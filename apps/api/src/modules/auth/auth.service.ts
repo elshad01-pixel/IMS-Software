@@ -1,0 +1,177 @@
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { compare, hash } from 'bcryptjs';
+import { PrismaService } from '../../common/prisma/prisma.service';
+import { LoginDto } from './dto/login.dto';
+import { RegisterTenantDto } from './dto/register-tenant.dto';
+
+const defaultPermissions = [
+  'dashboard.read',
+  'documents.read',
+  'documents.write',
+  'risks.read',
+  'risks.write',
+  'capa.read',
+  'capa.write',
+  'audits.read',
+  'audits.write',
+  'management-review.read',
+  'management-review.write',
+  'kpis.read',
+  'kpis.write',
+  'training.read',
+  'training.write',
+  'reports.read',
+  'users.read',
+  'users.write',
+  'settings.read',
+  'settings.write',
+  'attachments.write',
+  'action-items.write'
+];
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService
+  ) {}
+
+  async registerTenant(input: RegisterTenantDto) {
+    const existingTenant = await this.prisma.tenant.findUnique({
+      where: { slug: input.tenantSlug }
+    });
+    if (existingTenant) {
+      throw new ConflictException('Tenant slug is already in use');
+    }
+
+    const permissions = await Promise.all(
+      defaultPermissions.map((key) =>
+        this.prisma.permission.upsert({
+          where: { key },
+          update: {},
+          create: { key, description: key }
+        })
+      )
+    );
+
+    const passwordHash = await hash(input.password, 10);
+
+    const tenant = await this.prisma.tenant.create({
+      data: {
+        name: input.companyName,
+        slug: input.tenantSlug,
+        roles: {
+          create: {
+            name: 'Administrator',
+            description: 'Tenant administrator',
+            isSystem: true,
+            permissions: {
+              create: permissions.map((permission) => ({
+                permissionId: permission.id
+              }))
+            }
+          }
+        }
+      },
+      include: { roles: true }
+    });
+
+    const role = tenant.roles[0];
+    const user = await this.prisma.user.create({
+      data: {
+        tenantId: tenant.id,
+        email: input.email,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        passwordHash,
+        roleId: role.id
+      }
+    });
+
+    await this.prisma.tenantSetting.createMany({
+      data: [
+        { tenantId: tenant.id, key: 'companyName', value: input.companyName },
+        { tenantId: tenant.id, key: 'timezone', value: 'UTC' }
+      ]
+    });
+
+    return this.issueToken(user.id, tenant.id, user.email, role.id);
+  }
+
+  async login(input: LoginDto) {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { slug: input.tenantSlug }
+    });
+    if (!tenant) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: {
+        tenantId_email: {
+          tenantId: tenant.id,
+          email: input.email
+        }
+      },
+      include: {
+        role: {
+          include: {
+            permissions: { include: { permission: true } }
+          }
+        }
+      }
+    });
+
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const passwordMatches = await compare(input.password, user.passwordHash);
+    if (!passwordMatches) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    return this.issueToken(user.id, tenant.id, user.email, user.roleId || undefined);
+  }
+
+  async me(userId: string, tenantId: string) {
+    return this.prisma.user.findFirst({
+      where: { id: userId, tenantId },
+      include: {
+        role: {
+          include: {
+            permissions: {
+              include: {
+                permission: true
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  private async issueToken(userId: string, tenantId: string, email: string, roleId?: string) {
+    const permissions = roleId
+      ? await this.prisma.rolePermission.findMany({
+          where: { roleId },
+          include: { permission: true }
+        })
+      : [];
+
+    const payload = {
+      sub: userId,
+      tenantId,
+      email,
+      roleId,
+      permissions: permissions.map((entry) => entry.permission.key)
+    };
+
+    const accessToken = await this.jwtService.signAsync(payload);
+    return {
+      accessToken,
+      user: payload
+    };
+  }
+}
