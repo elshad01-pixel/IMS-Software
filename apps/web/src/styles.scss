@@ -1,0 +1,62 @@
+:root {
+  --bg: #f4f6ef;
+  --panel: rgba(255, 252, 245, 0.9);
+  --panel-border: rgba(72, 53, 35, 0.14);
+  --text: #1f211d;
+  --muted: #667065;
+  --brand: #285943;
+  --brand-strong: #173728;
+  --accent: #c78b34;
+  --danger: #b64b3c;
+  --shadow: 0 20px 40px rgba(34, 45, 35, 0.12);
+  font-family: "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top left, rgba(199, 139, 52, 0.16), transparent 25%),
+    linear-gradient(180deg, #fbfaf4 0%, #eef2e8 100%);
+  color: var(--text);
+}
+
+body {
+  min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  background: rgba(40, 89, 67, 0.08);
+  color: var(--brand-strong);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.page-grid {
+  display: grid;
+  gap: 1.25rem;
+}
