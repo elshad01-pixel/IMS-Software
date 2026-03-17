@@ -12,5 +12,5 @@ RUN npm run build
 
 FROM nginx:1.27-alpine AS runner
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder /app/apps/web/dist/web /usr/share/nginx/html
+COPY --from=builder /app/apps/web/dist/web/browser/ /usr/share/nginx/html/
 EXPOSE 80
