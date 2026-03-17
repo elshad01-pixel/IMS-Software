@@ -8,7 +8,6 @@ coverage
 .env.local
 .DS_Store
 Thumbs.db
-apps/api/prisma/migrations
 apps/api/generated
 apps/web/.angular
 storage

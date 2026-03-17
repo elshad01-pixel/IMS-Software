@@ -22,4 +22,4 @@ COPY --from=builder /app/apps/api/prisma ./prisma
 COPY --from=builder /app/apps/api/prisma.config.ts ./prisma.config.ts
 
 EXPOSE 3000
-CMD ["node", "dist/main.js"]
+CMD ["sh", "-ec", "npx prisma migrate deploy || npx prisma db push; node dist/prisma/seed.js; node dist/src/main.js"]

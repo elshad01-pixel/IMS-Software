@@ -31,18 +31,41 @@ Multi-tenant ISO management SaaS platform built with Angular, NestJS, PostgreSQL
 - Attachment storage via MinIO
 - Shared action-item engine
 
-## Local run
+## Docker startup
 
 1. Copy `.env.example` to `.env`
-2. Install dependencies with `npm install`
-3. Generate Prisma client with `npm run prisma:generate --workspace apps/api`
-4. Start infrastructure with `docker compose up -d postgres minio`
-5. Push schema with `npx prisma db push --schema apps/api/prisma/schema.prisma --config apps/api/prisma.config.ts`
-6. Seed demo data with `npm run seed --workspace apps/api`
-7. Run apps with `npm run dev:api` and `npm run dev:web`
+2. Run `docker compose up -d --build`
+3. Open the app at `http://localhost:8080`
 
-Default seeded login:
+The API container runs Prisma migration deployment with a `db push` fallback, then seeds the demo tenant automatically on startup.
+
+## URLs
+
+- App: `http://localhost:8080`
+- API: `http://localhost:3000/api`
+- Swagger: `http://localhost:3000/api/docs`
+- Swagger through Nginx: `http://localhost:8080/api/docs`
+- MinIO API: `http://localhost:9000`
+- MinIO Console: `http://localhost:9001`
+
+## Demo credentials
 
 - Tenant slug: `demo-tenant`
 - Email: `admin@demo.local`
 - Password: `ChangeMe123!`
+
+## Local development
+
+1. Copy `.env.example` to `.env`
+2. Run `npm install`
+3. Start PostgreSQL and MinIO with `docker compose up -d postgres minio`
+4. Generate the Prisma client with `npm run prisma:generate`
+5. Apply migrations with `npm run db:deploy`
+6. Seed demo data with `npm run seed`
+7. Run the API with `npm run dev:api`
+8. Run the frontend with `npm run dev:web`
+
+## Resetting the stack
+
+- Stop containers: `docker compose down`
+- Stop and delete volumes: `docker compose down -v`

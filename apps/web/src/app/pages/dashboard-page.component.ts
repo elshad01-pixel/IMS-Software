@@ -1,7 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, inject, signal } from '@angular/core';
 import { ApiService } from '../core/api.service';
+
+type DashboardResponse = {
+  metrics: Record<string, number>;
+  highRisks: Array<{ id: string; title: string; score: number; status: string }>;
+  recentDocuments: Array<{ id: string; code: string; title: string; status: string }>;
+  recentCapas: Array<{ id: string; title: string; status: string; dueDate?: string }>;
+  actionItems: Array<{ id: string; title: string; status: string; dueDate?: string; sourceType: string }>;
+};
 
 @Component({
   standalone: true,
@@ -11,7 +18,8 @@ import { ApiService } from '../core/api.service';
       <div class="card page-head">
         <div>
           <span class="pill">Dashboard</span>
-          <h2>Operational overview</h2>
+          <h2>Management system overview</h2>
+          <p>Review document control, risk exposure, corrective actions, and open follow-up in one place.</p>
         </div>
       </div>
 
@@ -22,32 +30,62 @@ import { ApiService } from '../core/api.service';
         </article>
       </div>
 
-      <div class="card table-card">
-        <div class="section-title">High risks</div>
-        <table>
-          <thead>
-            <tr><th>Title</th><th>Score</th><th>Status</th></tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let risk of summary()?.highRisks ?? []">
-              <td>{{ risk.title }}</td>
-              <td>{{ risk.score }}</td>
-              <td>{{ risk.status }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="panels">
+        <section class="card panel">
+          <div class="section-title">High risks</div>
+          <ul>
+            <li *ngFor="let risk of data().highRisks">
+              <strong>{{ risk.title }}</strong>
+              <span>{{ risk.score }} • {{ risk.status }}</span>
+            </li>
+          </ul>
+        </section>
+
+        <section class="card panel">
+          <div class="section-title">Recent documents</div>
+          <ul>
+            <li *ngFor="let document of data().recentDocuments">
+              <strong>{{ document.code }}</strong>
+              <span>{{ document.title }} • {{ document.status }}</span>
+            </li>
+          </ul>
+        </section>
+
+        <section class="card panel">
+          <div class="section-title">Recent CAPAs</div>
+          <ul>
+            <li *ngFor="let capa of data().recentCapas">
+              <strong>{{ capa.title }}</strong>
+              <span>{{ capa.status }}{{ capa.dueDate ? ' • ' + (capa.dueDate | date:'yyyy-MM-dd') : '' }}</span>
+            </li>
+          </ul>
+        </section>
+
+        <section class="card panel">
+          <div class="section-title">Open action items</div>
+          <ul>
+            <li *ngFor="let item of data().actionItems">
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.sourceType }} • {{ item.status }}{{ item.dueDate ? ' • ' + (item.dueDate | date:'yyyy-MM-dd') : '' }}</span>
+            </li>
+          </ul>
+        </section>
       </div>
     </section>
   `,
   styles: [`
     .page-head,
-    .table-card {
+    .panel {
       padding: 1.2rem 1.3rem;
     }
 
-    .page-head h2,
-    .section-title {
-      margin: 0.8rem 0 0;
+    .page-head h2 {
+      margin: 0.8rem 0 0.3rem;
+    }
+
+    .page-head p {
+      margin: 0;
+      color: var(--muted);
     }
 
     .metrics {
@@ -70,25 +108,52 @@ import { ApiService } from '../core/api.service';
       font-size: 2rem;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
+    .panels {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
     }
 
-    th, td {
-      padding: 0.9rem 0.4rem;
-      text-align: left;
+    .section-title {
+      font-weight: 700;
+      margin-bottom: 0.9rem;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    li {
+      display: grid;
+      gap: 0.25rem;
       border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      padding-bottom: 0.75rem;
+    }
+
+    li span {
+      color: var(--muted);
+      font-size: 0.92rem;
     }
   `]
 })
 export class DashboardPageComponent {
   private readonly api = inject(ApiService);
-  protected readonly summary = toSignal(
-    this.api.get<{ metrics: Record<string, number>; highRisks: Array<{ title: string; score: number; status: string }> }>('dashboard/summary')
-  );
+  protected readonly data = signal<DashboardResponse>({
+    metrics: {},
+    highRisks: [],
+    recentDocuments: [],
+    recentCapas: [],
+    actionItems: []
+  });
+
+  constructor() {
+    this.api.get<DashboardResponse>('dashboard/summary').subscribe((result) => this.data.set(result));
+  }
 
   protected readonly metricEntries = () =>
-    Object.entries(this.summary()?.metrics ?? {}).map(([label, value]) => ({ label, value }));
+    Object.entries(this.data().metrics).map(([label, value]) => ({ label, value }));
 }

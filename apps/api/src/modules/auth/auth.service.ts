@@ -138,11 +138,22 @@ export class AuthService {
   async me(userId: string, tenantId: string) {
     return this.prisma.user.findFirst({
       where: { id: userId, tenantId },
-      include: {
+      select: {
+        id: true,
+        tenantId: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
         role: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
             permissions: {
-              include: {
+              select: {
                 permission: true
               }
             }

@@ -15,7 +15,23 @@ export class UsersService {
   list(tenantId: string) {
     return this.prisma.user.findMany({
       where: { tenantId },
-      include: { role: true },
+      select: {
+        id: true,
+        tenantId: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        role: {
+          select: {
+            id: true,
+            name: true,
+            description: true
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' }
     });
   }
@@ -30,6 +46,23 @@ export class UsersService {
         lastName: dto.lastName,
         roleId: dto.roleId,
         passwordHash
+      },
+      select: {
+        id: true,
+        tenantId: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        role: {
+          select: {
+            id: true,
+            name: true,
+            description: true
+          }
+        }
       }
     });
 
@@ -58,7 +91,24 @@ export class UsersService {
 
     const user = await this.prisma.user.update({
       where: { id },
-      data
+      data,
+      select: {
+        id: true,
+        tenantId: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        role: {
+          select: {
+            id: true,
+            name: true,
+            description: true
+          }
+        }
+      }
     });
 
     await this.auditLogsService.create({

@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { TenancyMiddleware } from './common/tenancy/tenancy.middleware';
@@ -41,6 +41,6 @@ import { SettingsModule } from './modules/settings/settings.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(TenancyMiddleware).forRoutes('*');
+    consumer.apply(TenancyMiddleware).forRoutes({ path: '*path', method: RequestMethod.ALL });
   }
 }
