@@ -1,0 +1,19 @@
+{
+  "name": "iso-saas-platform",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:api": "npm --workspace apps/api run start:dev",
+    "dev:web": "npm --workspace apps/web run start",
+    "db:push": "npx prisma db push --schema apps/api/prisma/schema.prisma --config apps/api/prisma.config.ts",
+    "prisma:generate": "npm --workspace apps/api run prisma:generate",
+    "seed": "npm --workspace apps/api run seed",
+    "build": "npm run build --workspace apps/api && npm run build --workspace apps/web",
+    "lint": "npm run lint --workspace apps/api && npm run lint --workspace apps/web",
+    "format": "npm run format --workspace apps/api && npm run format --workspace apps/web"
+  }
+}
