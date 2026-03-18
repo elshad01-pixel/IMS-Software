@@ -68,6 +68,21 @@ The API container runs Prisma migration deployment on startup and then seeds the
 - Email: `admin@demo.local`
 - Password: `ChangeMe123!`
 
+## Browser smoke test
+
+Use these exact browser steps against the running stack after `docker compose up -d --build`:
+
+1. Open `http://localhost:8080/login`
+2. Sign in with:
+   - Tenant slug: `demo-tenant`
+   - Email: `admin@demo.local`
+   - Password: `ChangeMe123!`
+3. Confirm the app redirects to `Dashboard`
+4. Open `Documents`, `Risks`, and `CAPA` from the left navigation
+5. Create one new record in each module and confirm the green success message appears
+6. Confirm each new record appears in the register immediately after save
+7. Re-open each record from the register, edit it, save again, and confirm the changes persist
+
 ## Local development
 
 1. Copy `.env.example` to `.env`
@@ -130,11 +145,15 @@ Manual test:
 
 1. Sign in with the demo credentials.
 2. Open `Documents`.
-3. Create a document with code, title, type, and dates.
-4. Verify it appears immediately in the register.
-5. Open the record and submit it for review.
-6. Approve the record and confirm the status and revision update.
-7. Upload an attachment and add an action item.
+3. Leave the editor in create mode or click `Start new document`.
+4. Enter `Code`, `Title`, `Type`, `Owner`, and `Effective Date`.
+5. Click `Create document`.
+6. Confirm the green `Document saved successfully.` message appears.
+7. Verify the document appears immediately in the register.
+8. Re-open the record from the register, update it, and click `Save changes`.
+9. Open the record again and submit it for review.
+10. Approve the record and confirm the status and revision update.
+11. Upload an attachment and add an action item.
 
 ### Risks
 
@@ -150,11 +169,14 @@ Implemented:
 Manual test:
 
 1. Open `Risks`.
-2. Create a risk with likelihood and severity.
-3. Verify the calculated score and immediate register update.
-4. Update the risk to `IN_TREATMENT`.
-5. Add a treatment action item with owner and due date.
-6. Confirm the risk appears in dashboard high-risk and action summaries.
+2. Leave the editor in create mode or click `Start new risk`.
+3. Enter `Title`, `Description`, `Owner`, `Likelihood`, `Severity`, and `Target Date`.
+4. Click `Create risk`.
+5. Confirm the green `Risk saved successfully.` message appears.
+6. Verify the calculated score and immediate register update.
+7. Re-open the record, update it to `IN_TREATMENT`, and save again.
+8. Add a treatment action item with owner and due date.
+9. Confirm the risk appears in dashboard high-risk and action summaries.
 
 ### CAPA
 
@@ -171,11 +193,15 @@ Implemented:
 Manual test:
 
 1. Open `CAPA`.
-2. Create a CAPA with source, problem statement, and owner.
-3. Move it through `INVESTIGATING`, `ACTION_PLANNED`, and `IN_PROGRESS`.
-4. Add a linked action item and complete it.
-5. Set the CAPA to `VERIFIED`, then `CLOSED`.
-6. Confirm closure is persisted and visible on the dashboard.
+2. Leave the editor in create mode or click `Start new CAPA`.
+3. Enter `Title`, `Source`, `Problem Statement`, `Owner`, and `Due Date`.
+4. Click `Create CAPA`.
+5. Confirm the green `CAPA saved successfully.` message appears.
+6. Verify the record appears immediately in the CAPA register.
+7. Re-open the record, move it through `INVESTIGATING`, `ACTION_PLANNED`, and `IN_PROGRESS`, and save at each step.
+8. Add a linked action item and complete it.
+9. Set the CAPA to `VERIFIED`, then `CLOSED`.
+10. Confirm closure is persisted and visible on the dashboard.
 
 ### Dashboard
 

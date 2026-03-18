@@ -60,7 +60,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
               <strong>{{ documents().length }} documents</strong>
               <p class="subtle">Latest items update immediately after save and status changes.</p>
             </div>
-            <button type="button" class="ghost" (click)="resetForm()">New document</button>
+            <button *ngIf="selectedId()" type="button" class="ghost" (click)="resetForm()">Start new document</button>
           </div>
 
           <div class="table-state" *ngIf="loading()">Loading register...</div>
@@ -95,7 +95,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
                   {{ selectedDocument()?.code }} | V{{ selectedDocument()?.version }}.{{ selectedDocument()?.revision }}
                 </p>
               </div>
-              <span class="message" [class.error]="!!error()">{{ error() || message() }}</span>
+              <span class="message" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</span>
             </div>
 
             <div class="inline">
@@ -239,6 +239,10 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
 
     .message.error {
       color: #a03535;
+    }
+
+    .message.success {
+      color: var(--brand-strong);
     }
 
     table {
@@ -385,7 +389,7 @@ export class DocumentsPageComponent {
       reviewDueDate: '',
       changeSummary: ''
     });
-    this.message.set('');
+    this.message.set('Ready to create a new document.');
     this.error.set('');
   }
 
@@ -407,7 +411,7 @@ export class DocumentsPageComponent {
     request.subscribe({
       next: (document) => {
         this.saving.set(false);
-        this.message.set(this.selectedId() ? 'Document updated.' : 'Document created.');
+        this.message.set('Document saved successfully.');
         this.reload(() => {
           this.select(document);
         });

@@ -50,7 +50,7 @@ type RiskRow = {
               <strong>{{ risks().length }} risks</strong>
               <p class="subtle">Highest residual scores are shown first.</p>
             </div>
-            <button type="button" class="ghost" (click)="resetForm()">New risk</button>
+            <button *ngIf="selectedId()" type="button" class="ghost" (click)="resetForm()">Start new risk</button>
           </div>
 
           <div class="table-state" *ngIf="loading()">Loading register...</div>
@@ -83,7 +83,7 @@ type RiskRow = {
                 <strong>{{ selectedId() ? 'Edit risk' : 'Create risk' }}</strong>
                 <p class="subtle" *ngIf="selectedRisk()">Current score: {{ selectedRisk()?.score }}</p>
               </div>
-              <span class="message" [class.error]="!!error()">{{ error() || message() }}</span>
+              <span class="message" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</span>
             </div>
 
             <div class="inline">
@@ -217,6 +217,10 @@ type RiskRow = {
 
     .message.error {
       color: #a03535;
+    }
+
+    .message.success {
+      color: var(--brand-strong);
     }
 
     table {
@@ -355,7 +359,7 @@ export class RisksPageComponent {
       targetDate: '',
       status: 'OPEN'
     });
-    this.message.set('');
+    this.message.set('Ready to create a new risk.');
     this.error.set('');
   }
 
@@ -377,7 +381,7 @@ export class RisksPageComponent {
     request.subscribe({
       next: (risk) => {
         this.saving.set(false);
-        this.message.set(this.selectedId() ? 'Risk updated.' : 'Risk created.');
+        this.message.set('Risk saved successfully.');
         this.reload(() => this.select(risk));
       },
       error: (error: HttpErrorResponse) => {

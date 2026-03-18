@@ -54,7 +54,7 @@ type CapaRow = {
               <strong>{{ capas().length }} CAPAs</strong>
               <p class="subtle">Track status, ownership, and due dates across nonconformities.</p>
             </div>
-            <button type="button" class="ghost" (click)="resetForm()">Raise nonconformity</button>
+            <button *ngIf="selectedId()" type="button" class="ghost" (click)="resetForm()">Start new CAPA</button>
           </div>
 
           <div class="table-state" *ngIf="loading()">Loading CAPAs...</div>
@@ -85,7 +85,7 @@ type CapaRow = {
                 <strong>{{ selectedId() ? 'Edit CAPA' : 'Raise CAPA' }}</strong>
                 <p class="subtle" *ngIf="selectedCapa()">Status: {{ selectedCapa()?.status }}</p>
               </div>
-              <span class="message" [class.error]="!!error()">{{ error() || message() }}</span>
+              <span class="message" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</span>
             </div>
 
             <div class="inline">
@@ -248,6 +248,10 @@ type CapaRow = {
       color: #a03535;
     }
 
+    .message.success {
+      color: var(--brand-strong);
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -396,7 +400,7 @@ export class CapaPageComponent {
       dueDate: '',
       status: 'OPEN'
     });
-    this.message.set('');
+    this.message.set('Ready to create a new CAPA.');
     this.error.set('');
   }
 
@@ -418,7 +422,7 @@ export class CapaPageComponent {
     request.subscribe({
       next: (capa) => {
         this.saving.set(false);
-        this.message.set(this.selectedId() ? 'CAPA updated.' : 'CAPA created.');
+        this.message.set('CAPA saved successfully.');
         this.reload(() => this.select(capa));
       },
       error: (error: HttpErrorResponse) => {
