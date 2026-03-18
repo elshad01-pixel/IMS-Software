@@ -37,6 +37,42 @@ enum DocumentStatus {
   OBSOLETE
 }
 
+enum AuditStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CLOSED
+}
+
+enum AuditFindingSeverity {
+  OBSERVATION
+  MINOR
+  MAJOR
+}
+
+enum AuditFindingStatus {
+  OPEN
+  CAPA_CREATED
+  CLOSED
+}
+
+enum ManagementReviewStatus {
+  PLANNED
+  HELD
+  CLOSED
+}
+
+enum KpiDirection {
+  AT_LEAST
+  AT_MOST
+}
+
+enum TrainingAssignmentStatus {
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+}
+
 model Tenant {
   id                String             @id @default(cuid())
   name              String
@@ -52,9 +88,14 @@ model Tenant {
   auditLogs         AuditLog[]
   actionItems       ActionItem[]
   audits            Audit[]
+  auditChecklistItems AuditChecklistItem[]
+  auditFindings     AuditFinding[]
   managementReviews ManagementReview[]
+  managementReviewInputs ManagementReviewInput[]
   kpis              Kpi[]
+  kpiReadings       KpiReading[]
   trainings         Training[]
+  trainingAssignments TrainingAssignment[]
   reports           ReportDefinition[]
   settings          TenantSetting[]
 }
@@ -237,59 +278,173 @@ model Capa {
 }
 
 model Audit {
-  id          String   @id @default(cuid())
-  tenantId    String
-  title       String
-  scope       String?
-  scheduledAt DateTime?
-  status      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id              String              @id @default(cuid())
+  tenantId        String
+  code            String
+  title           String
+  type            String
+  scope           String?
+  leadAuditorId   String?
+  auditeeArea     String?
+  scheduledAt     DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  summary         String?
+  status          AuditStatus         @default(PLANNED)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  checklistItems  AuditChecklistItem[]
+  findings        AuditFinding[]
 
   @@index([tenantId])
+  @@unique([tenantId, code])
+  @@index([tenantId, status])
 }
 
 model ManagementReview {
-  id         String   @id @default(cuid())
-  tenantId   String
-  title      String
-  reviewDate DateTime?
-  status     String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id            String                 @id @default(cuid())
+  tenantId      String
+  title         String
+  reviewDate    DateTime?
+  chairpersonId String?
+  agenda        String?
+  minutes       String?
+  decisions     String?
+  summary       String?
+  status        ManagementReviewStatus @default(PLANNED)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  tenant        Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inputs        ManagementReviewInput[]
 
   @@index([tenantId])
+  @@index([tenantId, status])
 }
 
 model Kpi {
-  id          String   @id @default(cuid())
-  tenantId    String
-  name        String
-  target      Float
-  actual      Float
-  unit        String
-  periodLabel String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id               String       @id @default(cuid())
+  tenantId         String
+  name             String
+  description      String?
+  ownerId          String?
+  target           Float
+  warningThreshold Float?
+  actual           Float
+  unit             String
+  periodLabel      String
+  direction        KpiDirection @default(AT_LEAST)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  tenant           Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  readings         KpiReading[]
 
   @@index([tenantId])
 }
 
 model Training {
+  id             String               @id @default(cuid())
+  tenantId       String
+  title          String
+  audience       String?
+  description    String?
+  ownerId        String?
+  deliveryMethod String?
+  dueDate        DateTime?
+  completion     Float                @default(0)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  tenant         Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignments    TrainingAssignment[]
+
+  @@index([tenantId])
+}
+
+model AuditChecklistItem {
   id         String   @id @default(cuid())
   tenantId   String
+  auditId    String
   title      String
-  audience   String?
-  dueDate    DateTime?
-  completion Float    @default(0)
+  notes      String?
+  isComplete Boolean  @default(false)
+  sortOrder  Int      @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  audit      Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
 
-  @@index([tenantId])
+  @@index([tenantId, auditId])
+}
+
+model AuditFinding {
+  id           String              @id @default(cuid())
+  tenantId     String
+  auditId      String
+  title        String
+  description  String
+  severity     AuditFindingSeverity
+  ownerId      String?
+  dueDate      DateTime?
+  linkedCapaId String?
+  status       AuditFindingStatus  @default(OPEN)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  tenant       Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  audit        Audit               @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, auditId])
+  @@index([tenantId, status])
+}
+
+model ManagementReviewInput {
+  id         String   @id @default(cuid())
+  tenantId   String
+  reviewId   String
+  sourceType String
+  sourceId   String
+  title      String
+  summary    String?
+  createdAt  DateTime @default(now())
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  review     ManagementReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, reviewId])
+}
+
+model KpiReading {
+  id          String   @id @default(cuid())
+  tenantId    String
+  kpiId       String
+  value       Float
+  readingDate DateTime
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  kpi         Kpi      @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, kpiId])
+}
+
+model TrainingAssignment {
+  id              String                   @id @default(cuid())
+  tenantId        String
+  trainingId      String
+  userId          String
+  dueDate         DateTime?
+  completedAt     DateTime?
+  status          TrainingAssignmentStatus @default(ASSIGNED)
+  notes           String?
+  evidenceSummary String?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  tenant          Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  training        Training                 @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+
+  @@unique([trainingId, userId])
+  @@index([tenantId, trainingId])
+  @@index([tenantId, userId])
+  @@index([tenantId, status])
 }
 
 model ReportDefinition {

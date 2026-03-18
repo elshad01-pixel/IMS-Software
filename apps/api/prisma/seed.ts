@@ -111,6 +111,35 @@ async function main() {
     }
   });
 
+  const additionalUsers = [
+    { email: 'quality.manager@demo.local', firstName: 'Quality', lastName: 'Manager' },
+    { email: 'internal.auditor@demo.local', firstName: 'Internal', lastName: 'Auditor' },
+    { email: 'ops.supervisor@demo.local', firstName: 'Operations', lastName: 'Supervisor' }
+  ];
+
+  for (const user of additionalUsers) {
+    await prisma.user.upsert({
+      where: {
+        tenantId_email: {
+          tenantId: tenant.id,
+          email: user.email
+        }
+      },
+      update: {
+        roleId: adminRole.id,
+        passwordHash
+      },
+      create: {
+        tenantId: tenant.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        passwordHash,
+        roleId: adminRole.id
+      }
+    });
+  }
+
   await prisma.tenantSetting.upsert({
     where: {
       tenantId_key: {

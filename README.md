@@ -10,14 +10,22 @@ Multi-tenant ISO management SaaS platform built with Angular standalone, NestJS,
 
 ## Current module status
 
-Production-ready PHASE 1 workflows are implemented for:
+Production-ready PHASE 1 and PHASE 2 workflows are implemented for:
 
 - Dashboard
 - Documents
 - Risks
 - CAPA
+- Internal Audits
+- Management Review
+- KPIs
+- Training
 
-The remaining modules still exist in the repo, but they are not yet completed to the same standard.
+The remaining modules still exist in the repo, but they are not yet completed to the same standard:
+
+- Reports
+- Users enhancements
+- Settings enhancements
 
 ## Core capabilities
 
@@ -173,11 +181,17 @@ Manual test:
 
 Implemented:
 
-- Real metric cards for documents, approved documents, risks, high-risk count, CAPAs, open CAPAs, open actions, and overdue actions
+- Real metric cards for documents, approved documents, risks, high-risk count, CAPAs, open CAPAs, audits, management reviews, training assignments, KPI breaches, open actions, and overdue actions
 - Risk summary
 - CAPA summary
+- Audit summary
+- KPI watch and breach summary
+- Training overdue summary
 - Recent documents
 - Recent CAPAs
+- Recent audits
+- KPI summary
+- Training summary
 - Open action list with owners and due dates
 
 Manual test:
@@ -185,6 +199,90 @@ Manual test:
 1. Complete the Documents, Risks, and CAPA tests above.
 2. Open `Dashboard`.
 3. Verify the metrics, recent lists, and action list reflect the latest records immediately.
+
+## PHASE 2 workflows
+
+### Internal Audits
+
+Implemented:
+
+- Create audit plans with code, type, lead auditor, auditee area, schedule, and status
+- List audits with checklist completion and open finding counts
+- View audit details
+- Add checklist items and mark them complete
+- Record audit findings with severity, owner, and due date
+- Create linked CAPA directly from findings
+- Close audits after findings are resolved or escalated to CAPA
+- Linked audit action items through the shared action-item engine
+
+Manual test:
+
+1. Open `Audits`.
+2. Create an audit plan with code, title, auditor, and schedule.
+3. Move it to `IN_PROGRESS`.
+4. Add at least one checklist item and mark it complete.
+5. Add a finding.
+6. Create a CAPA from that finding.
+7. Move the audit to `COMPLETED`, then `CLOSED`.
+
+### Management Review
+
+Implemented:
+
+- Create management review meetings
+- Select review inputs from risks, CAPAs, audits, and KPIs
+- Record agenda, minutes, decisions, and summary
+- Track review status
+- Create linked management review action items
+- List and view review meetings
+
+Manual test:
+
+1. Open `Management Review`.
+2. Create a review meeting with date and chairperson.
+3. Select at least one input from each relevant module you want to include.
+4. Record minutes and decisions.
+5. Save the meeting in `HELD` status.
+6. Add a linked action item and verify it appears on the dashboard.
+
+### KPIs
+
+Implemented:
+
+- Create KPI definitions with owner, direction, target, threshold, unit, and period
+- Add KPI readings over time
+- Automatically update the current KPI value from the latest reading
+- Compute KPI status as `ON_TARGET`, `WATCH`, or `BREACH`
+- Show trend based on recent reading history
+- Highlight breaches in the KPI register and dashboard
+
+Manual test:
+
+1. Open `KPIs`.
+2. Create a KPI definition with target and warning threshold.
+3. Add at least two readings on different dates.
+4. Verify the current value, trend, and status update immediately.
+5. Confirm KPI watch or breach counts update on the dashboard when applicable.
+
+### Training
+
+Implemented:
+
+- Create training courses with audience, owner, method, and due date
+- Assign training to users
+- Track assignment status as `ASSIGNED`, `IN_PROGRESS`, or `COMPLETED`
+- Store assignment notes and evidence summary
+- Calculate course completion percentage from assignment completion
+- Show training status by user within each course detail
+
+Manual test:
+
+1. Open `Training`.
+2. Create a course.
+3. Assign it to one or more users with due dates.
+4. Save notes or evidence summary on the assignment.
+5. Mark one assignment complete.
+6. Verify course completion updates immediately.
 
 ## Verification completed
 
@@ -200,7 +298,11 @@ Verified against the running stack:
 - Document create, update, review, approve, detail fetch, list fetch, and attachment upload
 - Risk create, update, list, detail fetch, and linked treatment action creation
 - CAPA create, status progression, linked action completion, and closure
-- Dashboard summary reflects PHASE 1 records and open actions
+- Audit create, checklist update, finding creation, CAPA creation from finding, status progression, detail fetch, and closure
+- Management review create, linked input persistence, detail fetch, and action creation
+- KPI create, reading history persistence, trend calculation, and status calculation
+- Training create, assignment create, completion update, and detail fetch
+- Dashboard summary reflects PHASE 1 and PHASE 2 records and open actions
 - `http://localhost:8080` serves the Angular app
 - `http://localhost:8080/api/docs` still serves Swagger
 
