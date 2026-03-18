@@ -1,7 +1,15 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Input, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiService } from '../core/api.service';
+
+type UserOption = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+};
 
 type ActionItem = {
   id: string;
@@ -9,6 +17,7 @@ type ActionItem = {
   description?: string;
   dueDate?: string;
   status: string;
+  owner?: UserOption | null;
 };
 
 type Attachment = {
@@ -30,24 +39,58 @@ type Attachment = {
           <div>
             <span class="pill">Action Items</span>
             <h3>Follow-up</h3>
+            <p>Assign real treatment and closure work with ownership and due dates.</p>
           </div>
         </div>
 
         <form [formGroup]="actionForm" (ngSubmit)="createActionItem()" class="stack">
-          <input formControlName="title" placeholder="Close evidence gap">
-          <textarea formControlName="description" rows="3" placeholder="Action details"></textarea>
-          <input formControlName="dueDate" type="date">
-          <button type="submit" [disabled]="actionForm.invalid">Add action item</button>
+          <label>
+            <span>Title</span>
+            <input formControlName="title" placeholder="Close evidence gap">
+          </label>
+          <label>
+            <span>Description</span>
+            <textarea formControlName="description" rows="3" placeholder="Action details"></textarea>
+          </label>
+          <div class="inline">
+            <label>
+              <span>Owner</span>
+              <select formControlName="ownerId">
+                <option value="">Unassigned</option>
+                <option *ngFor="let user of users()" [value]="user.id">
+                  {{ user.firstName }} {{ user.lastName }}
+                </option>
+              </select>
+            </label>
+            <label>
+              <span>Due date</span>
+              <input formControlName="dueDate" type="date">
+            </label>
+          </div>
+          <button type="submit" [disabled]="actionForm.invalid || actionsSaving()">
+            {{ actionsSaving() ? 'Saving action...' : 'Add action item' }}
+          </button>
+          <p class="feedback" [class.error]="actionsError()">{{ actionsError() || actionsMessage() }}</p>
         </form>
 
-        <ul class="list">
+        <div class="panel-state" *ngIf="actionsLoading()">Loading action items...</div>
+        <ul class="list" *ngIf="!actionsLoading()">
           <li *ngFor="let item of actionItems()">
             <div>
               <strong>{{ item.title }}</strong>
               <p>{{ item.description || 'No description' }}</p>
-              <small>{{ item.status }}{{ item.dueDate ? ' • ' + item.dueDate.slice(0, 10) : '' }}</small>
+              <small>
+                {{ item.status }}
+                {{ item.owner ? ' | ' + item.owner.firstName + ' ' + item.owner.lastName : '' }}
+                {{ item.dueDate ? ' | due ' + item.dueDate.slice(0, 10) : '' }}
+              </small>
             </div>
-            <button type="button" class="ghost" (click)="completeActionItem(item.id)" [disabled]="item.status === 'DONE'">
+            <button
+              type="button"
+              class="ghost"
+              (click)="completeActionItem(item.id)"
+              [disabled]="item.status === 'DONE' || actionsSaving()"
+            >
               {{ item.status === 'DONE' ? 'Done' : 'Complete' }}
             </button>
           </li>
@@ -59,19 +102,29 @@ type Attachment = {
           <div>
             <span class="pill">Attachments</span>
             <h3>Evidence</h3>
+            <p>Upload supporting records directly to this item.</p>
           </div>
         </div>
 
         <form class="stack" (ngSubmit)="uploadAttachment()">
-          <input type="file" (change)="onFileSelected($event)">
-          <button type="submit" [disabled]="!selectedFile()">Upload</button>
+          <label>
+            <span>File</span>
+            <input type="file" (change)="onFileSelected($event)">
+          </label>
+          <button type="submit" [disabled]="!selectedFile() || attachmentsSaving()">
+            {{ attachmentsSaving() ? 'Uploading...' : 'Upload file' }}
+          </button>
+          <p class="feedback" [class.error]="attachmentsError()">
+            {{ attachmentsError() || attachmentsMessage() }}
+          </p>
         </form>
 
-        <ul class="list">
+        <div class="panel-state" *ngIf="attachmentsLoading()">Loading attachments...</div>
+        <ul class="list" *ngIf="!attachmentsLoading()">
           <li *ngFor="let item of attachments()">
             <div>
               <strong>{{ item.fileName }}</strong>
-              <p>{{ item.mimeType }}</p>
+              <p>{{ item.mimeType }} | {{ formatFileSize(item.size) }}</p>
               <small>{{ item.createdAt | date:'medium' }}</small>
             </div>
           </li>
@@ -96,14 +149,33 @@ type Attachment = {
       margin: 0.8rem 0 0;
     }
 
+    .panel-head p,
+    .empty p,
+    label span,
+    .feedback {
+      color: var(--muted);
+    }
+
     .stack {
       display: grid;
       gap: 0.7rem;
       margin-top: 1rem;
     }
 
+    .inline {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.7rem;
+    }
+
+    label {
+      display: grid;
+      gap: 0.35rem;
+    }
+
     input,
     textarea,
+    select,
     button {
       border-radius: 14px;
       border: 1px solid var(--panel-border);
@@ -139,14 +211,30 @@ type Attachment = {
       padding: 0.9rem;
     }
 
-    .list p,
-    .empty p {
+    .list p {
       margin: 0.3rem 0;
       color: var(--muted);
     }
 
-    small {
+    small,
+    .panel-state {
       color: var(--muted);
+    }
+
+    .feedback {
+      min-height: 1.15rem;
+      margin: 0;
+      font-size: 0.92rem;
+    }
+
+    .feedback.error {
+      color: #a03535;
+    }
+
+    @media (max-width: 700px) {
+      .inline {
+        grid-template-columns: 1fr;
+      }
     }
   `]
 })
@@ -157,15 +245,31 @@ export class RecordWorkItemsComponent implements OnChanges {
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
 
+  protected readonly users = signal<UserOption[]>([]);
   protected readonly actionItems = signal<ActionItem[]>([]);
   protected readonly attachments = signal<Attachment[]>([]);
   protected readonly selectedFile = signal<File | null>(null);
+  protected readonly actionsLoading = signal(false);
+  protected readonly actionsSaving = signal(false);
+  protected readonly attachmentsLoading = signal(false);
+  protected readonly attachmentsSaving = signal(false);
+  protected readonly actionsMessage = signal('');
+  protected readonly actionsError = signal('');
+  protected readonly attachmentsMessage = signal('');
+  protected readonly attachmentsError = signal('');
 
   protected readonly actionForm = this.fb.nonNullable.group({
     title: ['', Validators.required],
     description: [''],
+    ownerId: [''],
     dueDate: ['']
   });
+
+  constructor() {
+    this.api
+      .get<UserOption[]>('users')
+      .subscribe((users) => this.users.set(users.filter((user) => !!user.id)));
+  }
 
   ngOnChanges(changes: SimpleChanges) {
     if ((changes['sourceId'] || changes['sourceType']) && this.sourceId) {
@@ -178,18 +282,46 @@ export class RecordWorkItemsComponent implements OnChanges {
       return;
     }
 
-    this.api.post<ActionItem>('action-items', {
-      sourceType: this.sourceType,
-      sourceId: this.sourceId,
-      ...this.actionForm.getRawValue()
-    }).subscribe(() => {
-      this.actionForm.reset({ title: '', description: '', dueDate: '' });
-      this.reload();
-    });
+    this.actionsSaving.set(true);
+    this.actionsMessage.set('');
+    this.actionsError.set('');
+
+    this.api
+      .post<ActionItem>('action-items', {
+        sourceType: this.sourceType,
+        sourceId: this.sourceId,
+        ...this.actionForm.getRawValue()
+      })
+      .subscribe({
+        next: () => {
+          this.actionsSaving.set(false);
+          this.actionsMessage.set('Action item added.');
+          this.actionForm.reset({ title: '', description: '', ownerId: '', dueDate: '' });
+          this.reloadActions();
+        },
+        error: (error: HttpErrorResponse) => {
+          this.actionsSaving.set(false);
+          this.actionsError.set(this.readError(error, 'Action item save failed.'));
+        }
+      });
   }
 
   completeActionItem(id: string) {
-    this.api.patch(`action-items/${id}/complete`, {}).subscribe(() => this.reload());
+    this.actionsSaving.set(true);
+    this.actionsMessage.set('');
+    this.actionsError.set('');
+
+    this.api.patch(`action-items/${id}/complete`, {}).subscribe({
+      next: () => {
+        this.actionsSaving.set(false);
+        this.actionsMessage.set('Action item completed.');
+        this.reloadActions();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.actionsSaving.set(false);
+        this.actionsError.set(this.readError(error, 'Action item update failed.'));
+      }
+    });
   }
 
   onFileSelected(event: Event) {
@@ -205,22 +337,82 @@ export class RecordWorkItemsComponent implements OnChanges {
     const formData = new FormData();
     formData.append('file', this.selectedFile() as File);
 
-    this.api.postFormData(`attachments/${this.sourceType}/${this.sourceId}`, formData).subscribe(() => {
-      this.selectedFile.set(null);
-      this.reload();
+    this.attachmentsSaving.set(true);
+    this.attachmentsMessage.set('');
+    this.attachmentsError.set('');
+
+    this.api.postFormData(`attachments/${this.sourceType}/${this.sourceId}`, formData).subscribe({
+      next: () => {
+        this.attachmentsSaving.set(false);
+        this.attachmentsMessage.set('Attachment uploaded.');
+        this.selectedFile.set(null);
+        this.reloadAttachments();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.attachmentsSaving.set(false);
+        this.attachmentsError.set(this.readError(error, 'Attachment upload failed.'));
+      }
     });
   }
 
+  protected formatFileSize(size: number) {
+    if (size < 1024) {
+      return `${size} B`;
+    }
+
+    if (size < 1024 * 1024) {
+      return `${(size / 1024).toFixed(1)} KB`;
+    }
+
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
   private reload() {
+    this.reloadActions();
+    this.reloadAttachments();
+  }
+
+  private reloadActions() {
     if (!this.sourceId) {
       this.actionItems.set([]);
+      return;
+    }
+
+    this.actionsLoading.set(true);
+    this.api
+      .get<ActionItem[]>(`action-items?sourceType=${this.sourceType}&sourceId=${this.sourceId}`)
+      .subscribe({
+        next: (items) => {
+          this.actionsLoading.set(false);
+          this.actionItems.set(items);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.actionsLoading.set(false);
+          this.actionsError.set(this.readError(error, 'Action items could not be loaded.'));
+        }
+      });
+  }
+
+  private reloadAttachments() {
+    if (!this.sourceId) {
       this.attachments.set([]);
       return;
     }
 
-    this.api.get<ActionItem[]>(`action-items?sourceType=${this.sourceType}&sourceId=${this.sourceId}`)
-      .subscribe((items) => this.actionItems.set(items));
-    this.api.get<Attachment[]>(`attachments/${this.sourceType}/${this.sourceId}`)
-      .subscribe((items) => this.attachments.set(items));
+    this.attachmentsLoading.set(true);
+    this.api.get<Attachment[]>(`attachments/${this.sourceType}/${this.sourceId}`).subscribe({
+      next: (items) => {
+        this.attachmentsLoading.set(false);
+        this.attachments.set(items);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.attachmentsLoading.set(false);
+        this.attachmentsError.set(this.readError(error, 'Attachments could not be loaded.'));
+      }
+    });
+  }
+
+  private readError(error: HttpErrorResponse, fallback: string) {
+    return (error.error?.message as string) || fallback;
   }
 }

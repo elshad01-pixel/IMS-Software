@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ActionItemStatus } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
@@ -14,11 +14,23 @@ export class ActionItemsService {
   list(tenantId: string, sourceType?: string, sourceId?: string) {
     return this.prisma.actionItem.findMany({
       where: { tenantId, sourceType, sourceId },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' }
     });
   }
 
   async create(tenantId: string, actorId: string, dto: CreateActionItemDto) {
+    await this.ensureOwnerBelongsToTenant(tenantId, dto.ownerId);
+
     const actionItem = await this.prisma.actionItem.create({
       data: {
         tenantId,
@@ -62,5 +74,20 @@ export class ActionItemsService {
     });
 
     return actionItem;
+  }
+
+  private async ensureOwnerBelongsToTenant(tenantId: string, ownerId?: string) {
+    if (!ownerId) {
+      return;
+    }
+
+    const owner = await this.prisma.user.findFirst({
+      where: { id: ownerId, tenantId, isActive: true },
+      select: { id: true }
+    });
+
+    if (!owner) {
+      throw new BadRequestException('Selected action owner is not active in this tenant');
+    }
   }
 }

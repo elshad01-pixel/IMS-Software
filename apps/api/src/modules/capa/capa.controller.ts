@@ -22,6 +22,12 @@ export class CapaController {
     return this.capaService.list(tenantId);
   }
 
+  @Get(':id')
+  @Permissions('capa.read')
+  get(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.capaService.get(tenantId, id);
+  }
+
   @Post()
   @Permissions('capa.write')
   create(

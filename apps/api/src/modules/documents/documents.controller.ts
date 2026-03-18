@@ -22,6 +22,12 @@ export class DocumentsController {
     return this.documentsService.list(tenantId);
   }
 
+  @Get(':id')
+  @Permissions('documents.read')
+  get(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.documentsService.get(tenantId, id);
+  }
+
   @Post()
   @Permissions('documents.write')
   create(

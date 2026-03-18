@@ -1,9 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { RiskStatus } from '@prisma/client';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Risk, RiskStatus } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CreateRiskDto } from './dto/create-risk.dto';
 import { UpdateRiskDto } from './dto/update-risk.dto';
+
+const RISK_STATUS_FLOW: Record<RiskStatus, RiskStatus[]> = {
+  [RiskStatus.OPEN]: [RiskStatus.IN_TREATMENT, RiskStatus.ACCEPTED, RiskStatus.CLOSED],
+  [RiskStatus.IN_TREATMENT]: [RiskStatus.MITIGATED, RiskStatus.ACCEPTED, RiskStatus.CLOSED],
+  [RiskStatus.MITIGATED]: [RiskStatus.CLOSED, RiskStatus.IN_TREATMENT],
+  [RiskStatus.ACCEPTED]: [RiskStatus.CLOSED, RiskStatus.IN_TREATMENT],
+  [RiskStatus.CLOSED]: []
+};
 
 @Injectable()
 export class RisksService {
@@ -15,22 +23,33 @@ export class RisksService {
   list(tenantId: string) {
     return this.prisma.risk.findMany({
       where: { tenantId },
-      orderBy: { updatedAt: 'desc' }
+      orderBy: [{ score: 'desc' }, { updatedAt: 'desc' }]
+    });
+  }
+
+  get(tenantId: string, id: string) {
+    return this.prisma.risk.findFirstOrThrow({
+      where: { tenantId, id }
     });
   }
 
   async create(tenantId: string, actorId: string, dto: CreateRiskDto) {
+    await this.ensureOwnerBelongsToTenant(tenantId, dto.ownerId);
+
     const risk = await this.prisma.risk.create({
       data: {
         tenantId,
-        title: dto.title,
-        description: dto.description,
+        title: dto.title.trim(),
+        description: this.normalizeText(dto.description),
+        category: this.normalizeText(dto.category),
         likelihood: dto.likelihood,
-        impact: dto.impact,
-        score: dto.likelihood * dto.impact,
-        mitigationPlan: dto.mitigationPlan,
-        ownerId: dto.ownerId,
-        status: (dto.status as RiskStatus | undefined) || RiskStatus.OPEN
+        severity: dto.severity,
+        score: dto.likelihood * dto.severity,
+        treatmentPlan: this.normalizeText(dto.treatmentPlan),
+        treatmentSummary: this.normalizeText(dto.treatmentSummary),
+        ownerId: dto.ownerId || null,
+        targetDate: dto.targetDate ? new Date(dto.targetDate) : null,
+        status: dto.status ?? RiskStatus.OPEN
       }
     });
 
@@ -47,20 +66,22 @@ export class RisksService {
   }
 
   async update(tenantId: string, actorId: string, id: string, dto: UpdateRiskDto) {
-    const existing = await this.prisma.risk.findFirstOrThrow({
+    const existing = await this.prisma.risk.findFirst({
       where: { id, tenantId }
     });
 
+    if (!existing) {
+      throw new NotFoundException('Risk not found');
+    }
+
+    await this.ensureOwnerBelongsToTenant(tenantId, dto.ownerId);
+
+    const nextStatus = dto.status ?? existing.status;
+    this.assertValidStatusTransition(existing.status, nextStatus);
+
     const risk = await this.prisma.risk.update({
       where: { id },
-      data: {
-        ...dto,
-        score:
-          dto.likelihood || dto.impact
-            ? (dto.likelihood ?? existing.likelihood) * (dto.impact ?? existing.impact)
-            : undefined,
-        status: dto.status as RiskStatus | undefined
-      }
+      data: this.toUpdateRiskData(dto, existing)
     });
 
     await this.auditLogsService.create({
@@ -73,5 +94,61 @@ export class RisksService {
     });
 
     return risk;
+  }
+
+  private toUpdateRiskData(dto: UpdateRiskDto, existing: Risk) {
+    const likelihood = dto.likelihood ?? existing?.likelihood;
+    const severity = dto.severity ?? existing?.severity;
+
+    if (!likelihood || !severity) {
+      throw new BadRequestException('Likelihood and severity are required');
+    }
+
+    return {
+      title: dto.title?.trim(),
+      description: dto.description !== undefined ? this.normalizeText(dto.description) : undefined,
+      category: dto.category !== undefined ? this.normalizeText(dto.category) : undefined,
+      likelihood,
+      severity,
+      score: likelihood * severity,
+      treatmentPlan:
+        dto.treatmentPlan !== undefined ? this.normalizeText(dto.treatmentPlan) : undefined,
+      treatmentSummary:
+        dto.treatmentSummary !== undefined ? this.normalizeText(dto.treatmentSummary) : undefined,
+      ownerId: dto.ownerId !== undefined ? dto.ownerId || null : undefined,
+      targetDate:
+        dto.targetDate !== undefined ? (dto.targetDate ? new Date(dto.targetDate) : null) : undefined,
+      status: dto.status ?? existing?.status ?? RiskStatus.OPEN
+    };
+  }
+
+  private async ensureOwnerBelongsToTenant(tenantId: string, ownerId?: string) {
+    if (!ownerId) {
+      return;
+    }
+
+    const owner = await this.prisma.user.findFirst({
+      where: { id: ownerId, tenantId, isActive: true },
+      select: { id: true }
+    });
+
+    if (!owner) {
+      throw new BadRequestException('Selected owner is not active in this tenant');
+    }
+  }
+
+  private assertValidStatusTransition(current: RiskStatus, next: RiskStatus) {
+    if (current === next) {
+      return;
+    }
+
+    if (!RISK_STATUS_FLOW[current].includes(next)) {
+      throw new BadRequestException(`Invalid risk status transition: ${current} -> ${next}`);
+    }
+  }
+
+  private normalizeText(value?: string) {
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : null;
   }
 }

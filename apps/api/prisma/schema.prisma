@@ -15,6 +15,7 @@ enum ActionItemStatus {
 
 enum RiskStatus {
   OPEN
+  IN_TREATMENT
   MITIGATED
   ACCEPTED
   CLOSED
@@ -22,9 +23,18 @@ enum RiskStatus {
 
 enum CapaStatus {
   OPEN
+  INVESTIGATING
+  ACTION_PLANNED
   IN_PROGRESS
   VERIFIED
   CLOSED
+}
+
+enum DocumentStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  OBSOLETE
 }
 
 model Tenant {
@@ -153,56 +163,77 @@ model ActionItem {
 }
 
 model Document {
-  id        String   @id @default(cuid())
-  tenantId  String
-  code      String
-  title     String
-  version   String
-  status    String
-  ownerId   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id               String         @id @default(cuid())
+  tenantId         String
+  code             String
+  title            String
+  type             String
+  summary          String?
+  ownerId          String?
+  version          Int            @default(1)
+  revision         Int            @default(0)
+  status           DocumentStatus @default(DRAFT)
+  effectiveDate    DateTime?
+  reviewDueDate    DateTime?
+  approvedAt       DateTime?
+  approvedById     String?
+  obsoletedAt      DateTime?
+  changeSummary    String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  tenant           Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, code])
   @@index([tenantId])
+  @@index([tenantId, status])
 }
 
 model Risk {
-  id             String     @id @default(cuid())
-  tenantId       String
-  title          String
-  description    String?
-  likelihood     Int
-  impact         Int
-  score          Int
-  mitigationPlan String?
-  ownerId        String?
-  status         RiskStatus @default(OPEN)
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  tenant         Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId])
-}
-
-model Capa {
   id               String     @id @default(cuid())
   tenantId         String
   title            String
-  problemStatement String
-  rootCause        String?
-  correction       String?
-  correctiveAction String?
-  preventiveAction String?
+  description      String?
+  category         String?
+  likelihood       Int
+  severity         Int
+  score            Int
+  treatmentPlan    String?
+  treatmentSummary String?
   ownerId          String?
-  dueDate          DateTime?
-  status           CapaStatus @default(OPEN)
+  targetDate       DateTime?
+  status           RiskStatus @default(OPEN)
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
   tenant           Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+model Capa {
+  id                 String     @id @default(cuid())
+  tenantId           String
+  title              String
+  source             String
+  category           String?
+  problemStatement   String
+  containmentAction  String?
+  rootCause          String?
+  correction         String?
+  correctiveAction   String?
+  preventiveAction   String?
+  verificationMethod String?
+  closureSummary     String?
+  ownerId            String?
+  dueDate            DateTime?
+  closedAt           DateTime?
+  status             CapaStatus @default(OPEN)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  tenant             Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, status])
 }
 
 model Audit {

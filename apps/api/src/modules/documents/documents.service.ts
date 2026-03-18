@@ -1,8 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException
+} from '@nestjs/common';
+import { DocumentStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
+
+const DOCUMENT_STATUS_FLOW: Record<DocumentStatus, DocumentStatus[]> = {
+  [DocumentStatus.DRAFT]: [DocumentStatus.REVIEW],
+  [DocumentStatus.REVIEW]: [DocumentStatus.APPROVED, DocumentStatus.DRAFT],
+  [DocumentStatus.APPROVED]: [DocumentStatus.OBSOLETE],
+  [DocumentStatus.OBSOLETE]: []
+};
 
 @Injectable()
 export class DocumentsService {
@@ -14,46 +27,205 @@ export class DocumentsService {
   list(tenantId: string) {
     return this.prisma.document.findMany({
       where: { tenantId },
-      orderBy: { updatedAt: 'desc' }
+      orderBy: [{ updatedAt: 'desc' }, { title: 'asc' }]
+    });
+  }
+
+  get(tenantId: string, id: string) {
+    return this.prisma.document.findFirstOrThrow({
+      where: { tenantId, id }
     });
   }
 
   async create(tenantId: string, actorId: string, dto: CreateDocumentDto) {
-    const document = await this.prisma.document.create({
-      data: { tenantId, ...dto }
-    });
+    await this.ensureOwnerBelongsToTenant(tenantId, dto.ownerId);
 
-    await this.auditLogsService.create({
-      tenantId,
-      actorId,
-      action: 'document.created',
-      entityType: 'document',
-      entityId: document.id,
-      metadata: dto
-    });
+    try {
+      const document = await this.prisma.document.create({
+        data: {
+          tenantId,
+          code: dto.code.trim().toUpperCase(),
+          title: dto.title.trim(),
+          type: dto.type.trim(),
+          summary: this.normalizeText(dto.summary),
+          ownerId: dto.ownerId || null,
+          status: dto.status ?? DocumentStatus.DRAFT,
+          effectiveDate: dto.effectiveDate ? new Date(dto.effectiveDate) : null,
+          reviewDueDate: dto.reviewDueDate ? new Date(dto.reviewDueDate) : null,
+          changeSummary: this.normalizeText(dto.changeSummary)
+        }
+      });
 
-    return document;
+      await this.auditLogsService.create({
+        tenantId,
+        actorId,
+        action: 'document.created',
+        entityType: 'document',
+        entityId: document.id,
+        metadata: dto
+      });
+
+      return document;
+    } catch (error) {
+      this.handleDocumentWriteError(error);
+    }
   }
 
   async update(tenantId: string, actorId: string, id: string, dto: UpdateDocumentDto) {
-    await this.prisma.document.findFirstOrThrow({
+    const existing = await this.prisma.document.findFirst({
       where: { id, tenantId }
     });
 
-    const document = await this.prisma.document.update({
-      where: { id },
-      data: dto
+    if (!existing) {
+      throw new NotFoundException('Document not found');
+    }
+
+    await this.ensureOwnerBelongsToTenant(tenantId, dto.ownerId);
+
+    const nextStatus = dto.status ?? existing.status;
+    this.assertValidStatusTransition(existing.status, nextStatus);
+
+    const substantiveChange = this.hasSubstantiveChange(existing, dto);
+
+    try {
+      const document = await this.prisma.document.update({
+        where: { id },
+        data: {
+          code: dto.code ? dto.code.trim().toUpperCase() : undefined,
+          title: dto.title ? dto.title.trim() : undefined,
+          type: dto.type ? dto.type.trim() : undefined,
+          summary: dto.summary !== undefined ? this.normalizeText(dto.summary) : undefined,
+          ownerId: dto.ownerId !== undefined ? dto.ownerId || null : undefined,
+          status: nextStatus,
+          effectiveDate:
+            dto.effectiveDate !== undefined
+              ? dto.effectiveDate
+                ? new Date(dto.effectiveDate)
+                : null
+              : undefined,
+          reviewDueDate:
+            dto.reviewDueDate !== undefined
+              ? dto.reviewDueDate
+                ? new Date(dto.reviewDueDate)
+                : null
+              : undefined,
+          approvedAt: this.resolveApprovedAt(existing.status, nextStatus, existing.approvedAt),
+          approvedById:
+            nextStatus === DocumentStatus.APPROVED
+              ? actorId
+              : nextStatus === DocumentStatus.DRAFT
+                ? null
+                : undefined,
+          obsoletedAt:
+            nextStatus === DocumentStatus.OBSOLETE
+              ? existing.obsoletedAt ?? new Date()
+              : nextStatus !== existing.status
+                ? null
+                : undefined,
+          changeSummary:
+            dto.changeSummary !== undefined ? this.normalizeText(dto.changeSummary) : undefined,
+          revision: substantiveChange ? existing.revision + 1 : undefined
+        }
+      });
+
+      await this.auditLogsService.create({
+        tenantId,
+        actorId,
+        action: 'document.updated',
+        entityType: 'document',
+        entityId: document.id,
+        metadata: {
+          ...dto,
+          revisionChanged: substantiveChange
+        }
+      });
+
+      return document;
+    } catch (error) {
+      this.handleDocumentWriteError(error);
+    }
+  }
+
+  private async ensureOwnerBelongsToTenant(tenantId: string, ownerId?: string) {
+    if (!ownerId) {
+      return;
+    }
+
+    const owner = await this.prisma.user.findFirst({
+      where: { id: ownerId, tenantId, isActive: true },
+      select: { id: true }
     });
 
-    await this.auditLogsService.create({
-      tenantId,
-      actorId,
-      action: 'document.updated',
-      entityType: 'document',
-      entityId: document.id,
-      metadata: dto
-    });
+    if (!owner) {
+      throw new BadRequestException('Selected owner is not active in this tenant');
+    }
+  }
 
-    return document;
+  private assertValidStatusTransition(current: DocumentStatus, next: DocumentStatus) {
+    if (current === next) {
+      return;
+    }
+
+    if (!DOCUMENT_STATUS_FLOW[current].includes(next)) {
+      throw new BadRequestException(`Invalid document status transition: ${current} -> ${next}`);
+    }
+  }
+
+  private hasSubstantiveChange(existing: Prisma.DocumentUncheckedCreateInput, dto: UpdateDocumentDto) {
+    return Boolean(
+      (dto.code && dto.code.trim().toUpperCase() !== existing.code) ||
+        (dto.title && dto.title.trim() !== existing.title) ||
+        (dto.type && dto.type.trim() !== existing.type) ||
+        (dto.summary !== undefined && this.normalizeText(dto.summary) !== existing.summary) ||
+        (dto.ownerId !== undefined && (dto.ownerId || null) !== existing.ownerId) ||
+        (dto.effectiveDate !== undefined &&
+          this.toIsoDate(dto.effectiveDate) !== this.toIsoDate(existing.effectiveDate)) ||
+        (dto.reviewDueDate !== undefined &&
+          this.toIsoDate(dto.reviewDueDate) !== this.toIsoDate(existing.reviewDueDate)) ||
+        (dto.changeSummary !== undefined &&
+          this.normalizeText(dto.changeSummary) !== existing.changeSummary) ||
+        (dto.status !== undefined && dto.status !== existing.status)
+    );
+  }
+
+  private resolveApprovedAt(
+    current: DocumentStatus,
+    next: DocumentStatus,
+    existingApprovedAt: Date | null
+  ) {
+    if (current !== DocumentStatus.APPROVED && next === DocumentStatus.APPROVED) {
+      return new Date();
+    }
+
+    if (next === DocumentStatus.DRAFT) {
+      return null;
+    }
+
+    return existingApprovedAt ?? undefined;
+  }
+
+  private normalizeText(value?: string) {
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : null;
+  }
+
+  private toIsoDate(value?: string | Date | null) {
+    if (!value) {
+      return null;
+    }
+
+    const date = typeof value === 'string' ? new Date(value) : value;
+    return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
+  }
+
+  private handleDocumentWriteError(error: unknown): never {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      throw new ConflictException('Document code already exists in this tenant');
+    }
+
+    throw error;
   }
 }

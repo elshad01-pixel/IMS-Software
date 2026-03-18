@@ -22,6 +22,12 @@ export class RisksController {
     return this.risksService.list(tenantId);
   }
 
+  @Get(':id')
+  @Permissions('risks.read')
+  get(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.risksService.get(tenantId, id);
+  }
+
   @Post()
   @Permissions('risks.write')
   create(
