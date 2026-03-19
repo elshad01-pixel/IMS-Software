@@ -125,6 +125,38 @@ import { AuthStore } from '../core/auth.store';
       overflow-y: auto;
       padding-right: 0.25rem;
       margin-right: -0.25rem;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(244, 232, 208, 0.18) transparent;
+    }
+
+    nav::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    nav::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    nav::-webkit-scrollbar-thumb {
+      background: rgba(244, 232, 208, 0.12);
+      border-radius: 999px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+
+    nav::-webkit-scrollbar-thumb:hover {
+      background: rgba(244, 232, 208, 0.28);
+      background-clip: padding-box;
+    }
+
+    nav::-webkit-scrollbar-button {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+
+    .sidebar:hover nav {
+      scrollbar-color: rgba(244, 232, 208, 0.3) transparent;
     }
 
     nav a {

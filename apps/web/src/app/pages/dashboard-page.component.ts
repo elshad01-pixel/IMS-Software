@@ -79,7 +79,7 @@ type ChartSegment = {
         </div>
 
         <div class="chart-grid top-space">
-          <section class="card chart-card">
+          <a routerLink="/risks" class="card chart-card chart-link">
             <div class="section-head compact">
               <div>
                 <h4>Risk distribution</h4>
@@ -105,9 +105,9 @@ type ChartSegment = {
                 </div>
               </div>
             </div>
-          </section>
+          </a>
 
-          <section class="card chart-card">
+          <a routerLink="/capa" class="card chart-card chart-link">
             <div class="section-head compact">
               <div>
                 <h4>CAPA status</h4>
@@ -126,13 +126,13 @@ type ChartSegment = {
                 </div>
               </article>
             </div>
-          </section>
+          </a>
 
-          <section class="card chart-card">
+          <a routerLink="/kpis" class="card chart-card chart-link">
             <div class="section-head compact">
               <div>
-                <h4>KPI pressure</h4>
-                <p class="subtle">Current watch and breach counts, alongside overdue follow-up pressure.</p>
+                <h4>Performance overview</h4>
+                <p class="subtle">Current performance and compliance signals requiring attention.</p>
               </div>
             </div>
 
@@ -147,7 +147,7 @@ type ChartSegment = {
                 </div>
               </article>
             </div>
-          </section>
+          </a>
         </div>
       </section>
 
@@ -302,7 +302,21 @@ type ChartSegment = {
     }
 
     .chart-card {
+      display: block;
       padding: 1.3rem;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .chart-link {
+      cursor: pointer;
+      transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+    }
+
+    .chart-link:hover {
+      transform: translateY(-2px);
+      border-color: rgba(36, 79, 61, 0.18);
+      box-shadow: 0 18px 36px rgba(29, 42, 33, 0.1);
     }
 
     .compact {
@@ -515,31 +529,31 @@ export class DashboardPageComponent {
       {
         label: 'Open risks',
         value: this.data().riskSummary.open + this.data().riskSummary.inTreatment,
-        copy: 'Exposure still awaiting treatment or acceptance.',
+        copy: 'Awaiting treatment',
         link: '/risks'
       },
       {
         label: 'Open CAPA',
         value: metrics['openCapas'] ?? 0,
-        copy: 'Corrective and preventive actions still active.',
+        copy: 'Active CAPAs',
         link: '/capa'
       },
       {
         label: 'Active audits',
         value: metrics['openAudits'] ?? 0,
-        copy: 'Planned or in-progress internal audits.',
+        copy: 'Audits in progress',
         link: '/audits'
       },
       {
         label: 'Overdue actions',
         value: metrics['overdueActions'] ?? 0,
-        copy: 'Action items beyond their due date.',
+        copy: 'Past due follow-up',
         link: '/dashboard'
       },
       {
         label: 'KPI breaches',
         value: this.data().kpiSummaryCounts.breach,
-        copy: 'Performance indicators currently outside target.',
+        copy: 'Outside target',
         link: '/kpis'
       }
     ];
