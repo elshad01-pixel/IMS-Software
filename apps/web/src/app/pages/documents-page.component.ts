@@ -65,51 +65,91 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
         <div class="card list-card">
           <div class="section-head">
             <div>
+              <span class="section-eyebrow">Register</span>
               <h3>Controlled document register</h3>
-              <p class="subtle">Search and filter the library, then open a document for detail, review, or revision control.</p>
+              <p class="subtle">A premium document-control register for status, revision, and ownership without inline form clutter.</p>
             </div>
           </div>
 
-          <div class="filter-row filter-space">
-            <label class="field">
-              <span>Search</span>
-              <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Code, title, or type">
-            </label>
-            <label class="field">
-              <span>Status</span>
-              <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
-                <option value="">All statuses</option>
-                <option value="DRAFT">Draft</option>
-                <option value="REVIEW">Review</option>
-                <option value="APPROVED">Approved</option>
-                <option value="OBSOLETE">Obsolete</option>
-              </select>
-            </label>
+          <div class="toolbar filter-space">
+            <div class="toolbar-meta">
+              <div>
+                <p class="toolbar-title">Register filters</p>
+                <p class="toolbar-copy">Search by code, title, or type, then open a record for review or revision control.</p>
+              </div>
+              <div class="toolbar-stats">
+                <article class="toolbar-stat">
+                  <span>Total</span>
+                  <strong>{{ documents().length }}</strong>
+                </article>
+                <article class="toolbar-stat">
+                  <span>Approved</span>
+                  <strong>{{ countByStatus('APPROVED') }}</strong>
+                </article>
+                <article class="toolbar-stat">
+                  <span>In review</span>
+                  <strong>{{ countByStatus('REVIEW') }}</strong>
+                </article>
+              </div>
+            </div>
+
+            <div class="filter-row">
+              <label class="field">
+                <span>Search</span>
+                <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Code, title, or type">
+              </label>
+              <label class="field">
+                <span>Status</span>
+                <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
+                  <option value="">All statuses</option>
+                  <option value="DRAFT">Draft</option>
+                  <option value="REVIEW">Review</option>
+                  <option value="APPROVED">Approved</option>
+                  <option value="OBSOLETE">Obsolete</option>
+                </select>
+              </label>
+            </div>
           </div>
 
-          <div class="empty-state" *ngIf="loading()">Loading documents...</div>
-          <table class="data-table" *ngIf="!loading()">
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Title</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Revision</th>
-                <th>Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of filteredDocuments()" [routerLink]="['/documents', item.id]">
-                <td><strong>{{ item.code }}</strong></td>
-                <td>{{ item.title }}</td>
-                <td>{{ item.type }}</td>
-                <td><span class="status-badge" [class.success]="item.status === 'APPROVED'">{{ item.status }}</span></td>
-                <td>V{{ item.version }}.{{ item.revision }}</td>
-                <td>{{ item.updatedAt | date:'yyyy-MM-dd' }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="empty-state" *ngIf="loading()">
+            <strong>Loading documents</strong>
+            <span>Refreshing the controlled document register.</span>
+          </div>
+
+          <div class="empty-state top-space" *ngIf="!loading() && !filteredDocuments().length">
+            <strong>No documents match the current filter</strong>
+            <span>Adjust the search or create the first controlled document for this tenant.</span>
+          </div>
+
+          <div class="data-table-wrap" *ngIf="!loading() && filteredDocuments().length">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Document</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Revision</th>
+                  <th>Review due</th>
+                  <th>Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of filteredDocuments()" [routerLink]="['/documents', item.id]">
+                  <td>
+                    <div class="table-title">
+                      <strong>{{ item.code }}</strong>
+                      <small>{{ item.title }}</small>
+                    </div>
+                  </td>
+                  <td>{{ item.type }}</td>
+                  <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ item.status }}</span></td>
+                  <td>V{{ item.version }}.{{ item.revision }}</td>
+                  <td>{{ item.reviewDueDate ? (item.reviewDueDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
+                  <td>{{ item.updatedAt | date:'yyyy-MM-dd' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -117,68 +157,75 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
         <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
           <div class="section-head">
             <div>
+              <span class="section-eyebrow">Metadata</span>
               <h3>{{ mode() === 'create' ? 'New controlled document' : 'Edit document' }}</h3>
-              <p class="subtle">Keep the form focused on core metadata. Attachments and follow-up remain separated below.</p>
+              <p class="subtle">Keep the record metadata focused here. Evidence and actions stay in dedicated panels once the record exists.</p>
             </div>
           </div>
 
-          <p class="feedback" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+          <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
-          <div class="form-grid-2">
-            <label class="field">
-              <span>Code</span>
-              <input formControlName="code" placeholder="QMS-PRO-001">
-            </label>
-            <label class="field">
-              <span>Type</span>
-              <input formControlName="type" placeholder="Procedure">
-            </label>
-          </div>
+          <section class="detail-section">
+            <h4>Document identity</h4>
+            <div class="form-grid-2 top-space">
+              <label class="field">
+                <span>Code</span>
+                <input formControlName="code" placeholder="QMS-PRO-001">
+              </label>
+              <label class="field">
+                <span>Type</span>
+                <input formControlName="type" placeholder="Procedure">
+              </label>
+            </div>
 
-          <label class="field">
-            <span>Title</span>
-            <input formControlName="title" placeholder="Control of documented information">
-          </label>
-
-          <label class="field">
-            <span>Summary</span>
-            <textarea rows="4" formControlName="summary" placeholder="Purpose, scope, and intended use"></textarea>
-          </label>
-
-          <div class="form-grid-2">
-            <label class="field">
-              <span>Owner</span>
-              <select formControlName="ownerId">
-                <option value="">Unassigned</option>
-                <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
-              </select>
+            <label class="field top-space">
+              <span>Title</span>
+              <input formControlName="title" placeholder="Control of documented information">
             </label>
-            <label class="field">
-              <span>Status</span>
-              <select formControlName="status">
-                <option>DRAFT</option>
-                <option>REVIEW</option>
-                <option>APPROVED</option>
-                <option>OBSOLETE</option>
-              </select>
-            </label>
-          </div>
 
-          <div class="form-grid-2">
-            <label class="field">
-              <span>Effective date</span>
-              <input type="date" formControlName="effectiveDate">
+            <label class="field top-space">
+              <span>Summary</span>
+              <textarea rows="4" formControlName="summary" placeholder="Purpose, scope, and intended use"></textarea>
             </label>
-            <label class="field">
-              <span>Review due date</span>
-              <input type="date" formControlName="reviewDueDate">
-            </label>
-          </div>
+          </section>
 
-          <label class="field">
-            <span>Change summary</span>
-            <textarea rows="3" formControlName="changeSummary" placeholder="What changed in this revision"></textarea>
-          </label>
+          <section class="detail-section">
+            <h4>Lifecycle and ownership</h4>
+            <div class="form-grid-2 top-space">
+              <label class="field">
+                <span>Owner</span>
+                <select formControlName="ownerId">
+                  <option value="">Unassigned</option>
+                  <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Status</span>
+                <select formControlName="status">
+                  <option>DRAFT</option>
+                  <option>REVIEW</option>
+                  <option>APPROVED</option>
+                  <option>OBSOLETE</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="form-grid-2 top-space">
+              <label class="field">
+                <span>Effective date</span>
+                <input type="date" formControlName="effectiveDate">
+              </label>
+              <label class="field">
+                <span>Review due date</span>
+                <input type="date" formControlName="reviewDueDate">
+              </label>
+            </div>
+
+            <label class="field top-space">
+              <span>Change summary</span>
+              <textarea rows="3" formControlName="changeSummary" placeholder="What changed in this revision"></textarea>
+            </label>
+          </section>
 
           <div class="button-row">
             <button type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Saving...' : 'Save document' }}</button>
@@ -190,12 +237,13 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
           <section class="card panel-card">
             <div class="section-head">
               <div>
+                <span class="section-eyebrow">Control pattern</span>
                 <h3>Workflow guidance</h3>
-                <p class="subtle">Create the document first, then add evidence and follow-up on the document record page.</p>
+                <p class="subtle">Register the document first. Evidence, review support, and follow-up remain on the record after save.</p>
               </div>
             </div>
 
-            <div class="entity-list">
+            <div class="entity-list top-space">
               <div class="entity-item">
                 <strong>1. Register the document</strong>
                 <small>Save the controlled document with its code, title, owner, and review dates.</small>
@@ -221,10 +269,11 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
           <section class="card detail-card">
             <div class="section-head">
               <div>
+                <span class="section-eyebrow">Controlled record</span>
                 <h3>{{ selectedDocument()?.title }}</h3>
                 <p class="subtle">{{ selectedDocument()?.code }} | {{ selectedDocument()?.type }}</p>
               </div>
-              <span class="status-badge" [class.success]="selectedDocument()?.status === 'APPROVED'">{{ selectedDocument()?.status }}</span>
+              <span class="status-badge" [ngClass]="statusClass(selectedDocument()?.status || 'DRAFT')">{{ selectedDocument()?.status }}</span>
             </div>
 
             <div class="summary-strip top-space">
@@ -242,11 +291,18 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
               </article>
             </div>
 
+            <div class="page-stack top-space">
+              <section class="detail-section">
+                <h4>Summary</h4>
+                <p>{{ selectedDocument()?.summary || 'No summary provided.' }}</p>
+              </section>
+              <section class="detail-section">
+                <h4>Revision note</h4>
+                <p>{{ selectedDocument()?.changeSummary || 'No revision note provided.' }}</p>
+              </section>
+            </div>
+
             <dl class="key-value top-space">
-              <dt>Summary</dt>
-              <dd>{{ selectedDocument()?.summary || 'No summary provided.' }}</dd>
-              <dt>Change summary</dt>
-              <dd>{{ selectedDocument()?.changeSummary || 'No revision note provided.' }}</dd>
               <dt>Approved at</dt>
               <dd>{{ selectedDocument()?.approvedAt ? (selectedDocument()?.approvedAt | date:'yyyy-MM-dd HH:mm') : 'Not approved yet' }}</dd>
               <dt>Obsoleted at</dt>
@@ -259,6 +315,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
           <section class="card panel-card">
             <div class="section-head">
               <div>
+                <span class="section-eyebrow">Lifecycle</span>
                 <h3>Lifecycle</h3>
                 <p class="subtle">Move the record through review, approval, and obsolescence without opening the editor.</p>
               </div>
@@ -269,7 +326,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
                 {{ documentActionLabel(status) }}
               </button>
             </div>
-            <p class="feedback top-space" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+            <p class="feedback top-space" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
           </section>
         </div>
 
@@ -398,6 +455,26 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
   protected availableTransitions() {
     const status = this.selectedDocument()?.status || this.form.getRawValue().status;
     return NEXT_STATUS_OPTIONS[status] ?? [];
+  }
+
+  protected countByStatus(status: DocumentStatus) {
+    return this.documents().filter((item) => item.status === status).length;
+  }
+
+  protected statusClass(status: DocumentStatus) {
+    if (status === 'APPROVED') {
+      return 'success';
+    }
+
+    if (status === 'REVIEW') {
+      return 'warn';
+    }
+
+    if (status === 'OBSOLETE') {
+      return 'danger';
+    }
+
+    return 'neutral';
   }
 
   protected documentActionLabel(status: DocumentStatus) {

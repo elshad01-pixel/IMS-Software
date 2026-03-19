@@ -62,13 +62,19 @@ type ActionItem = {
           <button type="submit" [disabled]="actionForm.invalid || actionsSaving()">
             {{ actionsSaving() ? 'Saving action...' : 'Add action item' }}
           </button>
-          <p class="feedback" [class.error]="actionsError()">{{ actionsError() || actionsMessage() }}</p>
+          <p class="feedback" [class.is-empty]="!actionsError() && !actionsMessage()" [class.error]="actionsError()" [class.success]="actionsMessage() && !actionsError()">
+            {{ actionsError() || actionsMessage() }}
+          </p>
         </form>
 
         <div class="panel-state" *ngIf="actionsLoading()">Loading action items...</div>
-        <ul class="list" *ngIf="!actionsLoading()">
+        <div class="empty-state top-space" *ngIf="!actionsLoading() && !actionItems().length">
+          <strong>No action items yet</strong>
+          <span>Create ownership and due dates for the next meaningful step.</span>
+        </div>
+        <ul class="list" *ngIf="!actionsLoading() && actionItems().length">
           <li *ngFor="let item of actionItems()">
-            <div>
+            <div class="list-copy">
               <strong>{{ item.title }}</strong>
               <p>{{ item.description || 'No description' }}</p>
               <small>
@@ -100,7 +106,7 @@ type ActionItem = {
   styles: [`
     .panel,
     .empty {
-      padding: 1.1rem 1.2rem;
+      padding: 1.2rem;
     }
 
     .panel-head h3 {
@@ -164,14 +170,20 @@ type ActionItem = {
       display: flex;
       justify-content: space-between;
       gap: 1rem;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      border-radius: 16px;
-      padding: 0.9rem;
+      border: 1px solid rgba(23, 50, 37, 0.08);
+      border-radius: 18px;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.82);
     }
 
     .list p {
       margin: 0.3rem 0;
       color: var(--muted);
+    }
+
+    .list-copy {
+      display: grid;
+      gap: 0.15rem;
     }
 
     small,
@@ -180,13 +192,7 @@ type ActionItem = {
     }
 
     .feedback {
-      min-height: 1.15rem;
-      margin: 0;
       font-size: 0.92rem;
-    }
-
-    .feedback.error {
-      color: #a03535;
     }
 
     @media (max-width: 700px) {

@@ -22,7 +22,7 @@ type Breadcrumb = {
       </nav>
 
       <div class="page-hero__body">
-        <div>
+        <div class="hero-copy">
           <span class="pill">{{ label }}</span>
           <h2>{{ title }}</h2>
           <p>{{ description }}</p>
@@ -33,7 +33,14 @@ type Breadcrumb = {
         </div>
       </div>
     </section>
-  `
+  `,
+  styles: [`
+    .hero-copy {
+      display: grid;
+      gap: 0.05rem;
+      max-width: 52rem;
+    }
+  `]
 })
 export class PageHeaderComponent {
   @Input() label = '';

@@ -35,14 +35,17 @@ type DashboardResponse = {
       <iso-page-header
         [label]="'Dashboard'"
         [title]="'Integrated management overview'"
-        [description]="'A quieter operational view of document control, risks, CAPA, audits, reviews, KPIs, training, and actions.'"
+        [description]="'A premium operating view of document control, risk exposure, CAPA execution, and cross-functional follow-up.'"
         [breadcrumbs]="[{ label: 'Dashboard' }]"
-      />
+      >
+        <a routerLink="/documents/new" class="button-link">Create document</a>
+      </iso-page-header>
 
-      <section class="metrics-grid">
-        <article class="card metric-card" *ngFor="let item of metricEntries()">
+      <section class="metric-grid">
+        <article class="metric-tile hero-metric" *ngFor="let item of topMetricEntries()">
           <span>{{ item.label }}</span>
           <strong>{{ item.value }}</strong>
+          <small>{{ item.copy }}</small>
         </article>
       </section>
 
@@ -51,8 +54,9 @@ type DashboardResponse = {
           <section class="card panel-card">
             <div class="section-head">
               <div>
+                <span class="section-eyebrow">Operations</span>
                 <h3>Operational summaries</h3>
-                <p class="subtle">Key operational counts without forcing all modules into one crowded canvas.</p>
+                <p class="subtle">A tighter read on cross-module workload, exposure, and active follow-up.</p>
               </div>
             </div>
 
@@ -85,7 +89,7 @@ type DashboardResponse = {
               <article class="detail-item">
                 <span>Open actions</span>
                 <strong>{{ data().metrics['openActionItems'] }}</strong>
-                <a routerLink="/dashboard" class="text-link">Stay on dashboard</a>
+                <a routerLink="/dashboard" class="text-link">Action overview</a>
               </article>
             </div>
           </section>
@@ -93,11 +97,16 @@ type DashboardResponse = {
           <section class="card panel-card">
             <div class="section-head">
               <div>
+                <span class="section-eyebrow">Execution</span>
                 <h3>Open action items</h3>
-                <p class="subtle">Follow-up items across the system with source, owner, and due date.</p>
+                <p class="subtle">Cross-system work requiring follow-up, with ownership and due dates visible at a glance.</p>
               </div>
             </div>
-            <div class="entity-list top-space">
+            <div class="empty-state top-space" *ngIf="!data().actionItems.length">
+              <strong>No open action items</strong>
+              <span>Action-driven follow-up across modules will appear here.</span>
+            </div>
+            <div class="entity-list top-space" *ngIf="data().actionItems.length">
               <article class="entity-item" *ngFor="let item of data().actionItems">
                 <strong>{{ item.title }}</strong>
                 <small>
@@ -114,14 +123,18 @@ type DashboardResponse = {
           <section class="card panel-card">
             <div class="section-head">
               <div>
+                <span class="section-eyebrow">Recent activity</span>
                 <h3>Recent records</h3>
-                <p class="subtle">Keep the newest activity readable by module.</p>
+                <p class="subtle">The latest movement across controlled records, CAPA, and audit work.</p>
               </div>
             </div>
 
             <div class="mini-group top-space">
               <h4>Documents</h4>
-              <div class="entity-list">
+              <div class="empty-state" *ngIf="!data().recentDocuments.length">
+                <span>No recent documents.</span>
+              </div>
+              <div class="entity-list" *ngIf="data().recentDocuments.length">
                 <article class="entity-item" *ngFor="let document of data().recentDocuments">
                   <strong>{{ document.code }}</strong>
                   <small>{{ document.title }} | {{ document.status }} | V{{ document.version }}.{{ document.revision }}</small>
@@ -131,7 +144,10 @@ type DashboardResponse = {
 
             <div class="mini-group top-space">
               <h4>CAPA</h4>
-              <div class="entity-list">
+              <div class="empty-state" *ngIf="!data().recentCapas.length">
+                <span>No recent CAPA records.</span>
+              </div>
+              <div class="entity-list" *ngIf="data().recentCapas.length">
                 <article class="entity-item" *ngFor="let capa of data().recentCapas">
                   <strong>{{ capa.title }}</strong>
                   <small>{{ capa.status }}{{ capa.dueDate ? ' | ' + (capa.dueDate | date:'yyyy-MM-dd') : '' }}</small>
@@ -141,7 +157,10 @@ type DashboardResponse = {
 
             <div class="mini-group top-space">
               <h4>Audits</h4>
-              <div class="entity-list">
+              <div class="empty-state" *ngIf="!data().recentAudits.length">
+                <span>No recent audits.</span>
+              </div>
+              <div class="entity-list" *ngIf="data().recentAudits.length">
                 <article class="entity-item" *ngFor="let audit of data().recentAudits">
                   <strong>{{ audit.title }}</strong>
                   <small>{{ audit.status }}{{ audit.scheduledAt ? ' | ' + (audit.scheduledAt | date:'yyyy-MM-dd') : '' }}</small>
@@ -153,14 +172,18 @@ type DashboardResponse = {
           <section class="card panel-card">
             <div class="section-head">
               <div>
+                <span class="section-eyebrow">Watch list</span>
                 <h3>Watch lists</h3>
-                <p class="subtle">Current KPI and training watch points.</p>
+                <p class="subtle">Current KPI, training, and high-risk items that warrant management attention.</p>
               </div>
             </div>
 
             <div class="mini-group top-space">
               <h4>KPIs</h4>
-              <div class="entity-list">
+              <div class="empty-state" *ngIf="!data().kpiSummary.length">
+                <span>No KPI watch items.</span>
+              </div>
+              <div class="entity-list" *ngIf="data().kpiSummary.length">
                 <article class="entity-item" *ngFor="let item of data().kpiSummary">
                   <strong>{{ item.name }}</strong>
                   <small>{{ item.actual }}{{ item.unit }} vs {{ item.target }}{{ item.unit }} | {{ item.status }}</small>
@@ -170,7 +193,10 @@ type DashboardResponse = {
 
             <div class="mini-group top-space">
               <h4>Training</h4>
-              <div class="entity-list">
+              <div class="empty-state" *ngIf="!data().trainingSummary.length">
+                <span>No training watch items.</span>
+              </div>
+              <div class="entity-list" *ngIf="data().trainingSummary.length">
                 <article class="entity-item" *ngFor="let item of data().trainingSummary">
                   <strong>{{ item.title }}</strong>
                   <small>{{ item.completion | number:'1.0-0' }}% complete{{ item.dueDate ? ' | ' + (item.dueDate | date:'yyyy-MM-dd') : '' }}</small>
@@ -180,7 +206,10 @@ type DashboardResponse = {
 
             <div class="mini-group top-space">
               <h4>High risks</h4>
-              <div class="entity-list">
+              <div class="empty-state" *ngIf="!data().highRisks.length">
+                <span>No high-risk entries.</span>
+              </div>
+              <div class="entity-list" *ngIf="data().highRisks.length">
                 <article class="entity-item" *ngFor="let risk of data().highRisks">
                   <strong>{{ risk.title }}</strong>
                   <small>{{ risk.score }} | {{ risk.status }}</small>
@@ -193,32 +222,21 @@ type DashboardResponse = {
     </section>
   `,
   styles: [`
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 1rem;
+    .hero-metric {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(244, 246, 241, 0.98));
     }
 
-    .metric-card {
-      padding: 1rem 1.1rem;
-    }
-
-    .metric-card span {
-      color: var(--muted);
-    }
-
-    .metric-card strong {
+    .hero-metric small {
       display: block;
-      margin-top: 0.35rem;
-      font-size: 1.9rem;
-    }
-
-    .top-space {
-      margin-top: 1rem;
+      margin-top: 0.45rem;
+      color: var(--muted);
+      line-height: 1.45;
     }
 
     .mini-group h4 {
       margin: 0 0 0.6rem;
+      font-size: 0.95rem;
+      letter-spacing: -0.01em;
     }
 
     .text-link {
@@ -257,4 +275,30 @@ export class DashboardPageComponent {
       label: label.replace(/([A-Z])/g, ' $1').trim(),
       value
     }));
+
+  protected readonly topMetricEntries = () => {
+    const metrics = this.data().metrics;
+    return [
+      {
+        label: 'Controlled documents',
+        value: metrics['documents'] ?? 0,
+        copy: 'Active controlled records in the current tenant.'
+      },
+      {
+        label: 'Open risks',
+        value: metrics['openRisks'] ?? 0,
+        copy: 'Risk items that still require treatment or acceptance.'
+      },
+      {
+        label: 'Open CAPA',
+        value: metrics['openCapas'] ?? 0,
+        copy: 'Corrective and preventive actions still in flight.'
+      },
+      {
+        label: 'Open actions',
+        value: metrics['openActionItems'] ?? 0,
+        copy: 'Cross-module follow-up work with due dates and owners.'
+      }
+    ];
+  };
 }

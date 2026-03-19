@@ -55,50 +55,93 @@ type RiskRow = {
         <div class="card list-card">
           <div class="section-head">
             <div>
+              <span class="section-eyebrow">Register</span>
               <h3>Risk register</h3>
-              <p class="subtle">Track assessment, treatment, status, and due dates in a clean register view.</p>
+              <p class="subtle">A clear enterprise register for risk exposure, treatment ownership, target dates, and live scoring.</p>
             </div>
           </div>
 
-          <div class="filter-row top-space">
-            <label class="field">
-              <span>Search</span>
-              <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Title or category">
-            </label>
-            <label class="field">
-              <span>Status</span>
-              <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
-                <option value="">All statuses</option>
-                <option>OPEN</option>
-                <option>IN_TREATMENT</option>
-                <option>MITIGATED</option>
-                <option>ACCEPTED</option>
-                <option>CLOSED</option>
-              </select>
-            </label>
+          <div class="toolbar top-space">
+            <div class="toolbar-meta">
+              <div>
+                <p class="toolbar-title">Risk filters</p>
+                <p class="toolbar-copy">Search by risk title or category, then open the record for assessment, treatment, and evidence.</p>
+              </div>
+              <div class="toolbar-stats">
+                <article class="toolbar-stat">
+                  <span>Total</span>
+                  <strong>{{ risks().length }}</strong>
+                </article>
+                <article class="toolbar-stat">
+                  <span>In treatment</span>
+                  <strong>{{ countByStatus('IN_TREATMENT') }}</strong>
+                </article>
+                <article class="toolbar-stat">
+                  <span>High score</span>
+                  <strong>{{ highRiskCount() }}</strong>
+                </article>
+              </div>
+            </div>
+
+            <div class="filter-row">
+              <label class="field">
+                <span>Search</span>
+                <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Title or category">
+              </label>
+              <label class="field">
+                <span>Status</span>
+                <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
+                  <option value="">All statuses</option>
+                  <option>OPEN</option>
+                  <option>IN_TREATMENT</option>
+                  <option>MITIGATED</option>
+                  <option>ACCEPTED</option>
+                  <option>CLOSED</option>
+                </select>
+              </label>
+            </div>
           </div>
 
-          <div class="empty-state" *ngIf="loading()">Loading risks...</div>
-          <table class="data-table" *ngIf="!loading()">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Score</th>
-                <th>Status</th>
-                <th>Target</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of filteredRisks()" [routerLink]="['/risks', item.id]">
-                <td><strong>{{ item.title }}</strong></td>
-                <td>{{ item.category || 'General' }}</td>
-                <td>{{ item.score }}</td>
-                <td><span class="status-badge" [class.warn]="item.status === 'IN_TREATMENT'">{{ item.status }}</span></td>
-                <td>{{ item.targetDate ? (item.targetDate | date:'yyyy-MM-dd') : 'N/A' }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="empty-state" *ngIf="loading()">
+            <strong>Loading risks</strong>
+            <span>Refreshing current assessment and treatment data.</span>
+          </div>
+
+          <div class="empty-state top-space" *ngIf="!loading() && !filteredRisks().length">
+            <strong>No risks match the current filter</strong>
+            <span>Adjust the search or create the first risk entry for this tenant.</span>
+          </div>
+
+          <div class="data-table-wrap" *ngIf="!loading() && filteredRisks().length">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Risk</th>
+                  <th>Assessment</th>
+                  <th>Status</th>
+                  <th>Target</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of filteredRisks()" [routerLink]="['/risks', item.id]">
+                  <td>
+                    <div class="table-title">
+                      <strong>{{ item.title }}</strong>
+                      <small>{{ item.category || 'General' }}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="table-title">
+                      <strong>Score {{ item.score }}</strong>
+                      <small>L{{ item.likelihood }} x S{{ item.severity }}</small>
+                    </div>
+                  </td>
+                  <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ item.status }}</span></td>
+                  <td>{{ item.targetDate ? (item.targetDate | date:'yyyy-MM-dd') : 'N/A' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -106,78 +149,88 @@ type RiskRow = {
         <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
           <div class="section-head">
             <div>
+              <span class="section-eyebrow">Assessment</span>
               <h3>{{ mode() === 'create' ? 'New risk' : 'Edit risk' }}</h3>
               <p class="subtle">Keep risk definition, assessment, and treatment separated into clear form groups.</p>
             </div>
           </div>
 
-          <p class="feedback" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+          <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
-          <div class="form-grid-2">
-            <label class="field">
-              <span>Title</span>
-              <input formControlName="title" placeholder="Supplier delivery interruption">
+          <section class="detail-section">
+            <h4>Risk definition</h4>
+            <div class="form-grid-2 top-space">
+              <label class="field">
+                <span>Title</span>
+                <input formControlName="title" placeholder="Supplier delivery interruption">
+              </label>
+              <label class="field">
+                <span>Category</span>
+                <input formControlName="category" placeholder="Operational">
+              </label>
+            </div>
+
+            <label class="field top-space">
+              <span>Description</span>
+              <textarea rows="4" formControlName="description" placeholder="What could happen and why"></textarea>
             </label>
-            <label class="field">
-              <span>Category</span>
-              <input formControlName="category" placeholder="Operational">
+          </section>
+
+          <section class="detail-section">
+            <h4>Assessment</h4>
+            <div class="form-grid-3 top-space">
+              <label class="field">
+                <span>Likelihood</span>
+                <input type="number" min="1" max="5" formControlName="likelihood">
+              </label>
+              <label class="field">
+                <span>Severity</span>
+                <input type="number" min="1" max="5" formControlName="severity">
+              </label>
+              <article class="summary-item score-panel">
+                <span>Calculated score</span>
+                <strong>{{ currentScore() }}</strong>
+              </article>
+            </div>
+          </section>
+
+          <section class="detail-section">
+            <h4>Treatment</h4>
+            <label class="field top-space">
+              <span>Treatment plan</span>
+              <textarea rows="3" formControlName="treatmentPlan" placeholder="Controls and planned mitigation"></textarea>
             </label>
-          </div>
 
-          <label class="field">
-            <span>Description</span>
-            <textarea rows="4" formControlName="description" placeholder="What could happen and why"></textarea>
-          </label>
-
-          <div class="form-grid-3">
-            <label class="field">
-              <span>Likelihood</span>
-              <input type="number" min="1" max="5" formControlName="likelihood">
+            <label class="field top-space">
+              <span>Treatment summary</span>
+              <textarea rows="3" formControlName="treatmentSummary" placeholder="Current treatment status"></textarea>
             </label>
-            <label class="field">
-              <span>Severity</span>
-              <input type="number" min="1" max="5" formControlName="severity">
-            </label>
-            <article class="summary-item">
-              <span>Calculated score</span>
-              <strong>{{ currentScore() }}</strong>
-            </article>
-          </div>
 
-          <label class="field">
-            <span>Treatment plan</span>
-            <textarea rows="3" formControlName="treatmentPlan" placeholder="Controls and planned mitigation"></textarea>
-          </label>
+            <div class="form-grid-2 top-space">
+              <label class="field">
+                <span>Owner</span>
+                <select formControlName="ownerId">
+                  <option value="">Unassigned</option>
+                  <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Target date</span>
+                <input type="date" formControlName="targetDate">
+              </label>
+            </div>
 
-          <label class="field">
-            <span>Treatment summary</span>
-            <textarea rows="3" formControlName="treatmentSummary" placeholder="Current treatment status"></textarea>
-          </label>
-
-          <div class="form-grid-2">
-            <label class="field">
-              <span>Owner</span>
-              <select formControlName="ownerId">
-                <option value="">Unassigned</option>
-                <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
+            <label class="field top-space">
+              <span>Status</span>
+              <select formControlName="status">
+                <option>OPEN</option>
+                <option>IN_TREATMENT</option>
+                <option>MITIGATED</option>
+                <option>ACCEPTED</option>
+                <option>CLOSED</option>
               </select>
             </label>
-            <label class="field">
-              <span>Target date</span>
-              <input type="date" formControlName="targetDate">
-            </label>
-          </div>
-
-          <label class="field">
-            <span>Status</span>
-            <select formControlName="status">
-              <option>OPEN</option>
-              <option>IN_TREATMENT</option>
-              <option>MITIGATED</option>
-              <option>ACCEPTED</option>
-              <option>CLOSED</option>
-            </select>
-          </label>
+          </section>
 
           <div class="button-row">
             <button type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Saving...' : 'Save risk' }}</button>
@@ -188,6 +241,7 @@ type RiskRow = {
         <section class="card panel-card">
           <div class="section-head">
             <div>
+              <span class="section-eyebrow">Control pattern</span>
               <h3>Workflow guidance</h3>
               <p class="subtle">Assessment and treatment stay readable here; actions and evidence continue on the risk record.</p>
             </div>
@@ -216,10 +270,11 @@ type RiskRow = {
           <section class="card detail-card">
             <div class="section-head">
               <div>
+                <span class="section-eyebrow">Risk detail</span>
                 <h3>{{ selectedRisk()?.title }}</h3>
                 <p class="subtle">{{ selectedRisk()?.category || 'General' }}</p>
               </div>
-              <span class="status-badge" [class.warn]="selectedRisk()?.status === 'IN_TREATMENT'">{{ selectedRisk()?.status }}</span>
+              <span class="status-badge" [ngClass]="statusClass(selectedRisk()?.status || 'OPEN')">{{ selectedRisk()?.status }}</span>
             </div>
 
             <div class="summary-strip top-space">
@@ -237,13 +292,23 @@ type RiskRow = {
               </article>
             </div>
 
+            <div class="section-grid-2 top-space">
+              <section class="detail-section">
+                <h4>Description</h4>
+                <p>{{ selectedRisk()?.description || 'No description provided.' }}</p>
+              </section>
+              <section class="detail-section">
+                <h4>Treatment plan</h4>
+                <p>{{ selectedRisk()?.treatmentPlan || 'No treatment plan yet.' }}</p>
+              </section>
+            </div>
+
+            <section class="detail-section top-space">
+              <h4>Treatment progress</h4>
+              <p>{{ selectedRisk()?.treatmentSummary || 'No treatment summary yet.' }}</p>
+            </section>
+
             <dl class="key-value top-space">
-              <dt>Description</dt>
-              <dd>{{ selectedRisk()?.description || 'No description provided.' }}</dd>
-              <dt>Treatment plan</dt>
-              <dd>{{ selectedRisk()?.treatmentPlan || 'No treatment plan yet.' }}</dd>
-              <dt>Treatment summary</dt>
-              <dd>{{ selectedRisk()?.treatmentSummary || 'No treatment summary yet.' }}</dd>
               <dt>Target date</dt>
               <dd>{{ selectedRisk()?.targetDate ? (selectedRisk()?.targetDate | date:'yyyy-MM-dd') : 'Not set' }}</dd>
               <dt>Last updated</dt>
@@ -262,6 +327,10 @@ type RiskRow = {
   styles: [`
     .top-space {
       margin-top: 1rem;
+    }
+
+    .score-panel strong {
+      font-size: 1.55rem;
     }
 
     tr[routerLink] {
@@ -367,6 +436,30 @@ export class RisksPageComponent implements OnInit, OnChanges {
   protected currentScore() {
     const raw = this.form.getRawValue();
     return Number(raw.likelihood) * Number(raw.severity);
+  }
+
+  protected countByStatus(status: RiskStatus) {
+    return this.risks().filter((item) => item.status === status).length;
+  }
+
+  protected highRiskCount() {
+    return this.risks().filter((item) => item.score >= 15).length;
+  }
+
+  protected statusClass(status: RiskStatus) {
+    if (status === 'IN_TREATMENT') {
+      return 'warn';
+    }
+
+    if (status === 'CLOSED') {
+      return 'neutral';
+    }
+
+    if (status === 'MITIGATED' || status === 'ACCEPTED') {
+      return 'success';
+    }
+
+    return 'danger';
   }
 
   protected readInputValue(event: Event) {

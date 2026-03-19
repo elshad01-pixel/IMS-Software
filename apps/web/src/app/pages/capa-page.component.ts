@@ -59,49 +59,89 @@ type CapaRow = {
         <div class="card list-card">
           <div class="section-head">
             <div>
+              <span class="section-eyebrow">Register</span>
               <h3>CAPA register</h3>
-              <p class="subtle">Track nonconformities, investigation, action planning, and closure in a structured register.</p>
+              <p class="subtle">A premium corrective and preventive action register for ownership, investigation, and closure readiness.</p>
             </div>
           </div>
 
-          <div class="filter-row top-space">
-            <label class="field">
-              <span>Search</span>
-              <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Title or source">
-            </label>
-            <label class="field">
-              <span>Status</span>
-              <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
-                <option value="">All statuses</option>
-                <option>OPEN</option>
-                <option>INVESTIGATING</option>
-                <option>ACTION_PLANNED</option>
-                <option>IN_PROGRESS</option>
-                <option>VERIFIED</option>
-                <option>CLOSED</option>
-              </select>
-            </label>
+          <div class="toolbar top-space">
+            <div class="toolbar-meta">
+              <div>
+                <p class="toolbar-title">CAPA filters</p>
+                <p class="toolbar-copy">Search by title or source, then open the record for cause analysis, action follow-up, and closure evidence.</p>
+              </div>
+              <div class="toolbar-stats">
+                <article class="toolbar-stat">
+                  <span>Total</span>
+                  <strong>{{ capas().length }}</strong>
+                </article>
+                <article class="toolbar-stat">
+                  <span>In progress</span>
+                  <strong>{{ countByStatus('IN_PROGRESS') }}</strong>
+                </article>
+                <article class="toolbar-stat">
+                  <span>Closed</span>
+                  <strong>{{ countByStatus('CLOSED') }}</strong>
+                </article>
+              </div>
+            </div>
+
+            <div class="filter-row">
+              <label class="field">
+                <span>Search</span>
+                <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Title or source">
+              </label>
+              <label class="field">
+                <span>Status</span>
+                <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
+                  <option value="">All statuses</option>
+                  <option>OPEN</option>
+                  <option>INVESTIGATING</option>
+                  <option>ACTION_PLANNED</option>
+                  <option>IN_PROGRESS</option>
+                  <option>VERIFIED</option>
+                  <option>CLOSED</option>
+                </select>
+              </label>
+            </div>
           </div>
 
-          <div class="empty-state" *ngIf="loading()">Loading CAPAs...</div>
-          <table class="data-table" *ngIf="!loading()">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Source</th>
-                <th>Status</th>
-                <th>Due date</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of filteredCapas()" [routerLink]="['/capa', item.id]">
-                <td><strong>{{ item.title }}</strong></td>
-                <td>{{ item.source }}</td>
-                <td><span class="status-badge" [class.success]="item.status === 'CLOSED'" [class.warn]="item.status === 'IN_PROGRESS'">{{ item.status }}</span></td>
-                <td>{{ item.dueDate ? (item.dueDate | date:'yyyy-MM-dd') : 'N/A' }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="empty-state" *ngIf="loading()">
+            <strong>Loading CAPA records</strong>
+            <span>Refreshing nonconformity, corrective action, and closure status.</span>
+          </div>
+
+          <div class="empty-state top-space" *ngIf="!loading() && !filteredCapas().length">
+            <strong>No CAPA records match the current filter</strong>
+            <span>Adjust the search or create the first CAPA entry for this tenant.</span>
+          </div>
+
+          <div class="data-table-wrap" *ngIf="!loading() && filteredCapas().length">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>CAPA</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                  <th>Due date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of filteredCapas()" [routerLink]="['/capa', item.id]">
+                  <td>
+                    <div class="table-title">
+                      <strong>{{ item.title }}</strong>
+                      <small>{{ item.category || 'General' }}</small>
+                    </div>
+                  </td>
+                  <td>{{ item.source }}</td>
+                  <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ item.status }}</span></td>
+                  <td>{{ item.dueDate ? (item.dueDate | date:'yyyy-MM-dd') : 'N/A' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -109,98 +149,111 @@ type CapaRow = {
         <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
           <div class="section-head">
             <div>
+              <span class="section-eyebrow">CAPA workflow</span>
               <h3>{{ mode() === 'create' ? 'Raise CAPA' : 'Edit CAPA' }}</h3>
               <p class="subtle">Keep the problem statement, cause, actions, and closure inputs in clearly separated sections.</p>
             </div>
           </div>
 
-          <p class="feedback" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+          <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
-          <div class="form-grid-2">
-            <label class="field">
-              <span>Title</span>
-              <input formControlName="title" placeholder="Calibration missed for production gauge">
-            </label>
-            <label class="field">
-              <span>Source</span>
-              <input formControlName="source" placeholder="Internal audit">
-            </label>
-          </div>
+          <section class="detail-section">
+            <h4>Issue definition</h4>
+            <div class="form-grid-2 top-space">
+              <label class="field">
+                <span>Title</span>
+                <input formControlName="title" placeholder="Calibration missed for production gauge">
+              </label>
+              <label class="field">
+                <span>Source</span>
+                <input formControlName="source" placeholder="Internal audit">
+              </label>
+            </div>
 
-          <div class="form-grid-2">
-            <label class="field">
-              <span>Category</span>
-              <input formControlName="category" placeholder="Process">
-            </label>
-            <label class="field">
-              <span>Status</span>
-              <select formControlName="status">
-                <option>OPEN</option>
-                <option>INVESTIGATING</option>
-                <option>ACTION_PLANNED</option>
-                <option>IN_PROGRESS</option>
-                <option>VERIFIED</option>
-                <option>CLOSED</option>
-              </select>
-            </label>
-          </div>
+            <div class="form-grid-2 top-space">
+              <label class="field">
+                <span>Category</span>
+                <input formControlName="category" placeholder="Process">
+              </label>
+              <label class="field">
+                <span>Status</span>
+                <select formControlName="status">
+                  <option>OPEN</option>
+                  <option>INVESTIGATING</option>
+                  <option>ACTION_PLANNED</option>
+                  <option>IN_PROGRESS</option>
+                  <option>VERIFIED</option>
+                  <option>CLOSED</option>
+                </select>
+              </label>
+            </div>
 
-          <label class="field">
-            <span>Problem statement</span>
-            <textarea rows="4" formControlName="problemStatement" placeholder="Describe the nonconformity"></textarea>
-          </label>
+            <label class="field top-space">
+              <span>Problem statement</span>
+              <textarea rows="4" formControlName="problemStatement" placeholder="Describe the nonconformity"></textarea>
+            </label>
+          </section>
 
-          <div class="form-grid-2">
-            <label class="field">
-              <span>Containment action</span>
-              <textarea rows="3" formControlName="containmentAction" placeholder="Immediate containment"></textarea>
-            </label>
-            <label class="field">
-              <span>Root cause</span>
-              <textarea rows="3" formControlName="rootCause" placeholder="Why it happened"></textarea>
-            </label>
-          </div>
+          <section class="detail-section">
+            <h4>Containment and cause</h4>
+            <div class="form-grid-2 top-space">
+              <label class="field">
+                <span>Containment action</span>
+                <textarea rows="3" formControlName="containmentAction" placeholder="Immediate containment"></textarea>
+              </label>
+              <label class="field">
+                <span>Root cause</span>
+                <textarea rows="3" formControlName="rootCause" placeholder="Why it happened"></textarea>
+              </label>
+            </div>
+          </section>
 
-          <div class="form-grid-2">
-            <label class="field">
-              <span>Correction</span>
-              <textarea rows="3" formControlName="correction" placeholder="Immediate correction"></textarea>
-            </label>
-            <label class="field">
-              <span>Corrective action</span>
-              <textarea rows="3" formControlName="correctiveAction" placeholder="Action to eliminate the cause"></textarea>
-            </label>
-          </div>
+          <section class="detail-section">
+            <h4>Action design</h4>
+            <div class="form-grid-2 top-space">
+              <label class="field">
+                <span>Correction</span>
+                <textarea rows="3" formControlName="correction" placeholder="Immediate correction"></textarea>
+              </label>
+              <label class="field">
+                <span>Corrective action</span>
+                <textarea rows="3" formControlName="correctiveAction" placeholder="Action to eliminate the cause"></textarea>
+              </label>
+            </div>
 
-          <div class="form-grid-2">
-            <label class="field">
-              <span>Preventive action</span>
-              <textarea rows="3" formControlName="preventiveAction" placeholder="Action to prevent recurrence"></textarea>
-            </label>
-            <label class="field">
-              <span>Verification method</span>
-              <textarea rows="3" formControlName="verificationMethod" placeholder="How effectiveness will be checked"></textarea>
-            </label>
-          </div>
+            <div class="form-grid-2 top-space">
+              <label class="field">
+                <span>Preventive action</span>
+                <textarea rows="3" formControlName="preventiveAction" placeholder="Action to prevent recurrence"></textarea>
+              </label>
+              <label class="field">
+                <span>Verification method</span>
+                <textarea rows="3" formControlName="verificationMethod" placeholder="How effectiveness will be checked"></textarea>
+              </label>
+            </div>
 
-          <label class="field">
-            <span>Closure summary</span>
-            <textarea rows="3" formControlName="closureSummary" placeholder="Evidence supporting closure"></textarea>
-          </label>
+            <label class="field top-space">
+              <span>Closure summary</span>
+              <textarea rows="3" formControlName="closureSummary" placeholder="Evidence supporting closure"></textarea>
+            </label>
+          </section>
 
-          <div class="form-grid-2">
-            <label class="field">
-              <span>Owner</span>
-              <select formControlName="ownerId">
-                <option value="">Unassigned</option>
-                <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
-              </select>
-            </label>
-            <label class="field">
-              <span>Due date</span>
-              <input type="date" formControlName="dueDate">
-            </label>
-          </div>
+          <section class="detail-section">
+            <h4>Ownership</h4>
+            <div class="form-grid-2 top-space">
+              <label class="field">
+                <span>Owner</span>
+                <select formControlName="ownerId">
+                  <option value="">Unassigned</option>
+                  <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Due date</span>
+                <input type="date" formControlName="dueDate">
+              </label>
+            </div>
+          </section>
 
           <div class="button-row">
             <button type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Saving...' : 'Save CAPA' }}</button>
@@ -211,6 +264,7 @@ type CapaRow = {
         <section class="card panel-card">
           <div class="section-head">
             <div>
+              <span class="section-eyebrow">Control pattern</span>
               <h3>Workflow guidance</h3>
               <p class="subtle">Raise the issue here, then use the record page for follow-up actions, evidence, and closure review.</p>
             </div>
@@ -239,10 +293,11 @@ type CapaRow = {
           <section class="card detail-card">
             <div class="section-head">
               <div>
+                <span class="section-eyebrow">CAPA detail</span>
                 <h3>{{ selectedCapa()?.title }}</h3>
                 <p class="subtle">{{ selectedCapa()?.source }}{{ selectedCapa()?.category ? ' | ' + selectedCapa()?.category : '' }}</p>
               </div>
-              <span class="status-badge" [class.success]="selectedCapa()?.status === 'CLOSED'" [class.warn]="selectedCapa()?.status === 'IN_PROGRESS'">{{ selectedCapa()?.status }}</span>
+              <span class="status-badge" [ngClass]="statusClass(selectedCapa()?.status || 'OPEN')">{{ selectedCapa()?.status }}</span>
             </div>
 
             <div class="summary-strip top-space">
@@ -260,24 +315,42 @@ type CapaRow = {
               </article>
             </div>
 
-            <dl class="key-value top-space">
-              <dt>Problem statement</dt>
-              <dd>{{ selectedCapa()?.problemStatement }}</dd>
-              <dt>Containment</dt>
-              <dd>{{ selectedCapa()?.containmentAction || 'No containment action recorded.' }}</dd>
-              <dt>Root cause</dt>
-              <dd>{{ selectedCapa()?.rootCause || 'No root cause recorded.' }}</dd>
-              <dt>Correction</dt>
-              <dd>{{ selectedCapa()?.correction || 'No correction recorded.' }}</dd>
-              <dt>Corrective action</dt>
-              <dd>{{ selectedCapa()?.correctiveAction || 'No corrective action recorded.' }}</dd>
-              <dt>Preventive action</dt>
-              <dd>{{ selectedCapa()?.preventiveAction || 'No preventive action recorded.' }}</dd>
-              <dt>Verification method</dt>
-              <dd>{{ selectedCapa()?.verificationMethod || 'No verification method recorded.' }}</dd>
-              <dt>Closure summary</dt>
-              <dd>{{ selectedCapa()?.closureSummary || 'No closure summary recorded.' }}</dd>
-            </dl>
+            <section class="detail-section top-space">
+              <h4>Problem statement</h4>
+              <p>{{ selectedCapa()?.problemStatement }}</p>
+            </section>
+
+            <div class="section-grid-2 top-space">
+              <section class="detail-section">
+                <h4>Containment</h4>
+                <p>{{ selectedCapa()?.containmentAction || 'No containment action recorded.' }}</p>
+              </section>
+              <section class="detail-section">
+                <h4>Root cause</h4>
+                <p>{{ selectedCapa()?.rootCause || 'No root cause recorded.' }}</p>
+              </section>
+              <section class="detail-section">
+                <h4>Correction</h4>
+                <p>{{ selectedCapa()?.correction || 'No correction recorded.' }}</p>
+              </section>
+              <section class="detail-section">
+                <h4>Corrective action</h4>
+                <p>{{ selectedCapa()?.correctiveAction || 'No corrective action recorded.' }}</p>
+              </section>
+              <section class="detail-section">
+                <h4>Preventive action</h4>
+                <p>{{ selectedCapa()?.preventiveAction || 'No preventive action recorded.' }}</p>
+              </section>
+              <section class="detail-section">
+                <h4>Verification method</h4>
+                <p>{{ selectedCapa()?.verificationMethod || 'No verification method recorded.' }}</p>
+              </section>
+            </div>
+
+            <section class="detail-section top-space">
+              <h4>Closure summary</h4>
+              <p>{{ selectedCapa()?.closureSummary || 'No closure summary recorded.' }}</p>
+            </section>
           </section>
         </div>
 
@@ -393,6 +466,26 @@ export class CapaPageComponent implements OnInit, OnChanges {
         item.source.toLowerCase().includes(term);
       return matchesStatus && matchesTerm;
     });
+  }
+
+  protected countByStatus(status: CapaStatus) {
+    return this.capas().filter((item) => item.status === status).length;
+  }
+
+  protected statusClass(status: CapaStatus) {
+    if (status === 'CLOSED' || status === 'VERIFIED') {
+      return 'success';
+    }
+
+    if (status === 'IN_PROGRESS' || status === 'ACTION_PLANNED') {
+      return 'warn';
+    }
+
+    if (status === 'INVESTIGATING') {
+      return 'neutral';
+    }
+
+    return 'danger';
   }
 
   protected readInputValue(event: Event) {

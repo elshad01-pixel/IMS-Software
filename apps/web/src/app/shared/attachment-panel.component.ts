@@ -21,7 +21,7 @@ type Attachment = {
         <div>
           <span class="pill">Attachments</span>
           <h3>Evidence</h3>
-          <p>Upload and download supporting records for this item.</p>
+          <p>Upload and download controlled evidence for this record without leaving the workflow.</p>
         </div>
       </div>
 
@@ -36,16 +36,19 @@ type Attachment = {
             {{ saving() ? 'Uploading...' : 'Upload file' }}
           </button>
         </div>
-        <p class="feedback" [class.error]="error()" [class.success]="message() && !error()">
+        <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="error()" [class.success]="message() && !error()">
           {{ error() || message() }}
         </p>
       </div>
 
       <div class="panel-state" *ngIf="loading()">Loading attachments...</div>
-      <div class="empty-state top-space" *ngIf="!loading() && !attachments().length">No attachments yet.</div>
+      <div class="empty-state top-space" *ngIf="!loading() && !attachments().length">
+        <strong>No attachments yet</strong>
+        <span>Upload the first supporting file to start the evidence trail.</span>
+      </div>
       <ul class="list" *ngIf="!loading() && attachments().length">
         <li *ngFor="let item of attachments()">
-          <div>
+          <div class="list-copy">
             <strong>{{ item.fileName }}</strong>
             <p>{{ item.mimeType }} | {{ formatFileSize(item.size) }}</p>
             <small>{{ item.createdAt | date:'medium' }}</small>
@@ -66,11 +69,11 @@ type Attachment = {
   `,
   styles: [`
     .panel {
-      padding: 1.1rem 1.2rem;
+      padding: 1.2rem;
     }
 
     .panel-head h3 {
-      margin: 0.8rem 0 0;
+      margin: 0.8rem 0 0.2rem;
     }
 
     .panel-head p,
@@ -93,10 +96,10 @@ type Attachment = {
     .dropzone {
       display: grid;
       gap: 0.4rem;
-      border: 1px dashed rgba(40, 89, 67, 0.25);
-      border-radius: 16px;
-      padding: 1rem;
-      background: rgba(40, 89, 67, 0.04);
+      border: 1px dashed rgba(36, 79, 61, 0.28);
+      border-radius: 18px;
+      padding: 1.05rem;
+      background: linear-gradient(180deg, rgba(232, 240, 234, 0.9), rgba(244, 247, 242, 0.82));
     }
 
     .dropzone input {
@@ -121,28 +124,24 @@ type Attachment = {
       display: flex;
       justify-content: space-between;
       gap: 1rem;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      border-radius: 16px;
-      padding: 0.9rem;
+      border: 1px solid rgba(23, 50, 37, 0.08);
+      border-radius: 18px;
+      padding: 1rem;
       align-items: start;
+      background: rgba(255, 255, 255, 0.82);
     }
 
     .list p {
       margin: 0.3rem 0;
     }
 
+    .list-copy {
+      display: grid;
+      gap: 0.15rem;
+    }
+
     .feedback {
-      min-height: 1.1rem;
-      margin: 0;
       font-size: 0.92rem;
-    }
-
-    .feedback.error {
-      color: var(--danger);
-    }
-
-    .feedback.success {
-      color: var(--brand-strong);
     }
 
     @media (max-width: 700px) {
