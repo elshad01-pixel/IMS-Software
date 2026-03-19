@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, HostListener, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthStore } from '../core/auth.store';
 
@@ -27,24 +27,40 @@ import { AuthStore } from '../core/auth.store';
             <small>{{ item.hint }}</small>
           </a>
         </nav>
-
-        <section class="account card account-card">
-          <div class="account-copy">
-            <div>
-              <div class="eyebrow">Tenant</div>
-              <strong>{{ authStore.tenantSlug() || 'n/a' }}</strong>
-            </div>
-            <div>
-              <div class="eyebrow">User</div>
-              <strong>{{ authStore.session()?.user?.email }}</strong>
-            </div>
-          </div>
-          <button type="button" class="secondary account-button" (click)="authStore.logout()">Sign out</button>
-        </section>
       </aside>
 
       <main class="main">
-        <router-outlet />
+        <header class="topbar card">
+          <div class="topbar-copy">
+            <span class="topbar-label">Workspace</span>
+            <strong>Integrated Management System</strong>
+          </div>
+
+          <div class="user-menu" [class.open]="menuOpen()">
+            <button type="button" class="user-trigger" (click)="toggleMenu($event)">
+              <span class="user-trigger__copy">
+                <strong>{{ authStore.session()?.user?.email }}</strong>
+                <small>{{ authStore.tenantSlug() || 'n/a' }}</small>
+              </span>
+              <span class="user-trigger__caret">▾</span>
+            </button>
+
+            <section class="user-dropdown card" *ngIf="menuOpen()">
+              <div class="user-dropdown__identity">
+                <strong>{{ authStore.session()?.user?.email }}</strong>
+                <small>{{ authStore.tenantSlug() || 'n/a' }}</small>
+              </div>
+              <div class="user-dropdown__divider"></div>
+              <button type="button" class="user-dropdown__item" (click)="logout()">
+                Sign out
+              </button>
+            </section>
+          </div>
+        </header>
+
+        <section class="main-body">
+          <router-outlet />
+        </section>
       </main>
     </div>
   `,
@@ -60,7 +76,7 @@ import { AuthStore } from '../core/auth.store';
 
     .sidebar {
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto 1fr;
       padding: 1.35rem;
       gap: 1.35rem;
       position: sticky;
@@ -193,30 +209,15 @@ import { AuthStore } from '../core/auth.store';
       font-size: 0.76rem;
     }
 
-    .account-card {
-      display: grid;
-      gap: 0.95rem;
-      padding: 1rem;
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.08);
-      box-shadow: none;
-    }
-
-    .account-copy {
-      display: grid;
-      gap: 0.75rem;
-    }
-
-    .account-button {
-      width: 100%;
-    }
-
     .main {
       min-width: 0;
       padding: 0.15rem 0;
       overflow-y: auto;
       max-height: calc(100vh - 2.2rem);
       padding-right: 0.15rem;
+      display: grid;
+      gap: 1rem;
+      align-content: start;
     }
 
     .eyebrow {
@@ -224,6 +225,154 @@ import { AuthStore } from '../core/auth.store';
       color: rgba(249, 244, 234, 0.72);
       text-transform: uppercase;
       letter-spacing: 0.08em;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1.15rem;
+      min-height: 4.25rem;
+      background: rgba(255, 255, 255, 0.82);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar-copy {
+      display: grid;
+      gap: 0.12rem;
+    }
+
+    .topbar-copy strong {
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+      color: var(--text-soft);
+    }
+
+    .topbar-label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .main-body {
+      min-width: 0;
+      padding-bottom: 1rem;
+    }
+
+    .user-menu {
+      position: relative;
+    }
+
+    .user-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      min-width: 13.5rem;
+      padding: 0.72rem 0.85rem;
+      border-radius: 16px;
+      border: 1px solid rgba(23, 50, 37, 0.08);
+      background: rgba(244, 247, 242, 0.92);
+      color: var(--text);
+      box-shadow: none;
+      transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+    }
+
+    .user-trigger:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.98);
+      border-color: rgba(36, 79, 61, 0.14);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .user-trigger__copy {
+      display: grid;
+      gap: 0.12rem;
+      text-align: left;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .user-trigger__copy strong,
+    .user-dropdown__identity strong {
+      font-size: 0.92rem;
+      line-height: 1.2;
+      color: var(--text-soft);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-trigger__copy small,
+    .user-dropdown__identity small {
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .user-trigger__caret {
+      color: var(--muted-strong);
+      font-size: 0.82rem;
+      transition: transform 140ms ease;
+    }
+
+    .user-menu.open .user-trigger__caret {
+      transform: rotate(180deg);
+    }
+
+    .user-dropdown {
+      position: absolute;
+      top: calc(100% + 0.65rem);
+      right: 0;
+      min-width: 15rem;
+      padding: 0.7rem;
+      display: grid;
+      gap: 0.55rem;
+      background: rgba(255, 255, 255, 0.98);
+      animation: dropdown-in 160ms ease;
+    }
+
+    .user-dropdown__identity {
+      display: grid;
+      gap: 0.15rem;
+      padding: 0.45rem 0.45rem 0.2rem;
+    }
+
+    .user-dropdown__divider {
+      height: 1px;
+      background: rgba(23, 50, 37, 0.08);
+      margin: 0 0.2rem;
+    }
+
+    .user-dropdown__item {
+      justify-content: flex-start;
+      width: 100%;
+      background: transparent;
+      color: var(--text-soft);
+      box-shadow: none;
+      padding: 0.8rem 0.85rem;
+    }
+
+    .user-dropdown__item:hover {
+      background: rgba(23, 50, 37, 0.04);
+      box-shadow: none;
+      transform: none;
+    }
+
+    @keyframes dropdown-in {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     @media (max-width: 960px) {
@@ -248,11 +397,29 @@ import { AuthStore } from '../core/auth.store';
         overflow: visible;
         max-height: none;
       }
+
+      .topbar {
+        position: static;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .topbar {
+        display: grid;
+        align-items: start;
+      }
+
+      .user-trigger,
+      .user-dropdown {
+        min-width: 100%;
+        width: 100%;
+      }
     }
   `]
 })
 export class ShellComponent {
   protected readonly authStore = inject(AuthStore);
+  protected readonly menuOpen = signal(false);
   protected readonly navItems = [
     { path: '/dashboard', label: 'Dashboard', hint: 'Executive overview', exact: true },
     { path: '/documents', label: 'Documents', hint: 'Controlled library' },
@@ -266,4 +433,19 @@ export class ShellComponent {
     { path: '/users', label: 'Users', hint: 'Access and ownership' },
     { path: '/settings', label: 'Settings', hint: 'System configuration' }
   ];
+
+  protected toggleMenu(event: Event) {
+    event.stopPropagation();
+    this.menuOpen.update((value) => !value);
+  }
+
+  protected logout() {
+    this.menuOpen.set(false);
+    this.authStore.logout();
+  }
+
+  @HostListener('document:click')
+  protected closeMenu() {
+    this.menuOpen.set(false);
+  }
 }
