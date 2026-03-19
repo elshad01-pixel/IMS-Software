@@ -71,7 +71,7 @@ export class DocumentsService {
     }
   }
 
-  async update(tenantId: string, actorId: string, id: string, dto: UpdateDocumentDto) {
+  async update(tenantId: string, actorId: string, actorPermissions: string[], id: string, dto: UpdateDocumentDto) {
     const existing = await this.prisma.document.findFirst({
       where: { id, tenantId }
     });
@@ -84,6 +84,7 @@ export class DocumentsService {
 
     const nextStatus = dto.status ?? existing.status;
     this.assertValidStatusTransition(existing.status, nextStatus);
+    this.assertApprovalPermission(actorPermissions, existing.status, nextStatus);
 
     const substantiveChange = this.hasSubstantiveChange(existing, dto);
 
@@ -168,6 +169,12 @@ export class DocumentsService {
 
     if (!DOCUMENT_STATUS_FLOW[current].includes(next)) {
       throw new BadRequestException(`Invalid document status transition: ${current} -> ${next}`);
+    }
+  }
+
+  private assertApprovalPermission(actorPermissions: string[], current: DocumentStatus, next: DocumentStatus) {
+    if (current !== DocumentStatus.APPROVED && next === DocumentStatus.APPROVED && !actorPermissions.includes('documents.approve')) {
+      throw new BadRequestException('Your role does not allow document approval');
     }
   }
 

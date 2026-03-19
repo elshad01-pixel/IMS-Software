@@ -18,6 +18,14 @@ type UserOption = {
   email: string;
 };
 
+type SettingsConfig = {
+  document: {
+    types: string[];
+    numberingPrefix: string;
+    versionFormat: string;
+  };
+};
+
 type DocumentRow = {
   id: string;
   code: string;
@@ -170,11 +178,14 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
             <div class="form-grid-2 top-space">
               <label class="field">
                 <span>Code</span>
-                <input formControlName="code" placeholder="QMS-PRO-001">
+                <input formControlName="code" [placeholder]="documentCodePlaceholder()">
               </label>
               <label class="field">
                 <span>Type</span>
-                <input formControlName="type" placeholder="Procedure">
+                <select formControlName="type">
+                  <option value="">Select type</option>
+                  <option *ngFor="let type of documentTypes()" [value]="type">{{ type }}</option>
+                </select>
               </label>
             </div>
 
@@ -361,6 +372,7 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
   protected readonly selectedDocument = signal<DocumentRow | null>(null);
   protected readonly selectedId = signal<string | null>(null);
   protected readonly users = signal<UserOption[]>([]);
+  protected readonly settings = signal<SettingsConfig | null>(null);
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly message = signal((history.state?.notice as string) || '');
@@ -382,6 +394,7 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.loadUsers();
+    this.loadSettings();
 
     if (this.forcedMode) {
       this.mode.set(this.forcedMode);
@@ -550,9 +563,9 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
     if (mode === 'list') {
       this.selectedDocument.set(null);
       this.form.reset({
-        code: '',
+        code: this.defaultDocumentCode(),
         title: '',
-        type: '',
+        type: this.documentTypes()[0] ?? '',
         summary: '',
         ownerId: '',
         status: 'DRAFT',
@@ -567,9 +580,9 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
     if (mode === 'create') {
       this.selectedDocument.set(null);
       this.form.reset({
-        code: '',
+        code: this.defaultDocumentCode(),
         title: '',
-        type: '',
+        type: this.documentTypes()[0] ?? '',
         summary: '',
         ownerId: '',
         status: 'DRAFT',
@@ -628,6 +641,20 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
     this.api.get<UserOption[]>('users').subscribe((users) => this.users.set(users));
   }
 
+  private loadSettings() {
+    this.api.get<SettingsConfig>('settings/config').subscribe({
+      next: (settings) => {
+        this.settings.set(settings);
+        if (this.mode() === 'create') {
+          this.form.patchValue({
+            code: this.defaultDocumentCode(),
+            type: this.documentTypes()[0] ?? this.form.getRawValue().type
+          });
+        }
+      }
+    });
+  }
+
   private toPayload() {
     const raw = this.form.getRawValue();
     return {
@@ -646,6 +673,22 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
   private readError(error: HttpErrorResponse, fallback: string) {
     const message = error.error?.message;
     return Array.isArray(message) ? message.join(', ') : (message as string) || fallback;
+  }
+
+  protected documentTypes() {
+    return this.settings()?.document.types?.length
+      ? this.settings()!.document.types
+      : ['Procedure', 'Policy', 'Work Instruction', 'Form'];
+  }
+
+  protected documentCodePlaceholder() {
+    const prefix = this.settings()?.document.numberingPrefix || 'QMS-PRO';
+    return `${prefix}-001`;
+  }
+
+  private defaultDocumentCode() {
+    const prefix = this.settings()?.document.numberingPrefix || 'QMS-PRO';
+    return `${prefix}-`;
   }
 }
 

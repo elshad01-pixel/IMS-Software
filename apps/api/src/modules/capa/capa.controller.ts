@@ -42,10 +42,10 @@ export class CapaController {
   @Permissions('capa.write')
   update(
     @CurrentTenant() tenantId: string,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: { sub: string; permissions?: string[] },
     @Param('id') id: string,
     @Body() dto: UpdateCapaDto
   ) {
-    return this.capaService.update(tenantId, user.sub, id, dto);
+    return this.capaService.update(tenantId, user.sub, user.permissions || [], id, dto);
   }
 }

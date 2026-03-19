@@ -6,7 +6,6 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  Max,
   MaxLength,
   Min
 } from 'class-validator';
@@ -28,12 +27,10 @@ export class CreateRiskDto {
 
   @IsInt()
   @Min(1)
-  @Max(5)
   likelihood!: number;
 
   @IsInt()
   @Min(1)
-  @Max(5)
   severity!: number;
 
   @IsOptional()

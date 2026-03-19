@@ -18,6 +18,13 @@ type UserOption = {
   email: string;
 };
 
+type SettingsConfig = {
+  risk: {
+    likelihoodScale: number;
+    severityScale: number;
+  };
+};
+
 type RiskRow = {
   id: string;
   title: string;
@@ -181,11 +188,11 @@ type RiskRow = {
             <div class="form-grid-3 top-space">
               <label class="field">
                 <span>Likelihood</span>
-                <input type="number" min="1" max="5" formControlName="likelihood">
+                <input type="number" min="1" [attr.max]="likelihoodScaleMax()" formControlName="likelihood">
               </label>
               <label class="field">
                 <span>Severity</span>
-                <input type="number" min="1" max="5" formControlName="severity">
+                <input type="number" min="1" [attr.max]="severityScaleMax()" formControlName="severity">
               </label>
               <article class="summary-item score-panel">
                 <span>Calculated score</span>
@@ -351,6 +358,7 @@ export class RisksPageComponent implements OnInit, OnChanges {
   protected readonly selectedRisk = signal<RiskRow | null>(null);
   protected readonly selectedId = signal<string | null>(null);
   protected readonly users = signal<UserOption[]>([]);
+  protected readonly settings = signal<SettingsConfig | null>(null);
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly message = signal((history.state?.notice as string) || '');
@@ -362,8 +370,8 @@ export class RisksPageComponent implements OnInit, OnChanges {
     title: ['', [Validators.required, Validators.maxLength(160)]],
     description: [''],
     category: [''],
-    likelihood: [3, [Validators.required, Validators.min(1), Validators.max(5)]],
-    severity: [3, [Validators.required, Validators.min(1), Validators.max(5)]],
+    likelihood: [3, [Validators.required, Validators.min(1)]],
+    severity: [3, [Validators.required, Validators.min(1)]],
     treatmentPlan: [''],
     treatmentSummary: [''],
     ownerId: [''],
@@ -373,6 +381,7 @@ export class RisksPageComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.loadUsers();
+    this.loadSettings();
     if (this.forcedMode) {
       this.mode.set(this.forcedMode);
       this.handleRoute(this.route.snapshot.paramMap);
@@ -586,6 +595,19 @@ export class RisksPageComponent implements OnInit, OnChanges {
     this.api.get<UserOption[]>('users').subscribe((users) => this.users.set(users));
   }
 
+  private loadSettings() {
+    this.api.get<SettingsConfig>('settings/config').subscribe({
+      next: (settings) => {
+        this.settings.set(settings);
+        const raw = this.form.getRawValue();
+        this.form.patchValue({
+          likelihood: Math.min(Number(raw.likelihood), this.likelihoodScaleMax()),
+          severity: Math.min(Number(raw.severity), this.severityScaleMax())
+        }, { emitEvent: false });
+      }
+    });
+  }
+
   private toPayload() {
     const raw = this.form.getRawValue();
     return {
@@ -603,6 +625,14 @@ export class RisksPageComponent implements OnInit, OnChanges {
   private readError(error: HttpErrorResponse, fallback: string) {
     const message = error.error?.message;
     return Array.isArray(message) ? message.join(', ') : (message as string) || fallback;
+  }
+
+  protected likelihoodScaleMax() {
+    return this.settings()?.risk.likelihoodScale ?? 5;
+  }
+
+  protected severityScaleMax() {
+    return this.settings()?.risk.severityScale ?? 5;
   }
 }
 

@@ -42,10 +42,10 @@ export class DocumentsController {
   @Permissions('documents.write')
   update(
     @CurrentTenant() tenantId: string,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: { sub: string; permissions?: string[] },
     @Param('id') id: string,
     @Body() dto: UpdateDocumentDto
   ) {
-    return this.documentsService.update(tenantId, user.sub, id, dto);
+    return this.documentsService.update(tenantId, user.sub, user.permissions || [], id, dto);
   }
 }

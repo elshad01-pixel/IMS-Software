@@ -70,7 +70,7 @@ export class CapaService {
     return capa;
   }
 
-  async update(tenantId: string, actorId: string, id: string, dto: UpdateCapaDto) {
+  async update(tenantId: string, actorId: string, actorPermissions: string[], id: string, dto: UpdateCapaDto) {
     const existing = await this.prisma.capa.findFirst({
       where: { id, tenantId }
     });
@@ -83,6 +83,7 @@ export class CapaService {
 
     const nextStatus = dto.status ?? existing.status;
     this.assertValidStatusTransition(existing.status, nextStatus);
+    this.assertClosePermission(actorPermissions, existing.status, nextStatus);
     await this.assertClosureRules(tenantId, id, dto, existing);
 
     const capa = await this.prisma.capa.update({
@@ -198,6 +199,12 @@ export class CapaService {
 
     if (!CAPA_STATUS_FLOW[current].includes(next)) {
       throw new BadRequestException(`Invalid CAPA status transition: ${current} -> ${next}`);
+    }
+  }
+
+  private assertClosePermission(actorPermissions: string[], current: CapaStatus, next: CapaStatus) {
+    if (current !== CapaStatus.CLOSED && next === CapaStatus.CLOSED && !actorPermissions.includes('capa.close')) {
+      throw new BadRequestException('Your role does not allow CAPA closure');
     }
   }
 

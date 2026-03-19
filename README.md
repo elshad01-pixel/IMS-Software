@@ -10,7 +10,7 @@ Multi-tenant ISO management SaaS platform built with Angular standalone, NestJS,
 
 ## Current module status
 
-Production-ready PHASE 1 and PHASE 2 workflows are implemented for:
+Production-ready workflows are implemented for:
 
 - Dashboard
 - Documents
@@ -20,12 +20,9 @@ Production-ready PHASE 1 and PHASE 2 workflows are implemented for:
 - Management Review
 - KPIs
 - Training
-
-The remaining modules still exist in the repo, but they are not yet completed to the same standard:
-
 - Reports
-- Users enhancements
-- Settings enhancements
+- Users
+- Settings
 
 ## Core capabilities
 
@@ -310,9 +307,36 @@ Manual test:
 5. Mark one assignment complete.
 6. Verify course completion updates immediately.
 
+### Settings
+
+Implemented:
+
+- Configure tenant organization details including company name, industry, and location
+- Upload an organization logo through the shared attachment workflow
+- Manage simple role capabilities for `Admin`, `Manager`, and `User`
+- Configure document types, numbering prefix, and version format
+- Configure risk likelihood and severity scales
+- Configure KPI threshold defaults
+- Enable or disable tenant notifications
+- Apply settings to downstream behavior where relevant:
+  - document create uses configured type options and numbering prefix
+  - risk create/edit uses configured likelihood and severity scales
+  - KPI create uses configured threshold defaults
+  - document approval and CAPA closure permissions respect role capability settings
+
+Manual test:
+
+1. Open `Settings`.
+2. Update `Organization` and save.
+3. Open `Document Settings`, change the prefix or types, save, then open `Documents > New` and confirm the new defaults appear.
+4. Open `Risk Settings`, switch the scale to `1-10`, save, then open `Risks > New` and confirm the assessment fields support the updated range.
+5. Open `KPI Settings`, change thresholds, save, then open `KPIs > New` and confirm the create form uses the updated defaults.
+6. Open `Users & Roles`, change a role capability, save, and confirm the change persists after refresh.
+7. Refresh `Settings` and verify all saved values persist.
+
 ## Verification completed
 
-The following were executed successfully on March 18, 2026:
+The following were executed successfully on March 19, 2026:
 
 - `npm run prisma:generate --workspace apps/api`
 - `npm run build`
@@ -328,6 +352,8 @@ Verified against the running stack:
 - Management review create, linked input persistence, detail fetch, and action creation
 - KPI create, reading history persistence, trend calculation, and status calculation
 - Training create, assignment create, completion update, and detail fetch
+- Settings config read, section save, role capability update, and persistence after refresh
+- Settings-driven document type/prefix, risk scale, and KPI threshold behavior
 - Dashboard summary reflects PHASE 1 and PHASE 2 records and open actions
 - `http://localhost:8080` serves the Angular app
 - `http://localhost:8080/api/docs` still serves Swagger

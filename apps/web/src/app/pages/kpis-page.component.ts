@@ -16,6 +16,14 @@ type UserOption = {
   email: string;
 };
 
+type SettingsConfig = {
+  kpi: {
+    greenThreshold: number;
+    warningThreshold: number;
+    breachThreshold: number;
+  };
+};
+
 type KpiReading = {
   id: string;
   value: number;
@@ -231,6 +239,7 @@ export class KpisPageComponent {
   protected readonly mode = signal<PageMode>('list');
   protected readonly kpis = signal<KpiRecord[]>([]);
   protected readonly users = signal<UserOption[]>([]);
+  protected readonly settings = signal<SettingsConfig | null>(null);
   protected readonly selectedId = signal<string | null>(null);
   protected readonly selectedKpi = signal<KpiRecord | null>(null);
   protected readonly loading = signal(false);
@@ -257,6 +266,7 @@ export class KpisPageComponent {
 
   constructor() {
     this.loadUsers();
+    this.loadSettings();
     this.route.data.subscribe((data) => {
       this.mode.set((data['mode'] as PageMode) || 'list');
       this.handleRoute(this.route.snapshot.paramMap);
@@ -380,8 +390,8 @@ export class KpisPageComponent {
       name: '',
       description: '',
       ownerId: '',
-      target: 0,
-      warningThreshold: 0,
+      target: this.defaultTarget(),
+      warningThreshold: this.defaultWarningThreshold(),
       unit: '',
       periodLabel: '',
       direction: 'AT_LEAST'
@@ -431,8 +441,30 @@ export class KpisPageComponent {
     this.api.get<UserOption[]>('users').subscribe((users) => this.users.set(users));
   }
 
+  private loadSettings() {
+    this.api.get<SettingsConfig>('settings/config').subscribe({
+      next: (settings) => {
+        this.settings.set(settings);
+        if (this.mode() === 'create') {
+          this.kpiForm.patchValue({
+            target: this.defaultTarget(),
+            warningThreshold: this.defaultWarningThreshold()
+          }, { emitEvent: false });
+        }
+      }
+    });
+  }
+
   private readError(error: HttpErrorResponse, fallback: string) {
     const message = error.error?.message;
     return Array.isArray(message) ? message.join(', ') : (message as string) || fallback;
+  }
+
+  protected defaultTarget() {
+    return this.settings()?.kpi.greenThreshold ?? 100;
+  }
+
+  protected defaultWarningThreshold() {
+    return this.settings()?.kpi.warningThreshold ?? 90;
   }
 }

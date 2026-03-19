@@ -26,6 +26,8 @@ const defaultPermissions = [
   'users.write',
   'settings.read',
   'settings.write',
+  'documents.approve',
+  'capa.close',
   'attachments.write',
   'action-items.write'
 ];

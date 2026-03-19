@@ -35,6 +35,7 @@ export class RisksService {
 
   async create(tenantId: string, actorId: string, dto: CreateRiskDto) {
     await this.ensureOwnerBelongsToTenant(tenantId, dto.ownerId);
+    await this.assertScaleBounds(tenantId, dto.likelihood, dto.severity);
 
     const risk = await this.prisma.risk.create({
       data: {
@@ -78,6 +79,7 @@ export class RisksService {
 
     const nextStatus = dto.status ?? existing.status;
     this.assertValidStatusTransition(existing.status, nextStatus);
+    await this.assertScaleBounds(tenantId, dto.likelihood ?? existing.likelihood, dto.severity ?? existing.severity);
 
     const risk = await this.prisma.risk.update({
       where: { id },
@@ -144,6 +146,24 @@ export class RisksService {
 
     if (!RISK_STATUS_FLOW[current].includes(next)) {
       throw new BadRequestException(`Invalid risk status transition: ${current} -> ${next}`);
+    }
+  }
+
+  private async assertScaleBounds(tenantId: string, likelihood: number, severity: number) {
+    const settings = await this.prisma.tenantSetting.findMany({
+      where: {
+        tenantId,
+        key: { in: ['risk.likelihoodScale', 'risk.severityScale'] }
+      }
+    });
+    const map = new Map(settings.map((item) => [item.key, item.value]));
+    const likelihoodMax = Number(map.get('risk.likelihoodScale') ?? 5);
+    const severityMax = Number(map.get('risk.severityScale') ?? 5);
+
+    if (likelihood < 1 || likelihood > likelihoodMax || severity < 1 || severity > severityMax) {
+      throw new BadRequestException(
+        `Likelihood must be between 1 and ${likelihoodMax}, and severity must be between 1 and ${severityMax}`
+      );
     }
   }
 
