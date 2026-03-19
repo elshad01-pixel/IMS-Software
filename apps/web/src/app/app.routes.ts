@@ -3,9 +3,9 @@ import { authGuard } from './core/auth.guard';
 import { LoginPageComponent } from './pages/login-page.component';
 import { ShellComponent } from './layout/shell.component';
 import { DashboardPageComponent } from './pages/dashboard-page.component';
-import { DocumentsPageComponent } from './pages/documents-page.component';
-import { RisksPageComponent } from './pages/risks-page.component';
-import { CapaPageComponent } from './pages/capa-page.component';
+import { CapaCreatePageComponent, CapaDetailPageComponent, CapaEditPageComponent, CapaRegisterPageComponent } from './pages/capa-page.component';
+import { DocumentCreatePageComponent, DocumentDetailPageComponent, DocumentEditPageComponent, DocumentsRegisterPageComponent } from './pages/documents-page.component';
+import { RiskCreatePageComponent, RiskDetailPageComponent, RiskEditPageComponent, RisksRegisterPageComponent } from './pages/risks-page.component';
 import { AuditsPageComponent } from './pages/audits-page.component';
 import { ManagementReviewPageComponent } from './pages/management-review-page.component';
 import { KpisPageComponent } from './pages/kpis-page.component';
@@ -23,18 +23,18 @@ export const appRoutes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       { path: 'dashboard', component: DashboardPageComponent },
-      { path: 'documents', component: DocumentsPageComponent, data: { mode: 'list' } },
-      { path: 'documents/new', component: DocumentsPageComponent, data: { mode: 'create' } },
-      { path: 'documents/:id', component: DocumentsPageComponent, data: { mode: 'detail' } },
-      { path: 'documents/:id/edit', component: DocumentsPageComponent, data: { mode: 'edit' } },
-      { path: 'risks', component: RisksPageComponent, data: { mode: 'list' } },
-      { path: 'risks/new', component: RisksPageComponent, data: { mode: 'create' } },
-      { path: 'risks/:id', component: RisksPageComponent, data: { mode: 'detail' } },
-      { path: 'risks/:id/edit', component: RisksPageComponent, data: { mode: 'edit' } },
-      { path: 'capa', component: CapaPageComponent, data: { mode: 'list' } },
-      { path: 'capa/new', component: CapaPageComponent, data: { mode: 'create' } },
-      { path: 'capa/:id', component: CapaPageComponent, data: { mode: 'detail' } },
-      { path: 'capa/:id/edit', component: CapaPageComponent, data: { mode: 'edit' } },
+      { path: 'documents', component: DocumentsRegisterPageComponent },
+      { path: 'documents/new', component: DocumentCreatePageComponent },
+      { path: 'documents/:id', component: DocumentDetailPageComponent },
+      { path: 'documents/:id/edit', component: DocumentEditPageComponent },
+      { path: 'risks', component: RisksRegisterPageComponent },
+      { path: 'risks/new', component: RiskCreatePageComponent },
+      { path: 'risks/:id', component: RiskDetailPageComponent },
+      { path: 'risks/:id/edit', component: RiskEditPageComponent },
+      { path: 'capa', component: CapaRegisterPageComponent },
+      { path: 'capa/new', component: CapaCreatePageComponent },
+      { path: 'capa/:id', component: CapaDetailPageComponent },
+      { path: 'capa/:id/edit', component: CapaEditPageComponent },
       { path: 'audits', component: AuditsPageComponent, data: { mode: 'list' } },
       { path: 'audits/new', component: AuditsPageComponent, data: { mode: 'create' } },
       { path: 'audits/:id', component: AuditsPageComponent, data: { mode: 'detail' } },

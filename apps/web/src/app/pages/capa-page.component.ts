@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
@@ -38,6 +38,7 @@ type CapaRow = {
 };
 
 @Component({
+  selector: 'iso-capa-page',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, RecordWorkItemsComponent],
   template: `
@@ -292,7 +293,9 @@ type CapaRow = {
     }
   `]
 })
-export class CapaPageComponent {
+export class CapaPageComponent implements OnInit, OnChanges {
+  @Input() forcedMode: PageMode | null = null;
+
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
@@ -327,13 +330,25 @@ export class CapaPageComponent {
     status: ['OPEN' as CapaStatus, Validators.required]
   });
 
-  constructor() {
+  ngOnInit() {
     this.loadUsers();
-    this.route.data.subscribe((data) => {
-      this.mode.set((data['mode'] as PageMode) || 'list');
+    if (this.forcedMode) {
+      this.mode.set(this.forcedMode);
       this.handleRoute(this.route.snapshot.paramMap);
-    });
+    } else {
+      this.route.data.subscribe((data) => {
+        this.mode.set((data['mode'] as PageMode) || 'list');
+        this.handleRoute(this.route.snapshot.paramMap);
+      });
+    }
     this.route.paramMap.subscribe((params) => this.handleRoute(params));
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['forcedMode'] && this.forcedMode) {
+      this.mode.set(this.forcedMode);
+      this.handleRoute(this.route.snapshot.paramMap);
+    }
   }
 
   protected pageTitle() {
@@ -525,3 +540,31 @@ export class CapaPageComponent {
     return Array.isArray(message) ? message.join(', ') : (message as string) || fallback;
   }
 }
+
+@Component({
+  standalone: true,
+  imports: [CapaPageComponent],
+  template: `<iso-capa-page [forcedMode]="'list'" />`
+})
+export class CapaRegisterPageComponent {}
+
+@Component({
+  standalone: true,
+  imports: [CapaPageComponent],
+  template: `<iso-capa-page [forcedMode]="'create'" />`
+})
+export class CapaCreatePageComponent {}
+
+@Component({
+  standalone: true,
+  imports: [CapaPageComponent],
+  template: `<iso-capa-page [forcedMode]="'detail'" />`
+})
+export class CapaDetailPageComponent {}
+
+@Component({
+  standalone: true,
+  imports: [CapaPageComponent],
+  template: `<iso-capa-page [forcedMode]="'edit'" />`
+})
+export class CapaEditPageComponent {}
