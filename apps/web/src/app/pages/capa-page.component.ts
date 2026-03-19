@@ -4,6 +4,7 @@ import { Component, Input, OnChanges, OnInit, SimpleChanges, inject, signal } fr
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
+import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
 
@@ -40,7 +41,7 @@ type CapaRow = {
 @Component({
   selector: 'iso-capa-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, RecordWorkItemsComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, RecordWorkItemsComponent, AttachmentPanelComponent],
   template: `
     <section class="page-grid">
       <iso-page-header
@@ -228,6 +229,7 @@ type CapaRow = {
               <small>Review due dates, closure evidence, and linked actions before moving to verified or closed.</small>
             </div>
           </div>
+          <iso-attachment-panel *ngIf="selectedId()" [sourceType]="'capa'" [sourceId]="selectedId()" />
           <iso-record-work-items *ngIf="selectedId()" [sourceType]="'capa'" [sourceId]="selectedId()" />
         </section>
       </section>
@@ -279,7 +281,10 @@ type CapaRow = {
           </section>
         </div>
 
-        <iso-record-work-items [sourceType]="'capa'" [sourceId]="selectedId()" />
+        <div class="page-stack">
+          <iso-attachment-panel [sourceType]="'capa'" [sourceId]="selectedId()" />
+          <iso-record-work-items [sourceType]="'capa'" [sourceId]="selectedId()" />
+        </div>
       </section>
     </section>
   `,

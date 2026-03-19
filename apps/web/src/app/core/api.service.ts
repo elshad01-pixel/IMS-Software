@@ -24,4 +24,8 @@ export class ApiService {
   postFormData<T>(path: string, formData: FormData) {
     return this.http.post<T>(`/api/${path}`, formData);
   }
+
+  getBlob(path: string) {
+    return this.http.get(`/api/${path}`, { responseType: 'blob' });
+  }
 }

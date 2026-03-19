@@ -20,14 +20,6 @@ type ActionItem = {
   owner?: UserOption | null;
 };
 
-type Attachment = {
-  id: string;
-  fileName: string;
-  mimeType: string;
-  size: number;
-  createdAt: string;
-};
-
 @Component({
   selector: 'iso-record-work-items',
   standalone: true,
@@ -93,40 +85,6 @@ type Attachment = {
             >
               {{ item.status === 'DONE' ? 'Done' : 'Complete' }}
             </button>
-          </li>
-        </ul>
-      </div>
-
-      <div class="card panel">
-        <div class="panel-head">
-          <div>
-            <span class="pill">Attachments</span>
-            <h3>Evidence</h3>
-            <p>Upload supporting records directly to this item.</p>
-          </div>
-        </div>
-
-        <form class="stack" (ngSubmit)="uploadAttachment()">
-          <label>
-            <span>File</span>
-            <input type="file" (change)="onFileSelected($event)">
-          </label>
-          <button type="submit" [disabled]="!selectedFile() || attachmentsSaving()">
-            {{ attachmentsSaving() ? 'Uploading...' : 'Upload file' }}
-          </button>
-          <p class="feedback" [class.error]="attachmentsError()">
-            {{ attachmentsError() || attachmentsMessage() }}
-          </p>
-        </form>
-
-        <div class="panel-state" *ngIf="attachmentsLoading()">Loading attachments...</div>
-        <ul class="list" *ngIf="!attachmentsLoading()">
-          <li *ngFor="let item of attachments()">
-            <div>
-              <strong>{{ item.fileName }}</strong>
-              <p>{{ item.mimeType }} | {{ formatFileSize(item.size) }}</p>
-              <small>{{ item.createdAt | date:'medium' }}</small>
-            </div>
           </li>
         </ul>
       </div>
@@ -247,16 +205,10 @@ export class RecordWorkItemsComponent implements OnChanges {
 
   protected readonly users = signal<UserOption[]>([]);
   protected readonly actionItems = signal<ActionItem[]>([]);
-  protected readonly attachments = signal<Attachment[]>([]);
-  protected readonly selectedFile = signal<File | null>(null);
   protected readonly actionsLoading = signal(false);
   protected readonly actionsSaving = signal(false);
-  protected readonly attachmentsLoading = signal(false);
-  protected readonly attachmentsSaving = signal(false);
   protected readonly actionsMessage = signal('');
   protected readonly actionsError = signal('');
-  protected readonly attachmentsMessage = signal('');
-  protected readonly attachmentsError = signal('');
 
   protected readonly actionForm = this.fb.nonNullable.group({
     title: ['', Validators.required],
@@ -273,7 +225,7 @@ export class RecordWorkItemsComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if ((changes['sourceId'] || changes['sourceType']) && this.sourceId) {
-      this.reload();
+      this.reloadActions();
     }
   }
 
@@ -324,54 +276,6 @@ export class RecordWorkItemsComponent implements OnChanges {
     });
   }
 
-  onFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.selectedFile.set(input.files?.[0] ?? null);
-  }
-
-  uploadAttachment() {
-    if (!this.sourceId || !this.selectedFile()) {
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', this.selectedFile() as File);
-
-    this.attachmentsSaving.set(true);
-    this.attachmentsMessage.set('');
-    this.attachmentsError.set('');
-
-    this.api.postFormData(`attachments/${this.sourceType}/${this.sourceId}`, formData).subscribe({
-      next: () => {
-        this.attachmentsSaving.set(false);
-        this.attachmentsMessage.set('Attachment uploaded.');
-        this.selectedFile.set(null);
-        this.reloadAttachments();
-      },
-      error: (error: HttpErrorResponse) => {
-        this.attachmentsSaving.set(false);
-        this.attachmentsError.set(this.readError(error, 'Attachment upload failed.'));
-      }
-    });
-  }
-
-  protected formatFileSize(size: number) {
-    if (size < 1024) {
-      return `${size} B`;
-    }
-
-    if (size < 1024 * 1024) {
-      return `${(size / 1024).toFixed(1)} KB`;
-    }
-
-    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-  }
-
-  private reload() {
-    this.reloadActions();
-    this.reloadAttachments();
-  }
-
   private reloadActions() {
     if (!this.sourceId) {
       this.actionItems.set([]);
@@ -391,25 +295,6 @@ export class RecordWorkItemsComponent implements OnChanges {
           this.actionsError.set(this.readError(error, 'Action items could not be loaded.'));
         }
       });
-  }
-
-  private reloadAttachments() {
-    if (!this.sourceId) {
-      this.attachments.set([]);
-      return;
-    }
-
-    this.attachmentsLoading.set(true);
-    this.api.get<Attachment[]>(`attachments/${this.sourceType}/${this.sourceId}`).subscribe({
-      next: (items) => {
-        this.attachmentsLoading.set(false);
-        this.attachments.set(items);
-      },
-      error: (error: HttpErrorResponse) => {
-        this.attachmentsLoading.set(false);
-        this.attachmentsError.set(this.readError(error, 'Attachments could not be loaded.'));
-      }
-    });
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

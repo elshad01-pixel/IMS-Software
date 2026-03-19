@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Client } from 'minio';
 import { randomUUID } from 'node:crypto';
+import { Readable } from 'node:stream';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
@@ -31,6 +32,32 @@ export class AttachmentsService {
       where: { tenantId, sourceType, sourceId },
       orderBy: { createdAt: 'desc' }
     });
+  }
+
+  async download(tenantId: string, actorId: string, attachmentId: string) {
+    const attachment = await this.prisma.attachment.findFirst({
+      where: { id: attachmentId, tenantId }
+    });
+
+    if (!attachment) {
+      throw new NotFoundException('Attachment not found.');
+    }
+
+    const objectStream = await this.minioClient.getObject(this.bucket, attachment.objectKey);
+
+    await this.auditLogsService.create({
+      tenantId,
+      actorId,
+      action: 'attachment.downloaded',
+      entityType: attachment.sourceType,
+      entityId: attachment.sourceId,
+      metadata: { attachmentId: attachment.id, fileName: attachment.fileName }
+    });
+
+    return {
+      attachment,
+      stream: objectStream as Readable
+    };
   }
 
   async upload(
