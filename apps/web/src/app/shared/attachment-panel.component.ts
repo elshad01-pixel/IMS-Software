@@ -25,21 +25,21 @@ type Attachment = {
         </div>
       </div>
 
-      <form class="stack" (ngSubmit)="uploadAttachment()">
+      <div class="stack">
         <label class="dropzone">
           <span>Select file</span>
           <input type="file" (change)="onFileSelected($event)">
           <small>{{ selectedFile()?.name || 'Choose a file to attach' }}</small>
         </label>
         <div class="button-row">
-          <button type="submit" [disabled]="!selectedFile() || saving()">
+          <button type="button" [disabled]="!selectedFile() || saving()" (click)="uploadAttachment()">
             {{ saving() ? 'Uploading...' : 'Upload file' }}
           </button>
         </div>
         <p class="feedback" [class.error]="error()" [class.success]="message() && !error()">
           {{ error() || message() }}
         </p>
-      </form>
+      </div>
 
       <div class="panel-state" *ngIf="loading()">Loading attachments...</div>
       <div class="empty-state top-space" *ngIf="!loading() && !attachments().length">No attachments yet.</div>
