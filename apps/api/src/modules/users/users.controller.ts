@@ -22,6 +22,18 @@ export class UsersController {
     return this.usersService.list(tenantId);
   }
 
+  @Get('roles')
+  @Permissions('users.read')
+  roles(@CurrentTenant() tenantId: string) {
+    return this.usersService.roles(tenantId);
+  }
+
+  @Get(':id')
+  @Permissions('users.read')
+  detail(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.usersService.detail(tenantId, id);
+  }
+
   @Post()
   @Permissions('users.write')
   create(

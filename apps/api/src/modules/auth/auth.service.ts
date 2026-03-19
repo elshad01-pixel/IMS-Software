@@ -30,6 +30,36 @@ const defaultPermissions = [
   'action-items.write'
 ];
 
+const systemRoleDefinitions = [
+  {
+    name: 'Admin',
+    description: 'Full tenant administration and configuration access',
+    permissions: defaultPermissions
+  },
+  {
+    name: 'Manager',
+    description: 'Operational management access without full system control',
+    permissions: defaultPermissions.filter((permission) => !['users.write', 'settings.write'].includes(permission))
+  },
+  {
+    name: 'User',
+    description: 'Basic operational access with read-focused permissions',
+    permissions: [
+      'dashboard.read',
+      'documents.read',
+      'risks.read',
+      'capa.read',
+      'audits.read',
+      'management-review.read',
+      'kpis.read',
+      'training.read',
+      'reports.read',
+      'attachments.write',
+      'action-items.write'
+    ]
+  }
+];
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -60,24 +90,31 @@ export class AuthService {
     const tenant = await this.prisma.tenant.create({
       data: {
         name: input.companyName,
-        slug: input.tenantSlug,
-        roles: {
-          create: {
-            name: 'Administrator',
-            description: 'Tenant administrator',
-            isSystem: true,
-            permissions: {
-              create: permissions.map((permission) => ({
-                permissionId: permission.id
-              }))
-            }
-          }
-        }
-      },
-      include: { roles: true }
+        slug: input.tenantSlug
+      }
     });
 
-    const role = tenant.roles[0];
+    const roles = await Promise.all(
+      systemRoleDefinitions.map((roleDefinition) =>
+        this.prisma.role.create({
+          data: {
+            tenantId: tenant.id,
+            name: roleDefinition.name,
+            description: roleDefinition.description,
+            isSystem: true,
+            permissions: {
+              create: permissions
+                .filter((permission) => roleDefinition.permissions.includes(permission.key))
+                .map((permission) => ({
+                  permissionId: permission.id
+                }))
+            }
+          }
+        })
+      )
+    );
+
+    const role = roles.find((entry) => entry.name === 'Admin');
     const user = await this.prisma.user.create({
       data: {
         tenantId: tenant.id,
@@ -85,7 +122,7 @@ export class AuthService {
         firstName: input.firstName,
         lastName: input.lastName,
         passwordHash,
-        roleId: role.id
+        roleId: role?.id
       }
     });
 
@@ -96,7 +133,7 @@ export class AuthService {
       ]
     });
 
-    return this.issueToken(user.id, tenant.id, user.email, role.id);
+    return this.issueToken(user.id, tenant.id, user.email, role?.id);
   }
 
   async login(input: LoginDto) {

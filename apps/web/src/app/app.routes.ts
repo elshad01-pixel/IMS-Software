@@ -10,7 +10,7 @@ import { AuditsPageComponent } from './pages/audits-page.component';
 import { ManagementReviewPageComponent } from './pages/management-review-page.component';
 import { KpisPageComponent } from './pages/kpis-page.component';
 import { TrainingPageComponent } from './pages/training-page.component';
-import { UsersPageComponent } from './pages/users-page.component';
+import { UserCreatePageComponent, UserDetailPageComponent, UserEditPageComponent, UsersRegisterPageComponent } from './pages/users-page.component';
 import { SettingsPageComponent } from './pages/settings-page.component';
 import { PlaceholderPageComponent } from './pages/placeholder-page.component';
 
@@ -52,7 +52,10 @@ export const appRoutes: Routes = [
       { path: 'training/:id', component: TrainingPageComponent, data: { mode: 'detail' } },
       { path: 'training/:id/edit', component: TrainingPageComponent, data: { mode: 'edit' } },
       { path: 'reports', component: PlaceholderPageComponent, data: { title: 'Reports', description: 'Generate cross-module operational reports.' } },
-      { path: 'users', component: UsersPageComponent },
+      { path: 'users', component: UsersRegisterPageComponent },
+      { path: 'users/new', component: UserCreatePageComponent },
+      { path: 'users/:id', component: UserDetailPageComponent },
+      { path: 'users/:id/edit', component: UserEditPageComponent },
       { path: 'settings', component: SettingsPageComponent }
     ]
   },

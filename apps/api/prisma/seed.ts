@@ -36,6 +36,36 @@ const permissionKeys = [
   'action-items.write'
 ];
 
+const systemRoleDefinitions = [
+  {
+    name: 'Admin',
+    description: 'Full tenant administration and configuration access',
+    permissions: permissionKeys
+  },
+  {
+    name: 'Manager',
+    description: 'Operational management access without full system control',
+    permissions: permissionKeys.filter((permission) => !['users.write', 'settings.write'].includes(permission))
+  },
+  {
+    name: 'User',
+    description: 'Basic operational access with read-focused permissions',
+    permissions: [
+      'dashboard.read',
+      'documents.read',
+      'risks.read',
+      'capa.read',
+      'audits.read',
+      'management-review.read',
+      'kpis.read',
+      'training.read',
+      'reports.read',
+      'attachments.write',
+      'action-items.write'
+    ]
+  }
+];
+
 async function main() {
   for (const key of permissionKeys) {
     await prisma.permission.upsert({
@@ -54,38 +84,64 @@ async function main() {
     }
   });
 
-  const adminRole = await prisma.role.upsert({
+  const legacyAdminRole = await prisma.role.findFirst({
     where: {
-      tenantId_name: {
-        tenantId: tenant.id,
-        name: 'Administrator'
-      }
-    },
-    update: {},
-    create: {
       tenantId: tenant.id,
-      name: 'Administrator',
-      description: 'System administrator',
-      isSystem: true
+      name: 'Administrator'
     }
   });
 
-  const permissions = await prisma.permission.findMany();
-
-  for (const permission of permissions) {
-    await prisma.rolePermission.upsert({
-      where: {
-        roleId_permissionId: {
-          roleId: adminRole.id,
-          permissionId: permission.id
-        }
-      },
-      update: {},
-      create: {
-        roleId: adminRole.id,
-        permissionId: permission.id
+  if (legacyAdminRole) {
+    await prisma.role.update({
+      where: { id: legacyAdminRole.id },
+      data: {
+        name: 'Admin',
+        description: 'Full tenant administration and configuration access',
+        isSystem: true
       }
     });
+  }
+
+  const permissions = await prisma.permission.findMany();
+  const roleIds = new Map<string, string>();
+
+  for (const roleDefinition of systemRoleDefinitions) {
+    const role = await prisma.role.upsert({
+      where: {
+        tenantId_name: {
+          tenantId: tenant.id,
+          name: roleDefinition.name
+        }
+      },
+      update: {
+        description: roleDefinition.description,
+        isSystem: true
+      },
+      create: {
+        tenantId: tenant.id,
+        name: roleDefinition.name,
+        description: roleDefinition.description,
+        isSystem: true
+      }
+    });
+
+    roleIds.set(roleDefinition.name, role.id);
+
+    for (const permission of permissions.filter((entry) => roleDefinition.permissions.includes(entry.key))) {
+      await prisma.rolePermission.upsert({
+        where: {
+          roleId_permissionId: {
+            roleId: role.id,
+            permissionId: permission.id
+          }
+        },
+        update: {},
+        create: {
+          roleId: role.id,
+          permissionId: permission.id
+        }
+      });
+    }
   }
 
   const passwordHash = await hash('ChangeMe123!', 10);
@@ -98,7 +154,7 @@ async function main() {
       }
     },
     update: {
-      roleId: adminRole.id,
+      roleId: roleIds.get('Admin'),
       passwordHash
     },
     create: {
@@ -107,14 +163,14 @@ async function main() {
       firstName: 'Demo',
       lastName: 'Admin',
       passwordHash,
-      roleId: adminRole.id
+      roleId: roleIds.get('Admin')
     }
   });
 
   const additionalUsers = [
-    { email: 'quality.manager@demo.local', firstName: 'Quality', lastName: 'Manager' },
-    { email: 'internal.auditor@demo.local', firstName: 'Internal', lastName: 'Auditor' },
-    { email: 'ops.supervisor@demo.local', firstName: 'Operations', lastName: 'Supervisor' }
+    { email: 'quality.manager@demo.local', firstName: 'Quality', lastName: 'Manager', roleName: 'Manager' },
+    { email: 'internal.auditor@demo.local', firstName: 'Internal', lastName: 'Auditor', roleName: 'User' },
+    { email: 'ops.supervisor@demo.local', firstName: 'Operations', lastName: 'Supervisor', roleName: 'Manager' }
   ];
 
   for (const user of additionalUsers) {
@@ -126,7 +182,7 @@ async function main() {
         }
       },
       update: {
-        roleId: adminRole.id,
+        roleId: roleIds.get(user.roleName),
         passwordHash
       },
       create: {
@@ -135,7 +191,7 @@ async function main() {
         firstName: user.firstName,
         lastName: user.lastName,
         passwordHash,
-        roleId: adminRole.id
+        roleId: roleIds.get(user.roleName)
       }
     });
   }
