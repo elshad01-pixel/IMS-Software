@@ -53,8 +53,9 @@ import { AuthStore } from '../core/auth.store';
       display: grid;
       grid-template-columns: 292px minmax(0, 1fr);
       gap: 1.25rem;
-      min-height: 100vh;
+      height: 100vh;
       padding: 1.1rem;
+      overflow: hidden;
     }
 
     .sidebar {
@@ -69,6 +70,7 @@ import { AuthStore } from '../core/auth.store';
         radial-gradient(circle at top, rgba(184, 132, 51, 0.16), transparent 28%),
         linear-gradient(180deg, rgba(23, 55, 40, 0.985), rgba(21, 44, 33, 0.985));
       color: #f9f4ea;
+      overflow: hidden;
     }
 
     .brand {
@@ -119,6 +121,10 @@ import { AuthStore } from '../core/auth.store';
       display: grid;
       gap: 0.35rem;
       align-content: start;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+      margin-right: -0.25rem;
     }
 
     nav a {
@@ -176,6 +182,9 @@ import { AuthStore } from '../core/auth.store';
     .main {
       min-width: 0;
       padding: 0.15rem 0;
+      overflow-y: auto;
+      max-height: calc(100vh - 2.2rem);
+      padding-right: 0.15rem;
     }
 
     .eyebrow {
@@ -188,15 +197,24 @@ import { AuthStore } from '../core/auth.store';
     @media (max-width: 960px) {
       .shell {
         grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
       }
 
       .sidebar {
         position: static;
         height: auto;
+        overflow: visible;
       }
 
       nav a:hover {
         transform: none;
+      }
+
+      nav,
+      .main {
+        overflow: visible;
+        max-height: none;
       }
     }
   `]

@@ -120,6 +120,30 @@ export class DashboardService {
         })
       ]);
 
+    const riskDistribution = {
+      low: await this.prisma.risk.count({
+        where: {
+          tenantId,
+          status: { not: RiskStatus.CLOSED },
+          score: { lt: 8 }
+        }
+      }),
+      medium: await this.prisma.risk.count({
+        where: {
+          tenantId,
+          status: { not: RiskStatus.CLOSED },
+          score: { gte: 8, lt: 15 }
+        }
+      }),
+      high: await this.prisma.risk.count({
+        where: {
+          tenantId,
+          status: { not: RiskStatus.CLOSED },
+          score: { gte: 15 }
+        }
+      })
+    };
+
     return {
       metrics: {
         documents,
@@ -143,6 +167,7 @@ export class DashboardService {
         inTreatment: await this.prisma.risk.count({ where: { tenantId, status: RiskStatus.IN_TREATMENT } }),
         mitigated: await this.prisma.risk.count({ where: { tenantId, status: RiskStatus.MITIGATED } })
       },
+      riskDistribution,
       capaSummary: {
         investigating: await this.prisma.capa.count({ where: { tenantId, status: CapaStatus.INVESTIGATING } }),
         inProgress: await this.prisma.capa.count({ where: { tenantId, status: CapaStatus.IN_PROGRESS } }),
