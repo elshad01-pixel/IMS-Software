@@ -11,8 +11,8 @@ import { ManagementReviewPageComponent } from './pages/management-review-page.co
 import { KpisPageComponent } from './pages/kpis-page.component';
 import { TrainingPageComponent } from './pages/training-page.component';
 import { UserCreatePageComponent, UserDetailPageComponent, UserEditPageComponent, UsersRegisterPageComponent } from './pages/users-page.component';
+import { ReportsPageComponent } from './pages/reports-page.component';
 import { SettingsPageComponent } from './pages/settings-page.component';
-import { PlaceholderPageComponent } from './pages/placeholder-page.component';
 
 export const appRoutes: Routes = [
   { path: 'login', component: LoginPageComponent },
@@ -51,7 +51,7 @@ export const appRoutes: Routes = [
       { path: 'training/new', component: TrainingPageComponent, data: { mode: 'create' } },
       { path: 'training/:id', component: TrainingPageComponent, data: { mode: 'detail' } },
       { path: 'training/:id/edit', component: TrainingPageComponent, data: { mode: 'edit' } },
-      { path: 'reports', component: PlaceholderPageComponent, data: { title: 'Reports', description: 'Generate cross-module operational reports.' } },
+      { path: 'reports', component: ReportsPageComponent },
       { path: 'users', component: UsersRegisterPageComponent },
       { path: 'users/new', component: UserCreatePageComponent },
       { path: 'users/:id', component: UserDetailPageComponent },

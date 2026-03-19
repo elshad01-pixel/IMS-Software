@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -27,5 +27,9 @@ export class ApiService {
 
   getBlob(path: string) {
     return this.http.get(`/api/${path}`, { responseType: 'blob' });
+  }
+
+  getBlobResponse(path: string) {
+    return this.http.get(`/api/${path}`, { observe: 'response', responseType: 'blob' });
   }
 }
