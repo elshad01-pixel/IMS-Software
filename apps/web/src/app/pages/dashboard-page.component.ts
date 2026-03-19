@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
+import { PageHeaderComponent } from '../shared/page-header.component';
 
 type DashboardResponse = {
   metrics: Record<string, number>;
@@ -28,158 +29,205 @@ type DashboardResponse = {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, PageHeaderComponent],
   template: `
     <section class="page-grid">
-      <div class="card page-head">
-        <div>
-          <span class="pill">Dashboard</span>
-          <h2>Integrated management system overview</h2>
-          <p>Track PHASE 1 and PHASE 2 operations across controlled documents, risks, CAPAs, audits, reviews, KPIs, training, and actions.</p>
-        </div>
-      </div>
+      <iso-page-header
+        [label]="'Dashboard'"
+        [title]="'Integrated management overview'"
+        [description]="'A quieter operational view of document control, risks, CAPA, audits, reviews, KPIs, training, and actions.'"
+        [breadcrumbs]="[{ label: 'Dashboard' }]"
+      />
 
-      <div class="metrics">
-        <article class="card metric" *ngFor="let item of metricEntries()">
+      <section class="metrics-grid">
+        <article class="card metric-card" *ngFor="let item of metricEntries()">
           <span>{{ item.label }}</span>
           <strong>{{ item.value }}</strong>
         </article>
-      </div>
+      </section>
 
-      <div class="panels">
-        <section class="card panel">
-          <div class="section-title">Risk summary</div>
-          <div class="summary-grid">
-            <article><span>Open</span><strong>{{ data().riskSummary.open }}</strong></article>
-            <article><span>In treatment</span><strong>{{ data().riskSummary.inTreatment }}</strong></article>
-            <article><span>Mitigated</span><strong>{{ data().riskSummary.mitigated }}</strong></article>
-          </div>
-          <a routerLink="/risks" class="link">Open risk register</a>
-        </section>
+      <section class="page-columns">
+        <div class="page-stack">
+          <section class="card panel-card">
+            <div class="section-head">
+              <div>
+                <h3>Operational summaries</h3>
+                <p class="subtle">Key operational counts without forcing all modules into one crowded canvas.</p>
+              </div>
+            </div>
 
-        <section class="card panel">
-          <div class="section-title">CAPA summary</div>
-          <div class="summary-grid">
-            <article><span>Investigating</span><strong>{{ data().capaSummary.investigating }}</strong></article>
-            <article><span>In progress</span><strong>{{ data().capaSummary.inProgress }}</strong></article>
-            <article><span>Verified</span><strong>{{ data().capaSummary.verified }}</strong></article>
-          </div>
-          <a routerLink="/capa" class="link">Open CAPA register</a>
-        </section>
+            <div class="detail-grid top-space">
+              <article class="detail-item">
+                <span>Risks in treatment</span>
+                <strong>{{ data().riskSummary.inTreatment }}</strong>
+                <a routerLink="/risks" class="text-link">Open risks</a>
+              </article>
+              <article class="detail-item">
+                <span>Open CAPA work</span>
+                <strong>{{ data().capaSummary.inProgress }}</strong>
+                <a routerLink="/capa" class="text-link">Open CAPA</a>
+              </article>
+              <article class="detail-item">
+                <span>Audits in progress</span>
+                <strong>{{ data().auditSummary.inProgress }}</strong>
+                <a routerLink="/audits" class="text-link">Open audits</a>
+              </article>
+              <article class="detail-item">
+                <span>KPI breaches</span>
+                <strong>{{ data().kpiSummaryCounts.breach }}</strong>
+                <a routerLink="/kpis" class="text-link">Open KPIs</a>
+              </article>
+              <article class="detail-item">
+                <span>Training overdue</span>
+                <strong>{{ data().metrics['overdueTrainingAssignments'] }}</strong>
+                <a routerLink="/training" class="text-link">Open training</a>
+              </article>
+              <article class="detail-item">
+                <span>Open actions</span>
+                <strong>{{ data().metrics['openActionItems'] }}</strong>
+                <a routerLink="/dashboard" class="text-link">Stay on dashboard</a>
+              </article>
+            </div>
+          </section>
 
-        <section class="card panel">
-          <div class="section-title">Audit summary</div>
-          <div class="summary-grid">
-            <article><span>Planned</span><strong>{{ data().auditSummary.planned }}</strong></article>
-            <article><span>In progress</span><strong>{{ data().auditSummary.inProgress }}</strong></article>
-            <article><span>Completed</span><strong>{{ data().auditSummary.completed }}</strong></article>
-          </div>
-          <a routerLink="/audits" class="link">Open audits</a>
-        </section>
+          <section class="card panel-card">
+            <div class="section-head">
+              <div>
+                <h3>Open action items</h3>
+                <p class="subtle">Follow-up items across the system with source, owner, and due date.</p>
+              </div>
+            </div>
+            <div class="entity-list top-space">
+              <article class="entity-item" *ngFor="let item of data().actionItems">
+                <strong>{{ item.title }}</strong>
+                <small>
+                  {{ item.sourceType }} | {{ item.status }}
+                  {{ item.owner ? ' | ' + item.owner.firstName + ' ' + item.owner.lastName : '' }}
+                  {{ item.dueDate ? ' | due ' + (item.dueDate | date:'yyyy-MM-dd') : '' }}
+                </small>
+              </article>
+            </div>
+          </section>
+        </div>
 
-        <section class="card panel">
-          <div class="section-title">KPI and training watch</div>
-          <div class="summary-grid">
-            <article><span>KPI watch</span><strong>{{ data().kpiSummaryCounts.watch }}</strong></article>
-            <article><span>KPI breaches</span><strong>{{ data().kpiSummaryCounts.breach }}</strong></article>
-            <article><span>Training overdue</span><strong>{{ data().metrics['overdueTrainingAssignments'] }}</strong></article>
-          </div>
-          <a routerLink="/kpis" class="link">Open KPIs</a>
-        </section>
+        <div class="page-stack">
+          <section class="card panel-card">
+            <div class="section-head">
+              <div>
+                <h3>Recent records</h3>
+                <p class="subtle">Keep the newest activity readable by module.</p>
+              </div>
+            </div>
 
-        <section class="card panel">
-          <div class="section-title">Recent audits</div>
-          <ul>
-            <li *ngFor="let audit of data().recentAudits">
-              <strong>{{ audit.title }}</strong>
-              <span>{{ audit.status }}{{ audit.scheduledAt ? ' | ' + (audit.scheduledAt | date:'yyyy-MM-dd') : '' }}</span>
-            </li>
-          </ul>
-        </section>
+            <div class="mini-group top-space">
+              <h4>Documents</h4>
+              <div class="entity-list">
+                <article class="entity-item" *ngFor="let document of data().recentDocuments">
+                  <strong>{{ document.code }}</strong>
+                  <small>{{ document.title }} | {{ document.status }} | V{{ document.version }}.{{ document.revision }}</small>
+                </article>
+              </div>
+            </div>
 
-        <section class="card panel">
-          <div class="section-title">KPI summary</div>
-          <ul>
-            <li *ngFor="let item of data().kpiSummary">
-              <strong>{{ item.name }}</strong>
-              <span>{{ item.actual }}{{ item.unit }} vs {{ item.target }}{{ item.unit }} | {{ item.status }}</span>
-            </li>
-          </ul>
-        </section>
+            <div class="mini-group top-space">
+              <h4>CAPA</h4>
+              <div class="entity-list">
+                <article class="entity-item" *ngFor="let capa of data().recentCapas">
+                  <strong>{{ capa.title }}</strong>
+                  <small>{{ capa.status }}{{ capa.dueDate ? ' | ' + (capa.dueDate | date:'yyyy-MM-dd') : '' }}</small>
+                </article>
+              </div>
+            </div>
 
-        <section class="card panel">
-          <div class="section-title">Training summary</div>
-          <ul>
-            <li *ngFor="let item of data().trainingSummary">
-              <strong>{{ item.title }}</strong>
-              <span>{{ item.completion | number:'1.0-0' }}% complete{{ item.dueDate ? ' | ' + (item.dueDate | date:'yyyy-MM-dd') : '' }}</span>
-            </li>
-          </ul>
-        </section>
+            <div class="mini-group top-space">
+              <h4>Audits</h4>
+              <div class="entity-list">
+                <article class="entity-item" *ngFor="let audit of data().recentAudits">
+                  <strong>{{ audit.title }}</strong>
+                  <small>{{ audit.status }}{{ audit.scheduledAt ? ' | ' + (audit.scheduledAt | date:'yyyy-MM-dd') : '' }}</small>
+                </article>
+              </div>
+            </div>
+          </section>
 
-        <section class="card panel">
-          <div class="section-title">High risks</div>
-          <ul>
-            <li *ngFor="let risk of data().highRisks">
-              <strong>{{ risk.title }}</strong>
-              <span>{{ risk.score }} | {{ risk.status }}</span>
-            </li>
-          </ul>
-        </section>
+          <section class="card panel-card">
+            <div class="section-head">
+              <div>
+                <h3>Watch lists</h3>
+                <p class="subtle">Current KPI and training watch points.</p>
+              </div>
+            </div>
 
-        <section class="card panel">
-          <div class="section-title">Recent documents</div>
-          <ul>
-            <li *ngFor="let document of data().recentDocuments">
-              <strong>{{ document.code }}</strong>
-              <span>{{ document.title }} | {{ document.status }} | V{{ document.version }}.{{ document.revision }}</span>
-            </li>
-          </ul>
-        </section>
+            <div class="mini-group top-space">
+              <h4>KPIs</h4>
+              <div class="entity-list">
+                <article class="entity-item" *ngFor="let item of data().kpiSummary">
+                  <strong>{{ item.name }}</strong>
+                  <small>{{ item.actual }}{{ item.unit }} vs {{ item.target }}{{ item.unit }} | {{ item.status }}</small>
+                </article>
+              </div>
+            </div>
 
-        <section class="card panel">
-          <div class="section-title">Recent CAPAs</div>
-          <ul>
-            <li *ngFor="let capa of data().recentCapas">
-              <strong>{{ capa.title }}</strong>
-              <span>{{ capa.status }}{{ capa.dueDate ? ' | ' + (capa.dueDate | date:'yyyy-MM-dd') : '' }}</span>
-            </li>
-          </ul>
-        </section>
+            <div class="mini-group top-space">
+              <h4>Training</h4>
+              <div class="entity-list">
+                <article class="entity-item" *ngFor="let item of data().trainingSummary">
+                  <strong>{{ item.title }}</strong>
+                  <small>{{ item.completion | number:'1.0-0' }}% complete{{ item.dueDate ? ' | ' + (item.dueDate | date:'yyyy-MM-dd') : '' }}</small>
+                </article>
+              </div>
+            </div>
 
-        <section class="card panel">
-          <div class="section-title">Open action items</div>
-          <ul>
-            <li *ngFor="let item of data().actionItems">
-              <strong>{{ item.title }}</strong>
-              <span>
-                {{ item.sourceType }} | {{ item.status }}
-                {{ item.owner ? ' | ' + item.owner.firstName + ' ' + item.owner.lastName : '' }}
-                {{ item.dueDate ? ' | ' + (item.dueDate | date:'yyyy-MM-dd') : '' }}
-              </span>
-            </li>
-          </ul>
-        </section>
-      </div>
+            <div class="mini-group top-space">
+              <h4>High risks</h4>
+              <div class="entity-list">
+                <article class="entity-item" *ngFor="let risk of data().highRisks">
+                  <strong>{{ risk.title }}</strong>
+                  <small>{{ risk.score }} | {{ risk.status }}</small>
+                </article>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
     </section>
   `,
   styles: [`
-    .page-head, .panel { padding: 1.2rem 1.3rem; }
-    .page-head h2 { margin: 0.8rem 0 0.3rem; }
-    .page-head p, .metric span, .summary-grid span, li span { color: var(--muted); }
-    .page-head p { margin: 0; }
-    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
-    .metric { padding: 1rem 1.1rem; }
-    .metric strong { display: block; margin-top: 0.45rem; font-size: 2rem; }
-    .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
-    .section-title { font-weight: 700; margin-bottom: 0.9rem; }
-    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
-    .summary-grid article { border: 1px solid rgba(0,0,0,0.08); border-radius: 16px; padding: 0.8rem; }
-    .summary-grid strong { display: block; margin-top: 0.25rem; font-size: 1.4rem; }
-    .link { display: inline-block; margin-top: 0.9rem; color: var(--brand-strong); text-decoration: none; font-weight: 700; }
-    ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
-    li { display: grid; gap: 0.25rem; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 0.75rem; }
-    @media (max-width: 700px) { .summary-grid { grid-template-columns: 1fr; } }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 1rem;
+    }
+
+    .metric-card {
+      padding: 1rem 1.1rem;
+    }
+
+    .metric-card span {
+      color: var(--muted);
+    }
+
+    .metric-card strong {
+      display: block;
+      margin-top: 0.35rem;
+      font-size: 1.9rem;
+    }
+
+    .top-space {
+      margin-top: 1rem;
+    }
+
+    .mini-group h4 {
+      margin: 0 0 0.6rem;
+    }
+
+    .text-link {
+      display: inline-block;
+      margin-top: 0.45rem;
+      color: var(--brand-strong);
+      text-decoration: none;
+      font-weight: 700;
+    }
   `]
 })
 export class DashboardPageComponent {

@@ -2,8 +2,13 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
+import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
+
+type PageMode = 'list' | 'create' | 'detail' | 'edit';
+type DocumentStatus = 'DRAFT' | 'REVIEW' | 'APPROVED' | 'OBSOLETE';
 
 type UserOption = {
   id: string;
@@ -11,8 +16,6 @@ type UserOption = {
   lastName: string;
   email: string;
 };
-
-type DocumentStatus = 'DRAFT' | 'REVIEW' | 'APPROVED' | 'OBSOLETE';
 
 type DocumentRow = {
   id: string;
@@ -42,317 +45,264 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RecordWorkItemsComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, RecordWorkItemsComponent],
   template: `
     <section class="page-grid">
-      <div class="card header">
-        <div>
-          <span class="pill">Documents</span>
-          <h2>Controlled document register</h2>
-          <p>Manage revision-controlled ISO documents with approval flow, ownership, and evidence.</p>
-        </div>
-      </div>
+      <iso-page-header
+        [label]="'Documents'"
+        [title]="pageTitle()"
+        [description]="pageDescription()"
+        [breadcrumbs]="breadcrumbs()"
+      >
+        <a *ngIf="mode() === 'list'" routerLink="/documents/new" class="button-link">+ New document</a>
+        <a *ngIf="mode() === 'detail' && selectedDocument()" [routerLink]="['/documents', selectedDocument()?.id, 'edit']" class="button-link">Edit document</a>
+        <a *ngIf="mode() !== 'list'" routerLink="/documents" class="button-link secondary">Back to register</a>
+      </iso-page-header>
 
-      <div class="workspace">
-        <div class="card table-card">
-          <div class="toolbar">
+      <section *ngIf="mode() === 'list'" class="page-stack">
+        <div class="card list-card">
+          <div class="section-head">
             <div>
-              <strong>{{ documents().length }} documents</strong>
-              <p class="subtle">Latest items update immediately after save and status changes.</p>
+              <h3>Controlled document register</h3>
+              <p class="subtle">Search and filter the library, then open a document for detail, review, or revision control.</p>
             </div>
-            <button *ngIf="selectedId()" type="button" class="ghost" (click)="resetForm()">Start new document</button>
           </div>
 
-          <div class="table-state" *ngIf="loading()">Loading register...</div>
-          <table *ngIf="!loading()">
+          <div class="filter-row filter-space">
+            <label class="field">
+              <span>Search</span>
+              <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Code, title, or type">
+            </label>
+            <label class="field">
+              <span>Status</span>
+              <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
+                <option value="">All statuses</option>
+                <option value="DRAFT">Draft</option>
+                <option value="REVIEW">Review</option>
+                <option value="APPROVED">Approved</option>
+                <option value="OBSOLETE">Obsolete</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="empty-state" *ngIf="loading()">Loading documents...</div>
+          <table class="data-table" *ngIf="!loading()">
             <thead>
               <tr>
                 <th>Code</th>
                 <th>Title</th>
                 <th>Type</th>
-                <th>Revision</th>
                 <th>Status</th>
+                <th>Revision</th>
+                <th>Updated</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of documents()" (click)="select(item)" [class.selected]="item.id === selectedId()">
-                <td>{{ item.code }}</td>
+              <tr *ngFor="let item of filteredDocuments()" [routerLink]="['/documents', item.id]">
+                <td><strong>{{ item.code }}</strong></td>
                 <td>{{ item.title }}</td>
                 <td>{{ item.type }}</td>
+                <td><span class="status-badge" [class.success]="item.status === 'APPROVED'">{{ item.status }}</span></td>
                 <td>V{{ item.version }}.{{ item.revision }}</td>
-                <td>{{ item.status }}</td>
+                <td>{{ item.updatedAt | date:'yyyy-MM-dd' }}</td>
               </tr>
             </tbody>
           </table>
         </div>
+      </section>
 
-        <div class="side">
-          <form class="card form-card" [formGroup]="form" (ngSubmit)="save()">
-            <div class="toolbar">
+      <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-columns">
+        <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
+          <div class="section-head">
+            <div>
+              <h3>{{ mode() === 'create' ? 'New controlled document' : 'Edit document' }}</h3>
+              <p class="subtle">Keep the form focused on core metadata. Attachments and follow-up remain separated below.</p>
+            </div>
+          </div>
+
+          <p class="feedback" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+
+          <div class="form-grid-2">
+            <label class="field">
+              <span>Code</span>
+              <input formControlName="code" placeholder="QMS-PRO-001">
+            </label>
+            <label class="field">
+              <span>Type</span>
+              <input formControlName="type" placeholder="Procedure">
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Title</span>
+            <input formControlName="title" placeholder="Control of documented information">
+          </label>
+
+          <label class="field">
+            <span>Summary</span>
+            <textarea rows="4" formControlName="summary" placeholder="Purpose, scope, and intended use"></textarea>
+          </label>
+
+          <div class="form-grid-2">
+            <label class="field">
+              <span>Owner</span>
+              <select formControlName="ownerId">
+                <option value="">Unassigned</option>
+                <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Status</span>
+              <select formControlName="status">
+                <option>DRAFT</option>
+                <option>REVIEW</option>
+                <option>APPROVED</option>
+                <option>OBSOLETE</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="form-grid-2">
+            <label class="field">
+              <span>Effective date</span>
+              <input type="date" formControlName="effectiveDate">
+            </label>
+            <label class="field">
+              <span>Review due date</span>
+              <input type="date" formControlName="reviewDueDate">
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Change summary</span>
+            <textarea rows="3" formControlName="changeSummary" placeholder="What changed in this revision"></textarea>
+          </label>
+
+          <div class="button-row">
+            <button type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Saving...' : 'Save document' }}</button>
+            <a [routerLink]="selectedId() ? ['/documents', selectedId()] : ['/documents']" class="button-link secondary">Cancel</a>
+          </div>
+        </form>
+
+        <div class="page-stack">
+          <section class="card panel-card">
+            <div class="section-head">
               <div>
-                <strong>{{ selectedId() ? 'Edit document' : 'Create document' }}</strong>
-                <p class="subtle" *ngIf="selectedDocument()">
-                  {{ selectedDocument()?.code }} | V{{ selectedDocument()?.version }}.{{ selectedDocument()?.revision }}
-                </p>
+                <h3>Workflow guidance</h3>
+                <p class="subtle">Create the document first, then add evidence and follow-up on the document record page.</p>
               </div>
-              <span class="message" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</span>
             </div>
 
-            <div class="inline">
-              <label>
-                <span>Code</span>
-                <input formControlName="code" placeholder="QMS-PRO-001">
-              </label>
-              <label>
-                <span>Type</span>
-                <input formControlName="type" placeholder="Procedure">
-              </label>
+            <div class="entity-list">
+              <div class="entity-item">
+                <strong>1. Register the document</strong>
+                <small>Save the controlled document with its code, title, owner, and review dates.</small>
+              </div>
+              <div class="entity-item">
+                <strong>2. Review the record</strong>
+                <small>Use the detail page for approval status changes, attachments, and action items.</small>
+              </div>
+              <div class="entity-item">
+                <strong>3. Maintain revision history</strong>
+                <small>Update the change summary whenever a substantive revision is made.</small>
+              </div>
+            </div>
+          </section>
+
+          <iso-record-work-items *ngIf="selectedId()" [sourceType]="'document'" [sourceId]="selectedId()" />
+        </div>
+      </section>
+
+      <section *ngIf="mode() === 'detail' && selectedDocument()" class="page-columns">
+        <div class="page-stack">
+          <section class="card detail-card">
+            <div class="section-head">
+              <div>
+                <h3>{{ selectedDocument()?.title }}</h3>
+                <p class="subtle">{{ selectedDocument()?.code }} | {{ selectedDocument()?.type }}</p>
+              </div>
+              <span class="status-badge" [class.success]="selectedDocument()?.status === 'APPROVED'">{{ selectedDocument()?.status }}</span>
             </div>
 
-            <label>
-              <span>Title</span>
-              <input formControlName="title" placeholder="Control of documented information">
-            </label>
-
-            <label>
-              <span>Summary</span>
-              <textarea formControlName="summary" rows="3" placeholder="Purpose and scope"></textarea>
-            </label>
-
-            <div class="inline">
-              <label>
-                <span>Owner</span>
-                <select formControlName="ownerId">
-                  <option value="">Unassigned</option>
-                  <option *ngFor="let user of users()" [value]="user.id">
-                    {{ user.firstName }} {{ user.lastName }}
-                  </option>
-                </select>
-              </label>
-              <label>
-                <span>Status</span>
-                <input [value]="form.getRawValue().status" disabled>
-              </label>
-            </div>
-
-            <div class="inline">
-              <label>
+            <div class="summary-strip top-space">
+              <article class="summary-item">
+                <span>Current revision</span>
+                <strong>V{{ selectedDocument()?.version }}.{{ selectedDocument()?.revision }}</strong>
+              </article>
+              <article class="summary-item">
                 <span>Effective date</span>
-                <input type="date" formControlName="effectiveDate">
-              </label>
-              <label>
-                <span>Review due date</span>
-                <input type="date" formControlName="reviewDueDate">
-              </label>
+                <strong>{{ selectedDocument()?.effectiveDate ? (selectedDocument()?.effectiveDate | date:'yyyy-MM-dd') : 'Not set' }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Review due</span>
+                <strong>{{ selectedDocument()?.reviewDueDate ? (selectedDocument()?.reviewDueDate | date:'yyyy-MM-dd') : 'Not set' }}</strong>
+              </article>
             </div>
 
-            <label>
-              <span>Change summary</span>
-              <textarea formControlName="changeSummary" rows="2" placeholder="What changed in this revision"></textarea>
-            </label>
+            <dl class="key-value top-space">
+              <dt>Summary</dt>
+              <dd>{{ selectedDocument()?.summary || 'No summary provided.' }}</dd>
+              <dt>Change summary</dt>
+              <dd>{{ selectedDocument()?.changeSummary || 'No revision note provided.' }}</dd>
+              <dt>Approved at</dt>
+              <dd>{{ selectedDocument()?.approvedAt ? (selectedDocument()?.approvedAt | date:'yyyy-MM-dd HH:mm') : 'Not approved yet' }}</dd>
+              <dt>Obsoleted at</dt>
+              <dd>{{ selectedDocument()?.obsoletedAt ? (selectedDocument()?.obsoletedAt | date:'yyyy-MM-dd HH:mm') : 'Active' }}</dd>
+              <dt>Last updated</dt>
+              <dd>{{ selectedDocument()?.updatedAt | date:'yyyy-MM-dd HH:mm' }}</dd>
+            </dl>
+          </section>
 
-            <div class="actions">
-              <button type="submit" [disabled]="form.invalid || saving()">
-                {{ saving() ? 'Saving...' : (selectedId() ? 'Save changes' : 'Create document') }}
-              </button>
-              <button
-                *ngFor="let status of availableTransitions()"
-                type="button"
-                class="ghost"
-                [disabled]="!selectedId() || saving()"
-                (click)="changeStatus(status)"
-              >
+          <section class="card panel-card">
+            <div class="section-head">
+              <div>
+                <h3>Lifecycle</h3>
+                <p class="subtle">Move the record through review, approval, and obsolescence without opening the editor.</p>
+              </div>
+            </div>
+
+            <div class="button-row top-space">
+              <button *ngFor="let status of availableTransitions()" type="button" class="secondary" (click)="changeStatus(status)" [disabled]="saving()">
                 {{ documentActionLabel(status) }}
               </button>
             </div>
-
-            <div class="detail-grid" *ngIf="selectedDocument()">
-              <article>
-                <span class="detail-label">Approved</span>
-                <strong>{{ selectedDocument()?.approvedAt ? (selectedDocument()?.approvedAt | date:'yyyy-MM-dd HH:mm') : 'Not yet' }}</strong>
-              </article>
-              <article>
-                <span class="detail-label">Obsoleted</span>
-                <strong>{{ selectedDocument()?.obsoletedAt ? (selectedDocument()?.obsoletedAt | date:'yyyy-MM-dd HH:mm') : 'Active' }}</strong>
-              </article>
-              <article>
-                <span class="detail-label">Updated</span>
-                <strong>{{ selectedDocument()?.updatedAt | date:'yyyy-MM-dd HH:mm' }}</strong>
-              </article>
-            </div>
-          </form>
-
-          <iso-record-work-items [sourceType]="'document'" [sourceId]="selectedId()" />
+            <p class="feedback top-space" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+          </section>
         </div>
-      </div>
+
+        <iso-record-work-items [sourceType]="'document'" [sourceId]="selectedId()" />
+      </section>
     </section>
   `,
   styles: [`
-    .header,
-    .table-card,
-    .form-card {
-      padding: 1.2rem 1.3rem;
-    }
-
-    .header h2 {
-      margin: 0.8rem 0 0.3rem;
-    }
-
-    .header p,
-    .subtle,
-    .message,
-    label span,
-    .detail-label,
-    .table-state {
-      color: var(--muted);
-    }
-
-    .workspace {
-      display: grid;
-      grid-template-columns: 1.35fr 1fr;
-      gap: 1rem;
-      align-items: start;
-    }
-
-    .side {
-      display: grid;
-      gap: 1rem;
-    }
-
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      align-items: start;
-    }
-
-    .subtle,
-    .message {
-      margin: 0.25rem 0 0;
-      font-size: 0.92rem;
-    }
-
-    .message {
-      min-height: 1.1rem;
-      text-align: right;
-    }
-
-    .message.error {
-      color: #a03535;
-    }
-
-    .message.success {
-      color: var(--brand-strong);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    .filter-space,
+    .top-space {
       margin-top: 1rem;
     }
 
-    th,
-    td {
-      padding: 0.95rem 0.4rem;
-      text-align: left;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    }
-
-    tbody tr {
+    tr[routerLink] {
       cursor: pointer;
-    }
-
-    tbody tr.selected {
-      background: rgba(40, 89, 67, 0.08);
-    }
-
-    form {
-      display: grid;
-      gap: 0.9rem;
-    }
-
-    label {
-      display: grid;
-      gap: 0.45rem;
-    }
-
-    .inline {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-    }
-
-    .detail-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.75rem;
-      margin-top: 0.35rem;
-    }
-
-    .detail-grid article {
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      border-radius: 16px;
-      padding: 0.85rem;
-    }
-
-    .detail-grid strong {
-      display: block;
-      margin-top: 0.35rem;
-    }
-
-    input,
-    select,
-    textarea,
-    button {
-      border-radius: 14px;
-      border: 1px solid var(--panel-border);
-      padding: 0.8rem 0.9rem;
-    }
-
-    button {
-      border: 0;
-      background: var(--brand);
-      color: white;
-      font-weight: 700;
-    }
-
-    .ghost {
-      background: rgba(40, 89, 67, 0.1);
-      color: var(--brand-strong);
-    }
-
-    @media (max-width: 1100px) {
-      .workspace {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 700px) {
-      .inline,
-      .detail-grid {
-        grid-template-columns: 1fr;
-      }
     }
   `]
 })
 export class DocumentsPageComponent {
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
+  protected readonly mode = signal<PageMode>('list');
   protected readonly documents = signal<DocumentRow[]>([]);
-  protected readonly users = signal<UserOption[]>([]);
-  protected readonly selectedId = signal<string | null>(null);
   protected readonly selectedDocument = signal<DocumentRow | null>(null);
+  protected readonly selectedId = signal<string | null>(null);
+  protected readonly users = signal<UserOption[]>([]);
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
-  protected readonly message = signal('');
+  protected readonly message = signal((history.state?.notice as string) || '');
   protected readonly error = signal('');
+  protected readonly search = signal('');
+  protected readonly statusFilter = signal('');
+
   protected readonly form = this.fb.nonNullable.group({
     code: ['', [Validators.required, Validators.maxLength(40)]],
     title: ['', [Validators.required, Validators.maxLength(160)]],
@@ -367,42 +317,83 @@ export class DocumentsPageComponent {
 
   constructor() {
     this.loadUsers();
-    this.reload();
-  }
-
-  select(item: DocumentRow) {
-    this.selectedId.set(item.id);
-    this.fetchDocument(item.id);
-  }
-
-  resetForm() {
-    this.selectedId.set(null);
-    this.selectedDocument.set(null);
-    this.form.reset({
-      code: '',
-      title: '',
-      type: '',
-      summary: '',
-      ownerId: '',
-      status: 'DRAFT',
-      effectiveDate: '',
-      reviewDueDate: '',
-      changeSummary: ''
+    this.route.data.subscribe((data) => {
+      this.mode.set((data['mode'] as PageMode) || 'list');
+      this.handleRoute(this.route.snapshot.paramMap);
     });
-    this.message.set('Ready to create a new document.');
-    this.error.set('');
+    this.route.paramMap.subscribe((params) => this.handleRoute(params));
   }
 
-  save() {
+  protected pageTitle() {
+    return {
+      list: 'Controlled document register',
+      create: 'Create controlled document',
+      detail: this.selectedDocument()?.title || 'Document detail',
+      edit: this.selectedDocument()?.title || 'Edit document'
+    }[this.mode()];
+  }
+
+  protected pageDescription() {
+    return {
+      list: 'A focused register for controlled documents, status control, and revision history.',
+      create: 'Create a new controlled document in a dedicated workflow without competing panels.',
+      detail: 'Review controlled metadata, move status forward, and manage evidence and actions.',
+      edit: 'Update document metadata in a dedicated editing view.'
+    }[this.mode()];
+  }
+
+  protected breadcrumbs() {
+    if (this.mode() === 'list') {
+      return [{ label: 'Documents' }];
+    }
+
+    const base = [{ label: 'Documents', link: '/documents' }];
+    if (this.mode() === 'create') {
+      return [...base, { label: 'New document' }];
+    }
+
+    if (this.mode() === 'edit') {
+      return [...base, { label: this.selectedDocument()?.code || 'Document', link: `/documents/${this.selectedId()}` }, { label: 'Edit' }];
+    }
+
+    return [...base, { label: this.selectedDocument()?.code || 'Document' }];
+  }
+
+  protected filteredDocuments() {
+    const term = this.search().trim().toLowerCase();
+    const status = this.statusFilter();
+    return this.documents().filter((item) => {
+      const matchesStatus = !status || item.status === status;
+      const matchesTerm =
+        !term ||
+        item.code.toLowerCase().includes(term) ||
+        item.title.toLowerCase().includes(term) ||
+        item.type.toLowerCase().includes(term);
+      return matchesStatus && matchesTerm;
+    });
+  }
+
+  protected availableTransitions() {
+    const status = this.selectedDocument()?.status || this.form.getRawValue().status;
+    return NEXT_STATUS_OPTIONS[status] ?? [];
+  }
+
+  protected documentActionLabel(status: DocumentStatus) {
+    if (status === 'REVIEW') return 'Submit for review';
+    if (status === 'APPROVED') return 'Approve';
+    if (status === 'OBSOLETE') return 'Mark obsolete';
+    return 'Return to draft';
+  }
+
+  protected save() {
     if (this.form.invalid) {
       this.error.set('Complete the required document fields.');
       return;
     }
 
     this.saving.set(true);
-    this.message.set('');
     this.error.set('');
-
+    this.message.set('');
     const payload = this.toPayload();
     const request = this.selectedId()
       ? this.api.patch<DocumentRow>(`documents/${this.selectedId()}`, payload)
@@ -411,10 +402,7 @@ export class DocumentsPageComponent {
     request.subscribe({
       next: (document) => {
         this.saving.set(false);
-        this.message.set('Document saved successfully.');
-        this.reload(() => {
-          this.select(document);
-        });
+        this.router.navigate(['/documents', document.id], { state: { notice: 'Document saved successfully.' } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
@@ -423,33 +411,93 @@ export class DocumentsPageComponent {
     });
   }
 
-  changeStatus(status: DocumentStatus) {
+  protected changeStatus(status: DocumentStatus) {
     if (!this.selectedId()) {
       return;
     }
 
-    this.form.patchValue({ status });
-    this.save();
+    this.saving.set(true);
+    this.error.set('');
+    this.message.set('');
+    this.api.patch<DocumentRow>(`documents/${this.selectedId()}`, { status }).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.message.set('Document status updated.');
+        this.fetchDocument(this.selectedId() as string);
+        this.reloadDocuments();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.error.set(this.readError(error, 'Document status update failed.'));
+      }
+    });
   }
 
-  protected documentActionLabel(status: DocumentStatus) {
-    if (status === 'REVIEW') {
-      return 'Submit for review';
-    }
-
-    if (status === 'APPROVED') {
-      return 'Approve';
-    }
-
-    if (status === 'OBSOLETE') {
-      return 'Mark obsolete';
-    }
-
-    return 'Return to draft';
+  protected readInputValue(event: Event) {
+    return (event.target as HTMLInputElement).value;
   }
 
-  protected availableTransitions() {
-    return NEXT_STATUS_OPTIONS[this.form.getRawValue().status] ?? [];
+  protected readSelectValue(event: Event) {
+    return (event.target as HTMLSelectElement).value;
+  }
+
+  private handleRoute(params: ParamMap) {
+    const mode = this.mode();
+    const id = params.get('id');
+    this.selectedId.set(id);
+    this.message.set((history.state?.notice as string) || '');
+    this.error.set('');
+
+    if (mode === 'list') {
+      this.selectedDocument.set(null);
+      this.form.reset({
+        code: '',
+        title: '',
+        type: '',
+        summary: '',
+        ownerId: '',
+        status: 'DRAFT',
+        effectiveDate: '',
+        reviewDueDate: '',
+        changeSummary: ''
+      });
+      this.reloadDocuments();
+      return;
+    }
+
+    if (mode === 'create') {
+      this.selectedDocument.set(null);
+      this.form.reset({
+        code: '',
+        title: '',
+        type: '',
+        summary: '',
+        ownerId: '',
+        status: 'DRAFT',
+        effectiveDate: '',
+        reviewDueDate: '',
+        changeSummary: ''
+      });
+      return;
+    }
+
+    if (id) {
+      this.fetchDocument(id);
+    }
+  }
+
+  private reloadDocuments() {
+    this.loading.set(true);
+    this.api.get<DocumentRow[]>('documents').subscribe({
+      next: (items) => {
+        this.loading.set(false);
+        this.documents.set(items);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.loading.set(false);
+        this.error.set(this.readError(error, 'Document register could not be loaded.'));
+      }
+    });
   }
 
   private fetchDocument(id: string) {
@@ -469,35 +517,10 @@ export class DocumentsPageComponent {
           reviewDueDate: document.reviewDueDate?.slice(0, 10) ?? '',
           changeSummary: document.changeSummary ?? ''
         });
-        this.message.set('');
-        this.error.set('');
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
         this.error.set(this.readError(error, 'Document details could not be loaded.'));
-      }
-    });
-  }
-
-  private reload(after?: () => void) {
-    this.loading.set(true);
-    this.api.get<DocumentRow[]>('documents').subscribe({
-      next: (items) => {
-        this.loading.set(false);
-        this.documents.set(items);
-
-        if (this.selectedId()) {
-          const match = items.find((item) => item.id === this.selectedId());
-          if (match) {
-            this.fetchDocument(match.id);
-          }
-        }
-
-        after?.();
-      },
-      error: (error: HttpErrorResponse) => {
-        this.loading.set(false);
-        this.error.set(this.readError(error, 'Document register could not be loaded.'));
       }
     });
   }
@@ -513,10 +536,10 @@ export class DocumentsPageComponent {
       code: raw.code.trim(),
       title: raw.title.trim(),
       type: raw.type.trim(),
+      summary: raw.summary.trim() || undefined,
       ownerId: raw.ownerId || undefined,
       effectiveDate: raw.effectiveDate || undefined,
       reviewDueDate: raw.reviewDueDate || undefined,
-      summary: raw.summary.trim() || undefined,
       changeSummary: raw.changeSummary.trim() || undefined
     };
   }

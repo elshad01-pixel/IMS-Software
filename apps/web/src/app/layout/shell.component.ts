@@ -10,21 +10,19 @@ import { AuthStore } from '../core/auth.store';
   template: `
     <div class="shell">
       <aside class="sidebar card">
-        <div>
+        <div class="brand">
           <div class="pill">ISO SaaS</div>
           <h1>Integrated Management</h1>
-          <p>Multi-tenant platform for ISO operations, controls, and follow-up.</p>
+          <p>Operational control for documents, risks, audits, CAPA, reviews, KPIs, and training.</p>
         </div>
 
         <nav>
-          <a *ngFor="let item of navItems" [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
+          <a *ngFor="let item of navItems" [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.exact ?? false }">
+            <span>{{ item.label }}</span>
+          </a>
         </nav>
 
-        <button type="button" (click)="authStore.logout()">Sign out</button>
-      </aside>
-
-      <main class="main">
-        <header class="topbar card">
+        <section class="account card account-card">
           <div>
             <div class="eyebrow">Tenant</div>
             <strong>{{ authStore.tenantSlug() || 'n/a' }}</strong>
@@ -33,8 +31,11 @@ import { AuthStore } from '../core/auth.store';
             <div class="eyebrow">User</div>
             <strong>{{ authStore.session()?.user?.email }}</strong>
           </div>
-        </header>
+          <button type="button" (click)="authStore.logout()">Sign out</button>
+        </section>
+      </aside>
 
+      <main class="main">
         <router-outlet />
       </main>
     </div>
@@ -42,57 +43,72 @@ import { AuthStore } from '../core/auth.store';
   styles: [`
     .shell {
       display: grid;
-      grid-template-columns: 290px 1fr;
-      gap: 1.25rem;
+      grid-template-columns: 270px minmax(0, 1fr);
+      gap: 1.1rem;
       min-height: 100vh;
-      padding: 1.25rem;
+      padding: 1rem;
     }
 
     .sidebar {
       display: grid;
-      align-content: space-between;
-      padding: 1.5rem;
-      gap: 1.5rem;
+      grid-template-rows: auto 1fr auto;
+      padding: 1.25rem;
+      gap: 1.25rem;
       position: sticky;
-      top: 1.25rem;
-      height: calc(100vh - 2.5rem);
-      background: linear-gradient(180deg, rgba(23, 55, 40, 0.98), rgba(40, 89, 67, 0.96));
+      top: 1rem;
+      height: calc(100vh - 2rem);
+      background: linear-gradient(180deg, rgba(23, 55, 40, 0.98), rgba(31, 74, 55, 0.97));
       color: #f9f4ea;
     }
 
-    .sidebar h1 {
-      margin: 0.9rem 0 0.4rem;
-      font-size: 1.8rem;
+    .brand h1 {
+      margin: 0.8rem 0 0.35rem;
+      font-size: 1.55rem;
       line-height: 1.1;
     }
 
-    .sidebar p {
+    .brand p {
       margin: 0;
       color: rgba(249, 244, 234, 0.78);
+      line-height: 1.45;
     }
 
     nav {
       display: grid;
-      gap: 0.35rem;
+      gap: 0.28rem;
+      align-content: start;
     }
 
     nav a {
-      border-radius: 14px;
-      padding: 0.8rem 0.95rem;
+      display: flex;
+      align-items: center;
+      border-radius: 12px;
+      padding: 0.78rem 0.9rem;
       color: inherit;
       text-decoration: none;
-      background: rgba(255, 255, 255, 0.05);
+      background: transparent;
+      border: 1px solid transparent;
     }
 
     nav a.active {
-      background: rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.08);
       font-weight: 700;
+    }
+
+    .account-card {
+      display: grid;
+      gap: 0.8rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.08);
+      box-shadow: none;
     }
 
     button {
       border: 0;
-      border-radius: 14px;
-      padding: 0.95rem 1rem;
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
       background: #f4e8d0;
       color: #173728;
       font-weight: 700;
@@ -100,22 +116,12 @@ import { AuthStore } from '../core/auth.store';
     }
 
     .main {
-      display: grid;
-      grid-template-rows: auto 1fr;
-      gap: 1.25rem;
       min-width: 0;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: 1.1rem 1.3rem;
     }
 
     .eyebrow {
       font-size: 0.75rem;
-      color: var(--muted);
+      color: rgba(249, 244, 234, 0.72);
       text-transform: uppercase;
       letter-spacing: 0.08em;
     }
@@ -135,7 +141,7 @@ import { AuthStore } from '../core/auth.store';
 export class ShellComponent {
   protected readonly authStore = inject(AuthStore);
   protected readonly navItems = [
-    { path: '/dashboard', label: 'Dashboard' },
+    { path: '/dashboard', label: 'Dashboard', exact: true },
     { path: '/documents', label: 'Documents' },
     { path: '/risks', label: 'Risks' },
     { path: '/capa', label: 'CAPA' },

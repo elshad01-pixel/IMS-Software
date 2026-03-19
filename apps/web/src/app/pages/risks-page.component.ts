@@ -2,8 +2,13 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
+import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
+
+type PageMode = 'list' | 'create' | 'detail' | 'edit';
+type RiskStatus = 'OPEN' | 'IN_TREATMENT' | 'MITIGATED' | 'ACCEPTED' | 'CLOSED';
 
 type UserOption = {
   id: string;
@@ -11,8 +16,6 @@ type UserOption = {
   lastName: string;
   email: string;
 };
-
-type RiskStatus = 'OPEN' | 'IN_TREATMENT' | 'MITIGATED' | 'ACCEPTED' | 'CLOSED';
 
 type RiskRow = {
   id: string;
@@ -32,29 +35,49 @@ type RiskRow = {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RecordWorkItemsComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, RecordWorkItemsComponent],
   template: `
     <section class="page-grid">
-      <div class="card header">
-        <div>
-          <span class="pill">Risks</span>
-          <h2>Risk register and treatment tracking</h2>
-          <p>Assess likelihood and severity, assign ownership, and drive treatment actions into the dashboard.</p>
-        </div>
-      </div>
+      <iso-page-header
+        [label]="'Risks'"
+        [title]="pageTitle()"
+        [description]="pageDescription()"
+        [breadcrumbs]="breadcrumbs()"
+      >
+        <a *ngIf="mode() === 'list'" routerLink="/risks/new" class="button-link">+ New risk</a>
+        <a *ngIf="mode() === 'detail' && selectedRisk()" [routerLink]="['/risks', selectedRisk()?.id, 'edit']" class="button-link">Edit risk</a>
+        <a *ngIf="mode() !== 'list'" routerLink="/risks" class="button-link secondary">Back to register</a>
+      </iso-page-header>
 
-      <div class="workspace">
-        <div class="card table-card">
-          <div class="toolbar">
+      <section *ngIf="mode() === 'list'" class="page-stack">
+        <div class="card list-card">
+          <div class="section-head">
             <div>
-              <strong>{{ risks().length }} risks</strong>
-              <p class="subtle">Highest residual scores are shown first.</p>
+              <h3>Risk register</h3>
+              <p class="subtle">Track assessment, treatment, status, and due dates in a clean register view.</p>
             </div>
-            <button *ngIf="selectedId()" type="button" class="ghost" (click)="resetForm()">Start new risk</button>
           </div>
 
-          <div class="table-state" *ngIf="loading()">Loading register...</div>
-          <table *ngIf="!loading()">
+          <div class="filter-row top-space">
+            <label class="field">
+              <span>Search</span>
+              <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Title or category">
+            </label>
+            <label class="field">
+              <span>Status</span>
+              <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
+                <option value="">All statuses</option>
+                <option>OPEN</option>
+                <option>IN_TREATMENT</option>
+                <option>MITIGATED</option>
+                <option>ACCEPTED</option>
+                <option>CLOSED</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="empty-state" *ngIf="loading()">Loading risks...</div>
+          <table class="data-table" *ngIf="!loading()">
             <thead>
               <tr>
                 <th>Title</th>
@@ -65,261 +88,198 @@ type RiskRow = {
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of risks()" (click)="select(item)" [class.selected]="item.id === selectedId()">
-                <td>{{ item.title }}</td>
+              <tr *ngFor="let item of filteredRisks()" [routerLink]="['/risks', item.id]">
+                <td><strong>{{ item.title }}</strong></td>
                 <td>{{ item.category || 'General' }}</td>
                 <td>{{ item.score }}</td>
-                <td>{{ item.status }}</td>
+                <td><span class="status-badge" [class.warn]="item.status === 'IN_TREATMENT'">{{ item.status }}</span></td>
                 <td>{{ item.targetDate ? (item.targetDate | date:'yyyy-MM-dd') : 'N/A' }}</td>
               </tr>
             </tbody>
           </table>
         </div>
+      </section>
 
-        <div class="side">
-          <form class="card form-card" [formGroup]="form" (ngSubmit)="save()">
-            <div class="toolbar">
-              <div>
-                <strong>{{ selectedId() ? 'Edit risk' : 'Create risk' }}</strong>
-                <p class="subtle" *ngIf="selectedRisk()">Current score: {{ selectedRisk()?.score }}</p>
-              </div>
-              <span class="message" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</span>
+      <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-columns">
+        <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
+          <div class="section-head">
+            <div>
+              <h3>{{ mode() === 'create' ? 'New risk' : 'Edit risk' }}</h3>
+              <p class="subtle">Keep risk definition, assessment, and treatment separated into clear form groups.</p>
             </div>
+          </div>
 
-            <div class="inline">
-              <label>
-                <span>Title</span>
-                <input formControlName="title" placeholder="Supplier delivery interruption">
-              </label>
-              <label>
-                <span>Category</span>
-                <input formControlName="category" placeholder="Operational">
-              </label>
-            </div>
+          <p class="feedback" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
-            <label>
-              <span>Description</span>
-              <textarea formControlName="description" rows="3" placeholder="What could happen and why"></textarea>
+          <div class="form-grid-2">
+            <label class="field">
+              <span>Title</span>
+              <input formControlName="title" placeholder="Supplier delivery interruption">
             </label>
+            <label class="field">
+              <span>Category</span>
+              <input formControlName="category" placeholder="Operational">
+            </label>
+          </div>
 
-            <div class="inline">
-              <label>
-                <span>Likelihood</span>
-                <input type="number" min="1" max="5" formControlName="likelihood">
-              </label>
-              <label>
-                <span>Severity</span>
-                <input type="number" min="1" max="5" formControlName="severity">
-              </label>
-            </div>
+          <label class="field">
+            <span>Description</span>
+            <textarea rows="4" formControlName="description" placeholder="What could happen and why"></textarea>
+          </label>
 
-            <div class="score-card">
+          <div class="form-grid-3">
+            <label class="field">
+              <span>Likelihood</span>
+              <input type="number" min="1" max="5" formControlName="likelihood">
+            </label>
+            <label class="field">
+              <span>Severity</span>
+              <input type="number" min="1" max="5" formControlName="severity">
+            </label>
+            <article class="summary-item">
               <span>Calculated score</span>
               <strong>{{ currentScore() }}</strong>
-            </div>
+            </article>
+          </div>
 
-            <label>
-              <span>Treatment plan</span>
-              <textarea formControlName="treatmentPlan" rows="3" placeholder="Controls and planned mitigation"></textarea>
-            </label>
+          <label class="field">
+            <span>Treatment plan</span>
+            <textarea rows="3" formControlName="treatmentPlan" placeholder="Controls and planned mitigation"></textarea>
+          </label>
 
-            <label>
-              <span>Treatment summary</span>
-              <textarea formControlName="treatmentSummary" rows="2" placeholder="Current treatment progress"></textarea>
-            </label>
+          <label class="field">
+            <span>Treatment summary</span>
+            <textarea rows="3" formControlName="treatmentSummary" placeholder="Current treatment status"></textarea>
+          </label>
 
-            <div class="inline">
-              <label>
-                <span>Owner</span>
-                <select formControlName="ownerId">
-                  <option value="">Unassigned</option>
-                  <option *ngFor="let user of users()" [value]="user.id">
-                    {{ user.firstName }} {{ user.lastName }}
-                  </option>
-                </select>
-              </label>
-              <label>
-                <span>Target date</span>
-                <input type="date" formControlName="targetDate">
-              </label>
-            </div>
-
-            <label>
-              <span>Status</span>
-              <select formControlName="status">
-                <option>OPEN</option>
-                <option>IN_TREATMENT</option>
-                <option>MITIGATED</option>
-                <option>ACCEPTED</option>
-                <option>CLOSED</option>
+          <div class="form-grid-2">
+            <label class="field">
+              <span>Owner</span>
+              <select formControlName="ownerId">
+                <option value="">Unassigned</option>
+                <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
               </select>
             </label>
+            <label class="field">
+              <span>Target date</span>
+              <input type="date" formControlName="targetDate">
+            </label>
+          </div>
 
-            <button type="submit" [disabled]="form.invalid || saving()">
-              {{ saving() ? 'Saving...' : (selectedId() ? 'Save changes' : 'Create risk') }}
-            </button>
-          </form>
+          <label class="field">
+            <span>Status</span>
+            <select formControlName="status">
+              <option>OPEN</option>
+              <option>IN_TREATMENT</option>
+              <option>MITIGATED</option>
+              <option>ACCEPTED</option>
+              <option>CLOSED</option>
+            </select>
+          </label>
 
-          <iso-record-work-items [sourceType]="'risk'" [sourceId]="selectedId()" />
+          <div class="button-row">
+            <button type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Saving...' : 'Save risk' }}</button>
+            <a [routerLink]="selectedId() ? ['/risks', selectedId()] : ['/risks']" class="button-link secondary">Cancel</a>
+          </div>
+        </form>
+
+        <section class="card panel-card">
+          <div class="section-head">
+            <div>
+              <h3>Workflow guidance</h3>
+              <p class="subtle">Assessment and treatment stay readable here; actions and evidence continue on the risk record.</p>
+            </div>
+          </div>
+          <div class="entity-list top-space">
+            <div class="entity-item">
+              <strong>Assess the inherent risk</strong>
+              <small>Use likelihood and severity to generate the register score automatically.</small>
+            </div>
+            <div class="entity-item">
+              <strong>Plan the treatment</strong>
+              <small>Keep the treatment plan concise, then track execution with linked action items.</small>
+            </div>
+            <div class="entity-item">
+              <strong>Review from the detail page</strong>
+              <small>Use the detail page for current status, dashboard context, and follow-up activity.</small>
+            </div>
+          </div>
+          <iso-record-work-items *ngIf="selectedId()" [sourceType]="'risk'" [sourceId]="selectedId()" />
+        </section>
+      </section>
+
+      <section *ngIf="mode() === 'detail' && selectedRisk()" class="page-columns">
+        <div class="page-stack">
+          <section class="card detail-card">
+            <div class="section-head">
+              <div>
+                <h3>{{ selectedRisk()?.title }}</h3>
+                <p class="subtle">{{ selectedRisk()?.category || 'General' }}</p>
+              </div>
+              <span class="status-badge" [class.warn]="selectedRisk()?.status === 'IN_TREATMENT'">{{ selectedRisk()?.status }}</span>
+            </div>
+
+            <div class="summary-strip top-space">
+              <article class="summary-item">
+                <span>Likelihood</span>
+                <strong>{{ selectedRisk()?.likelihood }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Severity</span>
+                <strong>{{ selectedRisk()?.severity }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Score</span>
+                <strong>{{ selectedRisk()?.score }}</strong>
+              </article>
+            </div>
+
+            <dl class="key-value top-space">
+              <dt>Description</dt>
+              <dd>{{ selectedRisk()?.description || 'No description provided.' }}</dd>
+              <dt>Treatment plan</dt>
+              <dd>{{ selectedRisk()?.treatmentPlan || 'No treatment plan yet.' }}</dd>
+              <dt>Treatment summary</dt>
+              <dd>{{ selectedRisk()?.treatmentSummary || 'No treatment summary yet.' }}</dd>
+              <dt>Target date</dt>
+              <dd>{{ selectedRisk()?.targetDate ? (selectedRisk()?.targetDate | date:'yyyy-MM-dd') : 'Not set' }}</dd>
+              <dt>Last updated</dt>
+              <dd>{{ selectedRisk()?.updatedAt | date:'yyyy-MM-dd HH:mm' }}</dd>
+            </dl>
+          </section>
         </div>
-      </div>
+
+        <iso-record-work-items [sourceType]="'risk'" [sourceId]="selectedId()" />
+      </section>
     </section>
   `,
   styles: [`
-    .header,
-    .table-card,
-    .form-card {
-      padding: 1.2rem 1.3rem;
-    }
-
-    .header h2 {
-      margin: 0.8rem 0 0.3rem;
-    }
-
-    .header p,
-    .subtle,
-    .message,
-    label span,
-    .table-state,
-    .score-card span {
-      color: var(--muted);
-    }
-
-    .workspace {
-      display: grid;
-      grid-template-columns: 1.2fr 1fr;
-      gap: 1rem;
-      align-items: start;
-    }
-
-    .side {
-      display: grid;
-      gap: 1rem;
-    }
-
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      align-items: start;
-    }
-
-    .subtle,
-    .message {
-      margin: 0.25rem 0 0;
-      font-size: 0.92rem;
-    }
-
-    .message {
-      min-height: 1.1rem;
-      text-align: right;
-    }
-
-    .message.error {
-      color: #a03535;
-    }
-
-    .message.success {
-      color: var(--brand-strong);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    .top-space {
       margin-top: 1rem;
     }
 
-    th,
-    td {
-      padding: 0.95rem 0.4rem;
-      text-align: left;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    }
-
-    tbody tr {
+    tr[routerLink] {
       cursor: pointer;
-    }
-
-    tbody tr.selected {
-      background: rgba(199, 139, 52, 0.12);
-    }
-
-    form {
-      display: grid;
-      gap: 0.9rem;
-    }
-
-    label {
-      display: grid;
-      gap: 0.45rem;
-    }
-
-    .inline {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-    }
-
-    .score-card {
-      border: 1px solid rgba(199, 139, 52, 0.22);
-      background: rgba(199, 139, 52, 0.1);
-      border-radius: 16px;
-      padding: 0.9rem 1rem;
-    }
-
-    .score-card strong {
-      display: block;
-      margin-top: 0.2rem;
-      font-size: 1.8rem;
-      color: #8f5b15;
-    }
-
-    input,
-    select,
-    textarea,
-    button {
-      border-radius: 14px;
-      border: 1px solid var(--panel-border);
-      padding: 0.8rem 0.9rem;
-    }
-
-    button {
-      border: 0;
-      background: var(--brand);
-      color: white;
-      font-weight: 700;
-    }
-
-    .ghost {
-      background: rgba(40, 89, 67, 0.1);
-      color: var(--brand-strong);
-    }
-
-    @media (max-width: 1100px) {
-      .workspace {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 700px) {
-      .inline {
-        grid-template-columns: 1fr;
-      }
     }
   `]
 })
 export class RisksPageComponent {
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
+  protected readonly mode = signal<PageMode>('list');
   protected readonly risks = signal<RiskRow[]>([]);
-  protected readonly users = signal<UserOption[]>([]);
-  protected readonly selectedId = signal<string | null>(null);
   protected readonly selectedRisk = signal<RiskRow | null>(null);
+  protected readonly selectedId = signal<string | null>(null);
+  protected readonly users = signal<UserOption[]>([]);
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
-  protected readonly message = signal('');
+  protected readonly message = signal((history.state?.notice as string) || '');
   protected readonly error = signal('');
+  protected readonly search = signal('');
+  protected readonly statusFilter = signal('');
 
   protected readonly form = this.fb.nonNullable.group({
     title: ['', [Validators.required, Validators.maxLength(160)]],
@@ -336,43 +296,76 @@ export class RisksPageComponent {
 
   constructor() {
     this.loadUsers();
-    this.reload();
-  }
-
-  select(item: RiskRow) {
-    this.selectedId.set(item.id);
-    this.fetchRisk(item.id);
-  }
-
-  resetForm() {
-    this.selectedId.set(null);
-    this.selectedRisk.set(null);
-    this.form.reset({
-      title: '',
-      description: '',
-      category: '',
-      likelihood: 3,
-      severity: 3,
-      treatmentPlan: '',
-      treatmentSummary: '',
-      ownerId: '',
-      targetDate: '',
-      status: 'OPEN'
+    this.route.data.subscribe((data) => {
+      this.mode.set((data['mode'] as PageMode) || 'list');
+      this.handleRoute(this.route.snapshot.paramMap);
     });
-    this.message.set('Ready to create a new risk.');
-    this.error.set('');
+    this.route.paramMap.subscribe((params) => this.handleRoute(params));
   }
 
-  save() {
+  protected pageTitle() {
+    return {
+      list: 'Risk register',
+      create: 'Create risk',
+      detail: this.selectedRisk()?.title || 'Risk detail',
+      edit: this.selectedRisk()?.title || 'Edit risk'
+    }[this.mode()];
+  }
+
+  protected pageDescription() {
+    return {
+      list: 'A calmer register for assessed risks, treatment ownership, and target follow-up.',
+      create: 'Capture a new risk in a dedicated page without mixing the register and editor.',
+      detail: 'Review risk assessment, treatment context, and action follow-up in one focused detail view.',
+      edit: 'Update assessment and treatment in a dedicated edit workflow.'
+    }[this.mode()];
+  }
+
+  protected breadcrumbs() {
+    if (this.mode() === 'list') {
+      return [{ label: 'Risks' }];
+    }
+    const base = [{ label: 'Risks', link: '/risks' }];
+    if (this.mode() === 'create') return [...base, { label: 'New risk' }];
+    if (this.mode() === 'edit') return [...base, { label: this.selectedRisk()?.title || 'Risk', link: `/risks/${this.selectedId()}` }, { label: 'Edit' }];
+    return [...base, { label: this.selectedRisk()?.title || 'Risk' }];
+  }
+
+  protected filteredRisks() {
+    const term = this.search().trim().toLowerCase();
+    const status = this.statusFilter();
+    return this.risks().filter((item) => {
+      const matchesStatus = !status || item.status === status;
+      const matchesTerm =
+        !term ||
+        item.title.toLowerCase().includes(term) ||
+        (item.category || '').toLowerCase().includes(term);
+      return matchesStatus && matchesTerm;
+    });
+  }
+
+  protected currentScore() {
+    const raw = this.form.getRawValue();
+    return Number(raw.likelihood) * Number(raw.severity);
+  }
+
+  protected readInputValue(event: Event) {
+    return (event.target as HTMLInputElement).value;
+  }
+
+  protected readSelectValue(event: Event) {
+    return (event.target as HTMLSelectElement).value;
+  }
+
+  protected save() {
     if (this.form.invalid) {
       this.error.set('Complete the required risk fields.');
       return;
     }
 
     this.saving.set(true);
-    this.message.set('');
     this.error.set('');
-
+    this.message.set('');
     const payload = this.toPayload();
     const request = this.selectedId()
       ? this.api.patch<RiskRow>(`risks/${this.selectedId()}`, payload)
@@ -381,8 +374,7 @@ export class RisksPageComponent {
     request.subscribe({
       next: (risk) => {
         this.saving.set(false);
-        this.message.set('Risk saved successfully.');
-        this.reload(() => this.select(risk));
+        this.router.navigate(['/risks', risk.id], { state: { notice: 'Risk saved successfully.' } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
@@ -391,9 +383,64 @@ export class RisksPageComponent {
     });
   }
 
-  protected currentScore() {
-    const raw = this.form.getRawValue();
-    return Number(raw.likelihood) * Number(raw.severity);
+  private handleRoute(params: ParamMap) {
+    const id = params.get('id');
+    this.selectedId.set(id);
+    this.message.set((history.state?.notice as string) || '');
+    this.error.set('');
+
+    if (this.mode() === 'list') {
+      this.selectedRisk.set(null);
+      this.form.reset({
+        title: '',
+        description: '',
+        category: '',
+        likelihood: 3,
+        severity: 3,
+        treatmentPlan: '',
+        treatmentSummary: '',
+        ownerId: '',
+        targetDate: '',
+        status: 'OPEN'
+      });
+      this.reloadRisks();
+      return;
+    }
+
+    if (this.mode() === 'create') {
+      this.selectedRisk.set(null);
+      this.form.reset({
+        title: '',
+        description: '',
+        category: '',
+        likelihood: 3,
+        severity: 3,
+        treatmentPlan: '',
+        treatmentSummary: '',
+        ownerId: '',
+        targetDate: '',
+        status: 'OPEN'
+      });
+      return;
+    }
+
+    if (id) {
+      this.fetchRisk(id);
+    }
+  }
+
+  private reloadRisks() {
+    this.loading.set(true);
+    this.api.get<RiskRow[]>('risks').subscribe({
+      next: (items) => {
+        this.loading.set(false);
+        this.risks.set(items);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.loading.set(false);
+        this.error.set(this.readError(error, 'Risk register could not be loaded.'));
+      }
+    });
   }
 
   private fetchRisk(id: string) {
@@ -414,35 +461,10 @@ export class RisksPageComponent {
           targetDate: risk.targetDate?.slice(0, 10) ?? '',
           status: risk.status
         });
-        this.message.set('');
-        this.error.set('');
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
         this.error.set(this.readError(error, 'Risk details could not be loaded.'));
-      }
-    });
-  }
-
-  private reload(after?: () => void) {
-    this.loading.set(true);
-    this.api.get<RiskRow[]>('risks').subscribe({
-      next: (items) => {
-        this.loading.set(false);
-        this.risks.set(items);
-
-        if (this.selectedId()) {
-          const match = items.find((item) => item.id === this.selectedId());
-          if (match) {
-            this.fetchRisk(match.id);
-          }
-        }
-
-        after?.();
-      },
-      error: (error: HttpErrorResponse) => {
-        this.loading.set(false);
-        this.error.set(this.readError(error, 'Risk register could not be loaded.'));
       }
     });
   }

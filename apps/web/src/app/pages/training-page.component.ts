@@ -2,7 +2,12 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
+import { PageHeaderComponent } from '../shared/page-header.component';
+
+type PageMode = 'list' | 'create' | 'detail' | 'edit';
+type TrainingAssignmentStatus = 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED';
 
 type UserOption = {
   id: string;
@@ -10,8 +15,6 @@ type UserOption = {
   lastName: string;
   email: string;
 };
-
-type TrainingAssignmentStatus = 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED';
 
 type TrainingAssignment = {
   id: string;
@@ -39,29 +42,31 @@ type TrainingRecord = {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent],
   template: `
     <section class="page-grid">
-      <div class="card header">
-        <div>
-          <span class="pill">Training</span>
-          <h2>Courses, assignments, and completion evidence</h2>
-          <p>Create training courses, assign them to users, track completion, and keep evidence notes by person.</p>
-        </div>
-      </div>
+      <iso-page-header
+        [label]="'Training'"
+        [title]="pageTitle()"
+        [description]="pageDescription()"
+        [breadcrumbs]="breadcrumbs()"
+      >
+        <a *ngIf="mode() === 'list'" routerLink="/training/new" class="button-link">+ New course</a>
+        <a *ngIf="mode() === 'detail' && selectedTraining()" [routerLink]="['/training', selectedTraining()?.id, 'edit']" class="button-link">Edit course</a>
+        <a *ngIf="mode() !== 'list'" routerLink="/training" class="button-link secondary">Back to training</a>
+      </iso-page-header>
 
-      <div class="workspace">
-        <div class="card table-card">
-          <div class="toolbar">
+      <section *ngIf="mode() === 'list'" class="page-stack">
+        <div class="card list-card">
+          <div class="section-head">
             <div>
-              <strong>{{ trainings().length }} courses</strong>
-              <p class="subtle">Completion reflects assignment status across users.</p>
+              <h3>Training courses</h3>
+              <p class="subtle">A focused list of courses with delivery method, due date, and overall completion.</p>
             </div>
-            <button type="button" class="ghost" (click)="resetForm()">New course</button>
           </div>
 
-          <div class="table-state" *ngIf="loading()">Loading courses...</div>
-          <table *ngIf="!loading()">
+          <div class="empty-state" *ngIf="loading()">Loading courses...</div>
+          <table class="data-table" *ngIf="!loading()">
             <thead>
               <tr>
                 <th>Title</th>
@@ -71,8 +76,8 @@ type TrainingRecord = {
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of trainings()" (click)="select(item)" [class.selected]="item.id === selectedId()">
-                <td>{{ item.title }}</td>
+              <tr *ngFor="let item of trainings()" [routerLink]="['/training', item.id]">
+                <td><strong>{{ item.title }}</strong></td>
                 <td>{{ item.deliveryMethod || 'Unspecified' }}</td>
                 <td>{{ item.dueDate ? (item.dueDate | date:'yyyy-MM-dd') : 'Open' }}</td>
                 <td>{{ item.completion | number:'1.0-0' }}%</td>
@@ -80,119 +85,158 @@ type TrainingRecord = {
             </tbody>
           </table>
         </div>
+      </section>
 
-        <div class="side">
-          <form class="card form-card" [formGroup]="trainingForm" (ngSubmit)="saveTraining()">
-            <div class="toolbar">
+      <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-columns">
+        <form class="card form-card page-stack" [formGroup]="trainingForm" (ngSubmit)="saveTraining()">
+          <div class="section-head">
+            <div>
+              <h3>{{ mode() === 'create' ? 'Create course' : 'Edit course' }}</h3>
+              <p class="subtle">Keep the course definition separate from assignments and completion evidence.</p>
+            </div>
+          </div>
+
+          <p class="feedback" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+
+          <label class="field"><span>Title</span><input formControlName="title" placeholder="Internal auditor awareness"></label>
+          <div class="form-grid-2">
+            <label class="field"><span>Audience</span><input formControlName="audience" placeholder="Quality team"></label>
+            <label class="field"><span>Delivery method</span><input formControlName="deliveryMethod" placeholder="Workshop"></label>
+          </div>
+          <label class="field"><span>Description</span><textarea rows="3" formControlName="description" placeholder="Course scope and expected competence"></textarea></label>
+          <div class="form-grid-2">
+            <label class="field">
+              <span>Course owner</span>
+              <select formControlName="ownerId">
+                <option value="">Unassigned</option>
+                <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
+              </select>
+            </label>
+            <label class="field"><span>Course due date</span><input type="date" formControlName="dueDate"></label>
+          </div>
+
+          <div class="button-row">
+            <button type="submit" [disabled]="trainingForm.invalid || saving()">{{ saving() ? 'Saving...' : 'Save course' }}</button>
+            <a [routerLink]="selectedId() ? ['/training', selectedId()] : ['/training']" class="button-link secondary">Cancel</a>
+          </div>
+        </form>
+
+        <section class="card panel-card">
+          <div class="section-head">
+            <div>
+              <h3>Course workflow</h3>
+              <p class="subtle">Assignments and evidence stay on the course record so the editor remains calm and clear.</p>
+            </div>
+          </div>
+          <div class="entity-list top-space">
+            <div class="entity-item">
+              <strong>Define the course</strong>
+              <small>Set audience, delivery method, owner, and due date.</small>
+            </div>
+            <div class="entity-item">
+              <strong>Assign from the detail page</strong>
+              <small>Use the course page for user assignments, progress, and evidence tracking.</small>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section *ngIf="mode() === 'detail' && selectedTraining()" class="page-columns">
+        <div class="page-stack">
+          <section class="card detail-card">
+            <div class="section-head">
               <div>
-                <strong>{{ selectedId() ? 'Edit course' : 'Create course' }}</strong>
-                <p class="subtle" *ngIf="selectedTraining()">Completion: {{ selectedTraining()?.completion | number:'1.0-0' }}%</p>
+                <h3>{{ selectedTraining()?.title }}</h3>
+                <p class="subtle">{{ selectedTraining()?.audience || 'Audience not set' }}</p>
               </div>
-              <span class="message" [class.error]="!!error()">{{ error() || message() }}</span>
+              <span class="status-badge success">{{ selectedTraining()?.completion | number:'1.0-0' }}% complete</span>
             </div>
 
-            <label><span>Title</span><input formControlName="title" placeholder="Internal auditor awareness"></label>
-            <div class="inline">
-              <label><span>Audience</span><input formControlName="audience" placeholder="Quality team"></label>
-              <label><span>Delivery method</span><input formControlName="deliveryMethod" placeholder="Workshop"></label>
-            </div>
-            <label><span>Description</span><textarea rows="2" formControlName="description" placeholder="Course scope and expected competence"></textarea></label>
-            <div class="inline">
-              <label>
-                <span>Course owner</span>
-                <select formControlName="ownerId">
-                  <option value="">Unassigned</option>
-                  <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
-                </select>
-              </label>
-              <label><span>Course due date</span><input type="date" formControlName="dueDate"></label>
-            </div>
-            <button type="submit" [disabled]="trainingForm.invalid || saving()">
-              {{ saving() ? 'Saving...' : (selectedId() ? 'Save changes' : 'Create course') }}
-            </button>
-          </form>
+            <dl class="key-value top-space">
+              <dt>Description</dt>
+              <dd>{{ selectedTraining()?.description || 'No description provided.' }}</dd>
+              <dt>Delivery method</dt>
+              <dd>{{ selectedTraining()?.deliveryMethod || 'Not set' }}</dd>
+              <dt>Due date</dt>
+              <dd>{{ selectedTraining()?.dueDate ? (selectedTraining()?.dueDate | date:'yyyy-MM-dd') : 'Open' }}</dd>
+            </dl>
+          </section>
 
-          <section class="card nested-card" *ngIf="selectedTraining()">
-            <div class="panel-title">Assignments</div>
-            <form [formGroup]="assignmentForm" class="stack" (ngSubmit)="addAssignment()">
-              <div class="inline">
-                <select formControlName="userId">
-                  <option value="">Select user</option>
-                  <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
-                </select>
-                <input type="date" formControlName="dueDate">
-                <select formControlName="status">
-                  <option>ASSIGNED</option>
-                  <option>IN_PROGRESS</option>
-                  <option>COMPLETED</option>
-                </select>
+          <section class="card panel-card">
+            <div class="section-head">
+              <div>
+                <h3>Assignments</h3>
+                <p class="subtle">Assign training, track completion, and store evidence by user.</p>
               </div>
-              <textarea rows="2" formControlName="notes" placeholder="Assignment notes"></textarea>
-              <textarea rows="2" formControlName="evidenceSummary" placeholder="Evidence or completion notes"></textarea>
+            </div>
+
+            <form [formGroup]="assignmentForm" class="page-stack top-space" (ngSubmit)="addAssignment()">
+              <div class="form-grid-3">
+                <label class="field">
+                  <span>User</span>
+                  <select formControlName="userId">
+                    <option value="">Select user</option>
+                    <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
+                  </select>
+                </label>
+                <label class="field"><span>Due date</span><input type="date" formControlName="dueDate"></label>
+                <label class="field">
+                  <span>Status</span>
+                  <select formControlName="status">
+                    <option>ASSIGNED</option>
+                    <option>IN_PROGRESS</option>
+                    <option>COMPLETED</option>
+                  </select>
+                </label>
+              </div>
+              <label class="field"><span>Notes</span><textarea rows="2" formControlName="notes" placeholder="Assignment notes"></textarea></label>
+              <label class="field"><span>Evidence summary</span><textarea rows="2" formControlName="evidenceSummary" placeholder="Completion evidence or notes"></textarea></label>
               <button type="submit" [disabled]="assignmentForm.invalid || saving()">Assign training</button>
             </form>
 
-            <ul class="list">
-              <li *ngFor="let assignment of selectedTraining()?.assignments || []">
-                <div>
-                  <strong>{{ assignment.user?.firstName }} {{ assignment.user?.lastName }}</strong>
-                  <p>{{ assignment.displayStatus }}{{ assignment.dueDate ? ' | due ' + assignment.dueDate.slice(0, 10) : '' }}</p>
-                  <small>{{ assignment.evidenceSummary || assignment.notes || 'No notes' }}</small>
+            <div class="entity-list top-space">
+              <article class="entity-item" *ngFor="let assignment of selectedTraining()?.assignments || []">
+                <div class="section-head">
+                  <div>
+                    <strong>{{ assignment.user?.firstName }} {{ assignment.user?.lastName }}</strong>
+                    <small>{{ assignment.displayStatus }}{{ assignment.dueDate ? ' | due ' + assignment.dueDate.slice(0, 10) : '' }}</small>
+                  </div>
+                  <button type="button" class="secondary" [disabled]="assignment.status === 'COMPLETED' || saving()" (click)="markAssignmentComplete(assignment)">
+                    {{ assignment.status === 'COMPLETED' ? 'Completed' : 'Mark complete' }}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  class="ghost"
-                  [disabled]="assignment.status === 'COMPLETED' || saving()"
-                  (click)="markAssignmentComplete(assignment)"
-                >
-                  {{ assignment.status === 'COMPLETED' ? 'Completed' : 'Mark complete' }}
-                </button>
-              </li>
-            </ul>
+                <p class="subtle">{{ assignment.evidenceSummary || assignment.notes || 'No notes' }}</p>
+              </article>
+            </div>
           </section>
         </div>
-      </div>
+      </section>
     </section>
   `,
   styles: [`
-    .header, .table-card, .form-card, .nested-card { padding: 1.2rem 1.3rem; }
-    .header h2 { margin: 0.8rem 0 0.3rem; }
-    .header p, .subtle, .message, .table-state, p, small { color: var(--muted); }
-    .workspace { display: grid; grid-template-columns: 1.1fr 1fr; gap: 1rem; align-items: start; }
-    .side { display: grid; gap: 1rem; }
-    .toolbar { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
-    .subtle, .message { margin: 0.25rem 0 0; font-size: 0.92rem; }
-    .message { min-height: 1.1rem; text-align: right; }
-    .message.error { color: #a03535; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { padding: 0.95rem 0.4rem; text-align: left; border-bottom: 1px solid rgba(0,0,0,0.08); }
-    tbody tr { cursor: pointer; }
-    tbody tr.selected { background: rgba(40,89,67,0.08); }
-    form, .stack { display: grid; gap: 0.9rem; }
-    .inline { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-    label { display: grid; gap: 0.45rem; }
-    input, select, textarea, button { border-radius: 14px; border: 1px solid var(--panel-border); padding: 0.8rem 0.9rem; }
-    button { border: 0; background: var(--brand); color: white; font-weight: 700; }
-    .ghost { background: rgba(40,89,67,0.1); color: var(--brand-strong); }
-    .panel-title { font-weight: 700; }
-    .list { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 0.75rem; }
-    .list li { border: 1px solid rgba(0,0,0,0.08); border-radius: 16px; padding: 0.85rem; display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
-    p, small { margin: 0.25rem 0 0; }
-    @media (max-width: 1100px) { .workspace { grid-template-columns: 1fr; } }
-    @media (max-width: 700px) { .inline { grid-template-columns: 1fr; } .list li { display: grid; } }
+    .top-space {
+      margin-top: 1rem;
+    }
+
+    tr[routerLink] {
+      cursor: pointer;
+    }
   `]
 })
 export class TrainingPageComponent {
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
+  protected readonly mode = signal<PageMode>('list');
   protected readonly trainings = signal<TrainingRecord[]>([]);
   protected readonly users = signal<UserOption[]>([]);
   protected readonly selectedId = signal<string | null>(null);
   protected readonly selectedTraining = signal<TrainingRecord | null>(null);
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
-  protected readonly message = signal('');
+  protected readonly message = signal((history.state?.notice as string) || '');
   protected readonly error = signal('');
 
   protected readonly trainingForm = this.fb.nonNullable.group({
@@ -214,37 +258,40 @@ export class TrainingPageComponent {
 
   constructor() {
     this.loadUsers();
-    this.reload();
-  }
-
-  select(item: TrainingRecord) {
-    this.selectedId.set(item.id);
-    this.fetchTraining(item.id);
-  }
-
-  resetForm() {
-    this.selectedId.set(null);
-    this.selectedTraining.set(null);
-    this.trainingForm.reset({
-      title: '',
-      audience: '',
-      description: '',
-      ownerId: '',
-      deliveryMethod: '',
-      dueDate: ''
+    this.route.data.subscribe((data) => {
+      this.mode.set((data['mode'] as PageMode) || 'list');
+      this.handleRoute(this.route.snapshot.paramMap);
     });
-    this.assignmentForm.reset({
-      userId: '',
-      dueDate: '',
-      status: 'ASSIGNED',
-      notes: '',
-      evidenceSummary: ''
-    });
-    this.message.set('');
-    this.error.set('');
+    this.route.paramMap.subscribe((params) => this.handleRoute(params));
   }
 
-  saveTraining() {
+  protected pageTitle() {
+    return {
+      list: 'Training courses',
+      create: 'Create training course',
+      detail: this.selectedTraining()?.title || 'Training detail',
+      edit: this.selectedTraining()?.title || 'Edit training course'
+    }[this.mode()];
+  }
+
+  protected pageDescription() {
+    return {
+      list: 'A focused training list for course setup, due dates, and completion progress.',
+      create: 'Create a course in a dedicated page instead of mixing course setup with assignments.',
+      detail: 'Review assignments, completion, and evidence in one clean course detail page.',
+      edit: 'Update the course definition without the noise of assignment management.'
+    }[this.mode()];
+  }
+
+  protected breadcrumbs() {
+    if (this.mode() === 'list') return [{ label: 'Training' }];
+    const base = [{ label: 'Training', link: '/training' }];
+    if (this.mode() === 'create') return [...base, { label: 'New course' }];
+    if (this.mode() === 'edit') return [...base, { label: this.selectedTraining()?.title || 'Course', link: `/training/${this.selectedId()}` }, { label: 'Edit' }];
+    return [...base, { label: this.selectedTraining()?.title || 'Course' }];
+  }
+
+  protected saveTraining() {
     if (this.trainingForm.invalid) {
       this.error.set('Complete the required training fields.');
       return;
@@ -271,8 +318,7 @@ export class TrainingPageComponent {
     request.subscribe({
       next: (training) => {
         this.saving.set(false);
-        this.message.set(this.selectedId() ? 'Training updated.' : 'Training created.');
-        this.reload(() => this.select(training));
+        this.router.navigate(['/training', training.id], { state: { notice: 'Training course saved successfully.' } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
@@ -281,7 +327,7 @@ export class TrainingPageComponent {
     });
   }
 
-  addAssignment() {
+  protected addAssignment() {
     if (!this.selectedId() || this.assignmentForm.invalid) {
       return;
     }
@@ -308,7 +354,7 @@ export class TrainingPageComponent {
     });
   }
 
-  markAssignmentComplete(assignment: TrainingAssignment) {
+  protected markAssignmentComplete(assignment: TrainingAssignment) {
     this.saving.set(true);
     this.api.patch(`training/assignments/${assignment.id}`, {
       status: 'COMPLETED',
@@ -324,6 +370,48 @@ export class TrainingPageComponent {
         this.saving.set(false);
         this.error.set(this.readError(error, 'Training assignment update failed.'));
       }
+    });
+  }
+
+  private handleRoute(params: ParamMap) {
+    const id = params.get('id');
+    this.selectedId.set(id);
+    this.message.set((history.state?.notice as string) || '');
+    this.error.set('');
+
+    if (this.mode() === 'list') {
+      this.selectedTraining.set(null);
+      this.resetForms();
+      this.reload();
+      return;
+    }
+
+    if (this.mode() === 'create') {
+      this.selectedTraining.set(null);
+      this.resetForms();
+      return;
+    }
+
+    if (id) {
+      this.fetchTraining(id);
+    }
+  }
+
+  private resetForms() {
+    this.trainingForm.reset({
+      title: '',
+      audience: '',
+      description: '',
+      ownerId: '',
+      deliveryMethod: '',
+      dueDate: ''
+    });
+    this.assignmentForm.reset({
+      userId: '',
+      dueDate: '',
+      status: 'ASSIGNED',
+      notes: '',
+      evidenceSummary: ''
     });
   }
 
@@ -349,13 +437,12 @@ export class TrainingPageComponent {
     });
   }
 
-  private reload(after?: () => void) {
+  private reload() {
     this.loading.set(true);
     this.api.get<TrainingRecord[]>('training').subscribe({
       next: (items) => {
         this.loading.set(false);
         this.trainings.set(items);
-        after?.();
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
