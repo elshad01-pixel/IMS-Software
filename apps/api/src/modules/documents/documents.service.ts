@@ -26,14 +26,14 @@ export class DocumentsService {
 
   list(tenantId: string) {
     return this.prisma.document.findMany({
-      where: { tenantId },
+      where: { tenantId, deletedAt: null },
       orderBy: [{ updatedAt: 'desc' }, { title: 'asc' }]
     });
   }
 
   get(tenantId: string, id: string) {
     return this.prisma.document.findFirstOrThrow({
-      where: { tenantId, id }
+      where: { tenantId, id, deletedAt: null }
     });
   }
 
@@ -73,7 +73,7 @@ export class DocumentsService {
 
   async update(tenantId: string, actorId: string, actorPermissions: string[], id: string, dto: UpdateDocumentDto) {
     const existing = await this.prisma.document.findFirst({
-      where: { id, tenantId }
+      where: { id, tenantId, deletedAt: null }
     });
 
     if (!existing) {
@@ -145,6 +145,39 @@ export class DocumentsService {
     } catch (error) {
       this.handleDocumentWriteError(error);
     }
+  }
+
+  async remove(tenantId: string, actorId: string, id: string) {
+    const existing = await this.prisma.document.findFirst({
+      where: { id, tenantId, deletedAt: null }
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Document not found');
+    }
+
+    if (existing.status !== DocumentStatus.DRAFT) {
+      throw new BadRequestException('Only draft documents can be deleted. Approved documents must be obsoleted instead.');
+    }
+
+    await this.prisma.document.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        deletedById: actorId
+      }
+    });
+
+    await this.auditLogsService.create({
+      tenantId,
+      actorId,
+      action: 'document.deleted',
+      entityType: 'document',
+      entityId: id,
+      metadata: { status: existing.status }
+    });
+
+    return { success: true };
   }
 
   private async ensureOwnerBelongsToTenant(tenantId: string, ownerId?: string) {

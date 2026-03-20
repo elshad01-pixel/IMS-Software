@@ -33,22 +33,23 @@ export class DashboardService {
       trainingAssignments,
       overdueTrainingAssignments
     ] = await Promise.all([
-      this.prisma.document.count({ where: { tenantId } }),
-      this.prisma.document.count({ where: { tenantId, status: DocumentStatus.APPROVED } }),
-      this.prisma.risk.count({ where: { tenantId } }),
-      this.prisma.risk.count({ where: { tenantId, score: { gte: 15 }, status: { not: RiskStatus.CLOSED } } }),
-      this.prisma.capa.count({ where: { tenantId } }),
-      this.prisma.capa.count({ where: { tenantId, status: { not: CapaStatus.CLOSED } } }),
-      this.prisma.audit.count({ where: { tenantId } }),
-      this.prisma.audit.count({ where: { tenantId, status: { not: AuditStatus.CLOSED } } }),
-      this.prisma.managementReview.count({ where: { tenantId } }),
+      this.prisma.document.count({ where: { tenantId, deletedAt: null } }),
+      this.prisma.document.count({ where: { tenantId, deletedAt: null, status: DocumentStatus.APPROVED } }),
+      this.prisma.risk.count({ where: { tenantId, deletedAt: null } }),
+      this.prisma.risk.count({ where: { tenantId, deletedAt: null, score: { gte: 15 }, status: { not: RiskStatus.CLOSED } } }),
+      this.prisma.capa.count({ where: { tenantId, deletedAt: null } }),
+      this.prisma.capa.count({ where: { tenantId, deletedAt: null, status: { not: CapaStatus.CLOSED } } }),
+      this.prisma.audit.count({ where: { tenantId, deletedAt: null } }),
+      this.prisma.audit.count({ where: { tenantId, deletedAt: null, status: { not: AuditStatus.CLOSED } } }),
+      this.prisma.managementReview.count({ where: { tenantId, deletedAt: null } }),
       this.prisma.training.count({ where: { tenantId } }),
       this.prisma.actionItem.count({
-        where: { tenantId, status: { in: [ActionItemStatus.OPEN, ActionItemStatus.IN_PROGRESS] } }
+        where: { tenantId, deletedAt: null, status: { in: [ActionItemStatus.OPEN, ActionItemStatus.IN_PROGRESS] } }
       }),
       this.prisma.actionItem.count({
         where: {
           tenantId,
+          deletedAt: null,
           dueDate: { lt: today },
           status: { in: [ActionItemStatus.OPEN, ActionItemStatus.IN_PROGRESS] }
         }
@@ -74,22 +75,22 @@ export class DashboardService {
     const [highRisks, recentDocuments, recentCapas, actionItems, recentAudits, kpiSummary, trainingSummary] =
       await Promise.all([
         this.prisma.risk.findMany({
-          where: { tenantId, status: { not: RiskStatus.CLOSED } },
+          where: { tenantId, deletedAt: null, status: { not: RiskStatus.CLOSED } },
           take: 6,
           orderBy: [{ score: 'desc' }, { updatedAt: 'desc' }]
         }),
         this.prisma.document.findMany({
-          where: { tenantId },
+          where: { tenantId, deletedAt: null },
           orderBy: { updatedAt: 'desc' },
           take: 6
         }),
         this.prisma.capa.findMany({
-          where: { tenantId },
+          where: { tenantId, deletedAt: null },
           orderBy: { updatedAt: 'desc' },
           take: 6
         }),
         this.prisma.actionItem.findMany({
-          where: { tenantId, status: { in: [ActionItemStatus.OPEN, ActionItemStatus.IN_PROGRESS] } },
+          where: { tenantId, deletedAt: null, status: { in: [ActionItemStatus.OPEN, ActionItemStatus.IN_PROGRESS] } },
           include: {
             owner: {
               select: { firstName: true, lastName: true }
@@ -99,7 +100,7 @@ export class DashboardService {
           take: 8
         }),
         this.prisma.audit.findMany({
-          where: { tenantId },
+          where: { tenantId, deletedAt: null },
           orderBy: [{ scheduledAt: 'asc' }, { updatedAt: 'desc' }],
           take: 5
         }),
@@ -124,6 +125,7 @@ export class DashboardService {
       low: await this.prisma.risk.count({
         where: {
           tenantId,
+          deletedAt: null,
           status: { not: RiskStatus.CLOSED },
           score: { lt: 8 }
         }
@@ -131,6 +133,7 @@ export class DashboardService {
       medium: await this.prisma.risk.count({
         where: {
           tenantId,
+          deletedAt: null,
           status: { not: RiskStatus.CLOSED },
           score: { gte: 8, lt: 15 }
         }
@@ -138,6 +141,7 @@ export class DashboardService {
       high: await this.prisma.risk.count({
         where: {
           tenantId,
+          deletedAt: null,
           status: { not: RiskStatus.CLOSED },
           score: { gte: 15 }
         }
@@ -163,20 +167,20 @@ export class DashboardService {
         overdueTrainingAssignments
       },
       riskSummary: {
-        open: await this.prisma.risk.count({ where: { tenantId, status: RiskStatus.OPEN } }),
-        inTreatment: await this.prisma.risk.count({ where: { tenantId, status: RiskStatus.IN_TREATMENT } }),
-        mitigated: await this.prisma.risk.count({ where: { tenantId, status: RiskStatus.MITIGATED } })
+        open: await this.prisma.risk.count({ where: { tenantId, deletedAt: null, status: RiskStatus.OPEN } }),
+        inTreatment: await this.prisma.risk.count({ where: { tenantId, deletedAt: null, status: RiskStatus.IN_TREATMENT } }),
+        mitigated: await this.prisma.risk.count({ where: { tenantId, deletedAt: null, status: RiskStatus.MITIGATED } })
       },
       riskDistribution,
       capaSummary: {
-        investigating: await this.prisma.capa.count({ where: { tenantId, status: CapaStatus.INVESTIGATING } }),
-        inProgress: await this.prisma.capa.count({ where: { tenantId, status: CapaStatus.IN_PROGRESS } }),
-        verified: await this.prisma.capa.count({ where: { tenantId, status: CapaStatus.VERIFIED } })
+        investigating: await this.prisma.capa.count({ where: { tenantId, deletedAt: null, status: CapaStatus.INVESTIGATING } }),
+        inProgress: await this.prisma.capa.count({ where: { tenantId, deletedAt: null, status: CapaStatus.IN_PROGRESS } }),
+        verified: await this.prisma.capa.count({ where: { tenantId, deletedAt: null, status: CapaStatus.VERIFIED } })
       },
       auditSummary: {
-        planned: await this.prisma.audit.count({ where: { tenantId, status: AuditStatus.PLANNED } }),
-        inProgress: await this.prisma.audit.count({ where: { tenantId, status: AuditStatus.IN_PROGRESS } }),
-        completed: await this.prisma.audit.count({ where: { tenantId, status: AuditStatus.COMPLETED } })
+        planned: await this.prisma.audit.count({ where: { tenantId, deletedAt: null, status: AuditStatus.PLANNED } }),
+        inProgress: await this.prisma.audit.count({ where: { tenantId, deletedAt: null, status: AuditStatus.IN_PROGRESS } }),
+        completed: await this.prisma.audit.count({ where: { tenantId, deletedAt: null, status: AuditStatus.COMPLETED } })
       },
       kpiSummaryCounts: {
         watch: kpiWatch,

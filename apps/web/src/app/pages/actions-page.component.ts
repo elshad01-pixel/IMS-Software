@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ApiService } from '../core/api.service';
+import { AuthStore } from '../core/auth.store';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
 type UserOption = {
@@ -115,6 +116,7 @@ type ActionRecord = {
                   <th>Owner</th>
                   <th>Due date</th>
                   <th>Status</th>
+                  <th *ngIf="canDeleteActions()">Admin</th>
                 </tr>
               </thead>
               <tbody>
@@ -141,6 +143,9 @@ type ActionRecord = {
                       <option>CANCELLED</option>
                     </select>
                   </td>
+                  <td *ngIf="canDeleteActions()">
+                    <button type="button" class="secondary" [disabled]="action.status === 'DONE'" (click)="deleteAction(action)">Delete</button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -152,6 +157,7 @@ type ActionRecord = {
 })
 export class ActionsPageComponent {
   private readonly api = inject(ApiService);
+  private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
 
   protected readonly users = signal<UserOption[]>([]);
@@ -206,6 +212,30 @@ export class ActionsPageComponent {
       },
       error: (error: HttpErrorResponse) => {
         this.error.set(this.readError(error, 'Action status update failed.'));
+      }
+    });
+  }
+
+  protected canDeleteActions() {
+    return this.authStore.hasPermission('admin.delete');
+  }
+
+  protected deleteAction(action: ActionRecord) {
+    if (!this.canDeleteActions() || action.status === 'DONE') {
+      return;
+    }
+
+    if (!window.confirm(`Delete action "${action.title}"? Completed actions are protected.`)) {
+      return;
+    }
+
+    this.api.delete(`action-items/${action.id}`).subscribe({
+      next: () => {
+        this.message.set('Action deleted.');
+        this.reload();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.error.set(this.readError(error, 'Action deletion failed.'));
       }
     });
   }

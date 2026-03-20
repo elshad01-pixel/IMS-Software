@@ -98,7 +98,7 @@ export class AuditsService {
 
   async list(tenantId: string) {
     const audits = await this.prisma.audit.findMany({
-      where: { tenantId },
+      where: { tenantId, deletedAt: null },
       include: {
         checklistItems: true,
         findings: true
@@ -111,7 +111,7 @@ export class AuditsService {
 
   async get(tenantId: string, id: string) {
     const audit = await this.prisma.audit.findFirst({
-      where: { tenantId, id },
+      where: { tenantId, id, deletedAt: null },
       include: {
         checklistItems: {
           orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }]
@@ -171,7 +171,7 @@ export class AuditsService {
 
   async update(tenantId: string, actorId: string, id: string, dto: UpdateAuditDto) {
     const existing = await this.prisma.audit.findFirst({
-      where: { tenantId, id },
+      where: { tenantId, id, deletedAt: null },
       include: { checklistItems: true }
     }) as ExistingAudit | null;
 
@@ -325,6 +325,68 @@ export class AuditsService {
       entityType: 'audit',
       entityId: item.auditId,
       metadata: { itemId }
+    });
+
+    return { success: true };
+  }
+
+  async remove(tenantId: string, actorId: string, id: string) {
+    const existing = await this.prisma.audit.findFirst({
+      where: { tenantId, id, deletedAt: null }
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Audit not found');
+    }
+
+    if (existing.status !== AuditStatus.PLANNED) {
+      throw new BadRequestException('Only planning-stage audits can be deleted. Completed audits must be archived instead.');
+    }
+
+    await this.prisma.audit.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        deletedById: actorId
+      }
+    });
+
+    await this.auditLogsService.create({
+      tenantId,
+      actorId,
+      action: 'audit.deleted',
+      entityType: 'audit',
+      entityId: id,
+      metadata: { status: existing.status }
+    });
+
+    return { success: true };
+  }
+
+  async archive(tenantId: string, actorId: string, id: string) {
+    const existing = await this.prisma.audit.findFirst({
+      where: { tenantId, id, deletedAt: null }
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Audit not found');
+    }
+
+    await this.prisma.audit.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        deletedById: actorId
+      }
+    });
+
+    await this.auditLogsService.create({
+      tenantId,
+      actorId,
+      action: 'audit.archived',
+      entityType: 'audit',
+      entityId: id,
+      metadata: { status: existing.status }
     });
 
     return { success: true };
@@ -506,7 +568,7 @@ export class AuditsService {
 
   private async requireAudit(tenantId: string, auditId: string) {
     const audit = await this.prisma.audit.findFirst({
-      where: { tenantId, id: auditId }
+      where: { tenantId, id: auditId, deletedAt: null }
     });
 
     if (!audit) {

@@ -4,6 +4,7 @@ import { Component, Input, OnChanges, OnInit, SimpleChanges, inject, signal } fr
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
+import { AuthStore } from '../core/auth.store';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
@@ -66,6 +67,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
       >
         <a *ngIf="mode() === 'list'" routerLink="/documents/new" class="button-link">+ New document</a>
         <a *ngIf="mode() === 'detail' && selectedDocument()" [routerLink]="['/documents', selectedDocument()?.id, 'edit']" class="button-link">Edit document</a>
+        <button *ngIf="mode() === 'detail' && canDeleteDocument()" type="button" class="button-link danger" (click)="deleteDocument()">Delete draft</button>
         <a *ngIf="mode() !== 'list'" routerLink="/documents" class="button-link secondary">Back to register</a>
       </iso-page-header>
 
@@ -363,6 +365,7 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
   @Input() forcedMode: PageMode | null = null;
 
   private readonly api = inject(ApiService);
+  private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -519,6 +522,34 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
         this.error.set(this.readError(error, 'Document save failed.'));
+      }
+    });
+  }
+
+  protected canDeleteDocument() {
+    return this.authStore.hasPermission('admin.delete') && this.selectedDocument()?.status === 'DRAFT';
+  }
+
+  protected deleteDocument() {
+    if (!this.selectedId() || !this.canDeleteDocument()) {
+      return;
+    }
+
+    if (!window.confirm('Delete this draft document? Approved and obsolete documents cannot be deleted.')) {
+      return;
+    }
+
+    this.saving.set(true);
+    this.error.set('');
+    this.message.set('');
+    this.api.delete(`documents/${this.selectedId()}`).subscribe({
+      next: () => {
+        this.saving.set(false);
+        void this.router.navigate(['/documents'], { state: { notice: 'Draft document deleted.' } });
+      },
+      error: (error: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.error.set(this.readError(error, 'Document deletion failed.'));
       }
     });
   }

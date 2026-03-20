@@ -4,6 +4,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
+import { AuthStore } from '../core/auth.store';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
@@ -84,6 +85,8 @@ type AuditRecord = {
       >
         <a *ngIf="mode() === 'list'" routerLink="/audits/new" class="button-link">+ New audit</a>
         <a *ngIf="mode() === 'detail' && selectedAudit()" [routerLink]="['/audits', selectedAudit()?.id, 'edit']" class="button-link">Edit audit</a>
+        <button *ngIf="mode() === 'detail' && canDeleteAudit()" type="button" class="button-link danger" (click)="deleteAudit()">Delete audit</button>
+        <button *ngIf="mode() === 'detail' && canArchiveAudit()" type="button" class="button-link secondary" (click)="archiveAudit()">Archive audit</button>
         <a *ngIf="mode() !== 'list'" routerLink="/audits" class="button-link secondary">Back to audits</a>
       </iso-page-header>
 
@@ -789,6 +792,7 @@ type AuditRecord = {
 })
 export class AuditsPageComponent {
   private readonly api = inject(ApiService);
+  private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -1115,6 +1119,62 @@ export class AuditsPageComponent {
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
         this.error.set(this.readError(error, 'Audit status update failed.'));
+      }
+    });
+  }
+
+  protected canDeleteAudit() {
+    return this.authStore.hasPermission('admin.delete') && this.selectedAudit()?.status === 'PLANNED';
+  }
+
+  protected canArchiveAudit() {
+    return this.authStore.hasPermission('admin.delete') && !!this.selectedAudit() && this.selectedAudit()?.status !== 'PLANNED';
+  }
+
+  protected deleteAudit() {
+    if (!this.selectedId() || !this.canDeleteAudit()) {
+      return;
+    }
+
+    if (!window.confirm('Delete this planning-stage audit? Completed audits should be archived instead.')) {
+      return;
+    }
+
+    this.saving.set(true);
+    this.error.set('');
+    this.message.set('');
+    this.api.delete(`audits/${this.selectedId()}`).subscribe({
+      next: () => {
+        this.saving.set(false);
+        void this.router.navigate(['/audits'], { state: { notice: 'Audit deleted.' } });
+      },
+      error: (error: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.error.set(this.readError(error, 'Audit deletion failed.'));
+      }
+    });
+  }
+
+  protected archiveAudit() {
+    if (!this.selectedId() || !this.canArchiveAudit()) {
+      return;
+    }
+
+    if (!window.confirm('Archive this audit? It will be removed from active lists but kept in the audit trail.')) {
+      return;
+    }
+
+    this.saving.set(true);
+    this.error.set('');
+    this.message.set('');
+    this.api.patch(`audits/${this.selectedId()}/archive`, {}).subscribe({
+      next: () => {
+        this.saving.set(false);
+        void this.router.navigate(['/audits'], { state: { notice: 'Audit archived.' } });
+      },
+      error: (error: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.error.set(this.readError(error, 'Audit archive failed.'));
       }
     });
   }

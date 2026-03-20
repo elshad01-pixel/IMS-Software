@@ -25,6 +25,11 @@ export class AuthStore {
   readonly isAuthenticated = computed(() => !!this.sessionState()?.accessToken);
   readonly tenantId = computed(() => this.sessionState()?.user.tenantId ?? null);
   readonly tenantSlug = computed(() => this.sessionState()?.tenantSlug ?? null);
+  readonly permissions = computed(() => this.sessionState()?.user.permissions ?? []);
+
+  hasPermission(permission: string) {
+    return this.permissions().includes(permission);
+  }
 
   login(payload: { email: string; password: string; tenantSlug: string }) {
     return this.http

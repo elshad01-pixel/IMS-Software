@@ -23,14 +23,14 @@ export class CapaService {
 
   list(tenantId: string) {
     return this.prisma.capa.findMany({
-      where: { tenantId },
+      where: { tenantId, deletedAt: null },
       orderBy: [{ updatedAt: 'desc' }, { dueDate: 'asc' }]
     });
   }
 
   get(tenantId: string, id: string) {
     return this.prisma.capa.findFirstOrThrow({
-      where: { tenantId, id }
+      where: { tenantId, id, deletedAt: null }
     });
   }
 
@@ -72,7 +72,7 @@ export class CapaService {
 
   async update(tenantId: string, actorId: string, actorPermissions: string[], id: string, dto: UpdateCapaDto) {
     const existing = await this.prisma.capa.findFirst({
-      where: { id, tenantId }
+      where: { id, tenantId, deletedAt: null }
     });
 
     if (!existing) {
@@ -101,6 +101,39 @@ export class CapaService {
     });
 
     return capa;
+  }
+
+  async remove(tenantId: string, actorId: string, id: string) {
+    const existing = await this.prisma.capa.findFirst({
+      where: { id, tenantId, deletedAt: null }
+    });
+
+    if (!existing) {
+      throw new NotFoundException('CAPA not found');
+    }
+
+    if (existing.status === CapaStatus.CLOSED) {
+      throw new BadRequestException('Closed CAPA records cannot be deleted.');
+    }
+
+    await this.prisma.capa.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        deletedById: actorId
+      }
+    });
+
+    await this.auditLogsService.create({
+      tenantId,
+      actorId,
+      action: 'capa.deleted',
+      entityType: 'capa',
+      entityId: id,
+      metadata: { status: existing.status }
+    });
+
+    return { success: true };
   }
 
   private toUpdateCapaData(dto: UpdateCapaDto, existing?: Capa) {
@@ -168,6 +201,7 @@ export class CapaService {
         tenantId,
         sourceType: 'capa',
         sourceId: capaId,
+        deletedAt: null,
         status: { not: 'DONE' }
       }
     });

@@ -25,6 +25,7 @@ export class ActionItemsService {
     const items = await this.prisma.actionItem.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         sourceType: filters.sourceType,
         sourceId: filters.sourceId,
         status: filters.status,
@@ -97,7 +98,7 @@ export class ActionItemsService {
 
   async update(tenantId: string, actorId: string, id: string, dto: UpdateActionItemDto) {
     const existing = await this.prisma.actionItem.findFirst({
-      where: { id, tenantId }
+      where: { id, tenantId, deletedAt: null }
     });
 
     if (!existing) {
@@ -137,6 +138,39 @@ export class ActionItemsService {
     });
 
     return this.mapActionItem(tenantId, actionItem);
+  }
+
+  async remove(tenantId: string, actorId: string, id: string) {
+    const existing = await this.prisma.actionItem.findFirst({
+      where: { id, tenantId, deletedAt: null }
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Action item not found');
+    }
+
+    if (existing.status === ActionItemStatus.DONE) {
+      throw new BadRequestException('Completed actions cannot be deleted.');
+    }
+
+    await this.prisma.actionItem.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        deletedById: actorId
+      }
+    });
+
+    await this.auditLogsService.create({
+      tenantId,
+      actorId,
+      action: 'action-item.deleted',
+      entityType: 'action-item',
+      entityId: id,
+      metadata: { status: existing.status, sourceType: existing.sourceType, sourceId: existing.sourceId }
+    });
+
+    return { success: true };
   }
 
   private async ensureOwnerBelongsToTenant(tenantId: string, ownerId?: string) {
@@ -190,28 +224,28 @@ export class ActionItemsService {
 
     if (normalized === 'risk') {
       return (await this.prisma.risk.findFirst({
-        where: { tenantId, id: sourceId },
+        where: { tenantId, id: sourceId, deletedAt: null },
         select: { title: true }
       }))?.title ?? sourceId;
     }
 
     if (normalized === 'capa') {
       return (await this.prisma.capa.findFirst({
-        where: { tenantId, id: sourceId },
+        where: { tenantId, id: sourceId, deletedAt: null },
         select: { title: true }
       }))?.title ?? sourceId;
     }
 
     if (normalized === 'audit') {
       return (await this.prisma.audit.findFirst({
-        where: { tenantId, id: sourceId },
+        where: { tenantId, id: sourceId, deletedAt: null },
         select: { title: true }
       }))?.title ?? sourceId;
     }
 
     if (normalized === 'management-review') {
       return (await this.prisma.managementReview.findFirst({
-        where: { tenantId, id: sourceId },
+        where: { tenantId, id: sourceId, deletedAt: null },
         select: { title: true }
       }))?.title ?? sourceId;
     }

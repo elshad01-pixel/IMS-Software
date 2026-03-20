@@ -48,4 +48,14 @@ export class ManagementReviewController {
   ) {
     return this.managementReviewService.update(tenantId, user.sub, id, dto);
   }
+
+  @Patch(':id/archive')
+  @Permissions('admin.delete')
+  archive(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { sub: string },
+    @Param('id') id: string
+  ) {
+    return this.managementReviewService.archive(tenantId, user.sub, id);
+  }
 }

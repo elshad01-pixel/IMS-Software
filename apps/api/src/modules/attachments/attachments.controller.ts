@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
@@ -59,5 +59,15 @@ export class AttachmentsController {
     }
   ) {
     return this.attachmentsService.upload(tenantId, user.sub, sourceType, sourceId, file);
+  }
+
+  @Delete(':attachmentId')
+  @Permissions('admin.delete')
+  remove(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { sub: string },
+    @Param('attachmentId') attachmentId: string
+  ) {
+    return this.attachmentsService.remove(tenantId, user.sub, attachmentId);
   }
 }

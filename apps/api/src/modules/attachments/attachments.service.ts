@@ -29,14 +29,14 @@ export class AttachmentsService {
 
   list(tenantId: string, sourceType: string, sourceId: string) {
     return this.prisma.attachment.findMany({
-      where: { tenantId, sourceType, sourceId },
+      where: { tenantId, sourceType, sourceId, deletedAt: null },
       orderBy: { createdAt: 'desc' }
     });
   }
 
   async download(tenantId: string, actorId: string, attachmentId: string) {
     const attachment = await this.prisma.attachment.findFirst({
-      where: { id: attachmentId, tenantId }
+      where: { id: attachmentId, tenantId, deletedAt: null }
     });
 
     if (!attachment) {
@@ -100,6 +100,37 @@ export class AttachmentsService {
     });
 
     return attachment;
+  }
+
+  async remove(tenantId: string, actorId: string, attachmentId: string) {
+    const attachment = await this.prisma.attachment.findFirst({
+      where: { id: attachmentId, tenantId, deletedAt: null }
+    });
+
+    if (!attachment) {
+      throw new NotFoundException('Attachment not found.');
+    }
+
+    await this.minioClient.removeObject(this.bucket, attachment.objectKey).catch(() => undefined);
+
+    await this.prisma.attachment.update({
+      where: { id: attachmentId },
+      data: {
+        deletedAt: new Date(),
+        deletedById: actorId
+      }
+    });
+
+    await this.auditLogsService.create({
+      tenantId,
+      actorId,
+      action: 'attachment.deleted',
+      entityType: attachment.sourceType,
+      entityId: attachment.sourceId,
+      metadata: { attachmentId: attachment.id, fileName: attachment.fileName }
+    });
+
+    return { success: true };
   }
 
   private async ensureBucket() {

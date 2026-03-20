@@ -4,6 +4,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
+import { AuthStore } from '../core/auth.store';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
 
@@ -67,6 +68,7 @@ type SourceOption = {
       >
         <a *ngIf="mode() === 'list'" routerLink="/management-review/new" class="button-link">+ New review meeting</a>
         <a *ngIf="mode() === 'detail' && selectedReview()" [routerLink]="['/management-review', selectedReview()?.id, 'edit']" class="button-link">Edit meeting</a>
+        <button *ngIf="mode() === 'detail' && canArchiveReview()" type="button" class="button-link secondary" (click)="archiveReview()">Archive meeting</button>
         <a *ngIf="mode() !== 'list'" routerLink="/management-review" class="button-link secondary">Back to meetings</a>
       </iso-page-header>
 
@@ -266,6 +268,7 @@ type SourceOption = {
 })
 export class ManagementReviewPageComponent {
   private readonly api = inject(ApiService);
+  private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -432,6 +435,34 @@ export class ManagementReviewPageComponent {
     this.draftActionTitle.set(`Management review action: ${sectionLabel}`);
     this.draftActionDescription.set(content || '');
     this.message.set(`Action form prepared from ${sectionLabel.toLowerCase()}.`);
+  }
+
+  protected canArchiveReview() {
+    return this.authStore.hasPermission('admin.delete') && !!this.selectedId();
+  }
+
+  protected archiveReview() {
+    if (!this.selectedId() || !this.canArchiveReview()) {
+      return;
+    }
+
+    if (!window.confirm('Archive this management review? It will be removed from the active meeting list but kept in the audit trail.')) {
+      return;
+    }
+
+    this.saving.set(true);
+    this.message.set('');
+    this.error.set('');
+    this.api.patch(`management-review/${this.selectedId()}/archive`, {}).subscribe({
+      next: () => {
+        this.saving.set(false);
+        void this.router.navigate(['/management-review'], { state: { notice: 'Management review archived.' } });
+      },
+      error: (error: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.error.set(this.readError(error, 'Management review archive failed.'));
+      }
+    });
   }
 
   private handleRoute(params: ParamMap) {

@@ -27,7 +27,7 @@ export class ManagementReviewService {
 
   async list(tenantId: string) {
     const reviews = await this.prisma.managementReview.findMany({
-      where: { tenantId },
+      where: { tenantId, deletedAt: null },
       include: {
         inputs: true
       },
@@ -42,7 +42,7 @@ export class ManagementReviewService {
 
   get(tenantId: string, id: string) {
     return this.prisma.managementReview.findFirstOrThrow({
-      where: { tenantId, id },
+      where: { tenantId, id, deletedAt: null },
       include: {
         inputs: {
           orderBy: { createdAt: 'asc' }
@@ -102,7 +102,7 @@ export class ManagementReviewService {
 
   async update(tenantId: string, actorId: string, id: string, dto: UpdateManagementReviewDto) {
     const existing = await this.prisma.managementReview.findFirst({
-      where: { tenantId, id },
+      where: { tenantId, id, deletedAt: null },
       include: { inputs: true }
     });
 
@@ -174,6 +174,35 @@ export class ManagementReviewService {
     return review;
   }
 
+  async archive(tenantId: string, actorId: string, id: string) {
+    const existing = await this.prisma.managementReview.findFirst({
+      where: { tenantId, id, deletedAt: null }
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Management review not found');
+    }
+
+    await this.prisma.managementReview.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        deletedById: actorId
+      }
+    });
+
+    await this.auditLogsService.create({
+      tenantId,
+      actorId,
+      action: 'management-review.archived',
+      entityType: 'management-review',
+      entityId: id,
+      metadata: { status: existing.status }
+    });
+
+    return { success: true };
+  }
+
   private async resolveInputs(tenantId: string, inputs: ManagementReviewInputDto[]) {
     const resolved = await Promise.all(inputs.map((input) => this.resolveInput(tenantId, input)));
     return resolved;
@@ -184,7 +213,7 @@ export class ManagementReviewService {
 
     if (sourceType === 'risk') {
       const risk = await this.prisma.risk.findFirst({
-        where: { tenantId, id: input.sourceId }
+        where: { tenantId, id: input.sourceId, deletedAt: null }
       });
       if (!risk) throw new NotFoundException('Referenced risk not found');
       return {
@@ -197,7 +226,7 @@ export class ManagementReviewService {
 
     if (sourceType === 'capa') {
       const capa = await this.prisma.capa.findFirst({
-        where: { tenantId, id: input.sourceId }
+        where: { tenantId, id: input.sourceId, deletedAt: null }
       });
       if (!capa) throw new NotFoundException('Referenced CAPA not found');
       return {
@@ -210,7 +239,7 @@ export class ManagementReviewService {
 
     if (sourceType === 'audit') {
       const audit = await this.prisma.audit.findFirst({
-        where: { tenantId, id: input.sourceId }
+        where: { tenantId, id: input.sourceId, deletedAt: null }
       });
       if (!audit) throw new NotFoundException('Referenced audit not found');
       return {

@@ -54,6 +54,26 @@ export class AuditsController {
     return this.auditsService.update(tenantId, user.sub, id, dto);
   }
 
+  @Delete(':id')
+  @Permissions('admin.delete')
+  remove(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { sub: string },
+    @Param('id') id: string
+  ) {
+    return this.auditsService.remove(tenantId, user.sub, id);
+  }
+
+  @Patch(':id/archive')
+  @Permissions('admin.delete')
+  archive(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { sub: string },
+    @Param('id') id: string
+  ) {
+    return this.auditsService.archive(tenantId, user.sub, id);
+  }
+
   @Post(':id/checklist-items')
   @Permissions('audits.write')
   addChecklistItem(

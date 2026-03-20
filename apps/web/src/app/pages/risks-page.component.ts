@@ -4,6 +4,7 @@ import { Component, Input, OnChanges, OnInit, SimpleChanges, inject, signal } fr
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
+import { AuthStore } from '../core/auth.store';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
@@ -55,6 +56,7 @@ type RiskRow = {
       >
         <a *ngIf="mode() === 'list'" routerLink="/risks/new" class="button-link">+ New risk</a>
         <a *ngIf="mode() === 'detail' && selectedRisk()" [routerLink]="['/risks', selectedRisk()?.id, 'edit']" class="button-link">Edit risk</a>
+        <button *ngIf="mode() === 'detail' && canDeleteRisk()" type="button" class="button-link danger" (click)="deleteRisk()">Delete risk</button>
         <a *ngIf="mode() !== 'list'" routerLink="/risks" class="button-link secondary">Back to register</a>
       </iso-page-header>
 
@@ -349,6 +351,7 @@ export class RisksPageComponent implements OnInit, OnChanges {
   @Input() forcedMode: PageMode | null = null;
 
   private readonly api = inject(ApiService);
+  private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -501,6 +504,34 @@ export class RisksPageComponent implements OnInit, OnChanges {
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
         this.error.set(this.readError(error, 'Risk save failed.'));
+      }
+    });
+  }
+
+  protected canDeleteRisk() {
+    return this.authStore.hasPermission('admin.delete') && !!this.selectedId();
+  }
+
+  protected deleteRisk() {
+    if (!this.selectedId() || !this.canDeleteRisk()) {
+      return;
+    }
+
+    if (!window.confirm('Delete this risk from the active register? The action will be audit logged.')) {
+      return;
+    }
+
+    this.saving.set(true);
+    this.error.set('');
+    this.message.set('');
+    this.api.delete(`risks/${this.selectedId()}`).subscribe({
+      next: () => {
+        this.saving.set(false);
+        void this.router.navigate(['/risks'], { state: { notice: 'Risk deleted.' } });
+      },
+      error: (error: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.error.set(this.readError(error, 'Risk deletion failed.'));
       }
     });
   }

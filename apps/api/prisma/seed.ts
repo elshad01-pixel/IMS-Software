@@ -35,7 +35,8 @@ const permissionKeys = [
   'documents.approve',
   'capa.close',
   'attachments.write',
-  'action-items.write'
+  'action-items.write',
+  'admin.delete'
 ];
 
 const systemRoleDefinitions = [
@@ -47,7 +48,7 @@ const systemRoleDefinitions = [
   {
     name: 'Manager',
     description: 'Operational management access without full system control',
-    permissions: permissionKeys.filter((permission) => !['users.write', 'settings.write'].includes(permission))
+    permissions: permissionKeys.filter((permission) => !['users.write', 'settings.write', 'admin.delete'].includes(permission))
   },
   {
     name: 'User',

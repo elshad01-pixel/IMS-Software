@@ -125,6 +125,7 @@ export class ReportsService {
     const rows = await this.prisma.document.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         status: (query.status as DocumentStatus | undefined) || undefined,
         ownerId: query.ownerId || undefined,
         createdAt: this.buildDateRange(query)
@@ -152,6 +153,7 @@ export class ReportsService {
     const rows = await this.prisma.risk.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         status: (query.status as RiskStatus | undefined) || undefined,
         ownerId: query.ownerId || undefined,
         createdAt: this.buildDateRange(query)
@@ -179,6 +181,7 @@ export class ReportsService {
     const rows = await this.prisma.capa.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         status: (query.status as CapaStatus | undefined) || undefined,
         ownerId: query.ownerId || undefined,
         createdAt: this.buildDateRange(query)
@@ -205,6 +208,7 @@ export class ReportsService {
     const rows = await this.prisma.audit.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         status: (query.status as AuditStatus | undefined) || undefined,
         scheduledAt: this.buildDateRange(query)
       },
@@ -253,6 +257,7 @@ export class ReportsService {
     const rows = await this.prisma.managementReview.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         status: (query.status as ManagementReviewStatus | undefined) || undefined,
         reviewDate: this.buildDateRange(query)
       },

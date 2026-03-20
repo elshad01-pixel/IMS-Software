@@ -178,6 +178,7 @@ model Attachment {
   id           String   @id @default(cuid())
   tenantId     String
   uploadedById String?
+  deletedById  String?
   fileName     String
   objectKey    String   @unique
   mimeType     String
@@ -185,6 +186,7 @@ model Attachment {
   sourceType   String
   sourceId     String
   createdAt    DateTime @default(now())
+  deletedAt    DateTime?
   tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   uploadedBy   User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
 
@@ -194,6 +196,7 @@ model Attachment {
 model ActionItem {
   id          String           @id @default(cuid())
   tenantId    String
+  deletedById String?
   sourceType  String
   sourceId    String
   title       String
@@ -202,6 +205,7 @@ model ActionItem {
   dueDate     DateTime?
   status      ActionItemStatus @default(OPEN)
   createdAt   DateTime         @default(now())
+  deletedAt   DateTime?
   updatedAt   DateTime         @updatedAt
   tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   owner       User?            @relation("ActionItemOwner", fields: [ownerId], references: [id], onDelete: SetNull)
@@ -212,6 +216,7 @@ model ActionItem {
 model Document {
   id               String         @id @default(cuid())
   tenantId         String
+  deletedById      String?
   code             String
   title            String
   type             String
@@ -225,6 +230,7 @@ model Document {
   approvedAt       DateTime?
   approvedById     String?
   obsoletedAt      DateTime?
+  deletedAt        DateTime?
   changeSummary    String?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
@@ -238,6 +244,7 @@ model Document {
 model Risk {
   id               String     @id @default(cuid())
   tenantId         String
+  deletedById      String?
   title            String
   description      String?
   category         String?
@@ -250,6 +257,7 @@ model Risk {
   targetDate       DateTime?
   status           RiskStatus @default(OPEN)
   createdAt        DateTime   @default(now())
+  deletedAt        DateTime?
   updatedAt        DateTime   @updatedAt
   tenant           Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -260,6 +268,7 @@ model Risk {
 model Capa {
   id                 String     @id @default(cuid())
   tenantId           String
+  deletedById        String?
   title              String
   source             String
   category           String?
@@ -274,6 +283,7 @@ model Capa {
   ownerId            String?
   dueDate            DateTime?
   closedAt           DateTime?
+  deletedAt          DateTime?
   status             CapaStatus @default(OPEN)
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
@@ -286,6 +296,7 @@ model Capa {
 model Audit {
   id              String              @id @default(cuid())
   tenantId        String
+  deletedById     String?
   code            String
   title           String
   type            String
@@ -299,6 +310,7 @@ model Audit {
   summary         String?
   status          AuditStatus         @default(PLANNED)
   createdAt       DateTime            @default(now())
+  deletedAt       DateTime?
   updatedAt       DateTime            @updatedAt
   tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   checklistItems  AuditChecklistItem[]
@@ -312,6 +324,7 @@ model Audit {
 model ManagementReview {
   id            String                 @id @default(cuid())
   tenantId      String
+  deletedById   String?
   title         String
   reviewDate    DateTime?
   chairpersonId String?
@@ -329,6 +342,7 @@ model ManagementReview {
   summary       String?
   status        ManagementReviewStatus @default(PLANNED)
   createdAt     DateTime               @default(now())
+  deletedAt     DateTime?
   updatedAt     DateTime               @updatedAt
   tenant        Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   inputs        ManagementReviewInput[]

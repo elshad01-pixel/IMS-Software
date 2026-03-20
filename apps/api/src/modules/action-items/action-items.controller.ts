@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ActionItemStatus } from '@prisma/client';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
@@ -59,5 +59,15 @@ export class ActionItemsController {
     @Body() dto: UpdateActionItemDto
   ) {
     return this.actionItemsService.update(tenantId, user.sub, id, dto);
+  }
+
+  @Delete(':id')
+  @Permissions('admin.delete')
+  remove(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { sub: string },
+    @Param('id') id: string
+  ) {
+    return this.actionItemsService.remove(tenantId, user.sub, id);
   }
 }

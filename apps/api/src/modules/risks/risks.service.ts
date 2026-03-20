@@ -22,14 +22,14 @@ export class RisksService {
 
   list(tenantId: string) {
     return this.prisma.risk.findMany({
-      where: { tenantId },
+      where: { tenantId, deletedAt: null },
       orderBy: [{ score: 'desc' }, { updatedAt: 'desc' }]
     });
   }
 
   get(tenantId: string, id: string) {
     return this.prisma.risk.findFirstOrThrow({
-      where: { tenantId, id }
+      where: { tenantId, id, deletedAt: null }
     });
   }
 
@@ -68,7 +68,7 @@ export class RisksService {
 
   async update(tenantId: string, actorId: string, id: string, dto: UpdateRiskDto) {
     const existing = await this.prisma.risk.findFirst({
-      where: { id, tenantId }
+      where: { id, tenantId, deletedAt: null }
     });
 
     if (!existing) {
@@ -96,6 +96,35 @@ export class RisksService {
     });
 
     return risk;
+  }
+
+  async remove(tenantId: string, actorId: string, id: string) {
+    const existing = await this.prisma.risk.findFirst({
+      where: { id, tenantId, deletedAt: null }
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Risk not found');
+    }
+
+    await this.prisma.risk.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        deletedById: actorId
+      }
+    });
+
+    await this.auditLogsService.create({
+      tenantId,
+      actorId,
+      action: 'risk.deleted',
+      entityType: 'risk',
+      entityId: id,
+      metadata: { status: existing.status, score: existing.score }
+    });
+
+    return { success: true };
   }
 
   private toUpdateRiskData(dto: UpdateRiskDto, existing: Risk) {

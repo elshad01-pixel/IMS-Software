@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
@@ -47,5 +47,15 @@ export class DocumentsController {
     @Body() dto: UpdateDocumentDto
   ) {
     return this.documentsService.update(tenantId, user.sub, user.permissions || [], id, dto);
+  }
+
+  @Delete(':id')
+  @Permissions('admin.delete')
+  remove(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { sub: string },
+    @Param('id') id: string
+  ) {
+    return this.documentsService.remove(tenantId, user.sub, id);
   }
 }

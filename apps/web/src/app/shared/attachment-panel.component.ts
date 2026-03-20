@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Input, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
 import { ApiService } from '../core/api.service';
+import { AuthStore } from '../core/auth.store';
 
 type Attachment = {
   id: string;
@@ -53,9 +54,14 @@ type Attachment = {
             <p>{{ item.mimeType }} | {{ formatFileSize(item.size) }}</p>
             <small>{{ item.createdAt | date:'medium' }}</small>
           </div>
-          <button type="button" class="secondary" [disabled]="downloadingId() === item.id" (click)="downloadAttachment(item)">
-            {{ downloadingId() === item.id ? 'Downloading...' : 'Download' }}
-          </button>
+          <div class="button-row compact-row">
+            <button type="button" class="secondary" [disabled]="downloadingId() === item.id" (click)="downloadAttachment(item)">
+              {{ downloadingId() === item.id ? 'Downloading...' : 'Download' }}
+            </button>
+            <button *ngIf="canDeleteAttachments()" type="button" class="secondary danger-outline" [disabled]="saving()" (click)="deleteAttachment(item)">
+              Delete
+            </button>
+          </div>
         </li>
       </ul>
     </section>
@@ -144,6 +150,12 @@ type Attachment = {
       font-size: 0.92rem;
     }
 
+    .compact-row {
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
     @media (max-width: 700px) {
       .list li {
         display: grid;
@@ -156,6 +168,7 @@ export class AttachmentPanelComponent implements OnChanges {
   @Input() sourceId: string | null = null;
 
   private readonly api = inject(ApiService);
+  private readonly authStore = inject(AuthStore);
 
   protected readonly attachments = signal<Attachment[]>([]);
   protected readonly selectedFile = signal<File | null>(null);
@@ -232,6 +245,35 @@ export class AttachmentPanelComponent implements OnChanges {
       error: (error: HttpErrorResponse) => {
         this.downloadingId.set(null);
         this.error.set(this.readError(error, 'Attachment download failed.'));
+      }
+    });
+  }
+
+  canDeleteAttachments() {
+    return this.authStore.hasPermission('admin.delete');
+  }
+
+  deleteAttachment(attachment: Attachment) {
+    if (!this.canDeleteAttachments()) {
+      return;
+    }
+
+    if (!window.confirm(`Delete attachment "${attachment.fileName}"? This action is audit logged.`)) {
+      return;
+    }
+
+    this.saving.set(true);
+    this.message.set('');
+    this.error.set('');
+    this.api.delete(`attachments/${attachment.id}`).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.message.set(`Attachment deleted: ${attachment.fileName}.`);
+        this.reload();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.error.set(this.readError(error, 'Attachment deletion failed.'));
       }
     });
   }
