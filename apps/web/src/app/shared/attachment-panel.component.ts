@@ -28,8 +28,8 @@ type Attachment = {
       <div class="stack">
         <label class="dropzone">
           <span>Select file</span>
-          <input type="file" (change)="onFileSelected($event)">
-          <small>{{ selectedFile()?.name || 'Choose a file to attach' }}</small>
+          <input #fileInput type="file" (change)="onFileSelected($event)">
+          <small>{{ selectedFile()?.name || lastUploadedFileName() || 'Choose a file to attach' }}</small>
         </label>
         <div class="button-row">
           <button type="button" [disabled]="!selectedFile() || saving()" (click)="uploadAttachment()">
@@ -159,6 +159,7 @@ export class AttachmentPanelComponent implements OnChanges {
 
   protected readonly attachments = signal<Attachment[]>([]);
   protected readonly selectedFile = signal<File | null>(null);
+  protected readonly lastUploadedFileName = signal('');
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly downloadingId = signal<string | null>(null);
@@ -173,10 +174,16 @@ export class AttachmentPanelComponent implements OnChanges {
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
-    this.selectedFile.set(input.files?.[0] ?? null);
+    const file = input.files?.[0] ?? null;
+    this.selectedFile.set(file);
+    this.message.set('');
+    this.error.set('');
+    if (file) {
+      this.uploadAttachment(input);
+    }
   }
 
-  uploadAttachment() {
+  uploadAttachment(input?: HTMLInputElement) {
     if (!this.sourceId || !this.selectedFile()) {
       return;
     }
@@ -191,8 +198,12 @@ export class AttachmentPanelComponent implements OnChanges {
     this.api.postFormData(`attachments/${this.sourceType}/${this.sourceId}`, formData).subscribe({
       next: () => {
         this.saving.set(false);
+        this.lastUploadedFileName.set((this.selectedFile() as File).name);
         this.selectedFile.set(null);
-        this.message.set('Attachment uploaded successfully.');
+        if (input) {
+          input.value = '';
+        }
+        this.message.set(`Attachment uploaded successfully: ${this.lastUploadedFileName()}.`);
         this.reload();
       },
       error: (error: HttpErrorResponse) => {

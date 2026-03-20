@@ -395,7 +395,13 @@ type AuditRecord = {
 
                       <label class="field top-space">
                         <span>Comments</span>
-                        <textarea rows="3" [value]="item.notes || ''" (blur)="updateChecklistItem(item, { notes: readTextarea($event) })" placeholder="Record objective evidence, comments, and observations"></textarea>
+                        <textarea
+                          rows="3"
+                          [value]="checklistNoteDraft(item)"
+                          (input)="setChecklistNoteDraft(item.id, readTextarea($event))"
+                          (blur)="saveChecklistNote(item)"
+                          placeholder="Record objective evidence, comments, and observations"
+                        ></textarea>
                       </label>
 
                       <div class="finding-prompt top-space" *ngIf="shouldSuggestFinding(item)">
@@ -443,7 +449,13 @@ type AuditRecord = {
 
                     <label class="field top-space">
                       <span>Comments</span>
-                      <textarea rows="3" [value]="item.notes || ''" (blur)="updateChecklistItem(item, { notes: readTextarea($event) })" placeholder="Record supplier evidence, observations, and follow-up notes"></textarea>
+                      <textarea
+                        rows="3"
+                        [value]="checklistNoteDraft(item)"
+                        (input)="setChecklistNoteDraft(item.id, readTextarea($event))"
+                        (blur)="saveChecklistNote(item)"
+                        placeholder="Record supplier evidence, observations, and follow-up notes"
+                      ></textarea>
                     </label>
 
                     <div class="finding-prompt top-space" *ngIf="shouldSuggestFinding(item)">
@@ -788,6 +800,7 @@ export class AuditsPageComponent {
   protected readonly selectedAudit = signal<AuditRecord | null>(null);
   protected readonly activeStep = signal<AuditStep>('plan');
   protected readonly expandedChecklistId = signal<string | null>(null);
+  protected readonly checklistNoteDrafts = signal<Record<string, string>>({});
   protected readonly draftActionTitle = signal<string | null>(null);
   protected readonly draftActionDescription = signal<string | null>(null);
   protected readonly loading = signal(false);
@@ -950,6 +963,24 @@ export class AuditsPageComponent {
 
   protected setChecklistResponse(item: AuditChecklistItem, response: ChecklistResponse) {
     this.updateChecklistItem(item, { response });
+  }
+
+  protected checklistNoteDraft(item: AuditChecklistItem) {
+    return this.checklistNoteDrafts()[item.id] ?? item.notes ?? '';
+  }
+
+  protected setChecklistNoteDraft(id: string, value: string) {
+    this.checklistNoteDrafts.update((drafts) => ({ ...drafts, [id]: value }));
+  }
+
+  protected saveChecklistNote(item: AuditChecklistItem) {
+    const nextValue = this.checklistNoteDraft(item).trim();
+    const currentValue = item.notes?.trim() || '';
+    if (nextValue === currentValue) {
+      return;
+    }
+
+    this.updateChecklistItem(item, { notes: nextValue });
   }
 
   protected removeChecklistItem(id: string) {
@@ -1125,6 +1156,7 @@ export class AuditsPageComponent {
     this.error.set('');
     this.activeStep.set('plan');
     this.expandedChecklistId.set(null);
+    this.checklistNoteDrafts.set({});
     this.draftActionTitle.set(null);
     this.draftActionDescription.set(null);
 
@@ -1167,10 +1199,18 @@ export class AuditsPageComponent {
     this.loading.set(true);
     this.api.get<AuditRecord>(`audits/${id}`).subscribe({
       next: (audit) => {
+        const currentExpandedId = this.expandedChecklistId();
         this.loading.set(false);
         this.selectedAudit.set(audit);
         this.activeStep.set(this.deriveStep(audit));
-        this.expandedChecklistId.set(audit.checklistItems?.[0]?.id ?? null);
+        this.checklistNoteDrafts.set(
+          Object.fromEntries((audit.checklistItems || []).map((item) => [item.id, item.notes ?? '']))
+        );
+        this.expandedChecklistId.set(
+          (audit.checklistItems || []).some((item) => item.id === currentExpandedId)
+            ? currentExpandedId
+            : audit.checklistItems?.[0]?.id ?? null
+        );
         this.auditForm.reset({
           code: audit.code,
           title: audit.title,
