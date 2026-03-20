@@ -67,6 +67,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
       >
         <a *ngIf="mode() === 'list'" routerLink="/documents/new" class="button-link">+ New document</a>
         <a *ngIf="mode() === 'detail' && selectedDocument()" [routerLink]="['/documents', selectedDocument()?.id, 'edit']" class="button-link">Edit document</a>
+        <button *ngIf="mode() === 'detail' && canArchiveDocument()" type="button" class="button-link secondary" (click)="archiveDocument()">Obsolete document</button>
         <button *ngIf="mode() === 'detail' && canDeleteDocument()" type="button" class="button-link danger" (click)="deleteDocument()">Delete draft</button>
         <a *ngIf="mode() !== 'list'" routerLink="/documents" class="button-link secondary">Back to register</a>
       </iso-page-header>
@@ -530,6 +531,10 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
     return this.authStore.hasPermission('admin.delete') && this.selectedDocument()?.status === 'DRAFT';
   }
 
+  protected canArchiveDocument() {
+    return this.authStore.hasPermission('admin.delete') && this.selectedDocument()?.status === 'APPROVED';
+  }
+
   protected deleteDocument() {
     if (!this.selectedId() || !this.canDeleteDocument()) {
       return;
@@ -550,6 +555,32 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
         this.error.set(this.readError(error, 'Document deletion failed.'));
+      }
+    });
+  }
+
+  protected archiveDocument() {
+    if (!this.selectedId() || !this.canArchiveDocument()) {
+      return;
+    }
+
+    if (!window.confirm('Mark this approved document as obsolete? This preserves traceability instead of deleting the record.')) {
+      return;
+    }
+
+    this.saving.set(true);
+    this.error.set('');
+    this.message.set('');
+    this.api.patch<DocumentRow>(`documents/${this.selectedId()}`, { status: 'OBSOLETE' }).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.message.set('Document marked obsolete.');
+        this.fetchDocument(this.selectedId() as string);
+        this.reloadDocuments();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.error.set(this.readError(error, 'Document obsolescence failed.'));
       }
     });
   }

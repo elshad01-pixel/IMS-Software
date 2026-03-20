@@ -97,6 +97,7 @@ const SIDEBAR_PIN_KEY = 'ims.sidebar.pinned';
                 <div class="user-dropdown__identity">
                   <strong>{{ authStore.session()?.user?.email }}</strong>
                   <small>{{ authStore.tenantSlug() || 'n/a' }}</small>
+                  <small>Role: {{ authStore.roleLabel() }}</small>
                 </div>
                 <div class="user-dropdown__divider"></div>
                 <button type="button" class="user-dropdown__item" (click)="logout()">

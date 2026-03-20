@@ -11,6 +11,7 @@ type Session = {
     email: string;
     permissions: string[];
     roleId?: string;
+    roleName?: string;
   };
   tenantSlug: string;
 };
@@ -26,9 +27,30 @@ export class AuthStore {
   readonly tenantId = computed(() => this.sessionState()?.user.tenantId ?? null);
   readonly tenantSlug = computed(() => this.sessionState()?.tenantSlug ?? null);
   readonly permissions = computed(() => this.sessionState()?.user.permissions ?? []);
+  readonly roleLabel = computed(() => {
+    const explicit = this.sessionState()?.user.roleName;
+    if (explicit) {
+      return explicit;
+    }
+
+    const permissions = this.permissions();
+    if (permissions.includes('admin.delete')) {
+      return 'Admin';
+    }
+
+    if (permissions.includes('documents.write') || permissions.includes('risks.write') || permissions.includes('capa.write')) {
+      return 'Manager';
+    }
+
+    return 'User';
+  });
 
   hasPermission(permission: string) {
     return this.permissions().includes(permission);
+  }
+
+  isAdmin() {
+    return this.roleLabel() === 'Admin';
   }
 
   login(payload: { email: string; password: string; tenantSlug: string }) {
