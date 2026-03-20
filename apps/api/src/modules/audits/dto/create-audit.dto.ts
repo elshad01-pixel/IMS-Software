@@ -17,6 +17,11 @@ export class CreateAuditDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(40)
+  standard?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(2000)
   scope?: string;
 

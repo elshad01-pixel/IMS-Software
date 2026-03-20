@@ -31,8 +31,16 @@ type ReviewRecord = {
   reviewDate?: string | null;
   chairpersonId?: string | null;
   agenda?: string | null;
+  auditResults?: string | null;
+  capaStatus?: string | null;
+  kpiPerformance?: string | null;
+  risksOpportunities?: string | null;
+  changesAffectingSystem?: string | null;
+  previousActions?: string | null;
   minutes?: string | null;
   decisions?: string | null;
+  improvementActions?: string | null;
+  resourceNeeds?: string | null;
   summary?: string | null;
   status: ReviewStatus;
   inputs?: ReviewInput[];
@@ -66,30 +74,42 @@ type SourceOption = {
         <div class="card list-card">
           <div class="section-head">
             <div>
-              <h3>Review meetings</h3>
-              <p class="subtle">A clean list of management review meetings with meeting date, status, and linked input count.</p>
+              <span class="section-eyebrow">Meetings</span>
+              <h3>Structured management reviews</h3>
+              <p class="subtle">Run ISO management review meetings with explicit inputs, outputs, decisions, and action follow-up.</p>
             </div>
           </div>
 
-          <div class="empty-state" *ngIf="loading()">Loading management reviews...</div>
-          <table class="data-table" *ngIf="!loading()">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Inputs</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of reviews()" [routerLink]="['/management-review', item.id]">
-                <td><strong>{{ item.title }}</strong></td>
-                <td>{{ item.reviewDate ? (item.reviewDate | date:'yyyy-MM-dd') : 'TBD' }}</td>
-                <td><span class="status-badge" [class.success]="item.status === 'CLOSED'" [class.warn]="item.status === 'HELD'">{{ item.status }}</span></td>
-                <td>{{ item.inputCount || item.inputs?.length || 0 }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="empty-state" *ngIf="loading()">
+            <strong>Loading management reviews</strong>
+            <span>Refreshing meetings, status, and linked inputs.</span>
+          </div>
+
+          <div class="data-table-wrap" *ngIf="!loading() && reviews().length">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Meeting</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Inputs</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of reviews()" [routerLink]="['/management-review', item.id]">
+                  <td>
+                    <div class="table-title">
+                      <strong>{{ item.title }}</strong>
+                      <small>{{ item.summary || 'No summary' }}</small>
+                    </div>
+                  </td>
+                  <td>{{ item.reviewDate ? (item.reviewDate | date:'yyyy-MM-dd') : 'TBD' }}</td>
+                  <td><span class="status-badge" [class.success]="item.status === 'CLOSED'" [class.warn]="item.status === 'HELD'">{{ item.status }}</span></td>
+                  <td>{{ item.inputCount || item.inputs?.length || 0 }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -97,15 +117,16 @@ type SourceOption = {
         <form class="card form-card page-stack" [formGroup]="reviewForm" (ngSubmit)="saveReview()">
           <div class="section-head">
             <div>
-              <h3>{{ mode() === 'create' ? 'Create review meeting' : 'Edit review meeting' }}</h3>
-              <p class="subtle">The meeting record stays clean here. Linked inputs and actions remain clearly separated.</p>
+              <span class="section-eyebrow">Meeting record</span>
+              <h3>{{ mode() === 'create' ? 'Create management review' : 'Edit management review' }}</h3>
+              <p class="subtle">Use the built-in ISO structure for inputs and outputs instead of a single free-form note.</p>
             </div>
           </div>
 
-          <p class="feedback" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+          <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
           <label class="field"><span>Title</span><input formControlName="title" placeholder="Q1 2026 management review"></label>
-          <div class="form-grid-2">
+          <div class="form-grid-3">
             <label class="field"><span>Meeting date</span><input type="date" formControlName="reviewDate"></label>
             <label class="field">
               <span>Chairperson</span>
@@ -114,8 +135,6 @@ type SourceOption = {
                 <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
               </select>
             </label>
-          </div>
-          <div class="form-grid-2">
             <label class="field">
               <span>Status</span>
               <select formControlName="status">
@@ -124,11 +143,30 @@ type SourceOption = {
                 <option>CLOSED</option>
               </select>
             </label>
-            <label class="field"><span>Summary</span><input formControlName="summary" placeholder="Quarterly review of IMS performance"></label>
           </div>
-          <label class="field"><span>Agenda</span><textarea rows="3" formControlName="agenda" placeholder="KPIs, audits, CAPA, risks"></textarea></label>
-          <label class="field"><span>Minutes</span><textarea rows="4" formControlName="minutes" placeholder="Formal meeting minutes"></textarea></label>
-          <label class="field"><span>Decisions</span><textarea rows="4" formControlName="decisions" placeholder="Decisions and outputs"></textarea></label>
+
+          <section class="detail-section">
+            <h4>Inputs</h4>
+            <div class="page-stack top-space">
+              <label class="field"><span>Audit results</span><textarea rows="3" formControlName="auditResults" placeholder="Summarize audit outcomes and themes"></textarea></label>
+              <label class="field"><span>CAPA status</span><textarea rows="3" formControlName="capaStatus" placeholder="Summarize open, overdue, and effective CAPA"></textarea></label>
+              <label class="field"><span>KPI performance</span><textarea rows="3" formControlName="kpiPerformance" placeholder="Summarize KPI performance, breaches, and trends"></textarea></label>
+              <label class="field"><span>Risks and opportunities</span><textarea rows="3" formControlName="risksOpportunities" placeholder="Summarize current risk exposure and opportunities"></textarea></label>
+              <label class="field"><span>Changes affecting the system</span><textarea rows="3" formControlName="changesAffectingSystem" placeholder="Regulatory, organizational, supplier, or process changes"></textarea></label>
+              <label class="field"><span>Previous actions</span><textarea rows="3" formControlName="previousActions" placeholder="Status of previous management review outputs"></textarea></label>
+            </div>
+          </section>
+
+          <section class="detail-section">
+            <h4>Outputs</h4>
+            <div class="page-stack top-space">
+              <label class="field"><span>Minutes</span><textarea rows="4" formControlName="minutes" placeholder="Formal meeting minutes"></textarea></label>
+              <label class="field"><span>Decisions</span><textarea rows="3" formControlName="decisions" placeholder="Decisions made by management"></textarea></label>
+              <label class="field"><span>Improvement actions</span><textarea rows="3" formControlName="improvementActions" placeholder="Improvement commitments and actions"></textarea></label>
+              <label class="field"><span>Resource needs</span><textarea rows="3" formControlName="resourceNeeds" placeholder="People, budget, competence, or infrastructure needs"></textarea></label>
+              <label class="field"><span>Summary</span><textarea rows="2" formControlName="summary" placeholder="Executive summary of the review"></textarea></label>
+            </div>
+          </section>
 
           <div class="button-row">
             <button type="submit" [disabled]="reviewForm.invalid || saving()">{{ saving() ? 'Saving...' : 'Save meeting' }}</button>
@@ -139,8 +177,9 @@ type SourceOption = {
         <section class="card panel-card">
           <div class="section-head">
             <div>
+              <span class="section-eyebrow">Linked evidence</span>
               <h3>Input selection</h3>
-              <p class="subtle">Select risks, CAPAs, audits, and KPIs that should be referenced in the meeting.</p>
+              <p class="subtle">Reference live records from risks, CAPA, audits, and KPIs alongside the written management review narrative.</p>
             </div>
           </div>
 
@@ -148,7 +187,7 @@ type SourceOption = {
             <section *ngFor="let group of sourceGroups()">
               <h4>{{ group.label }}</h4>
               <div class="entity-list top-space">
-                <label class="entity-item" *ngFor="let item of group.items">
+                <label class="entity-item selectable" *ngFor="let item of group.items">
                   <strong>{{ item.label }}</strong>
                   <small>{{ item.summary }}</small>
                   <input type="checkbox" [checked]="selectedInputIds().has(group.type + ':' + item.id)" (change)="toggleInput(group.type, item.id, $event)">
@@ -164,29 +203,32 @@ type SourceOption = {
           <section class="card detail-card">
             <div class="section-head">
               <div>
+                <span class="section-eyebrow">Management review</span>
                 <h3>{{ selectedReview()?.title }}</h3>
                 <p class="subtle">{{ selectedReview()?.reviewDate ? (selectedReview()?.reviewDate | date:'yyyy-MM-dd') : 'Date not set' }}</p>
               </div>
               <span class="status-badge" [class.success]="selectedReview()?.status === 'CLOSED'" [class.warn]="selectedReview()?.status === 'HELD'">{{ selectedReview()?.status }}</span>
             </div>
 
-            <dl class="key-value top-space">
-              <dt>Summary</dt>
-              <dd>{{ selectedReview()?.summary || 'No summary recorded.' }}</dd>
-              <dt>Agenda</dt>
-              <dd>{{ selectedReview()?.agenda || 'No agenda recorded.' }}</dd>
-              <dt>Minutes</dt>
-              <dd>{{ selectedReview()?.minutes || 'No minutes recorded.' }}</dd>
-              <dt>Decisions</dt>
-              <dd>{{ selectedReview()?.decisions || 'No decisions recorded.' }}</dd>
-            </dl>
+            <div class="page-stack top-space">
+              <section class="detail-section" *ngFor="let section of reviewSections()">
+                <div class="section-head">
+                  <div>
+                    <h4>{{ section.label }}</h4>
+                    <p class="subtle">{{ section.value || 'No content recorded yet.' }}</p>
+                  </div>
+                  <button type="button" class="secondary" (click)="prepareAction(section.label, section.value)">Create action</button>
+                </div>
+              </section>
+            </div>
           </section>
 
           <section class="card panel-card">
             <div class="section-head">
               <div>
-                <h3>Linked inputs</h3>
-                <p class="subtle">Keep the meeting inputs visible without mixing them into the minutes content.</p>
+                <span class="section-eyebrow">Linked inputs</span>
+                <h3>Referenced records</h3>
+                <p class="subtle">Live records included in the meeting narrative remain visible here.</p>
               </div>
             </div>
             <div class="entity-list top-space">
@@ -198,7 +240,12 @@ type SourceOption = {
           </section>
         </div>
 
-        <iso-record-work-items [sourceType]="'management-review'" [sourceId]="selectedId()" />
+        <iso-record-work-items
+          [sourceType]="'management-review'"
+          [sourceId]="selectedId()"
+          [draftTitle]="draftActionTitle()"
+          [draftDescription]="draftActionDescription()"
+        />
       </section>
     </section>
   `,
@@ -211,9 +258,9 @@ type SourceOption = {
       cursor: pointer;
     }
 
-    label.entity-item input {
+    label.selectable input {
       width: auto;
-      margin-top: 0.3rem;
+      margin-top: 0.35rem;
     }
   `]
 })
@@ -233,6 +280,8 @@ export class ManagementReviewPageComponent {
   protected readonly selectedId = signal<string | null>(null);
   protected readonly selectedReview = signal<ReviewRecord | null>(null);
   protected readonly selectedInputIds = signal<Set<string>>(new Set());
+  protected readonly draftActionTitle = signal<string | null>(null);
+  protected readonly draftActionDescription = signal<string | null>(null);
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly message = signal((history.state?.notice as string) || '');
@@ -243,8 +292,16 @@ export class ManagementReviewPageComponent {
     reviewDate: [''],
     chairpersonId: [''],
     agenda: [''],
+    auditResults: [''],
+    capaStatus: [''],
+    kpiPerformance: [''],
+    risksOpportunities: [''],
+    changesAffectingSystem: [''],
+    previousActions: [''],
     minutes: [''],
     decisions: [''],
+    improvementActions: [''],
+    resourceNeeds: [''],
     summary: [''],
     status: ['PLANNED' as ReviewStatus, Validators.required]
   });
@@ -260,7 +317,7 @@ export class ManagementReviewPageComponent {
 
   protected pageTitle() {
     return {
-      list: 'Management review meetings',
+      list: 'Management reviews',
       create: 'Create management review',
       detail: this.selectedReview()?.title || 'Management review detail',
       edit: this.selectedReview()?.title || 'Edit management review'
@@ -269,10 +326,10 @@ export class ManagementReviewPageComponent {
 
   protected pageDescription() {
     return {
-      list: 'A focused list of management review meetings and their linked operational inputs.',
-      create: 'Create the meeting record in a dedicated page, then manage inputs and actions cleanly.',
-      detail: 'Review meeting context, minutes, decisions, and linked inputs in one calm detail page.',
-      edit: 'Update the meeting record without mixing it with the list view.'
+      list: 'Run structured ISO management reviews with clear inputs, decisions, and action outputs.',
+      create: 'Capture the meeting against a structured ISO template and reference live system records.',
+      detail: 'Review management inputs, outputs, and linked actions in one calm operational workspace.',
+      edit: 'Update the meeting record while preserving the linked evidence and action context.'
     }[this.mode()];
   }
 
@@ -293,6 +350,23 @@ export class ManagementReviewPageComponent {
     ];
   }
 
+  protected reviewSections() {
+    const review = this.selectedReview();
+    if (!review) return [];
+    return [
+      { label: 'Audit results', value: review.auditResults },
+      { label: 'CAPA status', value: review.capaStatus },
+      { label: 'KPI performance', value: review.kpiPerformance },
+      { label: 'Risks and opportunities', value: review.risksOpportunities },
+      { label: 'Changes affecting the system', value: review.changesAffectingSystem },
+      { label: 'Previous actions', value: review.previousActions },
+      { label: 'Minutes', value: review.minutes },
+      { label: 'Decisions', value: review.decisions },
+      { label: 'Improvement actions', value: review.improvementActions },
+      { label: 'Resource needs', value: review.resourceNeeds }
+    ];
+  }
+
   protected saveReview() {
     if (this.reviewForm.invalid) {
       this.error.set('Complete the required management review fields.');
@@ -309,8 +383,16 @@ export class ManagementReviewPageComponent {
       reviewDate: raw.reviewDate || undefined,
       chairpersonId: raw.chairpersonId || undefined,
       agenda: raw.agenda.trim() || undefined,
+      auditResults: raw.auditResults.trim() || undefined,
+      capaStatus: raw.capaStatus.trim() || undefined,
+      kpiPerformance: raw.kpiPerformance.trim() || undefined,
+      risksOpportunities: raw.risksOpportunities.trim() || undefined,
+      changesAffectingSystem: raw.changesAffectingSystem.trim() || undefined,
+      previousActions: raw.previousActions.trim() || undefined,
       minutes: raw.minutes.trim() || undefined,
       decisions: raw.decisions.trim() || undefined,
+      improvementActions: raw.improvementActions.trim() || undefined,
+      resourceNeeds: raw.resourceNeeds.trim() || undefined,
       summary: raw.summary.trim() || undefined,
       inputs: Array.from(this.selectedInputIds()).map((key) => {
         const [sourceType, sourceId] = key.split(':');
@@ -346,11 +428,19 @@ export class ManagementReviewPageComponent {
     this.selectedInputIds.set(next);
   }
 
+  protected prepareAction(sectionLabel: string, content?: string | null) {
+    this.draftActionTitle.set(`Management review action: ${sectionLabel}`);
+    this.draftActionDescription.set(content || '');
+    this.message.set(`Action form prepared from ${sectionLabel.toLowerCase()}.`);
+  }
+
   private handleRoute(params: ParamMap) {
     const id = params.get('id');
     this.selectedId.set(id);
     this.message.set((history.state?.notice as string) || '');
     this.error.set('');
+    this.draftActionTitle.set(null);
+    this.draftActionDescription.set(null);
 
     if (this.mode() === 'list') {
       this.selectedReview.set(null);
@@ -376,9 +466,17 @@ export class ManagementReviewPageComponent {
       title: '',
       reviewDate: '',
       chairpersonId: '',
-      agenda: '',
+      agenda: 'Review performance of the integrated management system.',
+      auditResults: '',
+      capaStatus: '',
+      kpiPerformance: '',
+      risksOpportunities: '',
+      changesAffectingSystem: '',
+      previousActions: '',
       minutes: '',
       decisions: '',
+      improvementActions: '',
+      resourceNeeds: '',
       summary: '',
       status: 'PLANNED'
     });
@@ -395,8 +493,16 @@ export class ManagementReviewPageComponent {
           reviewDate: review.reviewDate?.slice(0, 10) ?? '',
           chairpersonId: review.chairpersonId ?? '',
           agenda: review.agenda ?? '',
+          auditResults: review.auditResults ?? '',
+          capaStatus: review.capaStatus ?? '',
+          kpiPerformance: review.kpiPerformance ?? '',
+          risksOpportunities: review.risksOpportunities ?? '',
+          changesAffectingSystem: review.changesAffectingSystem ?? '',
+          previousActions: review.previousActions ?? '',
           minutes: review.minutes ?? '',
           decisions: review.decisions ?? '',
+          improvementActions: review.improvementActions ?? '',
+          resourceNeeds: review.resourceNeeds ?? '',
           summary: review.summary ?? '',
           status: review.status
         });

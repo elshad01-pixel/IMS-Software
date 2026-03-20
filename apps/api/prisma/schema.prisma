@@ -56,6 +56,12 @@ enum AuditFindingStatus {
   CLOSED
 }
 
+enum AuditChecklistResponse {
+  YES
+  NO
+  PARTIAL
+}
+
 enum ManagementReviewStatus {
   PLANNED
   HELD
@@ -283,6 +289,7 @@ model Audit {
   code            String
   title           String
   type            String
+  standard        String?
   scope           String?
   leadAuditorId   String?
   auditeeArea     String?
@@ -309,8 +316,16 @@ model ManagementReview {
   reviewDate    DateTime?
   chairpersonId String?
   agenda        String?
+  auditResults  String?
+  capaStatus    String?
+  kpiPerformance String?
+  risksOpportunities String?
+  changesAffectingSystem String?
+  previousActions String?
   minutes       String?
   decisions     String?
+  improvementActions String?
+  resourceNeeds String?
   summary       String?
   status        ManagementReviewStatus @default(PLANNED)
   createdAt     DateTime               @default(now())
@@ -364,8 +379,11 @@ model AuditChecklistItem {
   id         String   @id @default(cuid())
   tenantId   String
   auditId    String
+  clause     String?
+  standard   String?
   title      String
   notes      String?
+  response   AuditChecklistResponse?
   isComplete Boolean  @default(false)
   sortOrder  Int      @default(0)
   createdAt  DateTime @default(now())

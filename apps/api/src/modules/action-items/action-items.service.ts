@@ -1,8 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ActionItemStatus } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CreateActionItemDto } from './dto/create-action-item.dto';
+import { UpdateActionItemDto } from './dto/update-action-item.dto';
 
 @Injectable()
 export class ActionItemsService {
@@ -11,9 +12,30 @@ export class ActionItemsService {
     private readonly auditLogsService: AuditLogsService
   ) {}
 
-  list(tenantId: string, sourceType?: string, sourceId?: string) {
-    return this.prisma.actionItem.findMany({
-      where: { tenantId, sourceType, sourceId },
+  async list(
+    tenantId: string,
+    filters: {
+      sourceType?: string;
+      sourceId?: string;
+      status?: ActionItemStatus;
+      ownerId?: string;
+      dueState?: 'overdue' | 'upcoming';
+    } = {}
+  ) {
+    const items = await this.prisma.actionItem.findMany({
+      where: {
+        tenantId,
+        sourceType: filters.sourceType,
+        sourceId: filters.sourceId,
+        status: filters.status,
+        ownerId: filters.ownerId,
+        dueDate:
+          filters.dueState === 'overdue'
+            ? { lt: new Date() }
+            : filters.dueState === 'upcoming'
+              ? { gte: new Date() }
+              : undefined
+      },
       include: {
         owner: {
           select: {
@@ -24,8 +46,10 @@ export class ActionItemsService {
           }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }]
     });
+
+    return Promise.all(items.map((item) => this.mapActionItem(tenantId, item)));
   }
 
   async create(tenantId: string, actorId: string, dto: CreateActionItemDto) {
@@ -56,13 +80,8 @@ export class ActionItemsService {
   }
 
   async complete(tenantId: string, actorId: string, id: string) {
-    await this.prisma.actionItem.findFirstOrThrow({
-      where: { id, tenantId }
-    });
-
-    const actionItem = await this.prisma.actionItem.update({
-      where: { id },
-      data: { status: ActionItemStatus.DONE }
+    const actionItem = await this.update(tenantId, actorId, id, {
+      status: ActionItemStatus.DONE
     });
 
     await this.auditLogsService.create({
@@ -70,10 +89,54 @@ export class ActionItemsService {
       actorId,
       action: 'action-item.completed',
       entityType: 'action-item',
-      entityId: actionItem.id
+      entityId: id
     });
 
     return actionItem;
+  }
+
+  async update(tenantId: string, actorId: string, id: string, dto: UpdateActionItemDto) {
+    const existing = await this.prisma.actionItem.findFirst({
+      where: { id, tenantId }
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Action item not found');
+    }
+
+    await this.ensureOwnerBelongsToTenant(tenantId, dto.ownerId);
+
+    const actionItem = await this.prisma.actionItem.update({
+      where: { id },
+      data: {
+        title: dto.title?.trim(),
+        description: dto.description !== undefined ? dto.description.trim() || null : undefined,
+        ownerId: dto.ownerId !== undefined ? dto.ownerId || null : undefined,
+        dueDate: dto.dueDate !== undefined ? (dto.dueDate ? new Date(dto.dueDate) : null) : undefined,
+        status: dto.status
+      },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    await this.auditLogsService.create({
+      tenantId,
+      actorId,
+      action: 'action-item.updated',
+      entityType: 'action-item',
+      entityId: id,
+      metadata: dto
+    });
+
+    return this.mapActionItem(tenantId, actionItem);
   }
 
   private async ensureOwnerBelongsToTenant(tenantId: string, ownerId?: string) {
@@ -89,5 +152,70 @@ export class ActionItemsService {
     if (!owner) {
       throw new BadRequestException('Selected action owner is not active in this tenant');
     }
+  }
+
+  private async mapActionItem(
+    tenantId: string,
+    item: {
+      id: string;
+      sourceType: string;
+      sourceId: string;
+      title: string;
+      description: string | null;
+      dueDate: Date | null;
+      status: ActionItemStatus;
+      createdAt: Date;
+      updatedAt: Date;
+      ownerId: string | null;
+      owner?: { id: string; firstName: string; lastName: string; email: string } | null;
+    }
+  ) {
+    return {
+      ...item,
+      dueDate: item.dueDate?.toISOString() ?? null,
+      sourceLabel: this.formatSourceLabel(item.sourceType),
+      sourceTitle: await this.resolveSourceTitle(tenantId, item.sourceType, item.sourceId)
+    };
+  }
+
+  private formatSourceLabel(sourceType: string) {
+    const normalized = sourceType.toLowerCase();
+    if (normalized === 'capa') return 'CAPA';
+    if (normalized === 'management-review') return 'Management Review';
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  }
+
+  private async resolveSourceTitle(tenantId: string, sourceType: string, sourceId: string) {
+    const normalized = sourceType.toLowerCase();
+
+    if (normalized === 'risk') {
+      return (await this.prisma.risk.findFirst({
+        where: { tenantId, id: sourceId },
+        select: { title: true }
+      }))?.title ?? sourceId;
+    }
+
+    if (normalized === 'capa') {
+      return (await this.prisma.capa.findFirst({
+        where: { tenantId, id: sourceId },
+        select: { title: true }
+      }))?.title ?? sourceId;
+    }
+
+    if (normalized === 'audit') {
+      return (await this.prisma.audit.findFirst({
+        where: { tenantId, id: sourceId },
+        select: { title: true }
+      }))?.title ?? sourceId;
+    }
+
+    if (normalized === 'management-review') {
+      return (await this.prisma.managementReview.findFirst({
+        where: { tenantId, id: sourceId },
+        select: { title: true }
+      }))?.title ?? sourceId;
+    }
+
+    return sourceId;
   }
 }

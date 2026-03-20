@@ -39,6 +39,36 @@ export class CreateManagementReviewDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(4000)
+  auditResults?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  capaStatus?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  kpiPerformance?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  risksOpportunities?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  changesAffectingSystem?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  previousActions?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(6000)
   minutes?: string;
 
@@ -46,6 +76,16 @@ export class CreateManagementReviewDto {
   @IsString()
   @MaxLength(4000)
   decisions?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  improvementActions?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  resourceNeeds?: string;
 
   @IsOptional()
   @IsString()

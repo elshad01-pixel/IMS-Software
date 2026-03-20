@@ -63,8 +63,16 @@ export class ManagementReviewService {
         reviewDate: dto.reviewDate ? new Date(dto.reviewDate) : null,
         chairpersonId: dto.chairpersonId || null,
         agenda: this.normalizeText(dto.agenda),
+        auditResults: this.normalizeText(dto.auditResults),
+        capaStatus: this.normalizeText(dto.capaStatus),
+        kpiPerformance: this.normalizeText(dto.kpiPerformance),
+        risksOpportunities: this.normalizeText(dto.risksOpportunities),
+        changesAffectingSystem: this.normalizeText(dto.changesAffectingSystem),
+        previousActions: this.normalizeText(dto.previousActions),
         minutes: this.normalizeText(dto.minutes),
         decisions: this.normalizeText(dto.decisions),
+        improvementActions: this.normalizeText(dto.improvementActions),
+        resourceNeeds: this.normalizeText(dto.resourceNeeds),
         summary: this.normalizeText(dto.summary),
         status: dto.status ?? ManagementReviewStatus.PLANNED,
         inputs: {
@@ -76,7 +84,7 @@ export class ManagementReviewService {
             summary: input.summary
           }))
         }
-      },
+      } as never,
       include: { inputs: true }
     });
 
@@ -120,8 +128,21 @@ export class ManagementReviewService {
           dto.reviewDate !== undefined ? (dto.reviewDate ? new Date(dto.reviewDate) : null) : undefined,
         chairpersonId: dto.chairpersonId !== undefined ? dto.chairpersonId || null : undefined,
         agenda: dto.agenda !== undefined ? this.normalizeText(dto.agenda) : undefined,
+        auditResults: dto.auditResults !== undefined ? this.normalizeText(dto.auditResults) : undefined,
+        capaStatus: dto.capaStatus !== undefined ? this.normalizeText(dto.capaStatus) : undefined,
+        kpiPerformance: dto.kpiPerformance !== undefined ? this.normalizeText(dto.kpiPerformance) : undefined,
+        risksOpportunities:
+          dto.risksOpportunities !== undefined ? this.normalizeText(dto.risksOpportunities) : undefined,
+        changesAffectingSystem:
+          dto.changesAffectingSystem !== undefined ? this.normalizeText(dto.changesAffectingSystem) : undefined,
+        previousActions:
+          dto.previousActions !== undefined ? this.normalizeText(dto.previousActions) : undefined,
         minutes: dto.minutes !== undefined ? this.normalizeText(dto.minutes) : undefined,
         decisions: dto.decisions !== undefined ? this.normalizeText(dto.decisions) : undefined,
+        improvementActions:
+          dto.improvementActions !== undefined ? this.normalizeText(dto.improvementActions) : undefined,
+        resourceNeeds:
+          dto.resourceNeeds !== undefined ? this.normalizeText(dto.resourceNeeds) : undefined,
         summary: dto.summary !== undefined ? this.normalizeText(dto.summary) : undefined,
         status: dto.status,
         inputs:
@@ -134,10 +155,10 @@ export class ManagementReviewService {
                   sourceId: input.sourceId,
                   title: input.title,
                   summary: input.summary
-                }))
+                  }))
               }
             : undefined
-      },
+      } as never,
       include: { inputs: true }
     });
 
@@ -251,6 +272,14 @@ export class ManagementReviewService {
     data: {
       minutes?: string | null;
       decisions?: string | null;
+      auditResults?: string | null;
+      capaStatus?: string | null;
+      kpiPerformance?: string | null;
+      risksOpportunities?: string | null;
+      changesAffectingSystem?: string | null;
+      previousActions?: string | null;
+      improvementActions?: string | null;
+      resourceNeeds?: string | null;
       inputs?: ManagementReviewInputDto[] | unknown[];
     }
   ) {
@@ -264,6 +293,10 @@ export class ManagementReviewService {
 
     if (!data.inputs || data.inputs.length === 0) {
       throw new BadRequestException('At least one input is required for a management review');
+    }
+
+    if (!data.auditResults || !data.capaStatus || !data.kpiPerformance || !data.risksOpportunities) {
+      throw new BadRequestException('Core management review input sections must be completed before holding the meeting');
     }
   }
 

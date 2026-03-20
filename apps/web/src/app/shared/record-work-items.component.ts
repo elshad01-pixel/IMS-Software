@@ -205,6 +205,8 @@ type ActionItem = {
 export class RecordWorkItemsComponent implements OnChanges {
   @Input() sourceType!: string;
   @Input() sourceId: string | null = null;
+  @Input() draftTitle: string | null = null;
+  @Input() draftDescription: string | null = null;
 
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
@@ -232,6 +234,13 @@ export class RecordWorkItemsComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if ((changes['sourceId'] || changes['sourceType']) && this.sourceId) {
       this.reloadActions();
+    }
+
+    if (changes['draftTitle'] || changes['draftDescription']) {
+      this.actionForm.patchValue({
+        title: this.draftTitle || this.actionForm.getRawValue().title,
+        description: this.draftDescription ?? this.actionForm.getRawValue().description
+      }, { emitEvent: false });
     }
   }
 

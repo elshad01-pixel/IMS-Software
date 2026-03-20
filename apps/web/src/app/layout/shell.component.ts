@@ -429,6 +429,7 @@ export class ShellComponent {
     { path: '/management-review', label: 'Management Review', hint: 'Meetings and decisions' },
     { path: '/kpis', label: 'KPIs', hint: 'Targets and trends' },
     { path: '/training', label: 'Training', hint: 'Assignments and evidence' },
+    { path: '/actions', label: 'Actions', hint: 'Global follow-up tracker' },
     { path: '/reports', label: 'Reports', hint: 'Exports and summaries' },
     { path: '/users', label: 'Users', hint: 'Access and ownership' },
     { path: '/settings', label: 'Settings', hint: 'System configuration' }

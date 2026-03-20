@@ -20,6 +20,7 @@ Production-ready workflows are implemented for:
 - Management Review
 - KPIs
 - Training
+- Actions
 - Reports
 - Users
 - Settings
@@ -229,24 +230,26 @@ Manual test:
 
 Implemented:
 
-- Create audit plans with code, type, lead auditor, auditee area, schedule, and status
-- List audits with checklist completion and open finding counts
+- Create internal and supplier audit plans with code, type, lead auditor, auditee area, schedule, and status
+- Seed internal audits with ISO 9001, ISO 45001, or ISO 14001 clause checklists
+- Maintain supplier audits with dynamic custom checklist items
+- Record checklist compliance as `YES`, `NO`, or `PARTIAL` with comments
 - View audit details
-- Add checklist items and mark them complete
 - Record audit findings with severity, owner, and due date
 - Create linked CAPA directly from findings
+- Create linked audit actions through the shared action-item engine
 - Close audits after findings are resolved or escalated to CAPA
-- Linked audit action items through the shared action-item engine
 
 Manual test:
 
 1. Open `Audits`.
-2. Create an audit plan with code, title, auditor, and schedule.
-3. Move it to `IN_PROGRESS`.
-4. Add at least one checklist item and mark it complete.
+2. Create an `Internal Audit`, select an ISO standard, and save.
+3. Verify clauses `4` through `10` are preloaded in the checklist.
+4. Create a `Supplier Audit`, add a custom checklist item, and set the response to `PARTIAL`.
 5. Add a finding.
 6. Create a CAPA from that finding.
-7. Move the audit to `COMPLETED`, then `CLOSED`.
+7. Create an action from the finding and verify it appears in `Actions`.
+8. Move the audit to `COMPLETED`, then `CLOSED`.
 
 ### Management Review
 
@@ -254,19 +257,37 @@ Implemented:
 
 - Create management review meetings
 - Select review inputs from risks, CAPAs, audits, and KPIs
-- Record agenda, minutes, decisions, and summary
+- Record structured input sections for audit results, CAPA status, KPI performance, risks and opportunities, changes affecting the system, and previous actions
+- Record structured output sections for decisions, improvement actions, and resource needs
 - Track review status
-- Create linked management review action items
+- Create linked management review action items from the meeting sections
 - List and view review meetings
 
 Manual test:
 
 1. Open `Management Review`.
 2. Create a review meeting with date and chairperson.
-3. Select at least one input from each relevant module you want to include.
-4. Record minutes and decisions.
+3. Select at least one linked input from audits, CAPA, risks, or KPIs.
+4. Complete the structured input and output sections.
 5. Save the meeting in `HELD` status.
-6. Add a linked action item and verify it appears on the dashboard.
+6. Create an action from one review section and verify it appears in `Actions`.
+
+### Actions
+
+Implemented:
+
+- Unified action tracker for follow-up raised from risks, CAPA, audits, and management review
+- Source-aware actions with title, description, owner, due date, and status
+- Global `/actions` register with filters for source, status, owner, and due-state
+- Inline status updates from the action tracker
+
+Manual test:
+
+1. Create actions from CAPA, an audit, and a management review.
+2. Open `Actions`.
+3. Filter by source and verify the expected actions appear.
+4. Filter by status or owner to narrow the list.
+5. Change one action to `DONE` and verify the update persists after refresh.
 
 ### KPIs
 
@@ -342,14 +363,16 @@ The following were executed successfully on March 19, 2026:
 - `npm run build`
 - `docker compose up -d --build api web nginx`
 
-Verified against the running stack:
+Verified against the running stack on March 20, 2026:
 
 - Demo login works through `http://localhost:8080/api/auth/login`
 - Document create, update, review, approve, detail fetch, list fetch, and attachment upload
 - Risk create, update, list, detail fetch, and linked treatment action creation
 - CAPA create, status progression, linked action completion, and closure
-- Audit create, checklist update, finding creation, CAPA creation from finding, status progression, detail fetch, and closure
-- Management review create, linked input persistence, detail fetch, and action creation
+- Internal audit create with seeded ISO checklist
+- Supplier audit create with dynamic checklist, compliance update, finding creation, CAPA creation, and linked action creation
+- Management review create with structured input and output sections, linked input persistence, detail fetch, and action creation
+- Global action tracker filtering by source and status
 - KPI create, reading history persistence, trend calculation, and status calculation
 - Training create, assignment create, completion update, and detail fetch
 - Settings config read, section save, role capability update, and persistence after refresh

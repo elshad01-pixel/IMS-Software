@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { ActionItemStatus } from '@prisma/client';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
@@ -6,6 +7,7 @@ import { Permissions } from '../../common/auth/permissions.decorator';
 import { PermissionsGuard } from '../../common/auth/permissions.guard';
 import { CurrentTenant } from '../../common/tenancy/current-tenant.decorator';
 import { CreateActionItemDto } from './dto/create-action-item.dto';
+import { UpdateActionItemDto } from './dto/update-action-item.dto';
 import { ActionItemsService } from './action-items.service';
 
 @ApiTags('action-items')
@@ -20,9 +22,12 @@ export class ActionItemsController {
   list(
     @CurrentTenant() tenantId: string,
     @Query('sourceType') sourceType?: string,
-    @Query('sourceId') sourceId?: string
+    @Query('sourceId') sourceId?: string,
+    @Query('status') status?: ActionItemStatus,
+    @Query('ownerId') ownerId?: string,
+    @Query('dueState') dueState?: 'overdue' | 'upcoming'
   ) {
-    return this.actionItemsService.list(tenantId, sourceType, sourceId);
+    return this.actionItemsService.list(tenantId, { sourceType, sourceId, status, ownerId, dueState });
   }
 
   @Post()
@@ -43,5 +48,16 @@ export class ActionItemsController {
     @Param('id') id: string
   ) {
     return this.actionItemsService.complete(tenantId, user.sub, id);
+  }
+
+  @Patch(':id')
+  @Permissions('action-items.write')
+  update(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { sub: string },
+    @Param('id') id: string,
+    @Body() dto: UpdateActionItemDto
+  ) {
+    return this.actionItemsService.update(tenantId, user.sub, id, dto);
   }
 }

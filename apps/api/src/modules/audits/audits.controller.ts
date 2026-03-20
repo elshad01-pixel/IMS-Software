@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
@@ -74,6 +74,16 @@ export class AuditsController {
     @Body() dto: UpdateAuditChecklistItemDto
   ) {
     return this.auditsService.updateChecklistItem(tenantId, user.sub, itemId, dto);
+  }
+
+  @Delete('checklist-items/:itemId')
+  @Permissions('audits.write')
+  removeChecklistItem(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { sub: string },
+    @Param('itemId') itemId: string
+  ) {
+    return this.auditsService.removeChecklistItem(tenantId, user.sub, itemId);
   }
 
   @Post(':id/findings')
