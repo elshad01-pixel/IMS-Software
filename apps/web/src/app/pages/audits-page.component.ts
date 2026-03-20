@@ -33,6 +33,11 @@ type AuditChecklistItem = {
   sortOrder: number;
 };
 
+type ChecklistGroup = {
+  clause: string;
+  items: AuditChecklistItem[];
+};
+
 type AuditFinding = {
   id: string;
   title: string;
@@ -131,7 +136,7 @@ type AuditRecord = {
             <div>
               <span class="section-eyebrow">Audit setup</span>
               <h3>{{ mode() === 'create' ? 'Create audit plan' : 'Edit audit plan' }}</h3>
-              <p class="subtle">Internal audits can seed ISO clause checklists automatically. Supplier audits stay fully custom.</p>
+              <p class="subtle">Internal audits preload ISO audit questions. Supplier audits stay simple and custom.</p>
             </div>
           </div>
 
@@ -206,11 +211,11 @@ type AuditRecord = {
           <div class="entity-list top-space">
             <div class="entity-item">
               <strong>Internal audit</strong>
-              <small>Select an ISO standard to seed clauses 4-10 automatically.</small>
+              <small>Select an ISO standard to load predefined audit questions across clauses 4-10.</small>
             </div>
             <div class="entity-item">
               <strong>Supplier audit</strong>
-              <small>Use the detail page to add or remove supplier-specific checklist items.</small>
+              <small>Use a lightweight question list with an optional section or category.</small>
             </div>
             <div class="entity-item">
               <strong>Findings and actions</strong>
@@ -270,24 +275,20 @@ type AuditRecord = {
             <div class="section-head">
               <div>
                 <span class="section-eyebrow">Checklist</span>
-                <h3>{{ selectedAudit()?.type === 'Internal Audit' ? 'Clause-based ISO checklist' : 'Supplier checklist' }}</h3>
-                <p class="subtle">Mark clause compliance, record comments, and maintain custom supplier questions where needed.</p>
+                <h3>{{ selectedAudit()?.type === 'Internal Audit' ? 'ISO audit checklist' : 'Supplier checklist' }}</h3>
+                <p class="subtle">Group internal audits by clause and keep supplier audits as a simple question builder.</p>
               </div>
             </div>
 
             <form class="page-stack top-space" [formGroup]="checklistForm" (ngSubmit)="addChecklistItem()">
-              <div class="form-grid-3">
+              <div class="form-grid-2">
                 <label class="field">
-                  <span>Clause</span>
-                  <input formControlName="clause" placeholder="4">
+                  <span>{{ selectedAudit()?.type === 'Internal Audit' ? 'Clause' : 'Section or category' }}</span>
+                  <input formControlName="clause" [placeholder]="selectedAudit()?.type === 'Internal Audit' ? '4' : 'Delivery'">
                 </label>
                 <label class="field">
-                  <span>Question</span>
+                  <span>Add question</span>
                   <input formControlName="title" placeholder="Supplier evaluation criteria are defined">
-                </label>
-                <label class="field">
-                  <span>Order</span>
-                  <input type="number" min="0" formControlName="sortOrder">
                 </label>
               </div>
               <label class="field">
@@ -299,32 +300,70 @@ type AuditRecord = {
               </div>
             </form>
 
-            <div class="entity-list top-space">
-              <article class="entity-item checklist-card" *ngFor="let item of selectedAudit()?.checklistItems || []">
+            <div class="page-stack top-space" *ngIf="selectedAudit()?.type === 'Internal Audit'; else supplierChecklist">
+              <section class="detail-section" *ngFor="let group of checklistGroups()">
                 <div class="section-head">
                   <div>
-                    <strong>Clause {{ item.clause || '-' }} | {{ item.title }}</strong>
-                    <small>{{ item.standard || selectedAudit()?.standard || selectedAudit()?.type }}</small>
+                    <span class="section-eyebrow">Clause {{ group.clause }}</span>
+                    <h4>{{ clauseHeading(group.clause) }}</h4>
                   </div>
-                  <button type="button" class="button-link secondary text-button" (click)="removeChecklistItem(item.id)" [disabled]="saving()">Remove</button>
                 </div>
-                <div class="form-grid-2 top-space">
-                  <label class="field">
-                    <span>Compliance</span>
-                    <select [value]="item.response || ''" (change)="updateChecklistItem(item, { response: readChecklistResponse($event) })">
-                      <option value="">Not assessed</option>
-                      <option>YES</option>
-                      <option>NO</option>
-                      <option>PARTIAL</option>
-                    </select>
-                  </label>
-                  <label class="field">
-                    <span>Comments</span>
-                    <textarea rows="2" [value]="item.notes || ''" (change)="updateChecklistItem(item, { notes: readTextarea($event) })"></textarea>
-                  </label>
+                <div class="entity-list top-space">
+                  <article class="entity-item checklist-card" *ngFor="let item of group.items">
+                    <div class="section-head">
+                      <div>
+                        <strong>{{ item.title }}</strong>
+                        <small>{{ item.standard || selectedAudit()?.standard }}</small>
+                      </div>
+                    </div>
+                    <div class="form-grid-2 top-space">
+                      <label class="field">
+                        <span>Compliance</span>
+                        <select [value]="item.response || ''" (change)="updateChecklistItem(item, { response: readChecklistResponse($event) })">
+                          <option value="">Not assessed</option>
+                          <option>YES</option>
+                          <option>NO</option>
+                          <option>PARTIAL</option>
+                        </select>
+                      </label>
+                      <label class="field">
+                        <span>Comments</span>
+                        <textarea rows="2" [value]="item.notes || ''" (change)="updateChecklistItem(item, { notes: readTextarea($event) })"></textarea>
+                      </label>
+                    </div>
+                  </article>
                 </div>
-              </article>
+              </section>
             </div>
+
+            <ng-template #supplierChecklist>
+              <div class="entity-list top-space">
+                <article class="entity-item checklist-card" *ngFor="let item of selectedAudit()?.checklistItems || []">
+                  <div class="section-head">
+                    <div>
+                      <strong>{{ item.title }}</strong>
+                      <small>{{ item.clause || 'General' }}</small>
+                    </div>
+                    <button type="button" class="button-link secondary text-button" (click)="removeChecklistItem(item.id)" [disabled]="saving()">Delete</button>
+                  </div>
+                  <div class="form-grid-2 top-space">
+                    <label class="field">
+                      <span>Compliance</span>
+                      <select [value]="item.response || ''" (change)="updateChecklistItem(item, { response: readChecklistResponse($event) })">
+                        <option value="">Not assessed</option>
+                        <option>YES</option>
+                        <option>NO</option>
+                        <option>PARTIAL</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <span>Comments</span>
+                      <textarea rows="2" [value]="item.notes || ''" (change)="updateChecklistItem(item, { notes: readTextarea($event) })"></textarea>
+                    </label>
+                  </div>
+                </article>
+              </div>
+            </ng-template>
           </section>
 
           <section class="card panel-card">
@@ -439,8 +478,7 @@ export class AuditsPageComponent {
   protected readonly checklistForm = this.fb.nonNullable.group({
     clause: [''],
     title: ['', [Validators.required, Validators.maxLength(200)]],
-    notes: [''],
-    sortOrder: [0, [Validators.required, Validators.min(0)]]
+    notes: ['']
   });
 
   protected readonly findingForm = this.fb.nonNullable.group({
@@ -545,7 +583,7 @@ export class AuditsPageComponent {
       next: () => {
         this.saving.set(false);
         this.message.set('Checklist item added.');
-        this.checklistForm.reset({ clause: '', title: '', notes: '', sortOrder: 0 });
+        this.checklistForm.reset({ clause: '', title: '', notes: '' });
         this.fetchAudit(this.selectedId() as string);
       },
       error: (error: HttpErrorResponse) => {
@@ -663,6 +701,32 @@ export class AuditsPageComponent {
     return (event.target as HTMLTextAreaElement).value;
   }
 
+  protected checklistGroups(): ChecklistGroup[] {
+    const items = this.selectedAudit()?.checklistItems || [];
+    const groups = new Map<string, AuditChecklistItem[]>();
+
+    for (const item of items) {
+      const clause = item.clause || 'Other';
+      groups.set(clause, [...(groups.get(clause) || []), item]);
+    }
+
+    return [...groups.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }))
+      .map(([clause, groupItems]) => ({ clause, items: groupItems }));
+  }
+
+  protected clauseHeading(clause: string) {
+    return {
+      '4': 'Context of the organization',
+      '5': 'Leadership',
+      '6': 'Planning',
+      '7': 'Support',
+      '8': 'Operation',
+      '9': 'Performance evaluation',
+      '10': 'Improvement'
+    }[clause] || 'Additional checklist items';
+  }
+
   private handleRoute(params: ParamMap) {
     const id = params.get('id');
     this.selectedId.set(id);
@@ -702,7 +766,7 @@ export class AuditsPageComponent {
       summary: '',
       status: 'PLANNED'
     });
-    this.checklistForm.reset({ clause: '', title: '', notes: '', sortOrder: 0 });
+    this.checklistForm.reset({ clause: '', title: '', notes: '' });
     this.findingForm.reset({ title: '', description: '', severity: 'OBSERVATION', ownerId: '', dueDate: '' });
   }
 

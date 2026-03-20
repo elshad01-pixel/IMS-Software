@@ -30,31 +30,52 @@ const AUDIT_STATUS_FLOW: Record<AuditStatus, AuditStatus[]> = {
 
 const ISO_AUDIT_TEMPLATES: Record<string, Array<{ clause: string; title: string }>> = {
   'ISO 9001': [
-    { clause: '4', title: 'Context of the organization is defined and monitored.' },
-    { clause: '5', title: 'Leadership commitment and quality policy are communicated.' },
-    { clause: '6', title: 'Risks, opportunities, and quality objectives are planned.' },
-    { clause: '7', title: 'Competence, awareness, and documented information are controlled.' },
-    { clause: '8', title: 'Operational planning and service or production controls are effective.' },
-    { clause: '9', title: 'Performance evaluation, internal audits, and management review are effective.' },
-    { clause: '10', title: 'Nonconformity, corrective action, and improvement are managed.' }
+    { clause: '4', title: 'Has the organization identified internal and external issues relevant to its purpose?' },
+    { clause: '4', title: 'Are interested parties and their relevant requirements determined and reviewed?' },
+    { clause: '5', title: 'Is the quality policy established, maintained, and communicated?' },
+    { clause: '5', title: 'Are roles, responsibilities, and authorities assigned and understood?' },
+    { clause: '6', title: 'Are risks and opportunities identified and addressed through planning?' },
+    { clause: '6', title: 'Are quality objectives defined, measurable, and monitored?' },
+    { clause: '7', title: 'Is competence evaluated and supported with training or awareness activities?' },
+    { clause: '7', title: 'Is documented information controlled, current, and available where needed?' },
+    { clause: '8', title: 'Are operational controls defined and consistently implemented?' },
+    { clause: '8', title: 'Are externally provided processes, products, or services controlled?' },
+    { clause: '9', title: 'Are monitoring, measurement, analysis, and evaluation activities effective?' },
+    { clause: '9', title: 'Are internal audits and management reviews completed on schedule?' },
+    { clause: '10', title: 'Are nonconformities corrected and root causes addressed?' },
+    { clause: '10', title: 'Is continual improvement demonstrated through effective actions?' }
   ],
   'ISO 45001': [
-    { clause: '4', title: 'OH&S context, workers, and interested parties are understood.' },
-    { clause: '5', title: 'Consultation, participation, and OH&S leadership are demonstrated.' },
-    { clause: '6', title: 'Hazard identification and OH&S planning are current.' },
-    { clause: '7', title: 'Resources, competence, awareness, and communication support OH&S.' },
-    { clause: '8', title: 'Operational controls and emergency preparedness are implemented.' },
-    { clause: '9', title: 'Monitoring, evaluation, and internal OH&S audit activities are effective.' },
-    { clause: '10', title: 'Incident handling, corrective action, and continual improvement are managed.' }
+    { clause: '4', title: 'Are OH&S issues, workers, and interested parties identified and reviewed?' },
+    { clause: '4', title: 'Is the OH&S management system scope defined and maintained?' },
+    { clause: '5', title: 'Does leadership demonstrate accountability for OH&S performance?' },
+    { clause: '5', title: 'Are worker consultation and participation arrangements effective?' },
+    { clause: '6', title: 'Are hazards identified and OH&S risks assessed proactively?' },
+    { clause: '6', title: 'Are legal requirements and OH&S objectives translated into plans?' },
+    { clause: '7', title: 'Are OH&S competence, awareness, and communications maintained?' },
+    { clause: '7', title: 'Is OH&S documented information controlled and accessible?' },
+    { clause: '8', title: 'Are operational controls and contractor controls implemented?' },
+    { clause: '8', title: 'Are emergency preparedness and response arrangements tested?' },
+    { clause: '9', title: 'Are OH&S performance, compliance, and audit results evaluated?' },
+    { clause: '9', title: 'Does management review address OH&S performance and opportunities?' },
+    { clause: '10', title: 'Are incidents, nonconformities, and corrective actions managed effectively?' },
+    { clause: '10', title: 'Is continual improvement in OH&S outcomes demonstrated?' }
   ],
   'ISO 14001': [
-    { clause: '4', title: 'Environmental context and compliance obligations are identified.' },
-    { clause: '5', title: 'Leadership commitment and environmental policy are maintained.' },
-    { clause: '6', title: 'Environmental aspects, risks, opportunities, and objectives are planned.' },
-    { clause: '7', title: 'Resources, competence, communication, and documented information are adequate.' },
-    { clause: '8', title: 'Operational controls and emergency preparedness are implemented.' },
-    { clause: '9', title: 'Monitoring, measurement, compliance evaluation, and internal audit are effective.' },
-    { clause: '10', title: 'Nonconformity, corrective action, and continual improvement are managed.' }
+    { clause: '4', title: 'Are environmental issues and compliance obligations identified and maintained?' },
+    { clause: '4', title: 'Is the EMS scope defined considering activities, products, and services?' },
+    { clause: '5', title: 'Is environmental policy established, communicated, and supported by leadership?' },
+    { clause: '5', title: 'Are environmental responsibilities assigned and understood?' },
+    { clause: '6', title: 'Are environmental aspects and impacts evaluated systematically?' },
+    { clause: '6', title: 'Are environmental objectives and plans established and monitored?' },
+    { clause: '7', title: 'Are competence, awareness, and communication sufficient for EMS needs?' },
+    { clause: '7', title: 'Is documented environmental information controlled effectively?' },
+    { clause: '8', title: 'Are operational controls for significant aspects implemented?' },
+    { clause: '8', title: 'Are emergency preparedness and response plans established and tested?' },
+    { clause: '9', title: 'Are monitoring, measurement, and compliance evaluations performed?' },
+    { clause: '9', title: 'Do internal audit and management review evaluate EMS effectiveness?' },
+    { clause: '10', title: 'Are nonconformities addressed and corrective actions tracked?' },
+    { clause: '10', title: 'Is continual environmental improvement evidenced in practice?' }
   ]
 };
 
@@ -217,6 +238,7 @@ export class AuditsService {
     dto: CreateAuditChecklistItemDto
   ) {
     const audit = await this.requireAudit(tenantId, auditId);
+    const nextSortOrder = await this.nextChecklistSortOrder(tenantId, auditId);
 
     const checklistItem = await this.prisma.auditChecklistItem.create({
       data: {
@@ -228,7 +250,7 @@ export class AuditsService {
         notes: this.normalizeText(dto.notes),
         response: dto.response as ChecklistResponse | undefined,
         isComplete: dto.isComplete ?? Boolean(dto.response),
-        sortOrder: dto.sortOrder ?? 0
+        sortOrder: nextSortOrder
       } as Prisma.AuditChecklistItemUncheckedCreateInput
     });
 
@@ -267,8 +289,7 @@ export class AuditsService {
         standard: dto.standard !== undefined ? this.normalizeText(dto.standard) : undefined,
         notes: dto.notes !== undefined ? this.normalizeText(dto.notes) : undefined,
         response: resolvedResponse,
-        isComplete: dto.isComplete ?? Boolean(resolvedResponse),
-        sortOrder: dto.sortOrder
+        isComplete: dto.isComplete ?? Boolean(resolvedResponse)
       } as Prisma.AuditChecklistItemUncheckedUpdateInput
     });
 
@@ -471,6 +492,16 @@ export class AuditsService {
         sortOrder: index + 1
       }))
     });
+  }
+
+  private async nextChecklistSortOrder(tenantId: string, auditId: string) {
+    const lastItem = await this.prisma.auditChecklistItem.findFirst({
+      where: { tenantId, auditId },
+      orderBy: [{ sortOrder: 'desc' }, { createdAt: 'desc' }],
+      select: { sortOrder: true }
+    });
+
+    return (lastItem?.sortOrder ?? 0) + 1;
   }
 
   private async requireAudit(tenantId: string, auditId: string) {

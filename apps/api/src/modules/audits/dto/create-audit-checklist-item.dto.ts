@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsIn, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateAuditChecklistItemDto {
   @IsOptional()
@@ -29,9 +29,4 @@ export class CreateAuditChecklistItemDto {
   @IsOptional()
   @IsBoolean()
   isComplete?: boolean;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  sortOrder?: number;
 }

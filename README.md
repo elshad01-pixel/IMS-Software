@@ -231,8 +231,8 @@ Manual test:
 Implemented:
 
 - Create internal and supplier audit plans with code, type, lead auditor, auditee area, schedule, and status
-- Seed internal audits with ISO 9001, ISO 45001, or ISO 14001 clause checklists
-- Maintain supplier audits with dynamic custom checklist items
+- Seed internal audits with ISO 9001, ISO 45001, or ISO 14001 question-based checklists grouped by clauses 4-10
+- Maintain supplier audits with a simple dynamic checklist builder using question plus optional section/category
 - Record checklist compliance as `YES`, `NO`, or `PARTIAL` with comments
 - View audit details
 - Record audit findings with severity, owner, and due date
@@ -244,12 +244,14 @@ Manual test:
 
 1. Open `Audits`.
 2. Create an `Internal Audit`, select an ISO standard, and save.
-3. Verify clauses `4` through `10` are preloaded in the checklist.
-4. Create a `Supplier Audit`, add a custom checklist item, and set the response to `PARTIAL`.
-5. Add a finding.
-6. Create a CAPA from that finding.
-7. Create an action from the finding and verify it appears in `Actions`.
-8. Move the audit to `COMPLETED`, then `CLOSED`.
+3. Verify clauses `4` through `10` are preloaded and each clause contains multiple audit questions.
+4. Mark several internal audit questions as `YES`, `NO`, or `PARTIAL` and add comments.
+5. Create a `Supplier Audit`, add custom questions using only question text and optional section/category labels.
+6. Confirm supplier checklist items appear in creation order without any manual order field.
+7. Add a finding.
+8. Create a CAPA from that finding.
+9. Create an action from the finding and verify it appears in `Actions`.
+10. Move the audit to `COMPLETED`, then `CLOSED`.
 
 ### Management Review
 
