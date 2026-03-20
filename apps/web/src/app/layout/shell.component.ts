@@ -3,28 +3,68 @@ import { Component, HostListener, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthStore } from '../core/auth.store';
 
+type NavItem = {
+  path: string;
+  label: string;
+  hint: string;
+  icon: string;
+  exact?: boolean;
+};
+
+const SIDEBAR_PIN_KEY = 'ims.sidebar.pinned';
+
 @Component({
   selector: 'iso-shell',
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   template: `
-    <div class="shell">
-      <aside class="sidebar card">
-        <div class="brand">
-          <div class="brand-mark">
-            <div class="brand-seal">IMS</div>
-            <div>
-              <div class="pill brand-pill">ISO SaaS</div>
-              <h1>Integrated Management</h1>
+    <div
+      class="shell"
+      [class.sidebar-expanded]="sidebarExpanded()"
+      [class.sidebar-pinned]="sidebarPinned()"
+      [class.sidebar-mobile-open]="mobileNavOpen()"
+    >
+      <div class="shell-backdrop" *ngIf="isCompactViewport() && mobileNavOpen()" (click)="closeMobileNav()"></div>
+
+      <aside
+        class="sidebar card"
+        [class.expanded]="sidebarExpanded()"
+        [class.pinned]="sidebarPinned()"
+        [class.mobile-open]="mobileNavOpen()"
+        (mouseenter)="handleSidebarEnter()"
+        (mouseleave)="handleSidebarLeave()"
+      >
+        <div class="sidebar-top">
+          <div class="brand">
+            <div class="brand-mark">
+              <div class="brand-seal">IMS</div>
+              <div class="brand-copy" *ngIf="sidebarExpanded()">
+                <div class="pill brand-pill">ISO SaaS</div>
+                <h1>Integrated Management</h1>
+              </div>
             </div>
+            <p *ngIf="sidebarExpanded()">Operational control for documents, risks, audits, CAPA, reviews, KPIs, and training.</p>
           </div>
-          <p>Operational control for documents, risks, audits, CAPA, reviews, KPIs, and training.</p>
+
+          <button type="button" class="pin-toggle" (click)="togglePin()" [attr.aria-pressed]="sidebarPinned()">
+            <span class="pin-toggle__icon">{{ sidebarPinned() ? 'PIN' : 'UNP' }}</span>
+            <span *ngIf="sidebarExpanded()">{{ sidebarPinned() ? 'Pinned' : 'Pin sidebar' }}</span>
+          </button>
         </div>
 
         <nav>
-          <a *ngFor="let item of navItems" [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.exact ?? false }">
-            <span class="nav-label">{{ item.label }}</span>
-            <small>{{ item.hint }}</small>
+          <a
+            *ngFor="let item of navItems"
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+            [attr.aria-label]="item.label"
+          >
+            <span class="nav-icon">{{ item.icon }}</span>
+            <span class="nav-copy" *ngIf="sidebarExpanded()">
+              <span class="nav-label">{{ item.label }}</span>
+              <small>{{ item.hint }}</small>
+            </span>
           </a>
         </nav>
       </aside>
@@ -32,29 +72,38 @@ import { AuthStore } from '../core/auth.store';
       <main class="main">
         <header class="topbar card">
           <div class="topbar-copy">
-            <span class="topbar-label">Workspace</span>
+            <div class="topbar-leading">
+              <button type="button" class="nav-toggle" (click)="toggleMobileNav()" *ngIf="isCompactViewport()">NAV</button>
+              <span class="topbar-label">Workspace</span>
+            </div>
             <strong>Integrated Management System</strong>
           </div>
 
-          <div class="user-menu" [class.open]="menuOpen()">
-            <button type="button" class="user-trigger" (click)="toggleMenu($event)">
-              <span class="user-trigger__copy">
-                <strong>{{ authStore.session()?.user?.email }}</strong>
-                <small>{{ authStore.tenantSlug() || 'n/a' }}</small>
-              </span>
-              <span class="user-trigger__caret">▾</span>
+          <div class="topbar-actions">
+            <button type="button" class="topbar-pin" (click)="togglePin()" *ngIf="!isCompactViewport()">
+              {{ sidebarPinned() ? 'Unpin sidebar' : 'Pin sidebar' }}
             </button>
 
-            <section class="user-dropdown card" *ngIf="menuOpen()">
-              <div class="user-dropdown__identity">
-                <strong>{{ authStore.session()?.user?.email }}</strong>
-                <small>{{ authStore.tenantSlug() || 'n/a' }}</small>
-              </div>
-              <div class="user-dropdown__divider"></div>
-              <button type="button" class="user-dropdown__item" (click)="logout()">
-                Sign out
+            <div class="user-menu" [class.open]="menuOpen()">
+              <button type="button" class="user-trigger" (click)="toggleMenu($event)">
+                <span class="user-trigger__copy">
+                  <strong>{{ authStore.session()?.user?.email }}</strong>
+                  <small>{{ authStore.tenantSlug() || 'n/a' }}</small>
+                </span>
+                <span class="user-trigger__caret">V</span>
               </button>
-            </section>
+
+              <section class="user-dropdown card" *ngIf="menuOpen()">
+                <div class="user-dropdown__identity">
+                  <strong>{{ authStore.session()?.user?.email }}</strong>
+                  <small>{{ authStore.tenantSlug() || 'n/a' }}</small>
+                </div>
+                <div class="user-dropdown__divider"></div>
+                <button type="button" class="user-dropdown__item" (click)="logout()">
+                  Sign out
+                </button>
+              </section>
+            </div>
           </div>
         </header>
 
@@ -66,19 +115,34 @@ import { AuthStore } from '../core/auth.store';
   `,
   styles: [`
     .shell {
+      --sidebar-collapsed: 5.8rem;
+      --sidebar-expanded: 18.25rem;
       display: grid;
-      grid-template-columns: 292px minmax(0, 1fr);
+      grid-template-columns: var(--sidebar-collapsed) minmax(0, 1fr);
       gap: 1.25rem;
       height: 100vh;
       padding: 1.1rem;
       overflow: hidden;
+      position: relative;
+      transition: grid-template-columns 180ms ease;
+    }
+
+    .shell.sidebar-expanded {
+      grid-template-columns: var(--sidebar-expanded) minmax(0, 1fr);
+    }
+
+    .shell-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(14, 23, 18, 0.34);
+      z-index: 29;
     }
 
     .sidebar {
       display: grid;
       grid-template-rows: auto 1fr;
-      padding: 1.35rem;
-      gap: 1.35rem;
+      padding: 1.1rem 0.9rem 1.1rem 1rem;
+      gap: 1rem;
       position: sticky;
       top: 1.1rem;
       height: calc(100vh - 2.2rem);
@@ -87,11 +151,24 @@ import { AuthStore } from '../core/auth.store';
         linear-gradient(180deg, rgba(23, 55, 40, 0.985), rgba(21, 44, 33, 0.985));
       color: #f9f4ea;
       overflow: hidden;
+      transition: width 180ms ease, padding 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+      width: var(--sidebar-collapsed);
+      z-index: 30;
+    }
+
+    .sidebar.expanded {
+      width: var(--sidebar-expanded);
+      padding-right: 1.15rem;
+    }
+
+    .sidebar-top {
+      display: grid;
+      gap: 1rem;
     }
 
     .brand {
       display: grid;
-      gap: 0.9rem;
+      gap: 0.8rem;
     }
 
     .brand-mark {
@@ -99,6 +176,10 @@ import { AuthStore } from '../core/auth.store';
       grid-template-columns: auto 1fr;
       gap: 0.9rem;
       align-items: start;
+    }
+
+    .brand-copy {
+      min-width: 0;
     }
 
     .brand-seal {
@@ -112,6 +193,7 @@ import { AuthStore } from '../core/auth.store';
       font-weight: 900;
       letter-spacing: 0.08em;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      flex-shrink: 0;
     }
 
     .brand-pill {
@@ -133,14 +215,47 @@ import { AuthStore } from '../core/auth.store';
       font-size: 0.95rem;
     }
 
+    .pin-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      padding: 0.62rem 0.72rem;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(249, 244, 234, 0.92);
+      box-shadow: none;
+      width: 100%;
+      min-height: 2.8rem;
+    }
+
+    .pin-toggle:hover {
+      transform: none;
+      box-shadow: none;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .pin-toggle__icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2.2rem;
+      min-height: 2rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+    }
+
     nav {
       display: grid;
       gap: 0.35rem;
       align-content: start;
       min-height: 0;
       overflow-y: auto;
-      padding-right: 0.25rem;
-      margin-right: -0.25rem;
+      padding-right: 0.1rem;
       scrollbar-width: thin;
       scrollbar-color: rgba(244, 232, 208, 0.18) transparent;
     }
@@ -177,14 +292,23 @@ import { AuthStore } from '../core/auth.store';
 
     nav a {
       display: grid;
-      gap: 0.12rem;
+      grid-template-columns: 2.6rem minmax(0, 1fr);
+      gap: 0.75rem;
+      align-items: center;
       border-radius: 16px;
-      padding: 0.88rem 0.95rem;
+      padding: 0.78rem 0.78rem;
       color: inherit;
       text-decoration: none;
       background: transparent;
       border: 1px solid transparent;
       transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+      min-height: 3.35rem;
+    }
+
+    .sidebar:not(.expanded) nav a {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      padding-inline: 0.4rem;
     }
 
     nav a:hover {
@@ -192,11 +316,33 @@ import { AuthStore } from '../core/auth.store';
       background: rgba(255, 255, 255, 0.05);
     }
 
+    .sidebar:not(.expanded) nav a:hover {
+      transform: translateY(-1px);
+    }
+
     nav a.active {
       background: rgba(255, 255, 255, 0.11);
       border-color: rgba(255, 255, 255, 0.1);
       font-weight: 700;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .nav-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 2.35rem;
+      height: 2.35rem;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #f9f4ea;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .nav-copy {
+      display: grid;
+      min-width: 0;
     }
 
     .nav-label {
@@ -220,13 +366,6 @@ import { AuthStore } from '../core/auth.store';
       align-content: start;
     }
 
-    .eyebrow {
-      font-size: 0.75rem;
-      color: rgba(249, 244, 234, 0.72);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
     .topbar {
       display: flex;
       justify-content: space-between;
@@ -246,6 +385,12 @@ import { AuthStore } from '../core/auth.store';
       gap: 0.12rem;
     }
 
+    .topbar-leading {
+      display: flex;
+      gap: 0.7rem;
+      align-items: center;
+    }
+
     .topbar-copy strong {
       font-size: 1rem;
       letter-spacing: -0.02em;
@@ -258,6 +403,33 @@ import { AuthStore } from '../core/auth.store';
       font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
+    }
+
+    .topbar-actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .nav-toggle,
+    .topbar-pin {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.68rem 0.85rem;
+      border-radius: 14px;
+      border: 1px solid rgba(23, 50, 37, 0.08);
+      background: rgba(244, 247, 242, 0.92);
+      color: var(--text-soft);
+      box-shadow: none;
+      font-size: 0.8rem;
+    }
+
+    .nav-toggle:hover,
+    .topbar-pin:hover {
+      transform: none;
+      box-shadow: none;
+      background: rgba(255, 255, 255, 0.98);
     }
 
     .main-body {
@@ -376,23 +548,48 @@ import { AuthStore } from '../core/auth.store';
     }
 
     @media (max-width: 960px) {
-      .shell {
+      .shell,
+      .shell.sidebar-expanded {
         grid-template-columns: 1fr;
         height: auto;
         overflow: visible;
       }
 
       .sidebar {
-        position: static;
+        position: fixed;
+        left: 1rem;
+        top: 1rem;
+        bottom: 1rem;
         height: auto;
-        overflow: visible;
+        transform: translateX(calc(-100% - 1rem));
+        width: min(20rem, calc(100vw - 2rem));
+        max-width: min(20rem, calc(100vw - 2rem));
+        box-shadow: 0 24px 48px rgba(17, 28, 21, 0.26);
+      }
+
+      .sidebar.mobile-open,
+      .sidebar.expanded {
+        transform: translateX(0);
+        padding-right: 1.15rem;
+      }
+
+      .sidebar .brand-copy,
+      .sidebar p,
+      .sidebar .nav-copy,
+      .sidebar .pin-toggle span:not(.pin-toggle__icon) {
+        display: block;
+      }
+
+      nav a {
+        grid-template-columns: 2.6rem minmax(0, 1fr);
+        justify-items: stretch;
+        padding-inline: 0.78rem;
       }
 
       nav a:hover {
         transform: none;
       }
 
-      nav,
       .main {
         overflow: visible;
         max-height: none;
@@ -409,6 +606,11 @@ import { AuthStore } from '../core/auth.store';
         align-items: start;
       }
 
+      .topbar-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
       .user-trigger,
       .user-dropdown {
         min-width: 100%;
@@ -420,20 +622,63 @@ import { AuthStore } from '../core/auth.store';
 export class ShellComponent {
   protected readonly authStore = inject(AuthStore);
   protected readonly menuOpen = signal(false);
-  protected readonly navItems = [
-    { path: '/dashboard', label: 'Dashboard', hint: 'Executive overview', exact: true },
-    { path: '/documents', label: 'Documents', hint: 'Controlled library' },
-    { path: '/risks', label: 'Risks', hint: 'Assessment and treatment' },
-    { path: '/capa', label: 'CAPA', hint: 'Corrective workflows' },
-    { path: '/audits', label: 'Audits', hint: 'Plans and findings' },
-    { path: '/management-review', label: 'Management Review', hint: 'Meetings and decisions' },
-    { path: '/kpis', label: 'KPIs', hint: 'Targets and trends' },
-    { path: '/training', label: 'Training', hint: 'Assignments and evidence' },
-    { path: '/actions', label: 'Actions', hint: 'Global follow-up tracker' },
-    { path: '/reports', label: 'Reports', hint: 'Exports and summaries' },
-    { path: '/users', label: 'Users', hint: 'Access and ownership' },
-    { path: '/settings', label: 'Settings', hint: 'System configuration' }
+  protected readonly mobileNavOpen = signal(false);
+  protected readonly sidebarPinned = signal(this.readPinnedPreference());
+  protected readonly sidebarHovered = signal(false);
+  protected readonly compactViewport = signal(this.readCompactViewport());
+  protected readonly navItems: NavItem[] = [
+    { path: '/dashboard', label: 'Dashboard', hint: 'Executive overview', icon: 'DB', exact: true },
+    { path: '/documents', label: 'Documents', hint: 'Controlled library', icon: 'DC' },
+    { path: '/risks', label: 'Risks', hint: 'Assessment and treatment', icon: 'RK' },
+    { path: '/capa', label: 'CAPA', hint: 'Corrective workflows', icon: 'CP' },
+    { path: '/audits', label: 'Audits', hint: 'Plans and findings', icon: 'AU' },
+    { path: '/management-review', label: 'Management Review', hint: 'Meetings and decisions', icon: 'MR' },
+    { path: '/kpis', label: 'KPIs', hint: 'Targets and trends', icon: 'KP' },
+    { path: '/training', label: 'Training', hint: 'Assignments and evidence', icon: 'TR' },
+    { path: '/actions', label: 'Actions', hint: 'Global follow-up tracker', icon: 'AC' },
+    { path: '/reports', label: 'Reports', hint: 'Exports and summaries', icon: 'RP' },
+    { path: '/users', label: 'Users', hint: 'Access and ownership', icon: 'US' },
+    { path: '/settings', label: 'Settings', hint: 'System configuration', icon: 'ST' }
   ];
+
+  protected sidebarExpanded() {
+    if (this.isCompactViewport()) {
+      return this.mobileNavOpen();
+    }
+
+    return this.sidebarPinned() || this.sidebarHovered();
+  }
+
+  protected isCompactViewport() {
+    return this.compactViewport();
+  }
+
+  protected handleSidebarEnter() {
+    if (!this.isCompactViewport() && !this.sidebarPinned()) {
+      this.sidebarHovered.set(true);
+    }
+  }
+
+  protected handleSidebarLeave() {
+    if (!this.isCompactViewport() && !this.sidebarPinned()) {
+      this.sidebarHovered.set(false);
+    }
+  }
+
+  protected togglePin() {
+    const next = !this.sidebarPinned();
+    this.sidebarPinned.set(next);
+    this.sidebarHovered.set(false);
+    this.writePinnedPreference(next);
+  }
+
+  protected toggleMobileNav() {
+    this.mobileNavOpen.update((value) => !value);
+  }
+
+  protected closeMobileNav() {
+    this.mobileNavOpen.set(false);
+  }
 
   protected toggleMenu(event: Event) {
     event.stopPropagation();
@@ -445,8 +690,37 @@ export class ShellComponent {
     this.authStore.logout();
   }
 
+  @HostListener('window:resize')
+  protected onResize() {
+    const compact = this.readCompactViewport();
+    this.compactViewport.set(compact);
+    if (!compact) {
+      this.mobileNavOpen.set(false);
+    }
+  }
+
   @HostListener('document:click')
   protected closeMenu() {
     this.menuOpen.set(false);
+  }
+
+  private readPinnedPreference() {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    return window.localStorage.getItem(SIDEBAR_PIN_KEY) === 'true';
+  }
+
+  private writePinnedPreference(value: boolean) {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem(SIDEBAR_PIN_KEY, String(value));
+  }
+
+  private readCompactViewport() {
+    return typeof window !== 'undefined' ? window.innerWidth <= 960 : false;
   }
 }
