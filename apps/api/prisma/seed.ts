@@ -27,6 +27,8 @@ const permissionKeys = [
   'kpis.write',
   'training.read',
   'training.write',
+  'ncr.read',
+  'ncr.write',
   'reports.read',
   'users.read',
   'users.write',
@@ -62,6 +64,7 @@ const systemRoleDefinitions = [
       'management-review.read',
       'kpis.read',
       'training.read',
+      'ncr.read',
       'reports.read',
       'attachments.write',
       'action-items.write'

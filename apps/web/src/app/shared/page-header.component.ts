@@ -26,6 +26,7 @@ type Breadcrumb = {
           <span class="pill">{{ label }}</span>
           <h2>{{ title }}</h2>
           <p>{{ description }}</p>
+          <small class="hero-supporting-line" *ngIf="supportingLine">{{ supportingLine }}</small>
         </div>
 
         <div class="page-hero__actions">
@@ -37,8 +38,26 @@ type Breadcrumb = {
   styles: [`
     .hero-copy {
       display: grid;
-      gap: 0.05rem;
+      gap: 0.2rem;
       max-width: 52rem;
+    }
+
+    .hero-copy h2 {
+      letter-spacing: -0.05em;
+      font-weight: 800;
+    }
+
+    .hero-copy p {
+      max-width: 44rem;
+    }
+
+    .hero-supporting-line {
+      margin-top: 0.85rem;
+      color: var(--muted-strong);
+      font-size: 0.84rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
     }
   `]
 })
@@ -46,5 +65,6 @@ export class PageHeaderComponent {
   @Input() label = '';
   @Input() title = '';
   @Input() description = '';
+  @Input() supportingLine = '';
   @Input() breadcrumbs: Breadcrumb[] = [];
 }

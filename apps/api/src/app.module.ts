@@ -17,6 +17,7 @@ import { KpisModule } from './modules/kpis/kpis.module';
 import { TrainingModule } from './modules/training/training.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { NcrModule } from './modules/ncr/ncr.module';
 
 @Module({
   imports: [
@@ -36,7 +37,8 @@ import { SettingsModule } from './modules/settings/settings.module';
     KpisModule,
     TrainingModule,
     ReportsModule,
-    SettingsModule
+    SettingsModule,
+    NcrModule
   ]
 })
 export class AppModule implements NestModule {

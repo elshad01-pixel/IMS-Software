@@ -41,8 +41,9 @@ type ChartSegment = {
     <section class="page-grid">
       <iso-page-header
         [label]="'Dashboard'"
-        [title]="'Operational overview'"
-        [description]="'A structured command view for exposure, corrective action pressure, and the most recent system activity.'"
+        [title]="'Integrated Management System'"
+        [description]="'A structured operational workspace for quality, environmental, and health and safety management.'"
+        [supportingLine]="'ISO 9001 • ISO 14001 • ISO 45001'"
         [breadcrumbs]="[{ label: 'Dashboard' }]"
       >
         <a routerLink="/documents/new" class="button-link">Create document</a>

@@ -274,7 +274,6 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
           </section>
 
           <iso-attachment-panel *ngIf="selectedId()" [sourceType]="'document'" [sourceId]="selectedId()" />
-          <iso-record-work-items *ngIf="selectedId()" [sourceType]="'document'" [sourceId]="selectedId()" />
         </div>
       </section>
 
@@ -342,11 +341,12 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
             </div>
             <p class="feedback top-space" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
           </section>
+
+          <iso-record-work-items [sourceType]="'document'" [sourceId]="selectedId()" />
         </div>
 
         <div class="page-stack">
           <iso-attachment-panel [sourceType]="'document'" [sourceId]="selectedId()" />
-          <iso-record-work-items [sourceType]="'document'" [sourceId]="selectedId()" />
         </div>
       </section>
     </section>

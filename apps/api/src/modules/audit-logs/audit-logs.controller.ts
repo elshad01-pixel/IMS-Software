@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { Permissions } from '../../common/auth/permissions.decorator';
@@ -15,7 +15,11 @@ export class AuditLogsController {
 
   @Get()
   @Permissions('settings.read')
-  list(@CurrentTenant() tenantId: string) {
-    return this.auditLogsService.list(tenantId);
+  list(
+    @CurrentTenant() tenantId: string,
+    @Query('entityType') entityType?: string,
+    @Query('entityId') entityId?: string
+  ) {
+    return this.auditLogsService.list(tenantId, { entityType, entityId });
   }
 }

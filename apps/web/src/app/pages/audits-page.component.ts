@@ -34,6 +34,18 @@ type AuditChecklistItem = {
   response?: ChecklistResponse | null;
   isComplete: boolean;
   sortOrder: number;
+  linkedFindingCount?: number;
+  linkedFindings?: Array<{
+    id: string;
+    title: string;
+    status: FindingStatus;
+    severity: FindingSeverity;
+    dueDate?: string | null;
+    ownerId?: string | null;
+    checklistItemId?: string | null;
+    clause?: string | null;
+    createdAt: string;
+  }>;
 };
 
 type ChecklistGroup = {
@@ -43,6 +55,8 @@ type ChecklistGroup = {
 
 type AuditFinding = {
   id: string;
+  checklistItemId?: string | null;
+  clause?: string | null;
   title: string;
   description: string;
   severity: FindingSeverity;
@@ -275,7 +289,7 @@ type AuditRecord = {
               <span>3</span>
               <div>
                 <strong>Review & close</strong>
-                <small>Findings and follow-up</small>
+                <small>Findings and corrective actions</small>
               </div>
             </button>
           </nav>
@@ -336,15 +350,26 @@ type AuditRecord = {
           </section>
         </section>
 
-        <section *ngIf="activeStep() === 'conduct'" class="page-columns audit-conduct-layout">
+        <section *ngIf="activeStep() === 'conduct'" class="page-stack">
           <section class="card panel-card">
             <div class="section-head">
               <div>
                 <span class="section-eyebrow">Conduct audit</span>
-                <h3>{{ selectedAudit()?.type === 'Internal Audit' ? 'Checklist walkthrough' : 'Supplier audit questions' }}</h3>
-                <p class="subtle">{{ selectedAudit()?.type === 'Internal Audit'
-                  ? 'Work through the ISO checklist question by question. Open an item, assess compliance, capture evidence, then move to the next.'
-                  : 'Build and assess supplier questions without clutter. Each item expands into a simple evaluation view.' }}</p>
+                <h3>{{ selectedAudit()?.type === 'Internal Audit' ? 'Clause-by-clause checklist' : 'Supplier audit checklist' }}</h3>
+                <p class="subtle">Answer each question. If a requirement is not met, record a finding and continue the audit.</p>
+              </div>
+            </div>
+
+            <div class="conduct-progress top-space" *ngIf="checklistGroups().length">
+              <div class="conduct-progress__meta">
+                <div>
+                  <strong>{{ currentClauseLabel() }}</strong>
+                  <small>{{ answeredChecklistCount() }}/{{ totalChecklistCount() }} questions answered</small>
+                </div>
+                <span>{{ currentClauseIndex() + 1 }}/{{ checklistGroups().length }} clauses</span>
+              </div>
+              <div class="conduct-progress__bar">
+                <span [style.width.%]="progressPercent()"></span>
               </div>
             </div>
 
@@ -368,141 +393,125 @@ type AuditRecord = {
               </div>
             </form>
 
-            <div class="page-stack top-space" *ngIf="selectedAudit()?.type === 'Internal Audit'; else supplierChecklist">
-              <section class="detail-section" *ngFor="let group of checklistGroups()">
-                <div class="section-head">
-                  <div>
-                    <span class="section-eyebrow">Clause {{ group.clause }}</span>
-                    <h4>{{ clauseHeading(group.clause) }}</h4>
-                  </div>
-                </div>
-
-                <div class="question-stack top-space">
-                  <article class="question-card" *ngFor="let item of group.items" [class.is-open]="isChecklistExpanded(item.id)">
-                    <button type="button" class="question-trigger" (click)="toggleChecklist(item.id)">
-                      <div>
-                        <small>Clause {{ item.clause || group.clause }}</small>
-                        <strong>{{ item.title }}</strong>
-                      </div>
-                      <span class="response-chip" [class.is-empty]="!item.response" [class.is-yes]="item.response === 'YES'" [class.is-no]="item.response === 'NO'" [class.is-partial]="item.response === 'PARTIAL'">
-                        {{ item.response || 'Not assessed' }}
-                      </span>
-                    </button>
-
-                    <div class="question-body" *ngIf="isChecklistExpanded(item.id)">
-                      <div class="response-group">
-                        <button type="button" class="response-button" [class.active]="item.response === 'YES'" (click)="setChecklistResponse(item, 'YES')">Yes</button>
-                        <button type="button" class="response-button" [class.active]="item.response === 'PARTIAL'" (click)="setChecklistResponse(item, 'PARTIAL')">Partial</button>
-                        <button type="button" class="response-button" [class.active]="item.response === 'NO'" (click)="setChecklistResponse(item, 'NO')">No</button>
-                      </div>
-
-                      <label class="field top-space">
-                        <span>Comments</span>
-                        <textarea
-                          rows="3"
-                          [value]="checklistNoteDraft(item)"
-                          (input)="setChecklistNoteDraft(item.id, readTextarea($event))"
-                          (blur)="saveChecklistNote(item)"
-                          placeholder="Record objective evidence, comments, and observations"
-                        ></textarea>
-                      </label>
-
-                      <div class="finding-prompt top-space" *ngIf="shouldSuggestFinding(item)">
-                        <div>
-                          <strong>Finding suggested</strong>
-                          <p>This response indicates a possible gap. Create a finding now and continue the follow-up from the review step.</p>
-                        </div>
-                        <button type="button" class="secondary" (click)="prepareFindingFromChecklist(item)">Create finding</button>
-                      </div>
-
-                      <iso-attachment-panel class="top-space" [sourceType]="'audit-checklist-item'" [sourceId]="item.id" />
-                    </div>
-                  </article>
-                </div>
-              </section>
+            <div class="empty-state top-space" *ngIf="!checklistGroups().length">
+              <strong>Start audit by answering questions</strong>
+              <span>{{ selectedAudit()?.type === 'Internal Audit' ? 'Checklist questions will appear here once the audit template is available.' : 'Add the first supplier audit question to begin the audit.' }}</span>
             </div>
 
-            <ng-template #supplierChecklist>
-              <div class="question-stack top-space">
-                <article class="question-card" *ngFor="let item of selectedAudit()?.checklistItems || []" [class.is-open]="isChecklistExpanded(item.id)">
-                  <button type="button" class="question-trigger" (click)="toggleChecklist(item.id)">
-                    <div>
-                      <small>{{ item.clause || 'General' }}</small>
+            <ng-container *ngIf="checklistGroups().length">
+              <section class="clause-header top-space">
+                <div>
+                  <span class="section-eyebrow">Clause {{ currentChecklistGroup()!.clause || 'General' }}</span>
+                  <h4>{{ currentChecklistGroup() ? clauseHeading(currentChecklistGroup()!.clause) : 'Checklist' }}</h4>
+                  <p class="subtle">{{ currentClauseHelperText() }}</p>
+                </div>
+                <div class="clause-header__meta">
+                  <span class="status-badge neutral">{{ answeredInCurrentClause() }}/{{ currentChecklistGroup()!.items.length || 0 }} answered</span>
+                </div>
+              </section>
+
+              <div class="empty-state top-space" *ngIf="currentChecklistGroup() && !answeredInCurrentClause()">
+                <strong>No questions answered in this clause</strong>
+                <span>Start with the first question below, then move to the next clause when you are ready.</span>
+              </div>
+
+              <div class="question-stack top-space" *ngIf="currentChecklistGroup() as group">
+                <article class="question-card" *ngFor="let item of group.items; let questionIndex = index" [class.is-open]="isChecklistExpanded(item.id)">
+                  <div class="question-card__head">
+                    <div class="question-card__title">
+                      <div class="question-meta">
+                        <span class="question-number">{{ questionNumber(group.clause, questionIndex) }}</span>
+                        <small>Clause {{ item.clause || group.clause }}</small>
+                        <span *ngIf="findingForChecklist(item)" class="finding-indicator">Finding recorded</span>
+                      </div>
                       <strong>{{ item.title }}</strong>
                     </div>
-                    <span class="response-chip" [class.is-empty]="!item.response" [class.is-yes]="item.response === 'YES'" [class.is-no]="item.response === 'NO'" [class.is-partial]="item.response === 'PARTIAL'">
-                      {{ item.response || 'Not assessed' }}
-                    </span>
-                  </button>
+
+                    <div class="question-card__actions">
+                      <div class="response-group">
+                        <button type="button" class="response-button" [class.active]="item.response === 'YES'" (click)="setChecklistResponse(item, 'YES')">Yes</button>
+                        <button type="button" class="response-button" [class.active]="item.response === 'NO'" (click)="setChecklistResponse(item, 'NO')">No</button>
+                        <button type="button" class="response-button" [class.active]="item.response === 'PARTIAL'" (click)="setChecklistResponse(item, 'PARTIAL')">N/A</button>
+                      </div>
+
+                      <div class="question-quick-actions">
+                        <button type="button" class="button-link secondary compact" (click)="toggleChecklist(item.id)">
+                          {{ isChecklistExpanded(item.id) ? 'Hide details' : (item.notes ? 'Edit Comment' : 'Add Comment') }}
+                        </button>
+                        <button type="button" class="button-link secondary compact" *ngIf="!findingForChecklist(item) && item.response === 'NO'" (click)="openFindingComposer(item)">Add Finding</button>
+                        <button type="button" class="button-link secondary compact" *ngIf="findingForChecklist(item)" (click)="viewFindingForChecklist(item)">View Finding</button>
+                      </div>
+                    </div>
+                  </div>
 
                   <div class="question-body" *ngIf="isChecklistExpanded(item.id)">
-                    <div class="section-head">
-                      <div>
-                        <span class="section-eyebrow">Supplier question</span>
-                        <h4>{{ item.clause || 'General' }}</h4>
-                      </div>
-                      <button type="button" class="button-link secondary text-button" (click)="removeChecklistItem(item.id)" [disabled]="saving()">Delete</button>
-                    </div>
-
-                    <div class="response-group top-space">
-                      <button type="button" class="response-button" [class.active]="item.response === 'YES'" (click)="setChecklistResponse(item, 'YES')">Yes</button>
-                      <button type="button" class="response-button" [class.active]="item.response === 'PARTIAL'" (click)="setChecklistResponse(item, 'PARTIAL')">Partial</button>
-                      <button type="button" class="response-button" [class.active]="item.response === 'NO'" (click)="setChecklistResponse(item, 'NO')">No</button>
-                    </div>
-
-                    <label class="field top-space">
-                      <span>Comments</span>
+                    <label class="field">
+                      <span>Comment on this question</span>
                       <textarea
                         rows="3"
                         [value]="checklistNoteDraft(item)"
                         (input)="setChecklistNoteDraft(item.id, readTextarea($event))"
                         (blur)="saveChecklistNote(item)"
-                        placeholder="Record supplier evidence, observations, and follow-up notes"
+                        placeholder="Record objective evidence, comments, and observations"
                       ></textarea>
                     </label>
 
-                    <div class="finding-prompt top-space" *ngIf="shouldSuggestFinding(item)">
+                    <div class="finding-prompt top-space" *ngIf="item.response === 'NO'">
                       <div>
-                        <strong>Finding suggested</strong>
-                        <p>This response indicates a supplier gap that may require a finding and follow-up action.</p>
+                        <strong>{{ findingForChecklist(item) ? 'Finding recorded' : 'Requirement not met' }}</strong>
+                        <p>{{ findingForChecklist(item) ? 'A finding is already linked to this question. You can continue the audit.' : 'Record a finding for this audit gap, then continue from the same question.' }}</p>
                       </div>
-                      <button type="button" class="secondary" (click)="prepareFindingFromChecklist(item)">Create finding</button>
+                      <div class="button-row compact-row">
+                        <button type="button" class="secondary" *ngIf="!findingForChecklist(item)" (click)="openFindingComposer(item)">Add Finding</button>
+                        <button type="button" class="secondary" *ngIf="findingForChecklist(item)" (click)="viewFindingForChecklist(item)">View Finding</button>
+                      </div>
                     </div>
 
                     <iso-attachment-panel class="top-space" [sourceType]="'audit-checklist-item'" [sourceId]="item.id" />
                   </div>
                 </article>
               </div>
-            </ng-template>
+
+              <div class="clause-nav top-space">
+                <button type="button" class="secondary" (click)="previousClause()" [disabled]="!hasPreviousClause()">Previous Clause</button>
+                <button type="button" (click)="nextClause()" [disabled]="!hasNextClause()">Next Clause</button>
+              </div>
+            </ng-container>
           </section>
 
-          <section class="card panel-card conduct-sidecard">
+          <div class="finding-modal-backdrop" *ngIf="pendingFindingItem()" (click)="cancelFindingComposer()"></div>
+          <section class="finding-modal card" *ngIf="pendingFindingItem() as pendingItem">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Audit guide</span>
-                <h3>How to assess each question</h3>
-                <p class="subtle">Keep answers short, objective, and supported by evidence. Findings should only be raised where a real gap exists.</p>
+                <span class="section-eyebrow">Finding</span>
+                <h3>Record audit finding</h3>
+                <p class="subtle">{{ questionNumber(pendingItem.clause || currentChecklistGroup()!.clause || 'Q', pendingQuestionIndex(pendingItem)) }} | {{ pendingItem.title }}</p>
               </div>
+              <button type="button" class="button-link secondary compact" (click)="cancelFindingComposer()">Close</button>
             </div>
 
-            <div class="entity-list top-space">
-              <div class="entity-item">
-                <strong>Yes</strong>
-                <small>Requirement is met and objective evidence is available.</small>
+            <form [formGroup]="findingForm" class="page-stack top-space" (ngSubmit)="addFindingFromChecklist(pendingItem)">
+              <label class="field">
+                <span>Finding title</span>
+                <input formControlName="title" placeholder="Requirement not met">
+              </label>
+              <label class="field">
+                <span>Description</span>
+                <textarea rows="4" formControlName="description" placeholder="Describe the gap, evidence, and impact"></textarea>
+              </label>
+              <label class="field">
+                <span>Severity</span>
+                <select formControlName="severity">
+                  <option>OBSERVATION</option>
+                  <option>MINOR</option>
+                  <option>MAJOR</option>
+                </select>
+              </label>
+              <div class="button-row">
+                <button type="submit" [disabled]="findingForm.invalid || saving()">Save finding</button>
+                <button type="button" class="secondary" [disabled]="saving()" (click)="cancelFindingComposer()">Cancel</button>
               </div>
-              <div class="entity-item">
-                <strong>Partial</strong>
-                <small>Requirement is partly met or inconsistent across the audited area.</small>
-              </div>
-              <div class="entity-item">
-                <strong>No</strong>
-                <small>Requirement is not met or required evidence is missing.</small>
-              </div>
-            </div>
-
-            <div class="button-row top-space">
-              <button type="button" class="secondary" (click)="setActiveStep('review')">Go to review</button>
-            </div>
+            </form>
           </section>
         </section>
 
@@ -511,8 +520,8 @@ type AuditRecord = {
             <div class="section-head">
               <div>
                 <span class="section-eyebrow">Review & close</span>
-                <h3>Findings and follow-up</h3>
-                <p class="subtle">Capture findings, create CAPA where required, and only close the audit once actions are clearly assigned.</p>
+                <h3>Findings and corrective actions</h3>
+                <p class="subtle">Review findings, create CAPA where required, and only close the audit once corrective actions are clearly assigned.</p>
               </div>
             </div>
 
@@ -544,15 +553,20 @@ type AuditRecord = {
               </div>
             </form>
 
-            <div class="entity-list top-space">
-              <article class="entity-item" *ngFor="let finding of selectedAudit()?.findings || []">
+            <div class="empty-state top-space" *ngIf="!(selectedAudit()?.findings || []).length">
+              <strong>No findings yet</strong>
+              <span>Answer the checklist first. Record a finding only when a requirement is not met.</span>
+            </div>
+
+            <div class="entity-list top-space" *ngIf="(selectedAudit()?.findings || []).length">
+              <article class="entity-item" *ngFor="let finding of selectedAudit()?.findings || []" [class.is-highlighted]="selectedFindingId() === finding.id">
                 <div class="section-head">
                   <div>
                     <strong>{{ finding.title }}</strong>
-                    <small>{{ finding.severity }} | {{ finding.status }}{{ finding.dueDate ? ' | due ' + finding.dueDate.slice(0, 10) : '' }}</small>
+                    <small>{{ finding.severity }} | {{ finding.status }}{{ finding.clause ? ' | clause ' + finding.clause : '' }}{{ finding.dueDate ? ' | due ' + finding.dueDate.slice(0, 10) : '' }}</small>
                   </div>
                 </div>
-                <p class="subtle">{{ finding.description }}</p>
+                <p class="subtle">{{ cleanFindingDescription(finding.description) }}</p>
                 <div class="button-row compact-row">
                   <button type="button" class="secondary" [disabled]="!!finding.linkedCapaId || saving()" (click)="createCapaFromFinding(finding)">
                     {{ finding.linkedCapaId ? 'CAPA linked' : 'Create CAPA' }}
@@ -651,6 +665,70 @@ type AuditRecord = {
       grid-template-columns: minmax(0, 1.8fr) minmax(18rem, 0.8fr);
     }
 
+    .conduct-progress,
+    .finding-form {
+      padding: 1rem;
+      border-radius: 20px;
+      background: rgba(244, 247, 242, 0.82);
+      border: 1px solid rgba(23, 50, 37, 0.08);
+    }
+
+    .conduct-progress__meta,
+    .clause-header,
+    .clause-nav,
+    .question-trigger__meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .conduct-progress__meta strong,
+    .clause-header h4 {
+      display: block;
+      margin: 0;
+    }
+
+    .conduct-progress__meta small,
+    .clause-header__meta {
+      color: var(--muted);
+    }
+
+    .conduct-progress__bar {
+      margin-top: 0.9rem;
+      height: 0.6rem;
+      border-radius: 999px;
+      background: rgba(23, 50, 37, 0.08);
+      overflow: hidden;
+    }
+
+    .conduct-progress__bar span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(36, 79, 61, 0.72), rgba(184, 132, 51, 0.72));
+    }
+
+    .finding-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 25, 20, 0.42);
+      z-index: 59;
+    }
+
+    .finding-modal {
+      position: fixed;
+      inset: 50% auto auto 50%;
+      transform: translate(-50%, -50%);
+      width: min(42rem, calc(100vw - 2rem));
+      max-height: calc(100vh - 3rem);
+      overflow: auto;
+      padding: 1.35rem 1.4rem;
+      z-index: 60;
+      box-shadow: 0 28px 60px rgba(18, 28, 22, 0.2);
+    }
+
     .supplier-builder {
       padding: 1rem;
       border-radius: 20px;
@@ -674,21 +752,67 @@ type AuditRecord = {
       box-shadow: 0 18px 40px rgba(24, 45, 32, 0.08);
     }
 
-    .question-trigger {
-      width: 100%;
-      border: 0;
-      background: transparent;
+    .entity-item.is-highlighted {
+      border-color: rgba(184, 132, 51, 0.3);
+      background: rgba(253, 248, 240, 0.96);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .question-card__head {
       display: flex;
       justify-content: space-between;
       gap: 1rem;
-      align-items: center;
-      text-align: left;
+      align-items: start;
       padding: 1.1rem 1.2rem;
     }
 
-    .question-trigger strong {
+    .question-card__title {
+      display: grid;
+      gap: 0.45rem;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
+    .question-card__title strong {
       display: block;
-      margin-top: 0.3rem;
+      font-size: 1.03rem;
+      line-height: 1.45;
+      color: var(--text);
+    }
+
+    .question-card__actions {
+      display: grid;
+      gap: 0.75rem;
+      justify-items: end;
+      flex: 0 0 auto;
+    }
+
+    .question-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+    }
+
+    .question-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 3.2rem;
+      padding: 0.32rem 0.7rem;
+      border-radius: 999px;
+      background: rgba(36, 79, 61, 0.1);
+      color: var(--brand-strong);
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+    }
+
+    .question-quick-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: end;
     }
 
     .question-body {
@@ -751,6 +875,19 @@ type AuditRecord = {
       color: #7c3f31;
     }
 
+    .finding-indicator {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 0.35rem 0.7rem;
+      background: rgba(184, 132, 51, 0.14);
+      color: #7b5d1f;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
     .finding-prompt {
       display: flex;
       justify-content: space-between;
@@ -767,25 +904,30 @@ type AuditRecord = {
       color: var(--muted);
     }
 
-    .conduct-sidecard {
-      align-self: start;
-      position: sticky;
-      top: 1rem;
-    }
-
     @media (max-width: 980px) {
       .audit-steps,
       .audit-conduct-layout {
         grid-template-columns: 1fr;
       }
 
-      .conduct-sidecard {
-        position: static;
+      .finding-prompt,
+      .question-card__head {
+        display: grid;
       }
 
-      .finding-prompt,
-      .question-trigger {
-        display: grid;
+      .question-card__actions {
+        justify-items: stretch;
+      }
+
+      .question-quick-actions {
+        justify-content: start;
+      }
+
+      .finding-modal {
+        inset: auto 1rem 1rem 1rem;
+        transform: none;
+        width: auto;
+        max-height: calc(100vh - 2rem);
       }
     }
   `]
@@ -803,8 +945,12 @@ export class AuditsPageComponent {
   protected readonly selectedId = signal<string | null>(null);
   protected readonly selectedAudit = signal<AuditRecord | null>(null);
   protected readonly activeStep = signal<AuditStep>('plan');
+  protected readonly currentClauseIndex = signal(0);
   protected readonly expandedChecklistId = signal<string | null>(null);
   protected readonly checklistNoteDrafts = signal<Record<string, string>>({});
+  protected readonly pendingFindingChecklistId = signal<string | null>(null);
+  protected readonly checklistScrollTop = signal<number | null>(null);
+  protected readonly selectedFindingId = signal<string | null>(null);
   protected readonly draftActionTitle = signal<string | null>(null);
   protected readonly draftActionDescription = signal<string | null>(null);
   protected readonly loading = signal(false);
@@ -966,6 +1112,11 @@ export class AuditsPageComponent {
   }
 
   protected setChecklistResponse(item: AuditChecklistItem, response: ChecklistResponse) {
+    if (response === 'NO' && !this.findingForChecklist(item)) {
+      this.openFindingComposer(item);
+    } else if (this.pendingFindingChecklistId() === item.id && response !== 'NO') {
+      this.cancelFindingComposer();
+    }
     this.updateChecklistItem(item, { response });
   }
 
@@ -1031,6 +1182,40 @@ export class AuditsPageComponent {
     });
   }
 
+  protected addFindingFromChecklist(item: AuditChecklistItem) {
+    if (!this.selectedId() || this.findingForm.invalid) {
+      this.findingForm.markAllAsTouched();
+      return;
+    }
+
+    this.saving.set(true);
+    this.error.set('');
+    this.message.set('');
+    const raw = this.findingForm.getRawValue();
+    this.api.post(`audits/${this.selectedId()}/findings`, {
+      title: raw.title.trim(),
+      description: raw.description.trim(),
+      severity: raw.severity,
+      ownerId: raw.ownerId || undefined,
+      dueDate: raw.dueDate || undefined,
+      checklistItemId: item.id,
+      clause: item.clause || undefined
+    }).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.message.set('Finding recorded. Continue with the checklist.');
+        this.selectedFindingId.set(null);
+        this.pendingFindingChecklistId.set(null);
+        this.fetchAudit(this.selectedId() as string);
+        this.restoreChecklistScrollSoon();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.error.set(this.readError(error, 'Finding save failed.'));
+      }
+    });
+  }
+
   protected updateFindingStatus(finding: AuditFinding, status: FindingStatus) {
     this.saving.set(true);
     this.error.set('');
@@ -1054,7 +1239,7 @@ export class AuditsPageComponent {
     this.message.set('');
     this.api.post(`audits/findings/${finding.id}/create-capa`, {
       title: `Audit finding CAPA: ${finding.title}`,
-      problemStatement: finding.description,
+      problemStatement: this.cleanFindingDescription(finding.description),
       ownerId: finding.ownerId || undefined,
       dueDate: finding.dueDate || undefined
     }).subscribe({
@@ -1072,22 +1257,29 @@ export class AuditsPageComponent {
 
   protected prepareActionFromFinding(finding: AuditFinding) {
     this.draftActionTitle.set(`Audit action: ${finding.title}`);
-    this.draftActionDescription.set(finding.description);
+    this.draftActionDescription.set(this.cleanFindingDescription(finding.description));
     this.message.set('Action form prepared from the selected finding.');
   }
 
-  protected prepareFindingFromChecklist(item: AuditChecklistItem) {
+  protected openFindingComposer(item: AuditChecklistItem) {
+    this.checklistScrollTop.set(window.scrollY);
+    this.expandedChecklistId.set(item.id);
+    this.pendingFindingChecklistId.set(item.id);
     this.findingForm.patchValue({
-      title: `Checklist finding: ${item.title}`,
-      description: item.notes?.trim() || `Potential nonconformity identified during audit question review: ${item.title}`,
-      severity: item.response === 'NO' ? 'MAJOR' : 'MINOR'
+      title: `Finding: Clause ${item.clause || 'General'} - ${item.title}`,
+      description: item.notes?.trim() || `Requirement not met during audit: ${item.title}`,
+      severity: 'MAJOR',
+      ownerId: '',
+      dueDate: ''
     });
-    this.activeStep.set('review');
-    this.message.set('Finding form prepared from the selected checklist question.');
+    this.message.set('Finding form opened for the selected question.');
   }
 
-  protected shouldSuggestFinding(item: AuditChecklistItem) {
-    return item.response === 'NO' || item.response === 'PARTIAL';
+  protected cancelFindingComposer() {
+    this.pendingFindingChecklistId.set(null);
+    this.selectedFindingId.set(null);
+    this.findingForm.reset({ title: '', description: '', severity: 'OBSERVATION', ownerId: '', dueDate: '' });
+    this.restoreChecklistScrollSoon();
   }
 
   protected setActiveStep(step: AuditStep) {
@@ -1100,6 +1292,116 @@ export class AuditsPageComponent {
 
   protected isChecklistExpanded(id: string) {
     return this.expandedChecklistId() === id;
+  }
+
+  protected currentChecklistGroup() {
+    return this.checklistGroups()[this.currentClauseIndex()] ?? null;
+  }
+
+  protected hasPreviousClause() {
+    return this.currentClauseIndex() > 0;
+  }
+
+  protected hasNextClause() {
+    return this.currentClauseIndex() < this.checklistGroups().length - 1;
+  }
+
+  protected previousClause() {
+    if (!this.hasPreviousClause()) {
+      return;
+    }
+    this.currentClauseIndex.update((index) => Math.max(0, index - 1));
+    this.expandFirstQuestionInCurrentClause();
+  }
+
+  protected nextClause() {
+    if (!this.hasNextClause()) {
+      return;
+    }
+    this.currentClauseIndex.update((index) => Math.min(this.checklistGroups().length - 1, index + 1));
+    this.expandFirstQuestionInCurrentClause();
+  }
+
+  protected currentClauseLabel() {
+    const group = this.currentChecklistGroup();
+    if (!group) {
+      return 'No active clause';
+    }
+    return `Clause ${group.clause} - ${this.clauseHeading(group.clause)}`;
+  }
+
+  protected currentClauseHelperText() {
+    if (this.selectedAudit()?.type === 'Supplier Audit') {
+      return 'Answer each supplier audit question, record evidence, and add a finding only when a requirement is not met.';
+    }
+    return 'Answer each question. If a requirement is not met, record a finding and continue to the next question.';
+  }
+
+  protected answeredChecklistCount() {
+    return (this.selectedAudit()?.checklistItems || []).filter((item) => !!item.response).length;
+  }
+
+  protected totalChecklistCount() {
+    return this.selectedAudit()?.checklistItems?.length || 0;
+  }
+
+  protected progressPercent() {
+    const total = this.totalChecklistCount();
+    return total ? Math.round((this.answeredChecklistCount() / total) * 100) : 0;
+  }
+
+  protected answeredInCurrentClause() {
+    return (this.currentChecklistGroup()?.items || []).filter((item) => !!item.response).length;
+  }
+
+  protected responseLabel(response?: ChecklistResponse | null) {
+    if (response === 'PARTIAL') {
+      return 'N/A';
+    }
+    return response || 'Not answered';
+  }
+
+  protected questionNumber(clause: string, index: number) {
+    return `${clause}.${index + 1}`;
+  }
+
+  protected findingForChecklist(item: AuditChecklistItem) {
+    return (
+      item.linkedFindings?.[0] ??
+      (this.selectedAudit()?.findings || []).find((finding) => finding.checklistItemId === item.id) ??
+      null
+    );
+  }
+
+  protected pendingFindingItem() {
+    const itemId = this.pendingFindingChecklistId();
+    if (!itemId) {
+      return null;
+    }
+    return (this.selectedAudit()?.checklistItems || []).find((item) => item.id === itemId) ?? null;
+  }
+
+  protected pendingQuestionIndex(item: AuditChecklistItem) {
+    const group = this.checklistGroups().find((entry) => entry.items.some((entryItem) => entryItem.id === item.id));
+    if (!group) {
+      return 0;
+    }
+    return Math.max(group.items.findIndex((entryItem) => entryItem.id === item.id), 0);
+  }
+
+  protected viewFindingForChecklist(item: AuditChecklistItem) {
+    const finding = this.findingForChecklist(item);
+    if (!finding) {
+      return;
+    }
+    this.pendingFindingChecklistId.set(null);
+    this.selectedFindingId.set(finding.id);
+    this.activeStep.set('review');
+    this.message.set('Viewing the linked finding for this checklist question.');
+  }
+
+  protected cleanFindingDescription(description: string) {
+    return description.trim();
   }
 
   protected updateAuditStatus(status: AuditStatus) {
@@ -1184,7 +1486,10 @@ export class AuditsPageComponent {
   }
 
   protected checklistGroups(): ChecklistGroup[] {
-    const items = this.selectedAudit()?.checklistItems || [];
+    return this.buildChecklistGroups(this.selectedAudit()?.checklistItems || []);
+  }
+
+  private buildChecklistGroups(items: AuditChecklistItem[]) {
     const groups = new Map<string, AuditChecklistItem[]>();
 
     for (const item of items) {
@@ -1209,13 +1514,32 @@ export class AuditsPageComponent {
     }[clause] || 'Additional checklist items';
   }
 
+  private expandFirstQuestionInCurrentClause() {
+    this.pendingFindingChecklistId.set(null);
+    this.expandedChecklistId.set(this.currentChecklistGroup()?.items?.[0]?.id ?? null);
+  }
+
+  private restoreChecklistScrollSoon() {
+    const top = this.checklistScrollTop();
+    if (top === null) {
+      return;
+    }
+    requestAnimationFrame(() => {
+      window.scrollTo({ top, behavior: 'auto' });
+      this.checklistScrollTop.set(null);
+    });
+  }
+
   private handleRoute(params: ParamMap) {
     const id = params.get('id');
     this.selectedId.set(id);
     this.message.set((history.state?.notice as string) || '');
     this.error.set('');
     this.activeStep.set('plan');
+    this.currentClauseIndex.set(0);
     this.expandedChecklistId.set(null);
+    this.pendingFindingChecklistId.set(null);
+    this.selectedFindingId.set(null);
     this.checklistNoteDrafts.set({});
     this.draftActionTitle.set(null);
     this.draftActionDescription.set(null);
@@ -1260,16 +1584,19 @@ export class AuditsPageComponent {
     this.api.get<AuditRecord>(`audits/${id}`).subscribe({
       next: (audit) => {
         const currentExpandedId = this.expandedChecklistId();
+        const currentClauseIndex = this.currentClauseIndex();
         this.loading.set(false);
         this.selectedAudit.set(audit);
         this.activeStep.set(this.deriveStep(audit));
         this.checklistNoteDrafts.set(
           Object.fromEntries((audit.checklistItems || []).map((item) => [item.id, item.notes ?? '']))
         );
+        const groups = this.buildChecklistGroups(audit.checklistItems || []);
+        this.currentClauseIndex.set(Math.min(currentClauseIndex, Math.max(groups.length - 1, 0)));
         this.expandedChecklistId.set(
           (audit.checklistItems || []).some((item) => item.id === currentExpandedId)
             ? currentExpandedId
-            : audit.checklistItems?.[0]?.id ?? null
+            : groups[this.currentClauseIndex()]?.items?.[0]?.id ?? audit.checklistItems?.[0]?.id ?? null
         );
         this.auditForm.reset({
           code: audit.code,

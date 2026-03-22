@@ -240,14 +240,14 @@ type SourceOption = {
               </article>
             </div>
           </section>
-        </div>
 
-        <iso-record-work-items
-          [sourceType]="'management-review'"
-          [sourceId]="selectedId()"
-          [draftTitle]="draftActionTitle()"
-          [draftDescription]="draftActionDescription()"
-        />
+          <iso-record-work-items
+            [sourceType]="'management-review'"
+            [sourceId]="selectedId()"
+            [draftTitle]="draftActionTitle()"
+            [draftDescription]="draftActionDescription()"
+          />
+        </div>
       </section>
     </section>
   `,

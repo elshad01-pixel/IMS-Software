@@ -22,6 +22,17 @@ export class CreateAuditFindingDto {
   @IsDateString()
   dueDate?: string;
 
+  @ApiPropertyOptional({ description: 'Checklist item that triggered this finding' })
+  @IsOptional()
+  @IsString()
+  checklistItemId?: string;
+
+  @ApiPropertyOptional({ description: 'Clause associated with the source checklist question' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  clause?: string;
+
   @ApiPropertyOptional({ enum: AuditFindingStatus, default: AuditFindingStatus.OPEN })
   @IsOptional()
   @IsEnum(AuditFindingStatus)

@@ -637,6 +637,7 @@ export class ShellComponent {
     { path: '/kpis', label: 'KPIs', hint: 'Targets and trends', icon: 'KP' },
     { path: '/training', label: 'Training', hint: 'Assignments and evidence', icon: 'TR' },
     { path: '/actions', label: 'Actions', hint: 'Global follow-up tracker', icon: 'AC' },
+    { path: '/ncr', label: 'NCR', hint: 'Nonconformance control', icon: 'NC' },
     { path: '/reports', label: 'Reports', hint: 'Exports and summaries', icon: 'RP' },
     { path: '/users', label: 'Users', hint: 'Access and ownership', icon: 'US' },
     { path: '/settings', label: 'Settings', hint: 'System configuration', icon: 'ST' }

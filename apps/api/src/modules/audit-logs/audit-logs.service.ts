@@ -25,9 +25,13 @@ export class AuditLogsService {
     });
   }
 
-  list(tenantId: string) {
+  list(tenantId: string, filters?: { entityType?: string; entityId?: string }) {
     return this.prisma.auditLog.findMany({
-      where: { tenantId },
+      where: {
+        tenantId,
+        entityType: filters?.entityType,
+        entityId: filters?.entityId
+      },
       orderBy: { createdAt: 'desc' },
       take: 100
     });

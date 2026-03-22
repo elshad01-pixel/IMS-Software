@@ -8,9 +8,10 @@ import { AuthStore } from '../core/auth.store';
   template: `
     <section class="login-wrap">
       <div class="hero">
-        <span class="pill">Production Scaffold</span>
-        <h1>Integrated ISO management with clean tenant boundaries.</h1>
-        <p>Angular 21, NestJS 11, PostgreSQL, Prisma, Docker, Nginx, and MinIO.</p>
+        <span class="pill">Enterprise IMS</span>
+        <h1>Integrated Management System</h1>
+        <p>Secure, structured control for quality, environmental, and occupational health and safety management.</p>
+        <small class="standards-line">ISO 9001 • ISO 14001 • ISO 45001</small>
       </div>
 
       <form class="card login-card" [formGroup]="form" (ngSubmit)="submit()">
@@ -42,27 +43,48 @@ import { AuthStore } from '../core/auth.store';
       align-items: center;
     }
 
+    .hero {
+      display: grid;
+      gap: 0.75rem;
+      align-self: center;
+    }
+
     .hero h1 {
-      max-width: 10ch;
-      font-size: clamp(3rem, 7vw, 5.5rem);
-      line-height: 0.95;
-      margin: 1rem 0;
+      max-width: 12ch;
+      font-size: clamp(3rem, 6vw, 5.1rem);
+      line-height: 0.92;
+      letter-spacing: -0.055em;
+      font-weight: 800;
+      margin: 0.4rem 0 0;
     }
 
     .hero p {
-      max-width: 38rem;
-      font-size: 1.1rem;
+      max-width: 34rem;
+      font-size: 1.02rem;
+      line-height: 1.7;
       color: var(--muted);
+      margin: 0;
+    }
+
+    .standards-line {
+      margin-top: 1.1rem;
+      color: var(--muted-strong);
+      font-size: 0.84rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
     }
 
     .login-card {
-      padding: 1.75rem;
+      padding: 1.9rem;
       display: grid;
-      gap: 1rem;
+      gap: 1.05rem;
     }
 
     .login-card h2 {
       margin: 0;
+      font-size: 1.45rem;
+      letter-spacing: -0.03em;
     }
 
     label {
@@ -96,6 +118,10 @@ import { AuthStore } from '../core/auth.store';
     @media (max-width: 960px) {
       .login-wrap {
         grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        max-width: none;
       }
     }
   `]

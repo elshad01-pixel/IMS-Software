@@ -114,6 +114,11 @@ export class AuditsService {
       where: { tenantId, id, deletedAt: null },
       include: {
         checklistItems: {
+          include: {
+            findings: {
+              orderBy: [{ createdAt: 'desc' }]
+            }
+          },
           orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }]
         },
         findings: {
@@ -395,11 +400,16 @@ export class AuditsService {
   async addFinding(tenantId: string, actorId: string, auditId: string, dto: CreateAuditFindingDto) {
     await this.requireAudit(tenantId, auditId);
     await this.ensureUserBelongsToTenant(tenantId, dto.ownerId);
+    const checklistItem = dto.checklistItemId
+      ? await this.requireChecklistItem(tenantId, auditId, dto.checklistItemId)
+      : null;
 
     const finding = await this.prisma.auditFinding.create({
       data: {
         tenantId,
         auditId,
+        checklistItemId: checklistItem?.id ?? null,
+        clause: this.normalizeText(dto.clause) ?? checklistItem?.clause ?? null,
         title: dto.title.trim(),
         description: dto.description.trim(),
         severity: dto.severity,
@@ -436,6 +446,9 @@ export class AuditsService {
     }
 
     await this.ensureUserBelongsToTenant(tenantId, dto.ownerId);
+    const checklistItem = dto.checklistItemId
+      ? await this.requireChecklistItem(tenantId, finding.auditId, dto.checklistItemId)
+      : null;
     if (
       dto.status === AuditFindingStatus.CLOSED &&
       finding.severity === AuditFindingSeverity.MAJOR &&
@@ -447,6 +460,11 @@ export class AuditsService {
     const updated = await this.prisma.auditFinding.update({
       where: { id: findingId },
       data: {
+        checklistItemId: dto.checklistItemId !== undefined ? checklistItem?.id ?? null : undefined,
+        clause:
+          dto.checklistItemId !== undefined || dto.clause !== undefined
+            ? this.normalizeText(dto.clause) ?? checklistItem?.clause ?? null
+            : undefined,
         title: dto.title?.trim(),
         description: dto.description?.trim(),
         severity: dto.severity,
@@ -524,13 +542,43 @@ export class AuditsService {
 
   private mapAuditSummary(
     audit: {
-      checklistItems: Array<{ isComplete: boolean }>;
+      checklistItems: Array<{
+        id: string;
+        isComplete: boolean;
+        findings?: Array<{
+          id: string;
+          title: string;
+          status: AuditFindingStatus;
+          severity: AuditFindingSeverity;
+          dueDate?: Date | null;
+          ownerId?: string | null;
+          checklistItemId?: string | null;
+          clause?: string | null;
+          createdAt: Date;
+        }>;
+      }>;
       findings: Array<{ status: AuditFindingStatus }>;
       [key: string]: unknown;
     }
   ) {
     return {
       ...audit,
+      checklistItems: audit.checklistItems.map((item) => ({
+        ...item,
+        linkedFindingCount: item.findings?.length ?? 0,
+        linkedFindings:
+          item.findings?.map((finding) => ({
+            id: finding.id,
+            title: finding.title,
+            status: finding.status,
+            severity: finding.severity,
+            dueDate: finding.dueDate,
+            ownerId: finding.ownerId,
+            checklistItemId: finding.checklistItemId,
+            clause: finding.clause,
+            createdAt: finding.createdAt
+          })) ?? []
+      })),
       checklistCount: audit.checklistItems.length,
       completedChecklistCount: audit.checklistItems.filter((item) => item.isComplete).length,
       findingCount: audit.findings.length,
@@ -576,6 +624,18 @@ export class AuditsService {
     }
 
     return audit;
+  }
+
+  private async requireChecklistItem(tenantId: string, auditId: string, checklistItemId: string) {
+    const checklistItem = await this.prisma.auditChecklistItem.findFirst({
+      where: { tenantId, auditId, id: checklistItemId }
+    });
+
+    if (!checklistItem) {
+      throw new NotFoundException('Checklist item not found');
+    }
+
+    return checklistItem;
   }
 
   private async ensureUserBelongsToTenant(tenantId: string, userId?: string | null) {

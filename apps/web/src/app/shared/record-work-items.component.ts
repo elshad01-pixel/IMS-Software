@@ -29,58 +29,35 @@ type ActionItem = {
       <div class="card panel">
         <div class="panel-head">
           <div>
-            <span class="pill">Action Items</span>
-            <h3>Follow-up</h3>
-            <p>Assign real treatment and closure work with ownership and due dates.</p>
+            <span class="pill">{{ sectionEyebrow() }}</span>
+            <h3>Actions</h3>
+            <p>{{ panelDescription() }}</p>
           </div>
         </div>
-
-        <form [formGroup]="actionForm" (ngSubmit)="createActionItem()" class="stack">
-          <label>
-            <span>Title</span>
-            <input formControlName="title" placeholder="Close evidence gap">
-          </label>
-          <label>
-            <span>Description</span>
-            <textarea formControlName="description" rows="3" placeholder="Action details"></textarea>
-          </label>
-          <div class="inline">
-            <label>
-              <span>Owner</span>
-              <select formControlName="ownerId">
-                <option value="">Unassigned</option>
-                <option *ngFor="let user of users()" [value]="user.id">
-                  {{ user.firstName }} {{ user.lastName }}
-                </option>
-              </select>
-            </label>
-            <label>
-              <span>Due date</span>
-              <input formControlName="dueDate" type="date">
-            </label>
-          </div>
-          <button type="submit" [disabled]="actionForm.invalid || actionsSaving()">
-            {{ actionsSaving() ? 'Saving action...' : 'Add action item' }}
-          </button>
-          <p class="feedback" [class.is-empty]="!actionsError() && !actionsMessage()" [class.error]="actionsError()" [class.success]="actionsMessage() && !actionsError()">
-            {{ actionsError() || actionsMessage() }}
-          </p>
-        </form>
 
         <div class="panel-state" *ngIf="actionsLoading()">Loading action items...</div>
-        <div class="empty-state top-space" *ngIf="!actionsLoading() && !actionItems().length">
-          <strong>No action items yet</strong>
-          <span>Create ownership and due dates for the next meaningful step.</span>
+        <div class="actions-section top-space">
+          <div class="section-copy">
+            <strong>{{ existingActionsTitle() }}</strong>
+            <small>{{ existingActionsDescription() }}</small>
+          </div>
         </div>
+
+        <div class="empty-state top-space" *ngIf="!actionsLoading() && !actionItems().length">
+          <strong>{{ emptyStateTitle() }}</strong>
+          <span>{{ emptyStateDescription() }}</span>
+        </div>
+
         <ul class="list" *ngIf="!actionsLoading() && actionItems().length">
           <li *ngFor="let item of actionItems()">
             <div class="list-copy">
               <strong>{{ item.title }}</strong>
               <p>{{ item.description || 'No description' }}</p>
-              <small>
+              <small [class.overdue]="isOverdue(item)">
                 {{ item.status }}
                 {{ item.owner ? ' | ' + item.owner.firstName + ' ' + item.owner.lastName : '' }}
                 {{ item.dueDate ? ' | due ' + item.dueDate.slice(0, 10) : '' }}
+                {{ isOverdue(item) ? ' | overdue' : '' }}
               </small>
             </div>
             <button
@@ -93,6 +70,51 @@ type ActionItem = {
             </button>
           </li>
         </ul>
+
+        <div class="actions-toolbar top-space">
+          <button type="button" class="secondary reveal-button" (click)="toggleComposer()">
+            {{ composerOpen() ? 'Hide form' : addButtonLabel() }}
+          </button>
+        </div>
+
+        <div class="actions-section form-section top-space" *ngIf="composerOpen()">
+          <div class="section-copy">
+            <strong>{{ createActionTitle() }}</strong>
+            <small>{{ createActionDescription() }}</small>
+          </div>
+
+          <form [formGroup]="actionForm" (ngSubmit)="createActionItem()" class="stack">
+            <label>
+              <span>Title</span>
+              <input formControlName="title" [placeholder]="titlePlaceholder()">
+            </label>
+            <label>
+              <span>Description</span>
+              <textarea formControlName="description" rows="3" [placeholder]="descriptionPlaceholder()"></textarea>
+            </label>
+            <div class="inline">
+              <label>
+                <span>Owner</span>
+                <select formControlName="ownerId">
+                  <option value="">Unassigned</option>
+                  <option *ngFor="let user of users()" [value]="user.id">
+                    {{ user.firstName }} {{ user.lastName }}
+                  </option>
+                </select>
+              </label>
+              <label>
+                <span>Due date</span>
+                <input formControlName="dueDate" type="date">
+              </label>
+            </div>
+            <button type="submit" [disabled]="actionForm.invalid || actionsSaving()">
+              {{ actionsSaving() ? savingLabel() : submitLabel() }}
+            </button>
+            <p class="feedback" [class.is-empty]="!actionsError() && !actionsMessage()" [class.error]="actionsError()" [class.success]="actionsMessage() && !actionsError()">
+              {{ actionsError() || actionsMessage() }}
+            </p>
+          </form>
+        </div>
       </div>
     </section>
 
@@ -109,6 +131,11 @@ type ActionItem = {
       padding: 1.2rem;
     }
 
+    .panel {
+      box-shadow: var(--shadow-soft);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(246, 248, 244, 0.9));
+    }
+
     .panel-head h3 {
       margin: 0.8rem 0 0;
     }
@@ -123,7 +150,7 @@ type ActionItem = {
     .stack {
       display: grid;
       gap: 0.7rem;
-      margin-top: 1rem;
+      margin-top: 0.85rem;
     }
 
     .inline {
@@ -173,7 +200,7 @@ type ActionItem = {
       border: 1px solid rgba(23, 50, 37, 0.08);
       border-radius: 18px;
       padding: 1rem;
-      background: rgba(255, 255, 255, 0.82);
+      background: rgba(255, 255, 255, 0.86);
     }
 
     .list p {
@@ -193,6 +220,46 @@ type ActionItem = {
 
     .feedback {
       font-size: 0.92rem;
+    }
+
+    .actions-section {
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .section-copy {
+      display: grid;
+      gap: 0.18rem;
+    }
+
+    .section-copy strong {
+      font-size: 0.96rem;
+      color: var(--text-soft);
+    }
+
+    .section-copy small {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .actions-toolbar {
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .reveal-button {
+      min-height: auto;
+      padding: 0.72rem 0.95rem;
+    }
+
+    .form-section {
+      padding-top: 1rem;
+      border-top: 1px solid rgba(23, 50, 37, 0.08);
+    }
+
+    .overdue {
+      color: var(--danger);
+      font-weight: 700;
     }
 
     @media (max-width: 700px) {
@@ -217,6 +284,7 @@ export class RecordWorkItemsComponent implements OnChanges {
   protected readonly actionsSaving = signal(false);
   protected readonly actionsMessage = signal('');
   protected readonly actionsError = signal('');
+  protected readonly composerOpen = signal(false);
 
   protected readonly actionForm = this.fb.nonNullable.group({
     title: ['', Validators.required],
@@ -233,6 +301,7 @@ export class RecordWorkItemsComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if ((changes['sourceId'] || changes['sourceType']) && this.sourceId) {
+      this.composerOpen.set(false);
       this.reloadActions();
     }
 
@@ -264,6 +333,7 @@ export class RecordWorkItemsComponent implements OnChanges {
           this.actionsSaving.set(false);
           this.actionsMessage.set('Action item added.');
           this.actionForm.reset({ title: '', description: '', ownerId: '', dueDate: '' });
+          this.composerOpen.set(false);
           this.reloadActions();
         },
         error: (error: HttpErrorResponse) => {
@@ -314,5 +384,86 @@ export class RecordWorkItemsComponent implements OnChanges {
 
   private readError(error: HttpErrorResponse, fallback: string) {
     return (error.error?.message as string) || fallback;
+  }
+
+  protected toggleComposer() {
+    this.composerOpen.set(!this.composerOpen());
+  }
+
+  protected sectionEyebrow() {
+    return this.sourceType === 'ncr' ? 'Resolution workflow' : 'Linked actions';
+  }
+
+  protected panelDescription() {
+    return this.sourceType === 'ncr'
+      ? 'Actions assigned to resolve this nonconformance'
+      : 'Track linked actions, ownership, due dates, and completion status for this record.';
+  }
+
+  protected existingActionsTitle() {
+    return this.sourceType === 'ncr' ? 'Assigned actions' : 'Existing actions';
+  }
+
+  protected existingActionsDescription() {
+    return this.sourceType === 'ncr'
+      ? 'Review the actions already linked to this nonconformance before adding new ones.'
+      : 'Review the current follow-up already linked to this record.';
+  }
+
+  protected emptyStateTitle() {
+    return this.sourceType === 'ncr' ? 'No corrective actions yet' : 'No action items yet';
+  }
+
+  protected emptyStateDescription() {
+    return this.sourceType === 'ncr'
+      ? 'Add the first corrective action when ownership and due dates are ready.'
+      : 'Create ownership and due dates for the next meaningful step.';
+  }
+
+  protected createActionTitle() {
+    if (this.sourceType === 'ncr') return 'Add corrective action';
+    if (this.sourceType === 'risk') return 'Add mitigation action';
+    return 'Add action';
+  }
+
+  protected createActionDescription() {
+    return this.sourceType === 'ncr'
+      ? 'Use this only when a new action is needed to resolve the NCR.'
+      : 'Create another linked action for this record only when additional follow-up is needed.';
+  }
+
+  protected titlePlaceholder() {
+    if (this.sourceType === 'ncr') return 'Update procedure and retrain team';
+    if (this.sourceType === 'risk') return 'Implement secondary supplier control';
+    return 'Close evidence gap';
+  }
+
+  protected descriptionPlaceholder() {
+    return this.sourceType === 'ncr' ? 'Describe the corrective step required to resolve the NCR' : 'Action details';
+  }
+
+  protected submitLabel() {
+    if (this.sourceType === 'ncr') return 'Add Corrective Action';
+    if (this.sourceType === 'risk') return 'Add Mitigation Action';
+    return 'Add Action';
+  }
+
+  protected savingLabel() {
+    if (this.sourceType === 'ncr') return 'Saving corrective action...';
+    if (this.sourceType === 'risk') return 'Saving mitigation action...';
+    return 'Saving action...';
+  }
+
+  protected addButtonLabel() {
+    if (this.sourceType === 'ncr') return 'Add Corrective Action';
+    if (this.sourceType === 'risk') return 'Add Mitigation Action';
+    return 'Add Action';
+  }
+
+  protected isOverdue(item: ActionItem) {
+    if (!item.dueDate || item.status === 'DONE' || item.status === 'CANCELLED') {
+      return false;
+    }
+    return new Date(item.dueDate) < new Date();
   }
 }

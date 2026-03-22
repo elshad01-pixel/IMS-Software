@@ -270,7 +270,6 @@ type RiskRow = {
             </div>
           </div>
           <iso-attachment-panel *ngIf="selectedId()" [sourceType]="'risk'" [sourceId]="selectedId()" />
-          <iso-record-work-items *ngIf="selectedId()" [sourceType]="'risk'" [sourceId]="selectedId()" />
         </section>
       </section>
 
@@ -324,11 +323,12 @@ type RiskRow = {
               <dd>{{ selectedRisk()?.updatedAt | date:'yyyy-MM-dd HH:mm' }}</dd>
             </dl>
           </section>
+
+          <iso-record-work-items [sourceType]="'risk'" [sourceId]="selectedId()" />
         </div>
 
         <div class="page-stack">
           <iso-attachment-panel [sourceType]="'risk'" [sourceId]="selectedId()" />
-          <iso-record-work-items [sourceType]="'risk'" [sourceId]="selectedId()" />
         </div>
       </section>
     </section>

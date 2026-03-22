@@ -286,7 +286,6 @@ type CapaRow = {
             </div>
           </div>
           <iso-attachment-panel *ngIf="selectedId()" [sourceType]="'capa'" [sourceId]="selectedId()" />
-          <iso-record-work-items *ngIf="selectedId()" [sourceType]="'capa'" [sourceId]="selectedId()" />
         </section>
       </section>
 
@@ -354,11 +353,12 @@ type CapaRow = {
               <p>{{ selectedCapa()?.closureSummary || 'No closure summary recorded.' }}</p>
             </section>
           </section>
+
+          <iso-record-work-items [sourceType]="'capa'" [sourceId]="selectedId()" />
         </div>
 
         <div class="page-stack">
           <iso-attachment-panel [sourceType]="'capa'" [sourceId]="selectedId()" />
-          <iso-record-work-items [sourceType]="'capa'" [sourceId]="selectedId()" />
         </div>
       </section>
     </section>

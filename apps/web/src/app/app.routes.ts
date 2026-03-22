@@ -14,6 +14,7 @@ import { UserCreatePageComponent, UserDetailPageComponent, UserEditPageComponent
 import { ReportsPageComponent } from './pages/reports-page.component';
 import { SettingsPageComponent } from './pages/settings-page.component';
 import { ActionsPageComponent } from './pages/actions-page.component';
+import { NcrCreatePageComponent, NcrDetailPageComponent, NcrEditPageComponent, NcrRegisterPageComponent } from './pages/ncr-page.component';
 
 export const appRoutes: Routes = [
   { path: 'login', component: LoginPageComponent },
@@ -53,6 +54,10 @@ export const appRoutes: Routes = [
       { path: 'training/:id', component: TrainingPageComponent, data: { mode: 'detail' } },
       { path: 'training/:id/edit', component: TrainingPageComponent, data: { mode: 'edit' } },
       { path: 'actions', component: ActionsPageComponent },
+      { path: 'ncr', component: NcrRegisterPageComponent },
+      { path: 'ncr/new', component: NcrCreatePageComponent },
+      { path: 'ncr/:id', component: NcrDetailPageComponent },
+      { path: 'ncr/:id/edit', component: NcrEditPageComponent },
       { path: 'reports', component: ReportsPageComponent },
       { path: 'users', component: UsersRegisterPageComponent },
       { path: 'users/new', component: UserCreatePageComponent },

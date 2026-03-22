@@ -30,6 +30,58 @@ enum CapaStatus {
   CLOSED
 }
 
+enum NcrCategory {
+  PROCESS
+  PRODUCT
+  SERVICE
+  SUPPLIER
+  COMPLAINT
+}
+
+enum NcrSource {
+  INTERNAL
+  CUSTOMER
+  SUPPLIER
+  AUDIT
+}
+
+enum NcrStatus {
+  OPEN
+  UNDER_REVIEW
+  INVESTIGATION
+  ACTION_IN_PROGRESS
+  PENDING_VERIFICATION
+  CLOSED
+  ARCHIVED
+}
+
+enum NcrSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum NcrPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum NcrVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum NcrRcaMethod {
+  FIVE_WHY
+  FISHBONE
+  IS_IS_NOT
+  OTHER
+}
+
 enum DocumentStatus {
   DRAFT
   REVIEW
@@ -104,6 +156,8 @@ model Tenant {
   trainingAssignments TrainingAssignment[]
   reports           ReportDefinition[]
   settings          TenantSetting[]
+  ncrs              Ncr[]
+  ncrComments       NcrComment[]
 }
 
 model User {
@@ -122,6 +176,7 @@ model User {
   auditLogs    AuditLog[]
   attachments  Attachment[]
   actionItems  ActionItem[] @relation("ActionItemOwner")
+  ncrComments  NcrComment[] @relation("NcrCommentAuthor")
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -293,6 +348,60 @@ model Capa {
   @@index([tenantId, status])
 }
 
+model Ncr {
+  id                      String                @id @default(cuid())
+  tenantId                String
+  deletedById             String?
+  referenceNo             String
+  title                   String
+  category                NcrCategory
+  source                  NcrSource
+  description             String
+  status                  NcrStatus             @default(OPEN)
+  severity                NcrSeverity
+  priority                NcrPriority
+  dateReported            DateTime
+  reportedByUserId        String?
+  ownerUserId             String?
+  department              String?
+  location                String?
+  dueDate                 DateTime?
+  containmentAction       String?
+  investigationSummary    String?
+  rootCause               String?
+  rcaMethod               NcrRcaMethod?
+  correctiveActionSummary String?
+  verificationStatus      NcrVerificationStatus @default(PENDING)
+  verifiedByUserId        String?
+  verificationDate        DateTime?
+  deletedAt               DateTime?
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  tenant                  Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  comments                NcrComment[]
+
+  @@unique([tenantId, referenceNo])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, ownerUserId])
+  @@index([tenantId, dueDate])
+}
+
+model NcrComment {
+  id        String   @id @default(cuid())
+  tenantId  String
+  ncrId     String
+  authorId  String
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ncr       Ncr      @relation(fields: [ncrId], references: [id], onDelete: Cascade)
+  author    User     @relation("NcrCommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, ncrId, createdAt])
+}
+
 model Audit {
   id              String              @id @default(cuid())
   tenantId        String
@@ -404,6 +513,7 @@ model AuditChecklistItem {
   updatedAt  DateTime @updatedAt
   tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   audit      Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  findings   AuditFinding[]
 
   @@index([tenantId, auditId])
 }
@@ -412,6 +522,8 @@ model AuditFinding {
   id           String              @id @default(cuid())
   tenantId     String
   auditId      String
+  checklistItemId String?
+  clause       String?
   title        String
   description  String
   severity     AuditFindingSeverity
@@ -423,8 +535,10 @@ model AuditFinding {
   updatedAt    DateTime            @updatedAt
   tenant       Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   audit        Audit               @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  checklistItem AuditChecklistItem? @relation(fields: [checklistItemId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, auditId])
+  @@index([tenantId, checklistItemId])
   @@index([tenantId, status])
 }
 

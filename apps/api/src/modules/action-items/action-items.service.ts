@@ -215,6 +215,7 @@ export class ActionItemsService {
   private formatSourceLabel(sourceType: string) {
     const normalized = sourceType.toLowerCase();
     if (normalized === 'capa') return 'CAPA';
+    if (normalized === 'ncr') return 'NCR';
     if (normalized === 'management-review') return 'Management Review';
     return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   }
@@ -247,6 +248,13 @@ export class ActionItemsService {
       return (await this.prisma.managementReview.findFirst({
         where: { tenantId, id: sourceId, deletedAt: null },
         select: { title: true }
+      }))?.title ?? sourceId;
+    }
+
+    if (normalized === 'ncr') {
+      return (await this.prisma.ncr.findFirst({
+        where: { tenantId, id: sourceId, deletedAt: null },
+        select: { referenceNo: true, title: true }
       }))?.title ?? sourceId;
     }
 
