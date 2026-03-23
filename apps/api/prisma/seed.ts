@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { hash } from 'bcryptjs';
+import { getAuditChecklistQuestionDelegate } from '../src/common/prisma/prisma-delegate-compat';
+import { createStarterQuestionSeedData } from '../src/modules/audits/audit-question-bank';
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -216,6 +218,16 @@ async function main() {
       value: 'Demo Tenant'
     }
   });
+
+  const existingChecklistQuestions = await getAuditChecklistQuestionDelegate(prisma).count({
+    where: { tenantId: tenant.id }
+  });
+
+  if (existingChecklistQuestions === 0) {
+    await getAuditChecklistQuestionDelegate(prisma).createMany({
+      data: createStarterQuestionSeedData(tenant.id)
+    });
+  }
 }
 
 main()

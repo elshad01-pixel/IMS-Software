@@ -21,6 +21,11 @@ enum RiskStatus {
   CLOSED
 }
 
+enum RiskIssueContextType {
+  INTERNAL
+  EXTERNAL
+}
+
 enum CapaStatus {
   OPEN
   INVESTIGATING
@@ -146,6 +151,7 @@ model Tenant {
   auditLogs         AuditLog[]
   actionItems       ActionItem[]
   audits            Audit[]
+  auditChecklistQuestions AuditChecklistQuestion[]
   auditChecklistItems AuditChecklistItem[]
   auditFindings     AuditFinding[]
   managementReviews ManagementReview[]
@@ -306,6 +312,13 @@ model Risk {
   likelihood       Int
   severity         Int
   score            Int
+  existingControls String?
+  plannedMitigationActions String?
+  residualLikelihood Int?
+  residualImpact   Int?
+  residualScore    Int?
+  issueContextType RiskIssueContextType?
+  issueContext     String?
   treatmentPlan    String?
   treatmentSummary String?
   ownerId          String?
@@ -499,23 +512,46 @@ model Training {
 }
 
 model AuditChecklistItem {
-  id         String   @id @default(cuid())
-  tenantId   String
-  auditId    String
-  clause     String?
-  standard   String?
-  title      String
-  notes      String?
-  response   AuditChecklistResponse?
-  isComplete Boolean  @default(false)
+    id         String   @id @default(cuid())
+    tenantId   String
+    auditId    String
+    sourceQuestionId String?
+    clause     String?
+    subclause  String?
+    standard   String?
+    title      String
+    notes      String?
+    response   AuditChecklistResponse?
+    isComplete Boolean  @default(false)
   sortOrder  Int      @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  audit      Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  findings   AuditFinding[]
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+    tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    audit      Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+    sourceQuestion AuditChecklistQuestion? @relation(fields: [sourceQuestionId], references: [id], onDelete: SetNull)
+    findings   AuditFinding[]
 
-  @@index([tenantId, auditId])
+    @@index([tenantId, auditId])
+    @@index([tenantId, sourceQuestionId])
+  }
+
+model AuditChecklistQuestion {
+  id                String   @id @default(cuid())
+  tenantId          String
+  standard          String
+  clause            String
+  subclause         String?
+  title             String
+  sortOrder         Int      @default(0)
+  isActive          Boolean  @default(true)
+  isTemplateDefault Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  checklistItems    AuditChecklistItem[]
+
+  @@index([tenantId, standard, clause, sortOrder])
+  @@index([tenantId, isActive])
 }
 
 model AuditFinding {

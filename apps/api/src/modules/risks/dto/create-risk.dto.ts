@@ -3,6 +3,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDateString,
   IsEnum,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -32,6 +33,35 @@ export class CreateRiskDto {
   @IsInt()
   @Min(1)
   severity!: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  existingControls?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  plannedMitigationActions?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  residualLikelihood?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  residualImpact?: number;
+
+  @IsOptional()
+  @IsIn(['INTERNAL', 'EXTERNAL'])
+  issueContextType?: 'INTERNAL' | 'EXTERNAL';
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(160)
+  issueContext?: string;
 
   @IsOptional()
   @IsString()

@@ -11,13 +11,22 @@ import {
   Injectable,
   NotFoundException
 } from '@nestjs/common';
+import { getAuditChecklistQuestionDelegate } from '../../common/prisma/prisma-delegate-compat';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import {
+  CLAUSE_SORT_ORDER,
+  createStarterQuestionSeedData,
+  getStarterQuestionsForStandard
+} from './audit-question-bank';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CreateAuditChecklistItemDto } from './dto/create-audit-checklist-item.dto';
+import { CreateAuditChecklistQuestionDto } from './dto/create-audit-checklist-question.dto';
 import { CreateAuditDto } from './dto/create-audit.dto';
 import { CreateAuditFindingDto } from './dto/create-audit-finding.dto';
 import { CreateCapaFromFindingDto } from './dto/create-capa-from-finding.dto';
+import { ReorderAuditChecklistQuestionsDto } from './dto/reorder-audit-checklist-questions.dto';
 import { UpdateAuditChecklistItemDto } from './dto/update-audit-checklist-item.dto';
+import { UpdateAuditChecklistQuestionDto } from './dto/update-audit-checklist-question.dto';
 import { UpdateAuditDto } from './dto/update-audit.dto';
 import { UpdateAuditFindingDto } from './dto/update-audit-finding.dto';
 
@@ -26,57 +35,6 @@ const AUDIT_STATUS_FLOW: Record<AuditStatus, AuditStatus[]> = {
   [AuditStatus.IN_PROGRESS]: [AuditStatus.COMPLETED, AuditStatus.CLOSED],
   [AuditStatus.COMPLETED]: [AuditStatus.CLOSED, AuditStatus.IN_PROGRESS],
   [AuditStatus.CLOSED]: []
-};
-
-const ISO_AUDIT_TEMPLATES: Record<string, Array<{ clause: string; title: string }>> = {
-  'ISO 9001': [
-    { clause: '4', title: 'Has the organization identified internal and external issues relevant to its purpose?' },
-    { clause: '4', title: 'Are interested parties and their relevant requirements determined and reviewed?' },
-    { clause: '5', title: 'Is the quality policy established, maintained, and communicated?' },
-    { clause: '5', title: 'Are roles, responsibilities, and authorities assigned and understood?' },
-    { clause: '6', title: 'Are risks and opportunities identified and addressed through planning?' },
-    { clause: '6', title: 'Are quality objectives defined, measurable, and monitored?' },
-    { clause: '7', title: 'Is competence evaluated and supported with training or awareness activities?' },
-    { clause: '7', title: 'Is documented information controlled, current, and available where needed?' },
-    { clause: '8', title: 'Are operational controls defined and consistently implemented?' },
-    { clause: '8', title: 'Are externally provided processes, products, or services controlled?' },
-    { clause: '9', title: 'Are monitoring, measurement, analysis, and evaluation activities effective?' },
-    { clause: '9', title: 'Are internal audits and management reviews completed on schedule?' },
-    { clause: '10', title: 'Are nonconformities corrected and root causes addressed?' },
-    { clause: '10', title: 'Is continual improvement demonstrated through effective actions?' }
-  ],
-  'ISO 45001': [
-    { clause: '4', title: 'Are OH&S issues, workers, and interested parties identified and reviewed?' },
-    { clause: '4', title: 'Is the OH&S management system scope defined and maintained?' },
-    { clause: '5', title: 'Does leadership demonstrate accountability for OH&S performance?' },
-    { clause: '5', title: 'Are worker consultation and participation arrangements effective?' },
-    { clause: '6', title: 'Are hazards identified and OH&S risks assessed proactively?' },
-    { clause: '6', title: 'Are legal requirements and OH&S objectives translated into plans?' },
-    { clause: '7', title: 'Are OH&S competence, awareness, and communications maintained?' },
-    { clause: '7', title: 'Is OH&S documented information controlled and accessible?' },
-    { clause: '8', title: 'Are operational controls and contractor controls implemented?' },
-    { clause: '8', title: 'Are emergency preparedness and response arrangements tested?' },
-    { clause: '9', title: 'Are OH&S performance, compliance, and audit results evaluated?' },
-    { clause: '9', title: 'Does management review address OH&S performance and opportunities?' },
-    { clause: '10', title: 'Are incidents, nonconformities, and corrective actions managed effectively?' },
-    { clause: '10', title: 'Is continual improvement in OH&S outcomes demonstrated?' }
-  ],
-  'ISO 14001': [
-    { clause: '4', title: 'Are environmental issues and compliance obligations identified and maintained?' },
-    { clause: '4', title: 'Is the EMS scope defined considering activities, products, and services?' },
-    { clause: '5', title: 'Is environmental policy established, communicated, and supported by leadership?' },
-    { clause: '5', title: 'Are environmental responsibilities assigned and understood?' },
-    { clause: '6', title: 'Are environmental aspects and impacts evaluated systematically?' },
-    { clause: '6', title: 'Are environmental objectives and plans established and monitored?' },
-    { clause: '7', title: 'Are competence, awareness, and communication sufficient for EMS needs?' },
-    { clause: '7', title: 'Is documented environmental information controlled effectively?' },
-    { clause: '8', title: 'Are operational controls for significant aspects implemented?' },
-    { clause: '8', title: 'Are emergency preparedness and response plans established and tested?' },
-    { clause: '9', title: 'Are monitoring, measurement, and compliance evaluations performed?' },
-    { clause: '9', title: 'Do internal audit and management review evaluate EMS effectiveness?' },
-    { clause: '10', title: 'Are nonconformities addressed and corrective actions tracked?' },
-    { clause: '10', title: 'Is continual environmental improvement evidenced in practice?' }
-  ]
 };
 
 type ChecklistResponse = 'YES' | 'NO' | 'PARTIAL';
@@ -109,6 +67,25 @@ export class AuditsService {
     return audits.map((audit) => this.mapAuditSummary(audit));
   }
 
+  async listChecklistQuestions(
+    tenantId: string,
+    standard?: string,
+    clause?: string,
+    includeInactive = false
+  ) {
+    const questions = await this.auditChecklistQuestionModel().findMany({
+      where: {
+        tenantId,
+        standard: standard ? standard.trim() : undefined,
+        clause: clause ? clause.trim() : undefined,
+        isActive: includeInactive ? undefined : true
+      },
+      orderBy: [{ standard: 'asc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }]
+    });
+
+    return this.sortQuestionBank(questions);
+  }
+
   async get(tenantId: string, id: string) {
     const audit = await this.prisma.audit.findFirst({
       where: { tenantId, id, deletedAt: null },
@@ -132,6 +109,178 @@ export class AuditsService {
     }
 
     return this.mapAuditSummary(audit);
+  }
+
+  async createChecklistQuestion(
+    tenantId: string,
+    actorId: string,
+    dto: CreateAuditChecklistQuestionDto
+  ) {
+    const sortOrder =
+      dto.sortOrder ?? (await this.nextQuestionSortOrder(tenantId, dto.standard, dto.clause));
+
+    await this.bumpQuestionOrdersForInsert(tenantId, dto.standard, dto.clause, sortOrder);
+
+    const question = await this.auditChecklistQuestionModel().create({
+      data: {
+        tenantId,
+        standard: dto.standard.trim(),
+        clause: dto.clause.trim(),
+        subclause: this.normalizeText(dto.subclause),
+        title: dto.title.trim(),
+        sortOrder,
+        isActive: dto.isActive ?? true,
+        isTemplateDefault: dto.isTemplateDefault ?? false
+      }
+    });
+
+    await this.auditLogsService.create({
+      tenantId,
+      actorId,
+      action: 'audit.checklist-question.created',
+      entityType: 'audit-checklist-question',
+      entityId: question.id,
+      metadata: dto
+    });
+
+    return question;
+  }
+
+  async updateChecklistQuestion(
+    tenantId: string,
+    actorId: string,
+    questionId: string,
+    dto: UpdateAuditChecklistQuestionDto
+  ) {
+    const question = await this.requireChecklistQuestion(tenantId, questionId);
+    const targetStandard = dto.standard?.trim() ?? question.standard;
+    const targetClause = dto.clause?.trim() ?? question.clause;
+    const requestedSortOrder = dto.sortOrder ?? question.sortOrder;
+
+    if (
+      targetStandard !== question.standard ||
+      targetClause !== question.clause ||
+      requestedSortOrder !== question.sortOrder
+    ) {
+      await this.resequenceQuestionGroup(tenantId, question.standard, question.clause, question.id);
+      await this.bumpQuestionOrdersForInsert(tenantId, targetStandard, targetClause, requestedSortOrder);
+    }
+
+    const updated = await this.auditChecklistQuestionModel().update({
+      where: { id: questionId },
+      data: {
+        standard: dto.standard !== undefined ? targetStandard : undefined,
+        clause: dto.clause !== undefined ? targetClause : undefined,
+        subclause: dto.subclause !== undefined ? this.normalizeText(dto.subclause) : undefined,
+        title: dto.title !== undefined ? dto.title.trim() : undefined,
+        sortOrder: requestedSortOrder,
+        isActive: dto.isActive,
+        isTemplateDefault: dto.isTemplateDefault
+      }
+    });
+
+    await this.resequenceQuestionGroup(tenantId, targetStandard, targetClause);
+
+    await this.auditLogsService.create({
+      tenantId,
+      actorId,
+      action: 'audit.checklist-question.updated',
+      entityType: 'audit-checklist-question',
+      entityId: questionId,
+      metadata: dto
+    });
+
+    return updated;
+  }
+
+  async archiveChecklistQuestion(tenantId: string, actorId: string, questionId: string) {
+    const question = await this.requireChecklistQuestion(tenantId, questionId);
+
+    const updated = await this.auditChecklistQuestionModel().update({
+      where: { id: questionId },
+      data: {
+        isActive: false
+      }
+    });
+
+    await this.auditLogsService.create({
+      tenantId,
+      actorId,
+      action: 'audit.checklist-question.archived',
+      entityType: 'audit-checklist-question',
+      entityId: questionId,
+      metadata: {
+        standard: question.standard,
+        clause: question.clause
+      }
+    });
+
+    return updated;
+  }
+
+  async removeChecklistQuestion(tenantId: string, actorId: string, questionId: string) {
+    const question = await this.requireChecklistQuestion(tenantId, questionId);
+
+    await this.auditChecklistQuestionModel().delete({
+      where: { id: questionId }
+    });
+
+    await this.resequenceQuestionGroup(tenantId, question.standard, question.clause);
+
+    await this.auditLogsService.create({
+      tenantId,
+      actorId,
+      action: 'audit.checklist-question.deleted',
+      entityType: 'audit-checklist-question',
+      entityId: questionId,
+      metadata: {
+        standard: question.standard,
+        clause: question.clause
+      }
+    });
+
+    return { success: true };
+  }
+
+  async reorderChecklistQuestions(
+    tenantId: string,
+    actorId: string,
+    dto: ReorderAuditChecklistQuestionsDto
+  ) {
+    const questions = await this.auditChecklistQuestionModel().findMany({
+      where: {
+        tenantId,
+        standard: dto.standard.trim(),
+        clause: dto.clause.trim()
+      },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }]
+    });
+
+    const byId = new Map(questions.map((question: { id: string }) => [question.id, question]));
+    if (dto.questionIds.length !== questions.length || dto.questionIds.some((id) => !byId.has(id))) {
+      throw new BadRequestException('Question reorder payload does not match the current clause question set');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      const questionModel = getAuditChecklistQuestionDelegate(tx);
+      for (const [index, questionId] of dto.questionIds.entries()) {
+        await questionModel.update({
+          where: { id: questionId },
+          data: { sortOrder: index + 1 }
+        });
+      }
+    });
+
+    await this.auditLogsService.create({
+      tenantId,
+      actorId,
+      action: 'audit.checklist-question.reordered',
+      entityType: 'audit-checklist-question',
+      entityId: `${dto.standard.trim()}:${dto.clause.trim()}`,
+      metadata: dto
+    });
+
+    return this.listChecklistQuestions(tenantId, dto.standard, dto.clause, true);
   }
 
   async create(tenantId: string, actorId: string, dto: CreateAuditDto) {
@@ -250,6 +399,7 @@ export class AuditsService {
         tenantId,
         auditId,
         clause: this.normalizeText(dto.clause),
+        subclause: this.normalizeText((dto as { subclause?: string }).subclause),
         standard: this.normalizeText(dto.standard) ?? audit.standard,
         title: dto.title.trim(),
         notes: this.normalizeText(dto.notes),
@@ -290,6 +440,10 @@ export class AuditsService {
       where: { id: itemId },
       data: {
         clause: dto.clause !== undefined ? this.normalizeText(dto.clause) : undefined,
+        subclause:
+          (dto as { subclause?: string }).subclause !== undefined
+            ? this.normalizeText((dto as { subclause?: string }).subclause)
+            : undefined,
         title: dto.title?.trim(),
         standard: dto.standard !== undefined ? this.normalizeText(dto.standard) : undefined,
         notes: dto.notes !== undefined ? this.normalizeText(dto.notes) : undefined,
@@ -544,6 +698,8 @@ export class AuditsService {
     audit: {
       checklistItems: Array<{
         id: string;
+        clause?: string | null;
+        subclause?: string | null;
         isComplete: boolean;
         findings?: Array<{
           id: string;
@@ -565,6 +721,7 @@ export class AuditsService {
       ...audit,
       checklistItems: audit.checklistItems.map((item) => ({
         ...item,
+        questionNumber: item.subclause ?? item.clause,
         linkedFindingCount: item.findings?.length ?? 0,
         linkedFindings:
           item.findings?.map((finding) => ({
@@ -587,16 +744,40 @@ export class AuditsService {
   }
 
   private async seedChecklistTemplate(tenantId: string, auditId: string, standard: string) {
-    const template = ISO_AUDIT_TEMPLATES[standard];
-    if (!template?.length) {
+    let template = await this.auditChecklistQuestionModel().findMany({
+      where: {
+        tenantId,
+        standard,
+        isActive: true
+      },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }]
+    });
+
+    if (!template.length) {
+      await this.seedChecklistQuestionBankForTenant(tenantId);
+      template = await this.auditChecklistQuestionModel().findMany({
+        where: {
+          tenantId,
+          standard,
+          isActive: true
+        },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }]
+      });
+    }
+
+    if (!template.length) {
       return;
     }
 
+    template = this.sortQuestionBank(template);
+
     await this.prisma.auditChecklistItem.createMany({
-      data: template.map((item, index) => ({
+      data: template.map((item: { id: string; clause: string; subclause: string | null; title: string }, index: number) => ({
         tenantId,
         auditId,
+        sourceQuestionId: item.id,
         clause: item.clause,
+        subclause: item.subclause,
         standard,
         title: item.title,
         sortOrder: index + 1
@@ -612,6 +793,129 @@ export class AuditsService {
     });
 
     return (lastItem?.sortOrder ?? 0) + 1;
+  }
+
+  private auditChecklistQuestionModel() {
+    return getAuditChecklistQuestionDelegate(this.prisma);
+  }
+
+  async seedChecklistQuestionBankForTenant(tenantId: string) {
+    const existingCount = await this.auditChecklistQuestionModel().count({
+      where: { tenantId }
+    });
+
+    if (existingCount > 0) {
+      return;
+    }
+
+    await this.auditChecklistQuestionModel().createMany({
+      data: createStarterQuestionSeedData(tenantId)
+    });
+  }
+
+  private async nextQuestionSortOrder(tenantId: string, standard: string, clause: string) {
+    const lastQuestion = await this.auditChecklistQuestionModel().findFirst({
+      where: {
+        tenantId,
+        standard: standard.trim(),
+        clause: clause.trim()
+      },
+      orderBy: [{ sortOrder: 'desc' }, { createdAt: 'desc' }],
+      select: { sortOrder: true }
+    });
+
+    return (lastQuestion?.sortOrder ?? 0) + 1;
+  }
+
+  private async requireChecklistQuestion(tenantId: string, questionId: string) {
+    const question = await this.auditChecklistQuestionModel().findFirst({
+      where: { tenantId, id: questionId }
+    });
+
+    if (!question) {
+      throw new NotFoundException('Checklist question not found');
+    }
+
+    return question;
+  }
+
+  private async bumpQuestionOrdersForInsert(
+    tenantId: string,
+    standard: string,
+    clause: string,
+    sortOrder: number
+  ) {
+    await this.auditChecklistQuestionModel().updateMany({
+      where: {
+        tenantId,
+        standard: standard.trim(),
+        clause: clause.trim(),
+        sortOrder: { gte: sortOrder }
+      },
+      data: {
+        sortOrder: { increment: 1 }
+      }
+    });
+  }
+
+  private async resequenceQuestionGroup(
+    tenantId: string,
+    standard: string,
+    clause: string,
+    excludeId?: string
+  ) {
+    const questions = await this.auditChecklistQuestionModel().findMany({
+      where: {
+        tenantId,
+        standard,
+        clause,
+        id: excludeId ? { not: excludeId } : undefined
+      },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }]
+    });
+
+    await this.prisma.$transaction(async (tx) => {
+      const questionModel = getAuditChecklistQuestionDelegate(tx);
+      for (const [index, question] of questions.entries()) {
+        await questionModel.update({
+          where: { id: question.id },
+          data: { sortOrder: index + 1 }
+        });
+      }
+    });
+  }
+
+  private sortQuestionBank<
+    T extends { standard?: string | null; clause: string; sortOrder: number; subclause?: string | null }
+  >(
+    questions: T[]
+  ) {
+    return [...questions].sort((left, right) => {
+      if ((left.standard ?? '') !== (right.standard ?? '')) {
+        return (left.standard ?? '').localeCompare(right.standard ?? '', undefined, {
+          numeric: true,
+          sensitivity: 'base'
+        });
+      }
+
+      const leftClauseIndex = CLAUSE_SORT_ORDER.indexOf(left.clause as (typeof CLAUSE_SORT_ORDER)[number]);
+      const rightClauseIndex = CLAUSE_SORT_ORDER.indexOf(right.clause as (typeof CLAUSE_SORT_ORDER)[number]);
+      const normalizedLeft = leftClauseIndex === -1 ? Number.MAX_SAFE_INTEGER : leftClauseIndex;
+      const normalizedRight = rightClauseIndex === -1 ? Number.MAX_SAFE_INTEGER : rightClauseIndex;
+
+      if (normalizedLeft !== normalizedRight) {
+        return normalizedLeft - normalizedRight;
+      }
+
+      if ((left.subclause ?? '') !== (right.subclause ?? '')) {
+        return (left.subclause ?? '').localeCompare(right.subclause ?? '', undefined, {
+          numeric: true,
+          sensitivity: 'base'
+        });
+      }
+
+      return left.sortOrder - right.sortOrder;
+    });
   }
 
   private async requireAudit(tenantId: string, auditId: string) {

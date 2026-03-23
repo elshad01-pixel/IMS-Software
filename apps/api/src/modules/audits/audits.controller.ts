@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
@@ -6,10 +6,13 @@ import { Permissions } from '../../common/auth/permissions.decorator';
 import { PermissionsGuard } from '../../common/auth/permissions.guard';
 import { CurrentTenant } from '../../common/tenancy/current-tenant.decorator';
 import { CreateAuditChecklistItemDto } from './dto/create-audit-checklist-item.dto';
+import { CreateAuditChecklistQuestionDto } from './dto/create-audit-checklist-question.dto';
 import { CreateAuditDto } from './dto/create-audit.dto';
 import { CreateAuditFindingDto } from './dto/create-audit-finding.dto';
 import { CreateCapaFromFindingDto } from './dto/create-capa-from-finding.dto';
+import { ReorderAuditChecklistQuestionsDto } from './dto/reorder-audit-checklist-questions.dto';
 import { UpdateAuditChecklistItemDto } from './dto/update-audit-checklist-item.dto';
+import { UpdateAuditChecklistQuestionDto } from './dto/update-audit-checklist-question.dto';
 import { UpdateAuditDto } from './dto/update-audit.dto';
 import { UpdateAuditFindingDto } from './dto/update-audit-finding.dto';
 import { AuditsService } from './audits.service';
@@ -25,6 +28,22 @@ export class AuditsController {
   @Permissions('audits.read')
   list(@CurrentTenant() tenantId: string) {
     return this.auditsService.list(tenantId);
+  }
+
+  @Get('checklist-questions')
+  @Permissions('audits.read')
+  listChecklistQuestions(
+    @CurrentTenant() tenantId: string,
+    @Query('standard') standard?: string,
+    @Query('clause') clause?: string,
+    @Query('includeInactive') includeInactive?: string
+  ) {
+    return this.auditsService.listChecklistQuestions(
+      tenantId,
+      standard,
+      clause,
+      includeInactive === 'true'
+    );
   }
 
   @Get(':id')
@@ -72,6 +91,57 @@ export class AuditsController {
     @Param('id') id: string
   ) {
     return this.auditsService.archive(tenantId, user.sub, id);
+  }
+
+  @Post('checklist-questions')
+  @Permissions('audits.write')
+  createChecklistQuestion(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { sub: string },
+    @Body() dto: CreateAuditChecklistQuestionDto
+  ) {
+    return this.auditsService.createChecklistQuestion(tenantId, user.sub, dto);
+  }
+
+  @Patch('checklist-questions/reorder')
+  @Permissions('audits.write')
+  reorderChecklistQuestions(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { sub: string },
+    @Body() dto: ReorderAuditChecklistQuestionsDto
+  ) {
+    return this.auditsService.reorderChecklistQuestions(tenantId, user.sub, dto);
+  }
+
+  @Patch('checklist-questions/:questionId')
+  @Permissions('audits.write')
+  updateChecklistQuestion(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { sub: string },
+    @Param('questionId') questionId: string,
+    @Body() dto: UpdateAuditChecklistQuestionDto
+  ) {
+    return this.auditsService.updateChecklistQuestion(tenantId, user.sub, questionId, dto);
+  }
+
+  @Patch('checklist-questions/:questionId/archive')
+  @Permissions('audits.write')
+  archiveChecklistQuestion(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { sub: string },
+    @Param('questionId') questionId: string
+  ) {
+    return this.auditsService.archiveChecklistQuestion(tenantId, user.sub, questionId);
+  }
+
+  @Delete('checklist-questions/:questionId')
+  @Permissions('audits.write')
+  removeChecklistQuestion(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { sub: string },
+    @Param('questionId') questionId: string
+  ) {
+    return this.auditsService.removeChecklistQuestion(tenantId, user.sub, questionId);
   }
 
   @Post(':id/checklist-items')

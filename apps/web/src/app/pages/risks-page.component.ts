@@ -34,6 +34,13 @@ type RiskRow = {
   likelihood: number;
   severity: number;
   score: number;
+  existingControls?: string | null;
+  plannedMitigationActions?: string | null;
+  residualLikelihood?: number | null;
+  residualImpact?: number | null;
+  residualScore?: number | null;
+  issueContextType?: 'INTERNAL' | 'EXTERNAL' | null;
+  issueContext?: string | null;
   treatmentPlan?: string | null;
   treatmentSummary?: string | null;
   ownerId?: string | null;
@@ -141,8 +148,8 @@ type RiskRow = {
                   </td>
                   <td>
                     <div class="table-title">
-                      <strong>Score {{ item.score }}</strong>
-                      <small>L{{ item.likelihood }} x S{{ item.severity }}</small>
+                      <strong>Initial {{ item.score }}{{ item.residualScore ? ' -> Residual ' + item.residualScore : '' }}</strong>
+                      <small>L{{ item.likelihood }} x I{{ item.severity }}</small>
                     </div>
                   </td>
                   <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ item.status }}</span></td>
@@ -158,16 +165,16 @@ type RiskRow = {
         <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Assessment</span>
+              <span class="section-eyebrow">Risk assessment</span>
               <h3>{{ mode() === 'create' ? 'New risk' : 'Edit risk' }}</h3>
-              <p class="subtle">Keep risk definition, assessment, and treatment separated into clear form groups.</p>
+              <p class="subtle">Separate the initial risk, mitigation planning, and residual risk review so the assessment reads like a real IMS risk register.</p>
             </div>
           </div>
 
           <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
           <section class="detail-section">
-            <h4>Risk definition</h4>
+            <h4>Risk context</h4>
             <div class="form-grid-2 top-space">
               <label class="field">
                 <span>Title</span>
@@ -183,36 +190,58 @@ type RiskRow = {
               <span>Description</span>
               <textarea rows="4" formControlName="description" placeholder="What could happen and why"></textarea>
             </label>
+
+            <div class="form-grid-2 top-space">
+              <label class="field">
+                <span>Issue context</span>
+                <select formControlName="issueContextType">
+                  <option value="">Not linked</option>
+                  <option value="INTERNAL">Internal issue</option>
+                  <option value="EXTERNAL">External issue</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Issue reference</span>
+                <input formControlName="issueContext" placeholder="Strategic supplier dependency">
+              </label>
+            </div>
           </section>
 
           <section class="detail-section">
-            <h4>Assessment</h4>
+            <h4>Initial risk</h4>
             <div class="form-grid-3 top-space">
               <label class="field">
                 <span>Likelihood</span>
                 <input type="number" min="1" [attr.max]="likelihoodScaleMax()" formControlName="likelihood">
               </label>
               <label class="field">
-                <span>Severity</span>
+                <span>Impact</span>
                 <input type="number" min="1" [attr.max]="severityScaleMax()" formControlName="severity">
               </label>
-              <article class="summary-item score-panel">
-                <span>Calculated score</span>
+            </div>
+
+            <div class="summary-strip top-space">
+              <article class="summary-item">
+                <span>Initial score</span>
                 <strong>{{ currentScore() }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Risk level</span>
+                <strong [class]="scoreToneClass(currentScore())">{{ riskLevelLabel(currentScore()) }}</strong>
               </article>
             </div>
           </section>
 
           <section class="detail-section">
-            <h4>Treatment</h4>
+            <h4>Mitigation</h4>
             <label class="field top-space">
-              <span>Treatment plan</span>
-              <textarea rows="3" formControlName="treatmentPlan" placeholder="Controls and planned mitigation"></textarea>
+              <span>Existing controls</span>
+              <textarea rows="3" formControlName="existingControls" placeholder="Current controls already reducing the risk"></textarea>
             </label>
 
             <label class="field top-space">
-              <span>Treatment summary</span>
-              <textarea rows="3" formControlName="treatmentSummary" placeholder="Current treatment status"></textarea>
+              <span>Planned mitigation actions</span>
+              <textarea rows="3" formControlName="plannedMitigationActions" placeholder="Additional mitigation actions to reduce the risk"></textarea>
             </label>
 
             <div class="form-grid-2 top-space">
@@ -224,7 +253,7 @@ type RiskRow = {
                 </select>
               </label>
               <label class="field">
-                <span>Target date</span>
+                <span>Due date</span>
                 <input type="date" formControlName="targetDate">
               </label>
             </div>
@@ -241,6 +270,31 @@ type RiskRow = {
             </label>
           </section>
 
+          <section class="detail-section">
+            <h4>Residual risk</h4>
+            <div class="form-grid-3 top-space">
+              <label class="field">
+                <span>Residual likelihood</span>
+                <input type="number" min="1" [attr.max]="likelihoodScaleMax()" formControlName="residualLikelihood">
+              </label>
+              <label class="field">
+                <span>Residual impact</span>
+                <input type="number" min="1" [attr.max]="severityScaleMax()" formControlName="residualImpact">
+              </label>
+            </div>
+
+            <div class="summary-strip top-space">
+              <article class="summary-item">
+                <span>Residual score</span>
+                <strong>{{ currentResidualScore() ?? 'Not assessed' }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Residual level</span>
+                <strong [class]="scoreToneClass(currentResidualScore())">{{ riskLevelLabel(currentResidualScore()) }}</strong>
+              </article>
+            </div>
+          </section>
+
           <div class="button-row">
             <button type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Saving...' : 'Save risk' }}</button>
             <a [routerLink]="selectedId() ? ['/risks', selectedId()] : ['/risks']" class="button-link secondary">Cancel</a>
@@ -252,21 +306,21 @@ type RiskRow = {
             <div>
               <span class="section-eyebrow">Control pattern</span>
               <h3>Workflow guidance</h3>
-              <p class="subtle">Assessment and treatment stay readable here; actions and evidence continue on the risk record.</p>
+              <p class="subtle">Capture the initial risk, define mitigation, then assess the residual position once controls are planned.</p>
             </div>
           </div>
           <div class="entity-list top-space">
             <div class="entity-item">
-              <strong>Assess the inherent risk</strong>
-              <small>Use likelihood and severity to generate the register score automatically.</small>
+              <strong>Assess the initial risk</strong>
+              <small>Use likelihood and impact to score the risk before any new mitigation is introduced.</small>
             </div>
             <div class="entity-item">
-              <strong>Plan the treatment</strong>
-              <small>Keep the treatment plan concise, then track execution with linked action items.</small>
+              <strong>Plan the mitigation</strong>
+              <small>Record existing controls, planned mitigation actions, ownership, and due date in one place.</small>
             </div>
             <div class="entity-item">
-              <strong>Review from the detail page</strong>
-              <small>Use the detail page for current status, dashboard context, and follow-up activity.</small>
+              <strong>Review the residual risk</strong>
+              <small>Re-score the risk after mitigation and track execution with linked mitigation actions.</small>
             </div>
           </div>
           <iso-attachment-panel *ngIf="selectedId()" [sourceType]="'risk'" [sourceId]="selectedId()" />
@@ -291,12 +345,16 @@ type RiskRow = {
                 <strong>{{ selectedRisk()?.likelihood }}</strong>
               </article>
               <article class="summary-item">
-                <span>Severity</span>
+                <span>Impact</span>
                 <strong>{{ selectedRisk()?.severity }}</strong>
               </article>
               <article class="summary-item">
-                <span>Score</span>
+                <span>Initial score</span>
                 <strong>{{ selectedRisk()?.score }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Level</span>
+                <strong [class]="scoreToneClass(selectedRisk()?.score ?? null)">{{ riskLevelLabel(selectedRisk()?.score ?? null) }}</strong>
               </article>
             </div>
 
@@ -306,18 +364,52 @@ type RiskRow = {
                 <p>{{ selectedRisk()?.description || 'No description provided.' }}</p>
               </section>
               <section class="detail-section">
-                <h4>Treatment plan</h4>
-                <p>{{ selectedRisk()?.treatmentPlan || 'No treatment plan yet.' }}</p>
+                <h4>Issue context</h4>
+                <p>{{ selectedRisk()?.issueContextType ? (selectedRisk()?.issueContextType + ' | ') : '' }}{{ selectedRisk()?.issueContext || 'No issue context linked.' }}</p>
               </section>
             </div>
 
             <section class="detail-section top-space">
-              <h4>Treatment progress</h4>
-              <p>{{ selectedRisk()?.treatmentSummary || 'No treatment summary yet.' }}</p>
+              <h4>Mitigation</h4>
+              <div class="section-grid-2 top-space">
+                <section class="detail-section">
+                  <h4>Existing controls</h4>
+                  <p>{{ selectedRisk()?.existingControls || selectedRisk()?.treatmentSummary || 'No existing controls recorded.' }}</p>
+                </section>
+                <section class="detail-section">
+                  <h4>Planned mitigation actions</h4>
+                  <p>{{ selectedRisk()?.plannedMitigationActions || selectedRisk()?.treatmentPlan || 'No planned mitigation actions recorded.' }}</p>
+                </section>
+              </div>
+            </section>
+
+            <section class="detail-section top-space">
+              <h4>Residual risk</h4>
+              <div class="summary-strip top-space" *ngIf="selectedRisk()?.residualLikelihood && selectedRisk()?.residualImpact; else residualEmpty">
+                <article class="summary-item">
+                  <span>Residual likelihood</span>
+                  <strong>{{ selectedRisk()?.residualLikelihood }}</strong>
+                </article>
+                <article class="summary-item">
+                  <span>Residual impact</span>
+                  <strong>{{ selectedRisk()?.residualImpact }}</strong>
+                </article>
+                <article class="summary-item">
+                  <span>Residual score</span>
+                  <strong>{{ selectedRisk()?.residualScore }}</strong>
+                </article>
+                <article class="summary-item">
+                  <span>Residual level</span>
+                  <strong [class]="scoreToneClass(selectedRisk()?.residualScore ?? null)">{{ riskLevelLabel(selectedRisk()?.residualScore ?? null) }}</strong>
+                </article>
+              </div>
+              <ng-template #residualEmpty>
+                <p>No residual risk assessment recorded yet.</p>
+              </ng-template>
             </section>
 
             <dl class="key-value top-space">
-              <dt>Target date</dt>
+              <dt>Due date</dt>
               <dd>{{ selectedRisk()?.targetDate ? (selectedRisk()?.targetDate | date:'yyyy-MM-dd') : 'Not set' }}</dd>
               <dt>Last updated</dt>
               <dd>{{ selectedRisk()?.updatedAt | date:'yyyy-MM-dd HH:mm' }}</dd>
@@ -338,8 +430,20 @@ type RiskRow = {
       margin-top: 1rem;
     }
 
-    .score-panel strong {
-      font-size: 1.55rem;
+    .tone-low {
+      color: #2f6b45;
+    }
+
+    .tone-medium {
+      color: #8a6322;
+    }
+
+    .tone-high {
+      color: #b0493a;
+    }
+
+    .tone-neutral {
+      color: var(--muted);
     }
 
     tr[routerLink] {
@@ -375,6 +479,12 @@ export class RisksPageComponent implements OnInit, OnChanges {
     category: [''],
     likelihood: [3, [Validators.required, Validators.min(1)]],
     severity: [3, [Validators.required, Validators.min(1)]],
+    existingControls: [''],
+    plannedMitigationActions: [''],
+    residualLikelihood: [null as number | null],
+    residualImpact: [null as number | null],
+    issueContextType: [''],
+    issueContext: [''],
     treatmentPlan: [''],
     treatmentSummary: [''],
     ownerId: [''],
@@ -450,6 +560,15 @@ export class RisksPageComponent implements OnInit, OnChanges {
     return Number(raw.likelihood) * Number(raw.severity);
   }
 
+  protected currentResidualScore() {
+    const raw = this.form.getRawValue();
+    if (!raw.residualLikelihood || !raw.residualImpact) {
+      return null;
+    }
+
+    return Number(raw.residualLikelihood) * Number(raw.residualImpact);
+  }
+
   protected countByStatus(status: RiskStatus) {
     return this.risks().filter((item) => item.status === status).length;
   }
@@ -472,6 +591,36 @@ export class RisksPageComponent implements OnInit, OnChanges {
     }
 
     return 'danger';
+  }
+
+  protected riskLevelLabel(score: number | null) {
+    if (!score) {
+      return 'Not assessed';
+    }
+
+    const maxScore = this.likelihoodScaleMax() * this.severityScaleMax();
+    const ratio = score / maxScore;
+    if (ratio <= 0.24) {
+      return 'Low';
+    }
+    if (ratio <= 0.6) {
+      return 'Medium';
+    }
+    return 'High';
+  }
+
+  protected scoreToneClass(score: number | null) {
+    const level = this.riskLevelLabel(score);
+    if (level === 'Low') {
+      return 'tone-low';
+    }
+    if (level === 'Medium') {
+      return 'tone-medium';
+    }
+    if (level === 'High') {
+      return 'tone-high';
+    }
+    return 'tone-neutral';
   }
 
   protected readInputValue(event: Event) {
@@ -550,6 +699,12 @@ export class RisksPageComponent implements OnInit, OnChanges {
         category: '',
         likelihood: 3,
         severity: 3,
+        existingControls: '',
+        plannedMitigationActions: '',
+        residualLikelihood: null,
+        residualImpact: null,
+        issueContextType: '',
+        issueContext: '',
         treatmentPlan: '',
         treatmentSummary: '',
         ownerId: '',
@@ -568,6 +723,12 @@ export class RisksPageComponent implements OnInit, OnChanges {
         category: '',
         likelihood: 3,
         severity: 3,
+        existingControls: '',
+        plannedMitigationActions: '',
+        residualLikelihood: null,
+        residualImpact: null,
+        issueContextType: '',
+        issueContext: '',
         treatmentPlan: '',
         treatmentSummary: '',
         ownerId: '',
@@ -608,6 +769,12 @@ export class RisksPageComponent implements OnInit, OnChanges {
           category: risk.category ?? '',
           likelihood: risk.likelihood,
           severity: risk.severity,
+          existingControls: risk.existingControls ?? risk.treatmentSummary ?? '',
+          plannedMitigationActions: risk.plannedMitigationActions ?? risk.treatmentPlan ?? '',
+          residualLikelihood: risk.residualLikelihood ?? null,
+          residualImpact: risk.residualImpact ?? null,
+          issueContextType: risk.issueContextType ?? '',
+          issueContext: risk.issueContext ?? '',
           treatmentPlan: risk.treatmentPlan ?? '',
           treatmentSummary: risk.treatmentSummary ?? '',
           ownerId: risk.ownerId ?? '',
@@ -646,6 +813,12 @@ export class RisksPageComponent implements OnInit, OnChanges {
       title: raw.title.trim(),
       description: raw.description.trim() || undefined,
       category: raw.category.trim() || undefined,
+      existingControls: raw.existingControls.trim() || undefined,
+      plannedMitigationActions: raw.plannedMitigationActions.trim() || undefined,
+      residualLikelihood: raw.residualLikelihood || undefined,
+      residualImpact: raw.residualImpact || undefined,
+      issueContextType: raw.issueContextType || undefined,
+      issueContext: raw.issueContext.trim() || undefined,
       treatmentPlan: raw.treatmentPlan.trim() || undefined,
       treatmentSummary: raw.treatmentSummary.trim() || undefined,
       ownerId: raw.ownerId || undefined,

@@ -1,7 +1,9 @@
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
+import { getAuditChecklistQuestionDelegate } from '../../common/prisma/prisma-delegate-compat';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { createStarterQuestionSeedData } from '../audits/audit-question-bank';
 import { LoginDto } from './dto/login.dto';
 import { RegisterTenantDto } from './dto/register-tenant.dto';
 
@@ -137,6 +139,10 @@ export class AuthService {
         { tenantId: tenant.id, key: 'companyName', value: input.companyName },
         { tenantId: tenant.id, key: 'timezone', value: 'UTC' }
       ]
+    });
+
+    await getAuditChecklistQuestionDelegate(this.prisma).createMany({
+      data: createStarterQuestionSeedData(tenant.id)
     });
 
     return this.issueToken(user.id, tenant.id, user.email, role?.id);

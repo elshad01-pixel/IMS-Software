@@ -7,6 +7,11 @@ export class CreateAuditChecklistItemDto {
   @MaxLength(40)
   clause?: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  subclause?: string;
+
   @IsString()
   @MaxLength(200)
   title!: string;
