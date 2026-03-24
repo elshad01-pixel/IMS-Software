@@ -15,6 +15,7 @@ import { ReportsPageComponent } from './pages/reports-page.component';
 import { SettingsPageComponent } from './pages/settings-page.component';
 import { ActionsPageComponent } from './pages/actions-page.component';
 import { NcrCreatePageComponent, NcrDetailPageComponent, NcrEditPageComponent, NcrRegisterPageComponent } from './pages/ncr-page.component';
+import { AuditChecklistQuestionBankPageComponent } from './pages/audit-checklist-question-bank-page.component';
 
 export const appRoutes: Routes = [
   { path: 'login', component: LoginPageComponent },
@@ -38,6 +39,7 @@ export const appRoutes: Routes = [
       { path: 'capa/:id', component: CapaDetailPageComponent },
       { path: 'capa/:id/edit', component: CapaEditPageComponent },
       { path: 'audits', component: AuditsPageComponent, data: { mode: 'list' } },
+      { path: 'audits/checklist-question-bank', component: AuditChecklistQuestionBankPageComponent },
       { path: 'audits/new', component: AuditsPageComponent, data: { mode: 'create' } },
       { path: 'audits/:id', component: AuditsPageComponent, data: { mode: 'detail' } },
       { path: 'audits/:id/edit', component: AuditsPageComponent, data: { mode: 'edit' } },

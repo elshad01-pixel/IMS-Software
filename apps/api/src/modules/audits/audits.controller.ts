@@ -1,10 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { Permissions } from '../../common/auth/permissions.decorator';
 import { PermissionsGuard } from '../../common/auth/permissions.guard';
 import { CurrentTenant } from '../../common/tenancy/current-tenant.decorator';
+import { AuditReportService } from './audit-report.service';
 import { CreateAuditChecklistItemDto } from './dto/create-audit-checklist-item.dto';
 import { CreateAuditChecklistQuestionDto } from './dto/create-audit-checklist-question.dto';
 import { CreateAuditDto } from './dto/create-audit.dto';
@@ -22,7 +24,10 @@ import { AuditsService } from './audits.service';
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('audits')
 export class AuditsController {
-  constructor(private readonly auditsService: AuditsService) {}
+  constructor(
+    private readonly auditsService: AuditsService,
+    private readonly auditReportService: AuditReportService
+  ) {}
 
   @Get()
   @Permissions('audits.read')
@@ -44,6 +49,20 @@ export class AuditsController {
       clause,
       includeInactive === 'true'
     );
+  }
+
+  @Get(':id/report')
+  @Permissions('audits.read')
+  async report(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Res() res: Response
+  ) {
+    const report = await this.auditReportService.generateAuditReport(tenantId, id);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${report.fileName}"`);
+    res.setHeader('Content-Length', String(report.buffer.length));
+    res.send(report.buffer);
   }
 
   @Get(':id')

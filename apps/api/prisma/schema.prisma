@@ -97,6 +97,7 @@ enum DocumentStatus {
 enum AuditStatus {
   PLANNED
   IN_PROGRESS
+  CHECKLIST_COMPLETED
   COMPLETED
   CLOSED
 }
@@ -428,8 +429,12 @@ model Audit {
   auditeeArea     String?
   scheduledAt     DateTime?
   startedAt       DateTime?
+  checklistCompletedAt DateTime?
   completedAt     DateTime?
+  completedByAuditorId String?
   summary         String?
+  conclusion      String?
+  recommendations String?
   status          AuditStatus         @default(PLANNED)
   createdAt       DateTime            @default(now())
   deletedAt       DateTime?

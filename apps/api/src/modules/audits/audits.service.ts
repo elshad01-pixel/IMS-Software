@@ -1,4 +1,5 @@
 import {
+  ActionItemStatus,
   AuditFindingSeverity,
   AuditFindingStatus,
   AuditStatus,
@@ -31,10 +32,11 @@ import { UpdateAuditDto } from './dto/update-audit.dto';
 import { UpdateAuditFindingDto } from './dto/update-audit-finding.dto';
 
 const AUDIT_STATUS_FLOW: Record<AuditStatus, AuditStatus[]> = {
-  [AuditStatus.PLANNED]: [AuditStatus.IN_PROGRESS, AuditStatus.CLOSED],
-  [AuditStatus.IN_PROGRESS]: [AuditStatus.COMPLETED, AuditStatus.CLOSED],
-  [AuditStatus.COMPLETED]: [AuditStatus.CLOSED, AuditStatus.IN_PROGRESS],
-  [AuditStatus.CLOSED]: []
+  [AuditStatus.PLANNED]: [AuditStatus.IN_PROGRESS, AuditStatus.CHECKLIST_COMPLETED, AuditStatus.COMPLETED, AuditStatus.CLOSED],
+  [AuditStatus.IN_PROGRESS]: [AuditStatus.CHECKLIST_COMPLETED, AuditStatus.COMPLETED, AuditStatus.CLOSED],
+  [AuditStatus.CHECKLIST_COMPLETED]: [AuditStatus.IN_PROGRESS, AuditStatus.COMPLETED, AuditStatus.CLOSED],
+  [AuditStatus.COMPLETED]: [AuditStatus.IN_PROGRESS, AuditStatus.CHECKLIST_COMPLETED, AuditStatus.CLOSED],
+  [AuditStatus.CLOSED]: [AuditStatus.COMPLETED]
 };
 
 type ChecklistResponse = 'YES' | 'NO' | 'PARTIAL';
@@ -43,8 +45,12 @@ type ExistingAudit = {
   type: string;
   standard?: string | null;
   startedAt?: Date | null;
+  checklistCompletedAt?: Date | null;
   completedAt?: Date | null;
-  checklistItems: Array<{ id: string }>;
+  conclusion?: string | null;
+  recommendations?: string | null;
+  completedByAuditorId?: string | null;
+  checklistItems: Array<{ id: string; response?: ChecklistResponse | null; isComplete?: boolean }>;
 };
 
 @Injectable()
@@ -108,7 +114,29 @@ export class AuditsService {
       throw new NotFoundException('Audit not found');
     }
 
-    return this.mapAuditSummary(audit);
+    const [actionItemCount, openActionItemCount] = await this.prisma.$transaction([
+      this.prisma.actionItem.count({
+        where: {
+          tenantId,
+          sourceType: 'audit',
+          sourceId: id,
+          deletedAt: null
+        }
+      }),
+      this.prisma.actionItem.count({
+        where: {
+          tenantId,
+          sourceType: 'audit',
+          sourceId: id,
+          deletedAt: null,
+          status: {
+            notIn: [ActionItemStatus.DONE, ActionItemStatus.CANCELLED]
+          }
+        }
+      })
+    ]);
+
+    return this.mapAuditSummary(audit, { actionItemCount, openActionItemCount });
   }
 
   async createChecklistQuestion(
@@ -285,6 +313,7 @@ export class AuditsService {
 
   async create(tenantId: string, actorId: string, dto: CreateAuditDto) {
     await this.ensureUserBelongsToTenant(tenantId, dto.leadAuditorId);
+    await this.ensureUserBelongsToTenant(tenantId, dto.completedByAuditorId);
     this.assertAuditType(dto.type, dto.standard);
 
     try {
@@ -299,7 +328,19 @@ export class AuditsService {
           leadAuditorId: dto.leadAuditorId || null,
           auditeeArea: this.normalizeText(dto.auditeeArea),
           scheduledAt: dto.scheduledAt ? new Date(dto.scheduledAt) : null,
+          startedAt:
+            dto.status && dto.status !== AuditStatus.PLANNED ? new Date() : null,
           summary: this.normalizeText(dto.summary),
+          conclusion: this.normalizeText(dto.conclusion),
+          recommendations: this.normalizeText(dto.recommendations),
+          completedByAuditorId: dto.completedByAuditorId || null,
+          checklistCompletedAt:
+            dto.status === AuditStatus.CHECKLIST_COMPLETED || dto.status === AuditStatus.COMPLETED
+              ? new Date()
+              : null,
+          completedAt: dto.status === AuditStatus.COMPLETED
+            ? (dto.completionDate ? new Date(dto.completionDate) : new Date())
+            : null,
           status: dto.status ?? AuditStatus.PLANNED
         } as Prisma.AuditUncheckedCreateInput
       });
@@ -326,7 +367,24 @@ export class AuditsService {
   async update(tenantId: string, actorId: string, id: string, dto: UpdateAuditDto) {
     const existing = await this.prisma.audit.findFirst({
       where: { tenantId, id, deletedAt: null },
-      include: { checklistItems: true }
+      select: {
+        status: true,
+        type: true,
+        standard: true,
+        startedAt: true,
+        checklistCompletedAt: true,
+        completedAt: true,
+        conclusion: true,
+        recommendations: true,
+        completedByAuditorId: true,
+        checklistItems: {
+          select: {
+            id: true,
+            response: true,
+            isComplete: true
+          }
+        }
+      }
     }) as ExistingAudit | null;
 
     if (!existing) {
@@ -334,8 +392,17 @@ export class AuditsService {
     }
 
     await this.ensureUserBelongsToTenant(tenantId, dto.leadAuditorId);
+    await this.ensureUserBelongsToTenant(tenantId, dto.completedByAuditorId);
     this.assertValidAuditTransition(existing.status, dto.status ?? existing.status);
     this.assertAuditType(dto.type ?? existing.type, dto.standard ?? existing.standard ?? undefined);
+
+    if ((dto.status ?? existing.status) === AuditStatus.CHECKLIST_COMPLETED) {
+      this.assertChecklistComplete(existing);
+    }
+
+    if ((dto.status ?? existing.status) === AuditStatus.COMPLETED) {
+      this.assertAuditReadyForCompletion(existing, dto);
+    }
 
     if ((dto.status ?? existing.status) === AuditStatus.CLOSED) {
       await this.assertAuditReadyForClosure(tenantId, id);
@@ -356,8 +423,18 @@ export class AuditsService {
           scheduledAt:
             dto.scheduledAt !== undefined ? (dto.scheduledAt ? new Date(dto.scheduledAt) : null) : undefined,
           startedAt: this.resolveStartedAt(existing.status, dto.status, existing.startedAt),
-          completedAt: this.resolveCompletedAt(existing.status, dto.status, existing.completedAt),
+          checklistCompletedAt: this.resolveChecklistCompletedAt(
+            existing.status,
+            dto.status,
+            existing.checklistCompletedAt
+          ),
+          completedAt: this.resolveCompletedAt(existing, dto),
           summary: dto.summary !== undefined ? this.normalizeText(dto.summary) : undefined,
+          conclusion: dto.conclusion !== undefined ? this.normalizeText(dto.conclusion) : undefined,
+          recommendations:
+            dto.recommendations !== undefined ? this.normalizeText(dto.recommendations) : undefined,
+          completedByAuditorId:
+            dto.completedByAuditorId !== undefined ? dto.completedByAuditorId || null : undefined,
           status: dto.status ?? undefined
         } as Prisma.AuditUncheckedUpdateInput
       });
@@ -392,6 +469,7 @@ export class AuditsService {
     dto: CreateAuditChecklistItemDto
   ) {
     const audit = await this.requireAudit(tenantId, auditId);
+    this.assertChecklistEditable(audit.status);
     const nextSortOrder = await this.nextChecklistSortOrder(tenantId, auditId);
 
     const checklistItem = await this.prisma.auditChecklistItem.create({
@@ -435,6 +513,9 @@ export class AuditsService {
       throw new NotFoundException('Checklist item not found');
     }
 
+    const audit = await this.requireAudit(tenantId, item.auditId);
+    this.assertChecklistEditable(audit.status);
+
     const resolvedResponse = (dto.response !== undefined ? dto.response : item.response) as ChecklistResponse | null | undefined;
     const checklistItem = await this.prisma.auditChecklistItem.update({
       where: { id: itemId },
@@ -461,6 +542,8 @@ export class AuditsService {
       metadata: dto
     });
 
+    await this.refreshChecklistProgressStatus(tenantId, actorId, item.auditId);
+
     return checklistItem;
   }
 
@@ -472,6 +555,9 @@ export class AuditsService {
     if (!item) {
       throw new NotFoundException('Checklist item not found');
     }
+
+    const audit = await this.requireAudit(tenantId, item.auditId);
+    this.assertChecklistEditable(audit.status);
 
     await this.prisma.auditChecklistItem.delete({
       where: { id: itemId }
@@ -485,6 +571,8 @@ export class AuditsService {
       entityId: item.auditId,
       metadata: { itemId }
     });
+
+    await this.refreshChecklistProgressStatus(tenantId, actorId, item.auditId);
 
     return { success: true };
   }
@@ -700,6 +788,7 @@ export class AuditsService {
         id: string;
         clause?: string | null;
         subclause?: string | null;
+        response?: ChecklistResponse | null;
         isComplete: boolean;
         findings?: Array<{
           id: string;
@@ -715,8 +804,16 @@ export class AuditsService {
       }>;
       findings: Array<{ status: AuditFindingStatus }>;
       [key: string]: unknown;
+    },
+    extras?: {
+      actionItemCount?: number;
+      openActionItemCount?: number;
     }
   ) {
+    const yesCount = audit.checklistItems.filter((item) => item.response === 'YES').length;
+    const noCount = audit.checklistItems.filter((item) => item.response === 'NO').length;
+    const naCount = audit.checklistItems.filter((item) => item.response === 'PARTIAL').length;
+
     return {
       ...audit,
       checklistItems: audit.checklistItems.map((item) => ({
@@ -738,8 +835,17 @@ export class AuditsService {
       })),
       checklistCount: audit.checklistItems.length,
       completedChecklistCount: audit.checklistItems.filter((item) => item.isComplete).length,
+      checklistAnsweredCount: audit.checklistItems.filter((item) => !!item.response).length,
+      checklistYesCount: yesCount,
+      checklistNoCount: noCount,
+      checklistNaCount: naCount,
+      isChecklistCompleted:
+        audit.checklistItems.length > 0 &&
+        audit.checklistItems.every((item) => item.isComplete && !!item.response),
       findingCount: audit.findings.length,
-      openFindingCount: audit.findings.filter((finding) => finding.status === AuditFindingStatus.OPEN).length
+      openFindingCount: audit.findings.filter((finding) => finding.status === AuditFindingStatus.OPEN).length,
+      actionItemCount: extras?.actionItemCount ?? 0,
+      openActionItemCount: extras?.openActionItemCount ?? 0
     };
   }
 
@@ -981,6 +1087,46 @@ export class AuditsService {
     }
   }
 
+  private assertChecklistEditable(status: AuditStatus) {
+    if (status === AuditStatus.COMPLETED || status === AuditStatus.CLOSED) {
+      throw new BadRequestException('Completed audits are read-only. Reopen the audit before editing the checklist.');
+    }
+  }
+
+  private assertChecklistComplete(audit: ExistingAudit) {
+    const unanswered = audit.checklistItems.filter((item) => !item.response || !item.isComplete).length;
+    if (unanswered > 0) {
+      throw new BadRequestException('Answer all checklist questions before moving to checklist completion.');
+    }
+  }
+
+  private assertAuditReadyForCompletion(audit: ExistingAudit, dto: UpdateAuditDto) {
+    this.assertChecklistComplete(audit);
+
+    const conclusion = dto.conclusion !== undefined ? this.normalizeText(dto.conclusion) : audit.conclusion;
+    const recommendations =
+      dto.recommendations !== undefined ? this.normalizeText(dto.recommendations) : audit.recommendations;
+    const completedByAuditorId =
+      dto.completedByAuditorId !== undefined ? dto.completedByAuditorId || null : audit.completedByAuditorId;
+    const completionDate = dto.completionDate ?? audit.completedAt?.toISOString();
+
+    if (!conclusion) {
+      throw new BadRequestException('Add an audit conclusion before completing the audit.');
+    }
+
+    if (!recommendations) {
+      throw new BadRequestException('Add audit recommendations before completing the audit.');
+    }
+
+    if (!completedByAuditorId) {
+      throw new BadRequestException('Select the auditor completing the audit before completion.');
+    }
+
+    if (!completionDate) {
+      throw new BadRequestException('Set a completion date before completing the audit.');
+    }
+  }
+
   private async assertAuditReadyForClosure(tenantId: string, auditId: string) {
     const openFindings = await this.prisma.auditFinding.count({
       where: {
@@ -1003,8 +1149,16 @@ export class AuditsService {
     return existingStartedAt ?? undefined;
   }
 
-  private resolveCompletedAt(current: AuditStatus, next?: AuditStatus, existingCompletedAt?: Date | null) {
-    if (current !== AuditStatus.COMPLETED && next === AuditStatus.COMPLETED) {
+  private resolveChecklistCompletedAt(
+    current: AuditStatus,
+    next?: AuditStatus,
+    existingChecklistCompletedAt?: Date | null
+  ) {
+    if (
+      (next === AuditStatus.CHECKLIST_COMPLETED || next === AuditStatus.COMPLETED) &&
+      current !== AuditStatus.CHECKLIST_COMPLETED &&
+      current !== AuditStatus.COMPLETED
+    ) {
       return new Date();
     }
 
@@ -1012,7 +1166,95 @@ export class AuditsService {
       return null;
     }
 
-    return existingCompletedAt ?? undefined;
+    return existingChecklistCompletedAt ?? undefined;
+  }
+
+  private resolveCompletedAt(existing: ExistingAudit, dto: UpdateAuditDto) {
+    if (dto.status === AuditStatus.COMPLETED) {
+      return dto.completionDate ? new Date(dto.completionDate) : existing.completedAt ?? new Date();
+    }
+
+    if (dto.completionDate !== undefined) {
+      return dto.completionDate ? new Date(dto.completionDate) : null;
+    }
+
+    if (dto.status === AuditStatus.IN_PROGRESS || dto.status === AuditStatus.CHECKLIST_COMPLETED) {
+      return null;
+    }
+
+    return existing.completedAt ?? undefined;
+  }
+
+  private async refreshChecklistProgressStatus(tenantId: string, actorId: string, auditId: string) {
+    const audit = await this.prisma.audit.findFirst({
+      where: { tenantId, id: auditId, deletedAt: null },
+      include: {
+        checklistItems: {
+          select: {
+            id: true,
+            response: true,
+            isComplete: true
+          }
+        }
+      }
+    }) as ExistingAudit & { id?: string } | null;
+
+    if (!audit || audit.status === AuditStatus.COMPLETED || audit.status === AuditStatus.CLOSED) {
+      return;
+    }
+
+    const hasChecklistItems = audit.checklistItems.length > 0;
+    const answeredCount = audit.checklistItems.filter((item) => !!item.response && item.isComplete).length;
+    const isChecklistComplete = hasChecklistItems && answeredCount === audit.checklistItems.length;
+
+    let nextStatus = audit.status;
+    let startedAt: Date | null | undefined;
+    let checklistCompletedAt: Date | null | undefined;
+
+    if (isChecklistComplete) {
+      nextStatus = AuditStatus.CHECKLIST_COMPLETED;
+      checklistCompletedAt = audit.checklistCompletedAt ?? new Date();
+      startedAt = audit.startedAt ?? new Date();
+    } else if (answeredCount > 0) {
+      nextStatus = AuditStatus.IN_PROGRESS;
+      checklistCompletedAt = null;
+      startedAt = audit.startedAt ?? new Date();
+    } else if (audit.status === AuditStatus.CHECKLIST_COMPLETED) {
+      nextStatus = AuditStatus.IN_PROGRESS;
+      checklistCompletedAt = null;
+    }
+
+    if (
+      nextStatus !== audit.status ||
+      (startedAt && !audit.startedAt) ||
+      (checklistCompletedAt === null && audit.checklistCompletedAt) ||
+      (checklistCompletedAt instanceof Date && !audit.checklistCompletedAt)
+    ) {
+      await this.prisma.audit.update({
+        where: { id: auditId },
+        data: {
+          status: nextStatus,
+          startedAt,
+          checklistCompletedAt
+        }
+      });
+
+      await this.auditLogsService.create({
+        tenantId,
+        actorId,
+        action:
+          nextStatus === AuditStatus.CHECKLIST_COMPLETED
+            ? 'audit.checklist.completed'
+            : 'audit.checklist.progress-updated',
+        entityType: 'audit',
+        entityId: auditId,
+        metadata: {
+          answeredCount,
+          totalChecklistCount: audit.checklistItems.length,
+          status: nextStatus
+        }
+      });
+    }
   }
 
   private normalizeText(value?: string | null) {

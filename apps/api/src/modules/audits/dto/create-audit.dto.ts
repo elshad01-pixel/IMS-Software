@@ -43,6 +43,24 @@ export class CreateAuditDto {
   @MaxLength(2000)
   summary?: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  conclusion?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  recommendations?: string;
+
+  @IsOptional()
+  @IsDateString()
+  completionDate?: string;
+
+  @IsOptional()
+  @IsString()
+  completedByAuditorId?: string;
+
   @ApiPropertyOptional({ enum: AuditStatus, default: AuditStatus.PLANNED })
   @IsOptional()
   @IsEnum(AuditStatus)

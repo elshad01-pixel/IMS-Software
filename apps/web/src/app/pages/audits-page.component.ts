@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
@@ -11,7 +11,7 @@ import { RecordWorkItemsComponent } from '../shared/record-work-items.component'
 
 type PageMode = 'list' | 'create' | 'detail' | 'edit';
 type AuditStep = 'plan' | 'conduct' | 'review';
-type AuditStatus = 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CLOSED';
+type AuditStatus = 'PLANNED' | 'IN_PROGRESS' | 'CHECKLIST_COMPLETED' | 'COMPLETED' | 'CLOSED';
 type AuditType = 'Internal Audit' | 'Supplier Audit';
 type AuditStandard = 'ISO 9001' | 'ISO 45001' | 'ISO 14001';
 type ChecklistResponse = 'YES' | 'NO' | 'PARTIAL';
@@ -28,6 +28,7 @@ type UserOption = {
 type AuditChecklistItem = {
   id: string;
   clause?: string | null;
+  subclause?: string | null;
   standard?: string | null;
   title: string;
   notes?: string | null;
@@ -76,12 +77,25 @@ type AuditRecord = {
   leadAuditorId?: string | null;
   auditeeArea?: string | null;
   scheduledAt?: string | null;
+  startedAt?: string | null;
+  checklistCompletedAt?: string | null;
+  completedAt?: string | null;
+  completedByAuditorId?: string | null;
   summary?: string | null;
+  conclusion?: string | null;
+  recommendations?: string | null;
   status: AuditStatus;
   checklistCount?: number;
   completedChecklistCount?: number;
+  checklistAnsweredCount?: number;
+  checklistYesCount?: number;
+  checklistNoCount?: number;
+  checklistNaCount?: number;
+  isChecklistCompleted?: boolean;
   findingCount?: number;
   openFindingCount?: number;
+  actionItemCount?: number;
+  openActionItemCount?: number;
   checklistItems?: AuditChecklistItem[];
   findings?: AuditFinding[];
 };
@@ -98,6 +112,10 @@ type AuditRecord = {
         [breadcrumbs]="breadcrumbs()"
       >
         <a *ngIf="mode() === 'list'" routerLink="/audits/new" class="button-link">+ New audit</a>
+        <a *ngIf="mode() === 'list' && canManageQuestionBank()" routerLink="/audits/checklist-question-bank" class="button-link secondary">Checklist question bank</a>
+        <button *ngIf="mode() === 'detail' && selectedAudit()" type="button" class="button-link secondary" [disabled]="generatingReport()" (click)="generateReport()">
+          {{ generatingReport() ? 'Generating report...' : 'Generate Report' }}
+        </button>
         <a *ngIf="mode() === 'detail' && selectedAudit()" [routerLink]="['/audits', selectedAudit()?.id, 'edit']" class="button-link">Edit audit</a>
         <button *ngIf="mode() === 'detail' && canDeleteAudit()" type="button" class="button-link danger" (click)="deleteAudit()">Delete audit</button>
         <button *ngIf="mode() === 'detail' && canArchiveAudit()" type="button" class="button-link secondary" (click)="archiveAudit()">Archive audit</button>
@@ -139,7 +157,7 @@ type AuditRecord = {
                     </div>
                   </td>
                   <td>{{ item.type }}<span *ngIf="item.standard"> | {{ item.standard }}</span></td>
-                  <td><span class="status-badge" [class.warn]="item.status === 'IN_PROGRESS'" [class.success]="item.status === 'CLOSED'">{{ item.status }}</span></td>
+                  <td><span class="status-badge" [class.warn]="item.status === 'IN_PROGRESS' || item.status === 'CHECKLIST_COMPLETED'" [class.success]="item.status === 'COMPLETED'" [class.neutral]="item.status === 'CLOSED'">{{ item.status }}</span></td>
                   <td>{{ item.completedChecklistCount || 0 }}/{{ item.checklistCount || 0 }}</td>
                   <td>{{ item.findingCount || 0 }}</td>
                 </tr>
@@ -205,8 +223,9 @@ type AuditRecord = {
               <select formControlName="status">
                 <option>PLANNED</option>
                 <option>IN_PROGRESS</option>
+                <option>CHECKLIST_COMPLETED</option>
                 <option>COMPLETED</option>
-                <option>CLOSED</option>
+                <option *ngIf="auditForm.getRawValue().status === 'CLOSED'">CLOSED</option>
               </select>
             </label>
           </div>
@@ -252,7 +271,7 @@ type AuditRecord = {
               <h3>{{ selectedAudit()?.title }}</h3>
               <p class="subtle">{{ selectedAudit()?.code }}<span *ngIf="selectedAudit()?.standard"> | {{ selectedAudit()?.standard }}</span></p>
             </div>
-            <span class="status-badge" [class.warn]="selectedAudit()?.status === 'IN_PROGRESS'" [class.success]="selectedAudit()?.status === 'CLOSED'">{{ selectedAudit()?.status }}</span>
+            <span class="status-badge" [class.warn]="selectedAudit()?.status === 'IN_PROGRESS' || selectedAudit()?.status === 'CHECKLIST_COMPLETED'" [class.success]="selectedAudit()?.status === 'COMPLETED'" [class.neutral]="selectedAudit()?.status === 'CLOSED'">{{ selectedAudit()?.status }}</span>
           </div>
 
           <div class="summary-strip top-space">
@@ -288,8 +307,8 @@ type AuditRecord = {
             <button type="button" class="audit-step" [class.active]="activeStep() === 'review'" (click)="setActiveStep('review')">
               <span>3</span>
               <div>
-                <strong>Review & close</strong>
-                <small>Findings and corrective actions</small>
+                <strong>Review findings</strong>
+                <small>Close-out and completion</small>
               </div>
             </button>
           </nav>
@@ -344,7 +363,7 @@ type AuditRecord = {
               </div>
               <div class="entity-item">
                 <strong>Closure path</strong>
-                <small>The review step consolidates findings, CAPA creation, actions, and final closure in one place.</small>
+                <small>When the checklist is complete, move into the review step for findings, close-out notes, and final completion.</small>
               </div>
             </div>
           </section>
@@ -360,6 +379,11 @@ type AuditRecord = {
               </div>
             </div>
 
+            <div class="empty-state top-space" *ngIf="isChecklistReadOnly()">
+              <strong>Checklist is read-only</strong>
+              <span>This audit has been completed. You can still review findings and evidence, but checklist responses can no longer be changed.</span>
+            </div>
+
             <div class="conduct-progress top-space" *ngIf="checklistGroups().length">
               <div class="conduct-progress__meta">
                 <div>
@@ -373,12 +397,18 @@ type AuditRecord = {
               </div>
             </div>
 
-            <form *ngIf="selectedAudit()?.type === 'Supplier Audit'" class="supplier-builder top-space" [formGroup]="checklistForm" (ngSubmit)="addChecklistItem()">
+            <form *ngIf="selectedAudit()?.type === 'Supplier Audit' && !isChecklistReadOnly()" class="supplier-builder top-space" [formGroup]="checklistForm" (ngSubmit)="addChecklistItem()">
               <div class="form-grid-2">
                 <label class="field">
                   <span>Section or group</span>
                   <input formControlName="clause" placeholder="Delivery">
                 </label>
+                <label class="field">
+                  <span>Subclause</span>
+                  <input formControlName="subclause" placeholder="8.4">
+                </label>
+              </div>
+              <div class="form-grid-2">
                 <label class="field">
                   <span>Add question</span>
                   <input formControlName="title" placeholder="Supplier communicates delivery delays in advance">
@@ -407,8 +437,36 @@ type AuditRecord = {
                 </div>
                 <div class="clause-header__meta">
                   <span class="status-badge neutral">{{ answeredInCurrentClause() }}/{{ currentChecklistGroup()!.items.length || 0 }} answered</span>
+                  <button *ngIf="selectedAudit()?.type === 'Internal Audit' && canManageQuestionBank() && !isChecklistReadOnly()" type="button" class="button-link secondary compact" (click)="toggleChecklistBuilder()">
+                    {{ checklistBuilderOpen() ? 'Hide add question' : '+ Add extra question' }}
+                  </button>
                 </div>
               </section>
+
+              <form *ngIf="selectedAudit()?.type === 'Internal Audit' && checklistBuilderOpen()" class="supplier-builder top-space" [formGroup]="checklistForm" (ngSubmit)="addChecklistItem()">
+                <div class="form-grid-3">
+                  <label class="field">
+                    <span>Clause / section</span>
+                    <input formControlName="clause" placeholder="4">
+                  </label>
+                  <label class="field">
+                    <span>Subclause</span>
+                    <input formControlName="subclause" placeholder="4.1">
+                  </label>
+                  <label class="field">
+                    <span>Add question</span>
+                    <input formControlName="title" placeholder="Are process owners reviewing key business issues and interested-party expectations?">
+                  </label>
+                </div>
+                <label class="field">
+                  <span>Comment prompt</span>
+                  <textarea rows="2" formControlName="notes" placeholder="Optional context or evidence to review"></textarea>
+                </label>
+                <div class="button-row">
+                  <button type="submit" [disabled]="checklistForm.invalid || saving()">{{ saving() ? 'Saving...' : 'Add question' }}</button>
+                  <button type="button" class="secondary" (click)="closeChecklistBuilder()">Cancel</button>
+                </div>
+              </form>
 
               <div class="empty-state top-space" *ngIf="currentChecklistGroup() && !answeredInCurrentClause()">
                 <strong>No questions answered in this clause</strong>
@@ -420,7 +478,7 @@ type AuditRecord = {
                   <div class="question-card__head">
                     <div class="question-card__title">
                       <div class="question-meta">
-                        <span class="question-number">{{ questionNumber(group.clause, questionIndex) }}</span>
+                        <span class="question-number">{{ item.subclause || questionNumber(group.clause, questionIndex) }}</span>
                         <small>Clause {{ item.clause || group.clause }}</small>
                         <span *ngIf="findingForChecklist(item)" class="finding-indicator">Finding recorded</span>
                       </div>
@@ -429,16 +487,16 @@ type AuditRecord = {
 
                     <div class="question-card__actions">
                       <div class="response-group">
-                        <button type="button" class="response-button" [class.active]="item.response === 'YES'" (click)="setChecklistResponse(item, 'YES')">Yes</button>
-                        <button type="button" class="response-button" [class.active]="item.response === 'NO'" (click)="setChecklistResponse(item, 'NO')">No</button>
-                        <button type="button" class="response-button" [class.active]="item.response === 'PARTIAL'" (click)="setChecklistResponse(item, 'PARTIAL')">N/A</button>
+                        <button type="button" class="response-button" [class.active]="item.response === 'YES'" [disabled]="isChecklistReadOnly()" (click)="setChecklistResponse(item, 'YES')">Yes</button>
+                        <button type="button" class="response-button" [class.active]="item.response === 'NO'" [disabled]="isChecklistReadOnly()" (click)="setChecklistResponse(item, 'NO')">No</button>
+                        <button type="button" class="response-button" [class.active]="item.response === 'PARTIAL'" [disabled]="isChecklistReadOnly()" (click)="setChecklistResponse(item, 'PARTIAL')">N/A</button>
                       </div>
 
                       <div class="question-quick-actions">
                         <button type="button" class="button-link secondary compact" (click)="toggleChecklist(item.id)">
                           {{ isChecklistExpanded(item.id) ? 'Hide details' : (item.notes ? 'Edit Comment' : 'Add Comment') }}
                         </button>
-                        <button type="button" class="button-link secondary compact" *ngIf="!findingForChecklist(item) && item.response === 'NO'" (click)="openFindingComposer(item)">Add Finding</button>
+                        <button type="button" class="button-link secondary compact" *ngIf="!findingForChecklist(item) && item.response === 'NO' && !isChecklistReadOnly()" (click)="openFindingComposer(item)">Add Finding</button>
                         <button type="button" class="button-link secondary compact" *ngIf="findingForChecklist(item)" (click)="viewFindingForChecklist(item)">View Finding</button>
                       </div>
                     </div>
@@ -450,6 +508,7 @@ type AuditRecord = {
                       <textarea
                         rows="3"
                         [value]="checklistNoteDraft(item)"
+                        [readOnly]="isChecklistReadOnly()"
                         (input)="setChecklistNoteDraft(item.id, readTextarea($event))"
                         (blur)="saveChecklistNote(item)"
                         placeholder="Record objective evidence, comments, and observations"
@@ -462,7 +521,7 @@ type AuditRecord = {
                         <p>{{ findingForChecklist(item) ? 'A finding is already linked to this question. You can continue the audit.' : 'Record a finding for this audit gap, then continue from the same question.' }}</p>
                       </div>
                       <div class="button-row compact-row">
-                        <button type="button" class="secondary" *ngIf="!findingForChecklist(item)" (click)="openFindingComposer(item)">Add Finding</button>
+                        <button type="button" class="secondary" *ngIf="!findingForChecklist(item) && !isChecklistReadOnly()" (click)="openFindingComposer(item)">Add Finding</button>
                         <button type="button" class="secondary" *ngIf="findingForChecklist(item)" (click)="viewFindingForChecklist(item)">View Finding</button>
                       </div>
                     </div>
@@ -474,8 +533,20 @@ type AuditRecord = {
 
               <div class="clause-nav top-space">
                 <button type="button" class="secondary" (click)="previousClause()" [disabled]="!hasPreviousClause()">Previous Clause</button>
-                <button type="button" (click)="nextClause()" [disabled]="!hasNextClause()">Next Clause</button>
+                <button type="button" *ngIf="hasNextClause()" (click)="nextClause()">Next Clause</button>
+                <button type="button" *ngIf="!hasNextClause() && isChecklistComplete()" (click)="setActiveStep('review')">Review Findings</button>
               </div>
+
+              <section class="completion-callout top-space" *ngIf="isChecklistComplete()">
+                <div>
+                  <span class="section-eyebrow">Checklist complete</span>
+                  <h4>Move into the review and close-out step</h4>
+                  <p class="subtle">All checklist questions are answered. Review findings, capture the audit conclusion, and complete the audit record.</p>
+                </div>
+                <div class="button-row compact-row">
+                  <button type="button" (click)="setActiveStep('review')">Review Findings</button>
+                </div>
+              </section>
             </ng-container>
           </section>
 
@@ -515,47 +586,61 @@ type AuditRecord = {
           </section>
         </section>
 
-        <section *ngIf="activeStep() === 'review'" class="page-columns">
+        <section *ngIf="activeStep() === 'review'" class="page-stack">
           <section class="card panel-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Review & close</span>
-                <h3>Findings and corrective actions</h3>
-                <p class="subtle">Review findings, create CAPA where required, and only close the audit once corrective actions are clearly assigned.</p>
+                <span class="section-eyebrow">Checklist completion</span>
+                <h3>Review findings and close out the audit</h3>
+                <p class="subtle">Once the checklist is complete, review findings, capture the audit conclusion, and finish the audit record. Findings and actions can continue after audit completion.</p>
               </div>
             </div>
 
-            <form [formGroup]="findingForm" class="page-stack top-space" (ngSubmit)="addFinding()">
-              <label class="field"><span>Finding title</span><input formControlName="title" placeholder="Supplier evaluation records were incomplete"></label>
-              <label class="field"><span>Description</span><textarea rows="3" formControlName="description" placeholder="Describe the gap, evidence, and impact"></textarea></label>
-              <div class="form-grid-3">
-                <label class="field">
-                  <span>Severity</span>
-                  <select formControlName="severity">
-                    <option>OBSERVATION</option>
-                    <option>MINOR</option>
-                    <option>MAJOR</option>
-                  </select>
-                </label>
-                <label class="field">
-                  <span>Owner</span>
-                  <select formControlName="ownerId">
-                    <option value="">Unassigned</option>
-                    <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
-                  </select>
-                </label>
-                <label class="field"><span>Due date</span><input type="date" formControlName="dueDate"></label>
+            <div class="summary-grid top-space">
+              <article class="summary-item">
+                <span>Total questions</span>
+                <strong>{{ selectedAudit()?.checklistCount || 0 }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Yes</span>
+                <strong>{{ selectedAudit()?.checklistYesCount || 0 }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>No</span>
+                <strong>{{ selectedAudit()?.checklistNoCount || 0 }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>N/A</span>
+                <strong>{{ selectedAudit()?.checklistNaCount || 0 }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Findings</span>
+                <strong>{{ selectedAudit()?.findingCount || 0 }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Linked actions</span>
+                <strong>{{ selectedAudit()?.actionItemCount || 0 }}</strong>
+              </article>
+            </div>
+
+            <div class="empty-state top-space" *ngIf="!isChecklistComplete()">
+              <strong>Checklist is not complete yet</strong>
+              <span>Answer all required checklist questions before the audit can move into final completion.</span>
+            </div>
+          </section>
+
+          <section class="card panel-card">
+            <div class="section-head">
+              <div>
+                <span class="section-eyebrow">Review findings</span>
+                <h3>Findings and corrective actions</h3>
+                <p class="subtle">Review each finding, open CAPA where required, and create corrective actions only where they add value.</p>
               </div>
-              <div class="button-row">
-                <button type="submit" [disabled]="findingForm.invalid || saving()">Add finding</button>
-                <button type="button" class="secondary" [disabled]="saving() || selectedAudit()?.status === 'COMPLETED'" (click)="updateAuditStatus('COMPLETED')">Mark completed</button>
-                <button type="button" class="secondary" [disabled]="saving() || selectedAudit()?.status === 'CLOSED'" (click)="updateAuditStatus('CLOSED')">Close audit</button>
-              </div>
-            </form>
+            </div>
 
             <div class="empty-state top-space" *ngIf="!(selectedAudit()?.findings || []).length">
               <strong>No findings yet</strong>
-              <span>Answer the checklist first. Record a finding only when a requirement is not met.</span>
+              <span>The audit can still be completed. Add findings only where a requirement was not met during checklist execution.</span>
             </div>
 
             <div class="entity-list top-space" *ngIf="(selectedAudit()?.findings || []).length">
@@ -568,10 +653,11 @@ type AuditRecord = {
                 </div>
                 <p class="subtle">{{ cleanFindingDescription(finding.description) }}</p>
                 <div class="button-row compact-row">
+                  <button type="button" class="secondary" (click)="focusChecklistQuestion(finding)" [disabled]="!finding.checklistItemId">Open checklist question</button>
                   <button type="button" class="secondary" [disabled]="!!finding.linkedCapaId || saving()" (click)="createCapaFromFinding(finding)">
                     {{ finding.linkedCapaId ? 'CAPA linked' : 'Create CAPA' }}
                   </button>
-                  <button type="button" class="secondary" [disabled]="saving()" (click)="prepareActionFromFinding(finding)">Create action</button>
+                  <button type="button" class="secondary" [disabled]="saving()" (click)="prepareActionFromFinding(finding)">Create corrective action</button>
                   <button type="button" class="secondary" [disabled]="saving() || finding.status === 'CLOSED'" (click)="updateFindingStatus(finding, 'CLOSED')">Close finding</button>
                 </div>
               </article>
@@ -584,6 +670,44 @@ type AuditRecord = {
             [draftTitle]="draftActionTitle()"
             [draftDescription]="draftActionDescription()"
           />
+
+          <section class="card panel-card">
+            <div class="section-head">
+              <div>
+                <span class="section-eyebrow">Audit close-out</span>
+                <h3>Conclusion and recommendations</h3>
+                <p class="subtle">Capture the overall conclusion, recommendations, and who completed the audit. Open findings and actions can continue after the audit itself is completed.</p>
+              </div>
+            </div>
+
+            <form [formGroup]="closeoutForm" class="page-stack top-space" (ngSubmit)="completeAudit()">
+              <label class="field">
+                <span>Audit conclusion</span>
+                <textarea rows="4" formControlName="conclusion" placeholder="Summarize whether the audited area is effective and where the main gaps were found"></textarea>
+              </label>
+              <label class="field">
+                <span>Recommendations</span>
+                <textarea rows="4" formControlName="recommendations" placeholder="Record the main recommendations, follow-up focus areas, or further verification needed"></textarea>
+              </label>
+              <div class="form-grid-2">
+                <label class="field">
+                  <span>Completion date</span>
+                  <input type="date" formControlName="completionDate">
+                </label>
+                <label class="field">
+                  <span>Auditor</span>
+                  <select formControlName="completedByAuditorId">
+                    <option value="">Select auditor</option>
+                    <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
+                  </select>
+                </label>
+              </div>
+              <div class="button-row">
+                <button type="button" class="secondary" (click)="saveCloseoutDraft()" [disabled]="saving() || selectedAudit()?.status === 'COMPLETED'">Save close-out draft</button>
+                <button type="submit" [disabled]="saving() || !canCompleteAudit()">Complete Audit</button>
+              </div>
+            </form>
+          </section>
         </section>
 
         <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
@@ -612,6 +736,12 @@ type AuditRecord = {
     .workflow-card {
       display: grid;
       gap: 1rem;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+      gap: 0.85rem;
     }
 
     .audit-steps {
@@ -904,6 +1034,18 @@ type AuditRecord = {
       color: var(--muted);
     }
 
+    .completion-callout {
+      padding: 1rem 1.1rem;
+      border-radius: 20px;
+      border: 1px solid rgba(36, 79, 61, 0.12);
+      background: rgba(244, 247, 242, 0.86);
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
     @media (max-width: 980px) {
       .audit-steps,
       .audit-conduct-layout {
@@ -911,6 +1053,7 @@ type AuditRecord = {
       }
 
       .finding-prompt,
+      .completion-callout,
       .question-card__head {
         display: grid;
       }
@@ -951,10 +1094,12 @@ export class AuditsPageComponent {
   protected readonly pendingFindingChecklistId = signal<string | null>(null);
   protected readonly checklistScrollTop = signal<number | null>(null);
   protected readonly selectedFindingId = signal<string | null>(null);
+  protected readonly checklistBuilderOpen = signal(false);
   protected readonly draftActionTitle = signal<string | null>(null);
   protected readonly draftActionDescription = signal<string | null>(null);
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
+  protected readonly generatingReport = signal(false);
   protected readonly message = signal((history.state?.notice as string) || '');
   protected readonly error = signal('');
 
@@ -973,6 +1118,7 @@ export class AuditsPageComponent {
 
   protected readonly checklistForm = this.fb.nonNullable.group({
     clause: [''],
+    subclause: [''],
     title: ['', [Validators.required, Validators.maxLength(200)]],
     notes: ['']
   });
@@ -983,6 +1129,13 @@ export class AuditsPageComponent {
     severity: ['OBSERVATION' as FindingSeverity, Validators.required],
     ownerId: [''],
     dueDate: ['']
+  });
+
+  protected readonly closeoutForm = this.fb.nonNullable.group({
+    conclusion: ['', [Validators.required, Validators.maxLength(4000)]],
+    recommendations: ['', [Validators.required, Validators.maxLength(4000)]],
+    completionDate: ['', Validators.required],
+    completedByAuditorId: ['', Validators.required]
   });
 
   constructor() {
@@ -1075,14 +1228,20 @@ export class AuditsPageComponent {
     this.api.post(`audits/${this.selectedId()}/checklist-items`, {
       ...raw,
       clause: raw.clause.trim() || undefined,
+      subclause: raw.subclause.trim() || undefined,
       notes: raw.notes.trim() || undefined,
       standard: this.selectedAudit()?.standard || undefined
     }).subscribe({
       next: () => {
         this.saving.set(false);
         this.message.set('Checklist item added.');
-        this.checklistForm.reset({ clause: '', title: '', notes: '' });
-        this.fetchAudit(this.selectedId() as string);
+        this.checklistForm.reset({
+          clause: this.currentChecklistGroup()?.clause || '',
+          subclause: '',
+          title: '',
+          notes: ''
+        });
+        this.fetchAudit(this.selectedId() as string, { preserveStep: true });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
@@ -1091,7 +1250,11 @@ export class AuditsPageComponent {
     });
   }
 
-  protected updateChecklistItem(item: AuditChecklistItem, patch: { response?: ChecklistResponse | null; notes?: string }) {
+  protected updateChecklistItem(
+    item: AuditChecklistItem,
+    patch: { response?: ChecklistResponse | null; notes?: string },
+    options?: { nextStepOnSuccess?: AuditStep }
+  ) {
     this.saving.set(true);
     this.error.set('');
     this.message.set('');
@@ -1102,7 +1265,13 @@ export class AuditsPageComponent {
       next: () => {
         this.saving.set(false);
         this.message.set('Checklist item updated.');
-        this.fetchAudit(this.selectedId() as string);
+        this.fetchAudit(this.selectedId() as string, { preserveStep: !options?.nextStepOnSuccess });
+        if (options?.nextStepOnSuccess) {
+          this.activeStep.set(options.nextStepOnSuccess);
+          if (options.nextStepOnSuccess === 'review') {
+            this.message.set('Checklist complete. Review findings and finish the audit close-out.');
+          }
+        }
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
@@ -1117,7 +1286,17 @@ export class AuditsPageComponent {
     } else if (this.pendingFindingChecklistId() === item.id && response !== 'NO') {
       this.cancelFindingComposer();
     }
-    this.updateChecklistItem(item, { response });
+
+    const willAddAnswer = !item.response && !!response;
+    const willCompleteChecklist =
+      willAddAnswer &&
+      response !== 'NO' &&
+      this.totalChecklistCount() > 0 &&
+      this.answeredChecklistCount() + 1 >= this.totalChecklistCount();
+
+    this.updateChecklistItem(item, { response }, {
+      nextStepOnSuccess: willCompleteChecklist ? 'review' : undefined
+    });
   }
 
   protected checklistNoteDraft(item: AuditChecklistItem) {
@@ -1146,7 +1325,7 @@ export class AuditsPageComponent {
       next: () => {
         this.saving.set(false);
         this.message.set('Checklist item removed.');
-        this.fetchAudit(this.selectedId() as string);
+        this.fetchAudit(this.selectedId() as string, { preserveStep: true });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
@@ -1173,7 +1352,7 @@ export class AuditsPageComponent {
         this.saving.set(false);
         this.message.set('Finding added.');
         this.findingForm.reset({ title: '', description: '', severity: 'OBSERVATION', ownerId: '', dueDate: '' });
-        this.fetchAudit(this.selectedId() as string);
+        this.fetchAudit(this.selectedId() as string, { preserveStep: true });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
@@ -1206,7 +1385,7 @@ export class AuditsPageComponent {
         this.message.set('Finding recorded. Continue with the checklist.');
         this.selectedFindingId.set(null);
         this.pendingFindingChecklistId.set(null);
-        this.fetchAudit(this.selectedId() as string);
+        this.fetchAudit(this.selectedId() as string, { preserveStep: true });
         this.restoreChecklistScrollSoon();
       },
       error: (error: HttpErrorResponse) => {
@@ -1224,7 +1403,7 @@ export class AuditsPageComponent {
       next: () => {
         this.saving.set(false);
         this.message.set('Finding updated.');
-        this.fetchAudit(this.selectedId() as string);
+        this.fetchAudit(this.selectedId() as string, { preserveStep: true });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
@@ -1246,7 +1425,7 @@ export class AuditsPageComponent {
       next: () => {
         this.saving.set(false);
         this.message.set('CAPA created from audit finding.');
-        this.fetchAudit(this.selectedId() as string);
+        this.fetchAudit(this.selectedId() as string, { preserveStep: true });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
@@ -1284,6 +1463,26 @@ export class AuditsPageComponent {
 
   protected setActiveStep(step: AuditStep) {
     this.activeStep.set(step);
+  }
+
+  protected toggleChecklistBuilder() {
+    if (this.checklistBuilderOpen()) {
+      this.closeChecklistBuilder();
+      return;
+    }
+
+    this.checklistForm.reset({
+      clause: this.currentChecklistGroup()?.clause || '',
+      subclause: '',
+      title: '',
+      notes: ''
+    });
+    this.checklistBuilderOpen.set(true);
+  }
+
+  protected closeChecklistBuilder() {
+    this.checklistBuilderOpen.set(false);
+    this.checklistForm.reset({ clause: '', subclause: '', title: '', notes: '' });
   }
 
   protected toggleChecklist(id: string) {
@@ -1400,8 +1599,103 @@ export class AuditsPageComponent {
     this.message.set('Viewing the linked finding for this checklist question.');
   }
 
+  protected focusChecklistQuestion(finding: AuditFinding) {
+    if (!finding.checklistItemId) {
+      return;
+    }
+
+    const groups = this.checklistGroups();
+    const targetGroupIndex = groups.findIndex((group) =>
+      group.items.some((item) => item.id === finding.checklistItemId)
+    );
+
+    if (targetGroupIndex >= 0) {
+      this.currentClauseIndex.set(targetGroupIndex);
+    }
+
+    this.expandedChecklistId.set(finding.checklistItemId);
+    this.selectedFindingId.set(finding.id);
+    this.activeStep.set('conduct');
+    this.message.set('Returned to the checklist question linked to this finding.');
+  }
+
   protected cleanFindingDescription(description: string) {
     return description.trim();
+  }
+
+  protected isChecklistReadOnly() {
+    return this.selectedAudit()?.status === 'COMPLETED' || this.selectedAudit()?.status === 'CLOSED';
+  }
+
+  protected isChecklistComplete() {
+    return !!this.selectedAudit()?.isChecklistCompleted;
+  }
+
+  protected canCompleteAudit() {
+    return this.isChecklistComplete() && this.closeoutForm.valid && this.selectedAudit()?.status !== 'COMPLETED';
+  }
+
+  protected saveCloseoutDraft() {
+    if (!this.selectedId()) {
+      return;
+    }
+
+    this.saving.set(true);
+    this.error.set('');
+    this.message.set('');
+
+    const raw = this.closeoutForm.getRawValue();
+    this.api.patch<AuditRecord>(`audits/${this.selectedId()}`, {
+      conclusion: raw.conclusion.trim() || undefined,
+      recommendations: raw.recommendations.trim() || undefined,
+      completionDate: raw.completionDate || undefined,
+      completedByAuditorId: raw.completedByAuditorId || undefined
+    }).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.message.set('Audit close-out draft saved.');
+        this.fetchAudit(this.selectedId() as string, { preserveStep: true });
+      },
+      error: (error: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.error.set(this.readError(error, 'Audit close-out could not be saved.'));
+      }
+    });
+  }
+
+  protected completeAudit() {
+    if (!this.selectedId()) {
+      return;
+    }
+
+    if (!this.canCompleteAudit()) {
+      this.closeoutForm.markAllAsTouched();
+      this.error.set('Complete the checklist and all close-out fields before completing the audit.');
+      return;
+    }
+
+    this.saving.set(true);
+    this.error.set('');
+    this.message.set('');
+
+    const raw = this.closeoutForm.getRawValue();
+    this.api.patch<AuditRecord>(`audits/${this.selectedId()}`, {
+      conclusion: raw.conclusion.trim(),
+      recommendations: raw.recommendations.trim(),
+      completionDate: raw.completionDate || undefined,
+      completedByAuditorId: raw.completedByAuditorId,
+      status: 'COMPLETED'
+    }).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.message.set('Audit completed successfully.');
+        this.fetchAudit(this.selectedId() as string, { preserveStep: true });
+      },
+      error: (error: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.error.set(this.readError(error, 'Audit completion failed.'));
+      }
+    });
   }
 
   protected updateAuditStatus(status: AuditStatus) {
@@ -1415,8 +1709,16 @@ export class AuditsPageComponent {
     this.api.patch<AuditRecord>(`audits/${this.selectedId()}`, { status }).subscribe({
       next: () => {
         this.saving.set(false);
-        this.message.set(status === 'CLOSED' ? 'Audit closed successfully.' : 'Audit status updated.');
-        this.fetchAudit(this.selectedId() as string);
+        this.message.set(
+          status === 'COMPLETED'
+            ? 'Audit completed successfully.'
+            : status === 'CHECKLIST_COMPLETED'
+              ? 'Checklist marked complete.'
+              : status === 'CLOSED'
+                ? 'Audit closed successfully.'
+                : 'Audit status updated.'
+        );
+        this.fetchAudit(this.selectedId() as string, { preserveStep: true });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
@@ -1427,6 +1729,10 @@ export class AuditsPageComponent {
 
   protected canDeleteAudit() {
     return this.authStore.hasPermission('admin.delete') && this.selectedAudit()?.status === 'PLANNED';
+  }
+
+  protected canManageQuestionBank() {
+    return this.authStore.hasPermission('audits.write');
   }
 
   protected canArchiveAudit() {
@@ -1477,6 +1783,28 @@ export class AuditsPageComponent {
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
         this.error.set(this.readError(error, 'Audit archive failed.'));
+      }
+    });
+  }
+
+  protected generateReport() {
+    if (!this.selectedId()) {
+      return;
+    }
+
+    this.generatingReport.set(true);
+    this.error.set('');
+    this.message.set('');
+
+    this.api.getBlobResponse(`audits/${this.selectedId()}/report`).subscribe({
+      next: (response) => {
+        this.generatingReport.set(false);
+        this.downloadResponse(response, `${this.selectedAudit()?.code || 'audit-report'}.pdf`);
+        this.message.set('Audit report download started.');
+      },
+      error: (error: HttpErrorResponse) => {
+        this.generatingReport.set(false);
+        this.error.set(this.readError(error, 'Audit report could not be generated.'));
       }
     });
   }
@@ -1541,6 +1869,7 @@ export class AuditsPageComponent {
     this.pendingFindingChecklistId.set(null);
     this.selectedFindingId.set(null);
     this.checklistNoteDrafts.set({});
+    this.checklistBuilderOpen.set(false);
     this.draftActionTitle.set(null);
     this.draftActionDescription.set(null);
 
@@ -1575,19 +1904,26 @@ export class AuditsPageComponent {
       summary: '',
       status: 'PLANNED'
     });
-    this.checklistForm.reset({ clause: '', title: '', notes: '' });
+    this.checklistForm.reset({ clause: '', subclause: '', title: '', notes: '' });
     this.findingForm.reset({ title: '', description: '', severity: 'OBSERVATION', ownerId: '', dueDate: '' });
+    this.closeoutForm.reset({
+      conclusion: '',
+      recommendations: '',
+      completionDate: '',
+      completedByAuditorId: ''
+    });
   }
 
-  private fetchAudit(id: string) {
+  private fetchAudit(id: string, options?: { preserveStep?: boolean }) {
     this.loading.set(true);
     this.api.get<AuditRecord>(`audits/${id}`).subscribe({
       next: (audit) => {
         const currentExpandedId = this.expandedChecklistId();
         const currentClauseIndex = this.currentClauseIndex();
+        const currentStep = this.activeStep();
         this.loading.set(false);
         this.selectedAudit.set(audit);
-        this.activeStep.set(this.deriveStep(audit));
+        this.activeStep.set(options?.preserveStep ? currentStep : this.deriveStep(audit));
         this.checklistNoteDrafts.set(
           Object.fromEntries((audit.checklistItems || []).map((item) => [item.id, item.notes ?? '']))
         );
@@ -1609,6 +1945,12 @@ export class AuditsPageComponent {
           scheduledAt: audit.scheduledAt?.slice(0, 10) ?? '',
           summary: audit.summary ?? '',
           status: audit.status
+        });
+        this.closeoutForm.reset({
+          conclusion: audit.conclusion ?? '',
+          recommendations: audit.recommendations ?? '',
+          completionDate: audit.completedAt?.slice(0, 10) ?? this.todayIso(),
+          completedByAuditorId: audit.completedByAuditorId ?? audit.leadAuditorId ?? ''
         });
       },
       error: (error: HttpErrorResponse) => {
@@ -1637,7 +1979,7 @@ export class AuditsPageComponent {
   }
 
   private deriveStep(audit: AuditRecord): AuditStep {
-    if (audit.status === 'COMPLETED' || audit.status === 'CLOSED' || (audit.findingCount || 0) > 0) {
+    if (audit.status === 'CHECKLIST_COMPLETED' || audit.status === 'COMPLETED' || audit.status === 'CLOSED') {
       return 'review';
     }
 
@@ -1651,5 +1993,26 @@ export class AuditsPageComponent {
   private readError(error: HttpErrorResponse, fallback: string) {
     const message = error.error?.message;
     return Array.isArray(message) ? message.join(', ') : (message as string) || fallback;
+  }
+
+  private downloadResponse(response: HttpResponse<Blob>, fallbackName: string) {
+    const blob = response.body;
+    if (!blob) {
+      return;
+    }
+
+    const disposition = response.headers.get('content-disposition') || '';
+    const match = disposition.match(/filename="(.+?)"/i);
+    const fileName = match?.[1] || fallbackName;
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(objectUrl);
+  }
+
+  private todayIso() {
+    return new Date().toISOString().slice(0, 10);
   }
 }
