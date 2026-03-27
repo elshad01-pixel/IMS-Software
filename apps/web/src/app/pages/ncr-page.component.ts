@@ -269,11 +269,7 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
 
       <section *ngIf="canRead() && mode() === 'detail' && selectedNcr()" class="page-stack detail-layout">
         <div class="page-stack">
-          <section class="debug-render-banner">
-            REAL RENDERED COMPONENT TEST: NcrPageComponent detail route
-          </section>
-
-          <section class="card detail-card">
+    <section class="card detail-card">
             <div class="section-head">
               <div>
                 <span class="section-eyebrow">Nonconformance</span>
