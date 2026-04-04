@@ -114,7 +114,7 @@ type AuditRecord = {
         <a *ngIf="mode() === 'list' && canWriteAudit()" routerLink="/audits/new" class="button-link">+ New audit</a>
         <a *ngIf="mode() === 'list' && canManageQuestionBank()" routerLink="/audits/checklist-question-bank" class="button-link secondary">Checklist question bank</a>
         <button *ngIf="mode() === 'detail' && selectedAudit()" type="button" class="button-link secondary" [disabled]="generatingReport()" (click)="generateReport()">
-          {{ generatingReport() ? 'Generating report...' : 'Generate Report' }}
+          {{ generatingReport() ? 'Preparing PDF...' : 'Download PDF report' }}
         </button>
         <a *ngIf="mode() === 'detail' && selectedAudit() && canWriteAudit()" [routerLink]="['/audits', selectedAudit()?.id, 'edit']" class="button-link">Edit audit</a>
         <button *ngIf="mode() === 'detail' && canDeleteAudit()" type="button" class="button-link danger" (click)="deleteAudit()">Delete audit</button>
@@ -297,7 +297,7 @@ type AuditRecord = {
                 {{ selectedAudit()?.isChecklistCompleted ? 'Review findings' : 'Continue checklist' }}
               </button>
               <button *ngIf="selectedAudit()?.status === 'COMPLETED' || selectedAudit()?.status === 'CLOSED'" type="button" class="secondary" [disabled]="generatingReport()" (click)="generateReport()">
-                {{ generatingReport() ? 'Generating report...' : 'Generate Report' }}
+                {{ generatingReport() ? 'Preparing PDF...' : 'Download PDF report' }}
               </button>
               <button *ngIf="selectedAudit()?.findingCount" type="button" class="secondary" (click)="setActiveStep('review')">Review findings</button>
             </div>
@@ -652,6 +652,15 @@ type AuditRecord = {
               </div>
             </div>
 
+            <section class="detail-section top-space" *ngIf="(selectedAudit()?.findings || []).length">
+              <h4>Traceability path</h4>
+              <p>{{ findingsTraceabilityCopy() }}</p>
+              <div class="button-row top-space">
+                <button type="button" class="secondary" (click)="scrollToAuditActions()">Open linked actions</button>
+                <button *ngIf="selectedAudit()?.findingCount" type="button" class="tertiary" (click)="setActiveStep('conduct')">Review checklist evidence</button>
+              </div>
+            </section>
+
             <div class="empty-state top-space" *ngIf="!(selectedAudit()?.findings || []).length">
               <strong>No findings yet</strong>
               <span>The audit can still be completed. Add findings only where a requirement was not met during checklist execution.</span>
@@ -673,18 +682,21 @@ type AuditRecord = {
                   </button>
                   <a *ngIf="finding.linkedCapaId" [routerLink]="['/capa', finding.linkedCapaId]" class="button-link secondary compact">Open CAPA</a>
                   <button type="button" class="secondary" [disabled]="saving() || !canCreateActions()" (click)="prepareActionFromFinding(finding)">Create corrective action</button>
+                  <button type="button" class="tertiary" (click)="scrollToAuditActions()">Open linked actions</button>
                   <button type="button" class="secondary" [disabled]="saving() || finding.status === 'CLOSED' || !canWriteAudit()" (click)="updateFindingStatus(finding, 'CLOSED')">Close finding</button>
                 </div>
               </article>
             </div>
           </section>
 
-          <iso-record-work-items
-            [sourceType]="'audit'"
-            [sourceId]="selectedId()"
-            [draftTitle]="draftActionTitle()"
-            [draftDescription]="draftActionDescription()"
-          />
+          <div id="audit-actions-section">
+            <iso-record-work-items
+              [sourceType]="'audit'"
+              [sourceId]="selectedId()"
+              [draftTitle]="draftActionTitle()"
+              [draftDescription]="draftActionDescription()"
+            />
+          </div>
 
           <section class="card panel-card">
             <div class="section-head">
@@ -1668,8 +1680,20 @@ export class AuditsPageComponent {
     this.message.set('Returned to the checklist question linked to this finding.');
   }
 
+  protected scrollToAuditActions() {
+    const section = document.getElementById('audit-actions-section');
+    section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   protected cleanFindingDescription(description: string) {
     return description.trim();
+  }
+
+  protected findingsTraceabilityCopy() {
+    const findings = this.selectedAudit()?.findings || [];
+    const capaLinkedCount = findings.filter((finding) => !!finding.linkedCapaId).length;
+    const actionCount = this.selectedAudit()?.actionItemCount || 0;
+    return `Follow the chain from checklist evidence to finding, then into ${capaLinkedCount ? `${capaLinkedCount} linked CAPA record${capaLinkedCount === 1 ? '' : 's'}` : 'CAPA only where needed'} and ${actionCount} linked audit action${actionCount === 1 ? '' : 's'}.`;
   }
 
   protected auditNextStepsCopy() {
@@ -1875,11 +1899,11 @@ export class AuditsPageComponent {
       next: (response) => {
         this.generatingReport.set(false);
         this.downloadResponse(response, `${this.selectedAudit()?.code || 'audit-report'}.pdf`);
-        this.message.set('Audit report download started.');
+        this.message.set('Audit PDF download started.');
       },
       error: (error: HttpErrorResponse) => {
         this.generatingReport.set(false);
-        this.error.set(this.readError(error, 'Audit report could not be generated.'));
+        this.error.set(this.readError(error, 'Audit PDF could not be prepared.'));
       }
     });
   }

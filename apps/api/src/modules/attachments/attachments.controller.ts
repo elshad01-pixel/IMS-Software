@@ -17,7 +17,6 @@ export class AttachmentsController {
   constructor(private readonly attachmentsService: AttachmentsService) {}
 
   @Get(':attachmentId/download')
-  @Permissions('dashboard.read')
   async download(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { sub: string },
@@ -32,17 +31,16 @@ export class AttachmentsController {
   }
 
   @Get(':sourceType/:sourceId')
-  @Permissions('dashboard.read')
   list(
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { sub: string },
     @Param('sourceType') sourceType: string,
     @Param('sourceId') sourceId: string
   ) {
-    return this.attachmentsService.list(tenantId, sourceType, sourceId);
+    return this.attachmentsService.list(tenantId, user.sub, sourceType, sourceId);
   }
 
   @Post(':sourceType/:sourceId')
-  @Permissions('attachments.write')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   upload(

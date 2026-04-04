@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Input, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 
@@ -21,10 +22,15 @@ type ActionItem = {
   owner?: UserOption | null;
 };
 
+type ReturnNavigation = {
+  route: string[];
+  label: string;
+};
+
 @Component({
   selector: 'iso-record-work-items',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <section class="page-grid" *ngIf="sourceId; else emptyState">
       <div class="card panel">
@@ -60,15 +66,18 @@ type ActionItem = {
                 {{ item.dueDate ? ' | due ' + item.dueDate.slice(0, 10) : '' }}
                 {{ isOverdue(item) ? ' | overdue' : '' }}
               </small>
+              <a [routerLink]="['/actions']" [queryParams]="{ focusActionId: item.id }" [state]="actionLinkState()" class="table-link action-link">Open in action tracker</a>
             </div>
-            <button
-              type="button"
-              class="ghost"
-              (click)="completeActionItem(item.id)"
-              [disabled]="item.status === 'DONE' || actionsSaving() || !canWriteActions()"
-            >
-              {{ item.status === 'DONE' ? 'Done' : 'Complete' }}
-            </button>
+            <div class="button-row compact-row">
+              <button
+                type="button"
+                class="ghost"
+                (click)="completeActionItem(item.id)"
+                [disabled]="item.status === 'DONE' || actionsSaving() || !canWriteActions()"
+              >
+                {{ item.status === 'DONE' ? 'Done' : 'Complete' }}
+              </button>
+            </div>
           </li>
         </ul>
 
@@ -125,8 +134,8 @@ type ActionItem = {
 
     <ng-template #emptyState>
       <section class="card empty">
-        <span class="pill">Work Items</span>
-        <p>Select a record to manage follow-up actions and attachments.</p>
+        <span class="pill">Actions</span>
+        <p>Save the record first to review or assign linked actions.</p>
       </section>
     </ng-template>
   `,
@@ -227,6 +236,21 @@ type ActionItem = {
       font-size: 0.92rem;
     }
 
+    .table-link {
+      color: var(--brand-strong);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .table-link:hover {
+      text-decoration: underline;
+    }
+
+    .action-link {
+      margin-top: 0.15rem;
+      font-size: 0.92rem;
+    }
+
     .actions-section {
       display: grid;
       gap: 0.45rem;
@@ -279,6 +303,7 @@ export class RecordWorkItemsComponent implements OnChanges {
   @Input() sourceId: string | null = null;
   @Input() draftTitle: string | null = null;
   @Input() draftDescription: string | null = null;
+  @Input() returnNavigation: ReturnNavigation | null = null;
 
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
@@ -481,6 +506,10 @@ export class RecordWorkItemsComponent implements OnChanges {
     if (this.sourceType === 'ncr') return 'Add Corrective Action';
     if (this.sourceType === 'risk') return 'Create Action';
     return 'Add Action';
+  }
+
+  protected actionLinkState() {
+    return this.returnNavigation ? { returnNavigation: this.returnNavigation } : undefined;
   }
 
   protected isOverdue(item: ActionItem) {

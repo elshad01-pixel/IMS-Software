@@ -395,6 +395,7 @@ type SourceContextNavigation = {
               <span>{{ nextStepsCopy(selectedRisk()?.assessmentType || 'RISK') }}</span>
               <div class="button-row top-space">
                 <button type="button" (click)="scrollToActions()">{{ selectedRisk()?.assessmentType === 'OPPORTUNITY' ? 'Create Action' : 'Create mitigation action' }}</button>
+                <button type="button" class="secondary" (click)="scrollToEvidence()">Review evidence</button>
                 <a *ngIf="sourceContextNavigation()" [routerLink]="sourceContextNavigation()!.route" class="button-link secondary">Review source issue</a>
                 <a routerLink="/risks" class="button-link tertiary">Review risks</a>
               </div>
@@ -456,7 +457,7 @@ type SourceContextNavigation = {
                     <p class="subtle">{{ linkedActionCopy(selectedRisk()?.assessmentType || 'RISK') }}</p>
                   </div>
                 </div>
-                <iso-record-work-items [sourceType]="'risk'" [sourceId]="selectedId()" />
+                <iso-record-work-items [sourceType]="'risk'" [sourceId]="selectedId()" [returnNavigation]="sourceContextNavigation()" />
               </div>
             </section>
 
@@ -496,7 +497,37 @@ type SourceContextNavigation = {
         </div>
 
         <div class="page-stack">
-          <iso-attachment-panel [sourceType]="'risk'" [sourceId]="selectedId()" />
+          <section class="card panel-card">
+            <div class="section-head">
+              <div>
+                <span class="section-eyebrow">Evidence trail</span>
+                <h3>Traceability</h3>
+                <p class="subtle">Keep the source issue, process context, mitigation actions, and supporting evidence aligned to this record.</p>
+              </div>
+            </div>
+            <dl class="key-value top-space">
+              <dt>Source issue</dt>
+              <dd>
+                <ng-container *ngIf="sourceContextNavigation(); else noRiskSource">
+                  <a [routerLink]="sourceContextNavigation()!.route" class="table-link">Open {{ sourceContextNavigation()!.label }}</a>
+                </ng-container>
+                <ng-template #noRiskSource>{{ selectedRisk()?.issueContext || 'No source issue linked.' }}</ng-template>
+              </dd>
+              <dt>Process context</dt>
+              <dd>{{ currentProcessContext() || 'No process linked.' }}</dd>
+              <dt>Linked actions</dt>
+              <dd>{{ linkedActionSummary(selectedRisk()?.assessmentType || 'RISK') }}</dd>
+            </dl>
+            <div class="button-row top-space">
+              <a *ngIf="sourceContextNavigation()" [routerLink]="sourceContextNavigation()!.route" class="button-link secondary">Open source issue</a>
+              <button type="button" class="secondary" (click)="scrollToActions()">Review linked actions</button>
+              <button type="button" class="tertiary" (click)="scrollToEvidence()">Review evidence</button>
+            </div>
+          </section>
+
+          <div id="risk-evidence-section">
+            <iso-attachment-panel [sourceType]="'risk'" [sourceId]="selectedId()" />
+          </div>
         </div>
       </section>
     </section>
@@ -1024,8 +1055,17 @@ export class RisksPageComponent implements OnInit, OnChanges {
       ? 'Actions raised from this opportunity stay linked here so realization work is easy to review without leaving the record.'
       : 'Actions raised from this record stay linked here so treatment work is easy to review without leaving the risk flow.';
   }
+  protected linkedActionSummary(type: RiskAssessmentType) {
+    return type === 'OPPORTUNITY'
+      ? 'Use linked actions to assign realization work, ownership, and due dates.'
+      : 'Use linked actions to assign mitigation work, ownership, and due dates.';
+  }
   protected scrollToActions() {
     const section = document.getElementById('risk-actions-section');
+    section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  protected scrollToEvidence() {
+    const section = document.getElementById('risk-evidence-section');
     section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   protected cancelRoute() {

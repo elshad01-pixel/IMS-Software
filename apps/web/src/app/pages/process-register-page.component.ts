@@ -44,6 +44,7 @@ type ProcessRow = {
   links?: ProcessLink[];
 };
 type LinkCandidate = { id: string; label: string };
+type ReturnNavigation = { route: string[]; label: string };
 
 @Component({
   selector: 'iso-process-register-page',
@@ -55,6 +56,7 @@ type LinkCandidate = { id: string; label: string };
         <a *ngIf="mode() === 'list' && canWrite()" routerLink="/process-register/new" class="button-link">+ New process</a>
         <a *ngIf="mode() === 'detail' && selectedProcess() && canWrite()" [routerLink]="['/process-register', selectedId(), 'edit']" class="button-link">Edit process</a>
         <button *ngIf="mode() === 'detail' && selectedProcess() && canDelete()" type="button" class="button-link danger" (click)="archiveProcess()">Archive</button>
+        <a *ngIf="returnNavigation()" [routerLink]="returnNavigation()!.route" class="button-link tertiary">Back to {{ returnNavigation()!.label }}</a>
         <a *ngIf="mode() !== 'list'" routerLink="/process-register" class="button-link secondary">Back</a>
       </iso-page-header>
 
@@ -245,6 +247,30 @@ type LinkCandidate = { id: string; label: string };
           <section class="card detail-card">
             <div class="section-head">
               <div>
+                <span class="section-eyebrow">Traceability</span>
+                <h3>At a glance</h3>
+                <p class="subtle">Use this process as a review hub for the records already linked to it, without changing their original workflows.</p>
+              </div>
+            </div>
+
+            <div class="summary-strip top-space">
+              <article class="summary-item"><span>Risks</span><strong>{{ linkCountByType('RISK') }}</strong></article>
+              <article class="summary-item"><span>Audits</span><strong>{{ linkCountByType('AUDIT') }}</strong></article>
+              <article class="summary-item"><span>NCRs</span><strong>{{ linkCountByType('NCR') }}</strong></article>
+              <article class="summary-item"><span>Actions</span><strong>{{ linkCountByType('ACTION') }}</strong></article>
+            </div>
+
+            <div class="button-row top-space">
+              <a *ngIf="firstLinkByType('RISK') as firstRisk" [routerLink]="linkRoute(firstRisk)" [queryParams]="linkQueryParams(firstRisk)" [state]="linkState(firstRisk)" class="button-link secondary">Open linked risk</a>
+              <a *ngIf="firstLinkByType('AUDIT') as firstAudit" [routerLink]="linkRoute(firstAudit)" [queryParams]="linkQueryParams(firstAudit)" [state]="linkState(firstAudit)" class="button-link secondary">Open linked audit</a>
+              <a *ngIf="firstLinkByType('NCR') as firstNcr" [routerLink]="linkRoute(firstNcr)" [queryParams]="linkQueryParams(firstNcr)" [state]="linkState(firstNcr)" class="button-link tertiary">Open linked NCR</a>
+              <a *ngIf="firstLinkByType('ACTION') as firstAction" [routerLink]="linkRoute(firstAction)" [queryParams]="linkQueryParams(firstAction)" [state]="linkState(firstAction)" class="button-link tertiary">Open linked action</a>
+            </div>
+          </section>
+
+          <section class="card detail-card">
+            <div class="section-head">
+              <div>
                 <span class="section-eyebrow">Linked records</span>
                 <h3>Process linkage hub</h3>
                 <p class="subtle">View and connect existing IMS records without changing their original workflows.</p>
@@ -283,7 +309,7 @@ type LinkCandidate = { id: string; label: string };
                       </div>
                       <div class="route-context">
                         <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
-                        <a *ngIf="link.path && !link.missing" [routerLink]="link.path" class="button-link secondary">Open</a>
+                        <a *ngIf="link.path && !link.missing" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link secondary">Open</a>
                         <button *ngIf="canWrite()" type="button" class="button-link tertiary" (click)="removeLink(link.id)">Remove</button>
                       </div>
                     </div>
@@ -377,6 +403,7 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
   protected readonly linkCandidates = signal<LinkCandidate[]>([]);
   protected readonly activeLinkComposerType = signal<LinkType | null>(null);
   protected readonly selectedTemplateId = signal('');
+  protected readonly returnNavigation = signal<ReturnNavigation | null>(null);
   protected readonly linkTypes: LinkType[] = ['DOCUMENT', 'RISK', 'AUDIT', 'KPI', 'ACTION', 'NCR', 'CONTEXT_ISSUE'];
   protected readonly visibleLinkTypes: LinkType[] = ['RISK', 'AUDIT', 'DOCUMENT', 'NCR', 'ACTION', 'CONTEXT_ISSUE'];
 
@@ -492,6 +519,23 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
   protected archivedCount() { return this.processes().filter((item) => item.status === 'ARCHIVED').length; }
   protected linksByType(type: LinkType) {
     return (this.selectedProcess()?.links || []).filter((link) => link.linkType === type);
+  }
+  protected linkCountByType(type: LinkType) {
+    return this.linksByType(type).length;
+  }
+  protected firstLinkByType(type: LinkType) {
+    return this.linksByType(type).find((link) => !!link.path && !link.missing) ?? null;
+  }
+  protected linkRoute(link: ProcessLink) {
+    return link.path || '/process-register';
+  }
+  protected linkQueryParams(link: ProcessLink) {
+    return link.linkType === 'ACTION' ? { focusActionId: link.linkedId } : undefined;
+  }
+  protected linkState(link: ProcessLink) {
+    return link.linkType === 'ACTION' && this.returnNavigation()
+      ? { returnNavigation: this.returnNavigation() }
+      : undefined;
   }
 
   protected pageTitle() {
@@ -632,6 +676,7 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
     this.selectedId.set(id);
     this.message.set((history.state?.notice as string) || '');
     this.error.set('');
+    this.returnNavigation.set((history.state?.returnNavigation as ReturnNavigation | undefined) ?? null);
     if (this.mode() === 'list') {
       this.selectedProcess.set(null);
       this.resetForms();

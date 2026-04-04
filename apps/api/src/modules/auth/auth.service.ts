@@ -66,7 +66,6 @@ const systemRoleDefinitions = [
       'training.read',
       'ncr.read',
       'reports.read',
-      'attachments.write',
       'action-items.write'
     ]
   }

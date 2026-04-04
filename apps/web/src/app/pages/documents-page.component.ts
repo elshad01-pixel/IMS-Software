@@ -277,6 +277,16 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
               </article>
             </div>
 
+            <section class="feedback next-steps-banner success top-space" *ngIf="message() && !error()">
+              <strong>{{ message() }}</strong>
+              <span>{{ documentNextStepsCopy() }}</span>
+              <div class="button-row top-space">
+                <button type="button" (click)="scrollToLifecycle()">Review lifecycle</button>
+                <button type="button" class="secondary" (click)="scrollToDocumentActions()">Review actions</button>
+                <button type="button" class="secondary" (click)="scrollToDocumentEvidence()">Review evidence</button>
+              </div>
+            </section>
+
             <div class="page-stack top-space">
               <section class="detail-section">
                 <h4>Summary</h4>
@@ -298,7 +308,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
             </dl>
           </section>
 
-          <section class="card panel-card">
+          <section id="document-lifecycle-section" class="card panel-card">
             <div class="section-head">
               <div>
                 <span class="section-eyebrow">Lifecycle</span>
@@ -315,11 +325,24 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
             <p class="feedback top-space" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
           </section>
 
-          <iso-record-work-items [sourceType]="'document'" [sourceId]="selectedId()" />
+          <div id="document-actions-section">
+            <iso-record-work-items [sourceType]="'document'" [sourceId]="selectedId()" />
+          </div>
         </div>
 
         <div class="page-stack">
-          <iso-attachment-panel [sourceType]="'document'" [sourceId]="selectedId()" />
+          <section class="card panel-card">
+            <div class="section-head">
+              <div>
+                <span class="section-eyebrow">Evidence trail</span>
+                <h3>Document evidence</h3>
+                <p class="subtle">Keep supporting files and related actions with the controlled record so lifecycle review and revision history stay easy to follow.</p>
+              </div>
+            </div>
+          </section>
+          <div id="document-evidence-section">
+            <iso-attachment-panel [sourceType]="'document'" [sourceId]="selectedId()" />
+          </div>
         </div>
       </section>
     </section>
@@ -328,6 +351,15 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
     .filter-space,
     .top-space {
       margin-top: 1rem;
+    }
+
+    .next-steps-banner {
+      display: grid;
+      gap: 0.35rem;
+      padding: 1rem 1.1rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(47, 107, 69, 0.16);
+      background: rgba(47, 107, 69, 0.08);
     }
 
     tr[routerLink] {
@@ -473,6 +505,16 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
     if (status === 'OBSOLETE') return 'Mark obsolete';
     return 'Return to draft';
   }
+  protected documentNextStepsCopy() {
+    const status = this.selectedDocument()?.status;
+    if (status === 'APPROVED') {
+      return 'Next: review evidence, confirm linked actions, and keep the review due date current.';
+    }
+    if (status === 'REVIEW') {
+      return 'Next: review the lifecycle step, confirm evidence is complete, and move the document toward approval.';
+    }
+    return 'Next: confirm lifecycle details, review evidence, and keep linked actions up to date.';
+  }
 
   protected save() {
     if (!this.canWrite()) {
@@ -515,6 +557,15 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
 
   protected canArchiveDocument() {
     return this.authStore.hasPermission('admin.delete') && this.selectedDocument()?.status === 'APPROVED';
+  }
+  protected scrollToLifecycle() {
+    document.getElementById('document-lifecycle-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  protected scrollToDocumentActions() {
+    document.getElementById('document-actions-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  protected scrollToDocumentEvidence() {
+    document.getElementById('document-evidence-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   protected deleteDocument() {

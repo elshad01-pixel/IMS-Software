@@ -2,10 +2,10 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 import { PageHeaderComponent } from '../shared/page-header.component';
-import { RouterLink } from '@angular/router';
 
 type UserOption = {
   id: string;
@@ -30,6 +30,11 @@ type ActionRecord = {
   owner?: UserOption | null;
 };
 
+type ReturnNavigation = {
+  route: string[];
+  label: string;
+};
+
 @Component({
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, RouterLink],
@@ -40,9 +45,66 @@ type ActionRecord = {
         [title]="'Global action tracker'"
         [description]="'Track follow-up from risks, CAPA, audits, and management review in one operational register.'"
         [breadcrumbs]="[{ label: 'Actions' }]"
-      />
+      >
+        <a *ngIf="returnNavigation()" [routerLink]="returnNavigation()!.route" class="button-link secondary">Back to {{ returnNavigation()!.label }}</a>
+      </iso-page-header>
 
       <section class="page-stack">
+        <section class="card detail-card" *ngIf="focusedAction() as focused">
+          <div class="section-head">
+            <div>
+              <span class="section-eyebrow">Focused action</span>
+              <h3>{{ focused.title }}</h3>
+              <p class="subtle">Review this linked action directly, then continue in the full tracker if needed.</p>
+            </div>
+            <div class="button-row">
+              <a *ngIf="returnNavigation()" [routerLink]="returnNavigation()!.route" class="button-link secondary">Back to {{ returnNavigation()!.label }}</a>
+              <button type="button" class="secondary" (click)="clearFocusedAction()">Back to all actions</button>
+            </div>
+          </div>
+
+          <div class="summary-strip top-space">
+            <article class="summary-item">
+              <span>Status</span>
+              <strong>{{ focused.status }}</strong>
+            </article>
+            <article class="summary-item">
+              <span>Owner</span>
+              <strong>{{ focused.owner ? focused.owner.firstName + ' ' + focused.owner.lastName : 'Unassigned' }}</strong>
+            </article>
+            <article class="summary-item">
+              <span>Due date</span>
+              <strong>{{ focused.dueDate ? (focused.dueDate | date:'yyyy-MM-dd') : 'Not set' }}</strong>
+            </article>
+          </div>
+
+          <div class="section-grid-2 top-space">
+            <section class="detail-section">
+              <h4>Description</h4>
+              <p>{{ focused.description || 'No description provided.' }}</p>
+            </section>
+            <section class="detail-section">
+              <h4>Source</h4>
+              <p>{{ focused.sourceLabel }} | {{ focused.sourceTitle }}</p>
+              <div class="button-row top-space" *ngIf="sourceRoute(focused) as route">
+                <a [routerLink]="route" class="button-link secondary">Open source record</a>
+              </div>
+            </section>
+          </div>
+
+          <div class="detail-section top-space">
+            <h4>Update status</h4>
+            <div class="button-row top-space">
+              <select [value]="focused.status" [disabled]="!canWriteActions()" (change)="updateStatus(focused, readStatus($event))">
+                <option>OPEN</option>
+                <option>IN_PROGRESS</option>
+                <option>DONE</option>
+                <option>CANCELLED</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
         <div class="card list-card">
           <div class="section-head">
             <div>
@@ -121,7 +183,7 @@ type ActionRecord = {
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let action of actions()">
+                <tr *ngFor="let action of actions()" [class.focused-row]="focusedActionId() === action.id">
                   <td>
                     <div class="table-title">
                       <strong>{{ action.title }}</strong>
@@ -168,18 +230,33 @@ type ActionRecord = {
     .table-link:hover {
       text-decoration: underline;
     }
+
+    .focused-row {
+      outline: 2px solid rgba(36, 79, 61, 0.22);
+      outline-offset: -2px;
+      background: rgba(36, 79, 61, 0.05);
+    }
+
+    .top-space {
+      margin-top: 1rem;
+    }
   `]
 })
 export class ActionsPageComponent {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   protected readonly users = signal<UserOption[]>([]);
   protected readonly actions = signal<ActionRecord[]>([]);
   protected readonly loading = signal(false);
   protected readonly message = signal('');
   protected readonly error = signal('');
+  protected readonly focusedActionId = signal<string | null>(null);
+  protected readonly focusedAction = computed(() => this.actions().find((action) => action.id === this.focusedActionId()) ?? null);
+  protected readonly returnNavigation = signal<ReturnNavigation | null>(null);
   protected readonly sourceTypeLabels = computed(() => ({
     risk: 'Risk',
     capa: 'CAPA',
@@ -199,6 +276,10 @@ export class ActionsPageComponent {
 
   constructor() {
     this.api.get<UserOption[]>('users').subscribe((users) => this.users.set(users));
+    this.route.queryParamMap.subscribe((params) => {
+      this.focusedActionId.set(params.get('focusActionId'));
+      this.returnNavigation.set((history.state?.returnNavigation as ReturnNavigation | undefined) ?? null);
+    });
     this.reload();
   }
 
@@ -294,6 +375,10 @@ export class ActionsPageComponent {
       default:
         return null;
     }
+  }
+
+  protected clearFocusedAction() {
+    void this.router.navigate(['/actions']);
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

@@ -336,6 +336,7 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
                   {{ selectedNcr()?.status === 'OPEN' || selectedNcr()?.status === 'UNDER_REVIEW' ? 'Continue investigation' : 'Review actions' }}
                 </button>
                 <button type="button" class="secondary" (click)="setDetailTab('comments')">Open comments</button>
+                <button type="button" class="secondary" (click)="setDetailTab('activity')">Review evidence</button>
               </div>
             </section>
           </section>
@@ -428,9 +429,9 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
           <section *ngIf="activeDetailTab() === 'activity'" class="card panel-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Activity</span>
-                <h3>Activity log</h3>
-                <p class="subtle">Backend audit events for this NCR record.</p>
+                <span class="section-eyebrow">Evidence trail</span>
+                <h3>Activity & evidence</h3>
+                <p class="subtle">Review lifecycle history and supporting evidence for this NCR in one place.</p>
               </div>
             </div>
             <div class="entity-list top-space" *ngIf="activity().length; else noActivity">
@@ -439,7 +440,7 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
                 <small>{{ item.createdAt | date:'yyyy-MM-dd HH:mm' }}</small>
               </div>
             </div>
-            <ng-template #noActivity><div class="empty-state top-space"><strong>No activity yet</strong><span>Lifecycle events will appear here as the NCR changes.</span></div></ng-template>
+            <ng-template #noActivity><div class="empty-state top-space"><strong>No activity yet</strong><span>Lifecycle events and evidence updates will appear here as the NCR progresses.</span></div></ng-template>
             <iso-attachment-panel class="top-space" [sourceType]="'ncr'" [sourceId]="selectedId()" />
           </section>
         </div>

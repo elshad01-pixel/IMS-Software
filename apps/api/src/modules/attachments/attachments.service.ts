@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Client } from 'minio';
 import { randomUUID } from 'node:crypto';
@@ -8,6 +8,17 @@ import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @Injectable()
 export class AttachmentsService {
+  private readonly attachmentPermissionMap: Record<string, { read: string; write: string }> = {
+    document: { read: 'documents.read', write: 'documents.write' },
+    risk: { read: 'risks.read', write: 'risks.write' },
+    capa: { read: 'capa.read', write: 'capa.write' },
+    audit: { read: 'audits.read', write: 'audits.write' },
+    'audit-checklist-item': { read: 'audits.read', write: 'audits.write' },
+    'management-review': { read: 'management-review.read', write: 'management-review.write' },
+    ncr: { read: 'ncr.read', write: 'ncr.write' },
+    settings: { read: 'settings.read', write: 'settings.write' }
+  };
+
   private readonly minioClient: Client;
   private readonly bucket: string;
 
@@ -27,7 +38,9 @@ export class AttachmentsService {
     void this.ensureBucket();
   }
 
-  list(tenantId: string, sourceType: string, sourceId: string) {
+  async list(tenantId: string, actorId: string, sourceType: string, sourceId: string) {
+    await this.ensureSourcePermission(tenantId, actorId, sourceType, 'read');
+    await this.ensureSourceRecordExists(tenantId, sourceType, sourceId);
     return this.prisma.attachment.findMany({
       where: { tenantId, sourceType, sourceId, deletedAt: null },
       orderBy: { createdAt: 'desc' }
@@ -42,6 +55,8 @@ export class AttachmentsService {
     if (!attachment) {
       throw new NotFoundException('Attachment not found.');
     }
+
+    await this.ensureSourcePermission(tenantId, actorId, attachment.sourceType, 'read');
 
     const objectStream = await this.minioClient.getObject(this.bucket, attachment.objectKey);
 
@@ -72,6 +87,9 @@ export class AttachmentsService {
       mimetype: string;
     }
   ) {
+    await this.ensureSourcePermission(tenantId, actorId, sourceType, 'write');
+    await this.ensureSourceRecordExists(tenantId, sourceType, sourceId);
+
     const objectKey = `${tenantId}/${sourceType}/${sourceId}/${randomUUID()}-${file.originalname}`;
     await this.minioClient.putObject(this.bucket, objectKey, file.buffer, file.size, {
       'Content-Type': file.mimetype
@@ -137,6 +155,81 @@ export class AttachmentsService {
     const exists = await this.minioClient.bucketExists(this.bucket).catch(() => false);
     if (!exists) {
       await this.minioClient.makeBucket(this.bucket);
+    }
+  }
+
+  private async ensureSourcePermission(
+    tenantId: string,
+    actorId: string,
+    sourceType: string,
+    mode: 'read' | 'write'
+  ) {
+    const permissions = this.attachmentPermissionMap[sourceType];
+    if (!permissions) {
+      throw new BadRequestException(`Attachments are not supported for source type "${sourceType}".`);
+    }
+
+    const user = await this.prisma.user.findFirst({
+      where: { id: actorId, tenantId, isActive: true },
+      select: {
+        role: {
+          select: {
+            permissions: {
+              select: {
+                permission: {
+                  select: {
+                    key: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const permissionKey = permissions[mode];
+    const permissionKeys = user?.role?.permissions.map((entry) => entry.permission.key) ?? [];
+
+    if (!permissionKeys.includes(permissionKey)) {
+      throw new ForbiddenException(`Your role does not include ${permissionKey}.`);
+    }
+  }
+
+  private async ensureSourceRecordExists(tenantId: string, sourceType: string, sourceId: string) {
+    let exists = false;
+
+    switch (sourceType) {
+      case 'document':
+        exists = !!(await this.prisma.document.findFirst({ where: { tenantId, id: sourceId, deletedAt: null }, select: { id: true } }));
+        break;
+      case 'risk':
+        exists = !!(await this.prisma.risk.findFirst({ where: { tenantId, id: sourceId, deletedAt: null }, select: { id: true } }));
+        break;
+      case 'capa':
+        exists = !!(await this.prisma.capa.findFirst({ where: { tenantId, id: sourceId, deletedAt: null }, select: { id: true } }));
+        break;
+      case 'audit':
+        exists = !!(await this.prisma.audit.findFirst({ where: { tenantId, id: sourceId, deletedAt: null }, select: { id: true } }));
+        break;
+      case 'audit-checklist-item':
+        exists = !!(await this.prisma.auditChecklistItem.findFirst({ where: { tenantId, id: sourceId }, select: { id: true } }));
+        break;
+      case 'management-review':
+        exists = !!(await this.prisma.managementReview.findFirst({ where: { tenantId, id: sourceId, deletedAt: null }, select: { id: true } }));
+        break;
+      case 'ncr':
+        exists = !!(await this.prisma.ncr.findFirst({ where: { tenantId, id: sourceId, deletedAt: null }, select: { id: true } }));
+        break;
+      case 'settings':
+        exists = sourceId === 'organization-logo';
+        break;
+      default:
+        exists = false;
+    }
+
+    if (!exists) {
+      throw new NotFoundException('Attachment source record was not found.');
     }
   }
 }

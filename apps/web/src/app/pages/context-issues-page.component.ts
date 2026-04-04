@@ -179,6 +179,36 @@ type ProcessCandidate = { id: string; name: string; referenceNo?: string | null;
           <section class="detail-section" *ngIf="mode() === 'edit' && selectedIssue()">
             <div class="section-head compact-head">
               <div>
+                <h4>Traceability</h4>
+                <p class="subtle">Keep this issue connected to the downstream records it shapes, without losing the Clause 4 context it started from.</p>
+              </div>
+            </div>
+
+            <div class="summary-strip top-space">
+              <article class="summary-item">
+                <span>Status</span>
+                <strong>{{ labelize(selectedIssue()?.status || 'OPEN') }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Linked risks</span>
+                <strong>{{ riskLinks().length }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Linked processes</span>
+                <strong>{{ processLinks().length }}</strong>
+              </article>
+            </div>
+
+            <div class="button-row top-space">
+              <button type="button" class="secondary" (click)="createRiskFromIssue()">Create Risk</button>
+              <a *ngIf="firstRiskLinkPath()" [routerLink]="firstRiskLinkPath()" [state]="linkedRiskState()" class="button-link secondary">Open linked risk</a>
+              <a *ngIf="firstProcessLinkPath()" [routerLink]="firstProcessLinkPath()" [state]="linkedProcessState()" class="button-link tertiary">Open linked process</a>
+            </div>
+          </section>
+
+          <section class="detail-section" *ngIf="mode() === 'edit' && selectedIssue()">
+            <div class="section-head compact-head">
+              <div>
                 <h4>Linked risks</h4>
                 <p class="subtle">Risks raised from this issue stay visible here. Use the guided handoff to create a new risk when the issue needs assessment.</p>
               </div>
@@ -199,7 +229,7 @@ type ProcessCandidate = { id: string; name: string; referenceNo?: string | null;
                   </div>
                   <div class="route-context">
                     <span *ngIf="link.status" class="status-badge neutral">{{ labelize(link.status) }}</span>
-                    <a *ngIf="link.path && !link.missing" [routerLink]="link.path" class="button-link secondary compact">Open</a>
+                    <a *ngIf="link.path && !link.missing" [routerLink]="link.path" [state]="linkedRiskState()" class="button-link secondary compact">Open</a>
                     <button type="button" class="button-link tertiary compact" (click)="removeRiskLink(link.id)">Remove</button>
                   </div>
                 </div>
@@ -229,7 +259,7 @@ type ProcessCandidate = { id: string; name: string; referenceNo?: string | null;
                   </div>
                   <div class="route-context">
                     <span *ngIf="link.status" class="status-badge neutral">{{ labelize(link.status) }}</span>
-                    <a *ngIf="link.path && !link.missing" [routerLink]="link.path" class="button-link secondary compact">Open</a>
+                    <a *ngIf="link.path && !link.missing" [routerLink]="link.path" [state]="linkedProcessState()" class="button-link secondary compact">Open</a>
                     <button type="button" class="button-link tertiary compact" (click)="removeProcessLink(link.id)">Remove</button>
                   </div>
                 </div>
@@ -411,6 +441,30 @@ export class ContextIssuesPageComponent implements OnInit, OnChanges {
       return 'Next: review the issue, create a risk if it needs assessment, or link the affected process for clearer context.';
     }
     return 'Next: create a risk if the issue needs assessment, or keep the linked process and risks up to date as the context changes.';
+  }
+  protected firstRiskLinkPath() {
+    return this.riskLinks().find((link) => !!link.path && !link.missing)?.path ?? null;
+  }
+  protected firstProcessLinkPath() {
+    return this.processLinks().find((link) => !!link.path && !link.missing)?.path ?? null;
+  }
+  protected issueReturnNavigation() {
+    const issue = this.selectedIssue();
+    if (!issue?.id) {
+      return null;
+    }
+    return {
+      route: this.editRoute(issue.id),
+      label: this.itemLabel().toLowerCase()
+    };
+  }
+  protected linkedRiskState() {
+    const navigation = this.issueReturnNavigation();
+    return navigation ? { sourceContextNavigation: navigation } : undefined;
+  }
+  protected linkedProcessState() {
+    const navigation = this.issueReturnNavigation();
+    return navigation ? { returnNavigation: navigation } : undefined;
   }
 
   protected save() {

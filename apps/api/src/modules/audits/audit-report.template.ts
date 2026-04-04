@@ -19,6 +19,8 @@ export type AuditReportTemplateData = {
   reportTitle: string;
   systemName: string;
   companyName: string;
+  auditCode: string;
+  auditTitle: string;
   standard: string;
   auditDate: string;
   auditor: string;
@@ -115,6 +117,9 @@ export function buildAuditReportHtml(data: AuditReportTemplateData) {
             padding: 54px 56px;
             min-height: calc(100vh - 92px);
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
           }
           .eyebrow {
             font-size: 11px;
@@ -123,11 +128,36 @@ export function buildAuditReportHtml(data: AuditReportTemplateData) {
             color: #5b6c62;
             margin-bottom: 22px;
           }
+          .cover-intro {
+            max-width: 420px;
+          }
           h1 {
             font-size: 34px;
             margin: 0 0 12px;
             line-height: 1.12;
             font-weight: 700;
+          }
+          .audit-title {
+            margin: 28px 0 0;
+            padding: 18px 20px;
+            border: 1px solid #d7dfda;
+            border-radius: 16px;
+            background: #fbfcfb;
+          }
+          .audit-title strong {
+            display: block;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #5b6c62;
+            margin-bottom: 8px;
+          }
+          .audit-title p {
+            margin: 0;
+            font-size: 18px;
+            line-height: 1.4;
+            color: #173225;
+            font-weight: 600;
           }
           .system-line {
             font-size: 18px;
@@ -143,7 +173,6 @@ export function buildAuditReportHtml(data: AuditReportTemplateData) {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 18px 28px;
-            margin-top: 80px;
           }
           .meta-label {
             font-size: 10px;
@@ -174,6 +203,13 @@ export function buildAuditReportHtml(data: AuditReportTemplateData) {
             color: #5b6c62;
             font-size: 12px;
           }
+          .header-code {
+            margin: 0 0 4px;
+            color: #5b6c62;
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+          }
           h2 {
             margin: 0 0 14px;
             font-size: 20px;
@@ -196,6 +232,9 @@ export function buildAuditReportHtml(data: AuditReportTemplateData) {
             letter-spacing: 0.08em;
             text-transform: uppercase;
             color: #5b6c62;
+          }
+          .summary-card p {
+            margin: 0;
           }
           table {
             width: 100%;
@@ -262,12 +301,22 @@ export function buildAuditReportHtml(data: AuditReportTemplateData) {
       <body>
         <section class="cover page">
           <div class="cover-frame">
-            <div class="eyebrow">${escapeHtml(data.companyName)}</div>
-            <h1>${escapeHtml(data.reportTitle)}</h1>
-            <p class="system-line">${escapeHtml(data.systemName)}</p>
-            <p class="standard-line">${escapeHtml(data.standard)}</p>
+            <div class="cover-intro">
+              <div class="eyebrow">${escapeHtml(data.companyName)}</div>
+              <h1>${escapeHtml(data.reportTitle)}</h1>
+              <p class="system-line">${escapeHtml(data.systemName)}</p>
+              <p class="standard-line">${escapeHtml(data.standard)}</p>
+              <div class="audit-title">
+                <strong>Audit Title</strong>
+                <p>${escapeHtml(data.auditTitle)}</p>
+              </div>
+            </div>
 
             <div class="cover-meta">
+              <div>
+                <div class="meta-label">Audit reference</div>
+                <div class="meta-value">${escapeHtml(data.auditCode)}</div>
+              </div>
               <div>
                 <div class="meta-label">Company</div>
                 <div class="meta-value">${escapeHtml(data.companyName)}</div>
@@ -291,6 +340,7 @@ export function buildAuditReportHtml(data: AuditReportTemplateData) {
         <section class="page">
           <div class="header">
             <div>
+              <p class="header-code">${escapeHtml(data.auditCode)}</p>
               <p class="header-title">${escapeHtml(data.reportTitle)}</p>
               <p class="header-subtitle">${escapeHtml(data.companyName)}</p>
             </div>

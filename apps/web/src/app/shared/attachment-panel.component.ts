@@ -20,31 +20,35 @@ type Attachment = {
     <section class="card panel" *ngIf="sourceId; else emptyState">
       <div class="panel-head">
         <div>
-          <span class="pill">Attachments</span>
-          <h3>Evidence</h3>
-          <p>Upload and download controlled evidence for this record without leaving the workflow.</p>
+          <span class="pill">Evidence</span>
+          <h3>Evidence files</h3>
+          <p>Review and manage supporting files for this record without leaving the workflow.</p>
         </div>
       </div>
 
       <div class="stack">
         <label class="dropzone">
           <span>Select file</span>
-          <input #fileInput type="file" (change)="onFileSelected($event)">
-          <small>{{ selectedFile()?.name || lastUploadedFileName() || 'Choose a file to attach' }}</small>
+          <input #fileInput type="file" [disabled]="!canUploadAttachments()" (change)="onFileSelected($event)">
+          <small>{{ selectedFile()?.name || lastUploadedFileName() || uploadHintCopy() }}</small>
         </label>
         <div class="button-row">
-          <button type="button" [disabled]="!selectedFile() || saving()" (click)="uploadAttachment()">
+          <button type="button" [disabled]="!selectedFile() || saving() || !canUploadAttachments()" (click)="uploadAttachment()">
             {{ saving() ? 'Uploading...' : 'Upload file' }}
           </button>
         </div>
         <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="error()" [class.success]="message() && !error()">
           {{ error() || message() }}
         </p>
+        <div class="empty-state compact-write-state" *ngIf="!canUploadAttachments()">
+          <strong>Read-only evidence</strong>
+          <span>You can review and download evidence here, but uploading files requires write access to this record.</span>
+        </div>
       </div>
 
-      <div class="panel-state" *ngIf="loading()">Loading attachments...</div>
+      <div class="panel-state" *ngIf="loading()">Loading evidence files...</div>
       <div class="empty-state top-space" *ngIf="!loading() && !attachments().length">
-        <strong>No attachments yet</strong>
+        <strong>No evidence files yet</strong>
         <span>Upload the first supporting file to start the evidence trail.</span>
       </div>
       <ul class="list" *ngIf="!loading() && attachments().length">
@@ -68,8 +72,8 @@ type Attachment = {
 
     <ng-template #emptyState>
       <section class="card panel">
-        <span class="pill">Attachments</span>
-        <p class="empty-state">Save the record first to upload supporting files.</p>
+        <span class="pill">Evidence</span>
+        <p class="empty-state">Save the record first to add supporting files.</p>
       </section>
     </ng-template>
   `,
@@ -194,7 +198,10 @@ export class AttachmentPanelComponent implements OnChanges {
   }
 
   uploadAttachment(input?: HTMLInputElement) {
-    if (!this.sourceId || !this.selectedFile()) {
+    if (!this.sourceId || !this.selectedFile() || !this.canUploadAttachments()) {
+      if (!this.canUploadAttachments()) {
+        this.error.set('You do not have permission to upload attachments.');
+      }
       return;
     }
 
@@ -213,12 +220,12 @@ export class AttachmentPanelComponent implements OnChanges {
         if (input) {
           input.value = '';
         }
-        this.message.set(`Attachment uploaded successfully: ${this.lastUploadedFileName()}.`);
+        this.message.set(`Evidence file uploaded: ${this.lastUploadedFileName()}.`);
         this.reload();
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Attachment upload failed.'));
+        this.error.set(this.readError(error, 'Evidence upload failed.'));
       }
     });
   }
@@ -237,17 +244,33 @@ export class AttachmentPanelComponent implements OnChanges {
         anchor.download = attachment.fileName;
         anchor.click();
         URL.revokeObjectURL(objectUrl);
-        this.message.set('Attachment download started.');
+        this.message.set('Evidence download started.');
       },
       error: (error: HttpErrorResponse) => {
         this.downloadingId.set(null);
-        this.error.set(this.readError(error, 'Attachment download failed.'));
+        this.error.set(this.readError(error, 'Evidence download failed.'));
       }
     });
   }
 
   canDeleteAttachments() {
     return this.authStore.hasPermission('admin.delete');
+  }
+
+  canUploadAttachments() {
+    const sourcePermissionMap: Record<string, string> = {
+      document: 'documents.write',
+      risk: 'risks.write',
+      capa: 'capa.write',
+      audit: 'audits.write',
+      'audit-checklist-item': 'audits.write',
+      'management-review': 'management-review.write',
+      ncr: 'ncr.write',
+      settings: 'settings.write'
+    };
+
+    const permission = sourcePermissionMap[this.sourceType];
+    return permission ? this.authStore.hasPermission(permission) : false;
   }
 
   deleteAttachment(attachment: Attachment) {
@@ -265,12 +288,12 @@ export class AttachmentPanelComponent implements OnChanges {
     this.api.delete(`attachments/${attachment.id}`).subscribe({
       next: () => {
         this.saving.set(false);
-        this.message.set(`Attachment deleted: ${attachment.fileName}.`);
+        this.message.set(`Evidence file deleted: ${attachment.fileName}.`);
         this.reload();
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Attachment deletion failed.'));
+        this.error.set(this.readError(error, 'Evidence deletion failed.'));
       }
     });
   }
@@ -295,19 +318,23 @@ export class AttachmentPanelComponent implements OnChanges {
 
     this.loading.set(true);
     this.api.get<Attachment[]>(`attachments/${this.sourceType}/${this.sourceId}`).subscribe({
-      next: (items) => {
-        this.loading.set(false);
-        this.attachments.set(items);
-      },
-      error: (error: HttpErrorResponse) => {
-        this.loading.set(false);
-        this.error.set(this.readError(error, 'Attachments could not be loaded.'));
-      }
-    });
+        next: (items) => {
+          this.loading.set(false);
+          this.attachments.set(items);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.loading.set(false);
+          this.error.set(this.readError(error, 'Evidence files could not be loaded.'));
+        }
+      });
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {
     const message = error.error?.message;
     return Array.isArray(message) ? message.join(', ') : (message as string) || fallback;
+  }
+
+  protected uploadHintCopy() {
+    return this.canUploadAttachments() ? 'Choose a file to add as evidence' : 'Evidence upload is read-only for your current role';
   }
 }

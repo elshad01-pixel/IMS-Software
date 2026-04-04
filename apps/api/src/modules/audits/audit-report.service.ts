@@ -125,6 +125,8 @@ export class AuditReportService {
       reportTitle: 'Internal Audit Report',
       systemName: 'Integrated Management System',
       companyName,
+      auditCode: audit.code,
+      auditTitle: audit.title,
       standard: audit.standard || audit.type,
       auditDate: this.formatDate(audit.completedAt ?? audit.scheduledAt ?? audit.createdAt),
       auditor:
@@ -206,6 +208,12 @@ export class AuditReportService {
       .stroke();
 
     doc
+      .font('Helvetica')
+      .fontSize(11)
+      .fillColor('#5B6C62')
+      .text(data.companyName, 76, 98, { characterSpacing: 1.8 });
+
+    doc
       .font('Helvetica-Bold')
       .fontSize(30)
       .fillColor('#173225')
@@ -224,14 +232,26 @@ export class AuditReportService {
       .text(`Standard: ${data.standard}`, 76, 270);
 
     doc
-      .font('Helvetica')
-      .fontSize(11)
-      .fillColor('#5B6C62')
-      .text(data.companyName, 76, 98, { characterSpacing: 1.8 });
+      .roundedRect(76, 315, 412, 82, 14)
+      .lineWidth(1)
+      .fillAndStroke('#FBFCFB', '#D7DFDA');
 
-    this.drawCoverMeta(doc, 'Company name', data.companyName, 76, 610);
-    this.drawCoverMeta(doc, 'Audit date', data.auditDate, 76, 666);
-    this.drawCoverMeta(doc, 'Auditor', data.auditor, 300, 610);
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(10)
+      .fillColor('#5B6C62')
+      .text('AUDIT TITLE', 96, 334, { characterSpacing: 1 });
+
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(18)
+      .fillColor('#173225')
+      .text(data.auditTitle, 96, 352, { width: 372, lineGap: 3 });
+
+    this.drawCoverMeta(doc, 'Audit reference', data.auditCode, 76, 596);
+    this.drawCoverMeta(doc, 'Company name', data.companyName, 300, 596);
+    this.drawCoverMeta(doc, 'Audit date', data.auditDate, 76, 662);
+    this.drawCoverMeta(doc, 'Auditor', data.auditor, 300, 662);
   }
 
   private drawCoverMeta(doc: PdfDocument, label: string, value: string, x: number, y: number) {
@@ -258,11 +278,12 @@ export class AuditReportService {
       }
 
       const pageNumber = index + 1;
+      const pageLabel = `Page ${pageNumber} of ${range.count}`;
       doc
         .font('Helvetica')
         .fontSize(9)
         .fillColor('#6A7A71')
-        .text(`Page ${pageNumber}`, 52, 806, {
+        .text(`${data.auditCode} | ${pageLabel}`, 52, 806, {
           width: 491,
           align: 'right'
         });
@@ -279,7 +300,7 @@ export class AuditReportService {
       .font('Helvetica')
       .fontSize(10)
       .fillColor('#5B6C62')
-      .text(data.companyName, 360, 30, { width: 183, align: 'right' });
+      .text(`${data.companyName} | ${data.auditCode}`, 300, 30, { width: 243, align: 'right' });
     doc
       .moveTo(52, 52)
       .lineTo(543, 52)
@@ -292,19 +313,23 @@ export class AuditReportService {
   private drawSectionHeading(doc: PdfDocument, heading: string) {
     this.ensurePageSpace(doc, 42);
     doc.moveDown(0.7);
+    doc.x = 52;
     doc
       .font('Helvetica-Bold')
       .fontSize(18)
       .fillColor('#173225')
-      .text(heading);
+      .text(heading, 52, doc.y, { width: 491 });
     doc.moveDown(0.25);
+    doc.x = 52;
   }
 
   private drawSummaryCard(doc: PdfDocument, label: string, value: string) {
-    this.ensurePageSpace(doc, 68);
+    const contentHeight = Math.max(24, this.heightForText(doc, value, 455, 11, 'Helvetica'));
+    const cardHeight = 38 + contentHeight;
+    this.ensurePageSpace(doc, cardHeight + 12);
     const y = doc.y;
     doc
-      .roundedRect(52, y, 491, 56, 12)
+      .roundedRect(52, y, 491, cardHeight, 12)
       .lineWidth(1)
       .fillAndStroke('#FBFCFB', '#D7DFDA');
     doc
@@ -316,27 +341,26 @@ export class AuditReportService {
       .font('Helvetica')
       .fontSize(11)
       .fillColor('#24362D')
-      .text(value, 68, y + 26, {
-        width: 455,
-        height: 22,
-        ellipsis: true
-      });
-    doc.y = y + 66;
+      .text(value, 68, y + 26, { width: 455, lineGap: 2 });
+    doc.y = y + cardHeight + 10;
   }
 
   private drawParagraph(doc: PdfDocument, value: string) {
-    this.ensurePageSpace(doc, 44);
+    const paragraphHeight = this.heightForText(doc, value, 491, 11, 'Helvetica');
+    this.ensurePageSpace(doc, paragraphHeight + 18);
+    doc.x = 52;
     doc
       .font('Helvetica')
       .fontSize(11)
       .fillColor('#24362D')
       .text(value, 52, doc.y, { width: 491, lineGap: 3 });
     doc.moveDown(0.75);
+    doc.x = 52;
   }
 
   private drawFindingsSummaryTable(doc: PdfDocument, rows: SummaryFindingRow[]) {
     const headers = ['ID', 'Clause', 'Type', 'Description', 'Status'];
-    const widths = [52, 60, 120, 199, 60];
+    const widths = [52, 60, 112, 207, 60];
     this.drawTable(
       doc,
       headers,
@@ -354,13 +378,19 @@ export class AuditReportService {
   private drawTable(doc: PdfDocument, headers: string[], rows: string[][], widths: number[]) {
     const startX = 52;
     const headerHeight = 28;
-    const rowHeight = 34;
 
     const drawRow = (cells: string[], isHeader = false) => {
-      this.ensurePageSpace(doc, (isHeader ? headerHeight : rowHeight) + 10);
+      const height = isHeader
+        ? headerHeight
+        : Math.max(
+            34,
+            ...cells.map((cell, index) =>
+              this.heightForText(doc, cell, widths[index] - 14, 9.5, 'Helvetica') + 14
+            )
+          );
+      this.ensurePageSpace(doc, height + 10);
       const y = doc.y;
       let x = startX;
-      const height = isHeader ? headerHeight : rowHeight;
 
       cells.forEach((cell, index) => {
         const width = widths[index];
@@ -371,11 +401,7 @@ export class AuditReportService {
           .font(isHeader ? 'Helvetica-Bold' : 'Helvetica')
           .fontSize(isHeader ? 10 : 9.5)
           .fillColor(isHeader ? '#4A5D53' : '#24362D')
-          .text(cell, x + 7, y + (isHeader ? 9 : 7), {
-            width: width - 14,
-            height: height - 12,
-            ellipsis: true
-          });
+          .text(cell, x + 7, y + (isHeader ? 9 : 7), { width: width - 14, lineGap: 1 });
         x += width;
       });
 
@@ -391,45 +417,65 @@ export class AuditReportService {
 
     rows.forEach((row) => drawRow(row));
     doc.moveDown(0.6);
+    doc.x = 52;
   }
 
   private drawDetailedFinding(doc: PdfDocument, finding: DetailedFindingRow) {
-    this.ensurePageSpace(doc, 170);
-    const top = doc.y;
-    doc
-      .roundedRect(52, top, 491, 146, 14)
-      .lineWidth(1)
-      .fillAndStroke('#FFFFFF', '#D7DFDA');
-
-    doc
-      .font('Helvetica-Bold')
-      .fontSize(11)
-      .fillColor('#173225')
-      .text(`${finding.id} | Clause ${finding.clause}`, 70, top + 14);
-
     const rows: Array<[string, string]> = [
       ['Requirement', finding.requirement],
       ['Finding', finding.finding],
       ['Evidence', finding.evidence],
       ['Action', finding.action]
     ];
+    this.ensurePageSpace(doc, 54);
+    const top = doc.y;
 
-    let rowY = top + 40;
-    rows.forEach(([label, value]) => {
-      doc
-        .font('Helvetica-Bold')
-        .fontSize(9.5)
-        .fillColor('#5B6C62')
-        .text(label, 70, rowY, { width: 92 });
-      doc
-        .font('Helvetica')
-        .fontSize(10)
-        .fillColor('#24362D')
-        .text(value, 164, rowY, { width: 355, height: 22, ellipsis: true });
-      rowY += 24;
-    });
+    doc
+      .roundedRect(52, top, 491, 32, 12)
+      .lineWidth(1)
+      .fillAndStroke('#F7FAF8', '#D7DFDA');
 
-    doc.y = top + 160;
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(11)
+      .fillColor('#173225')
+      .text(`${finding.id} | Clause ${finding.clause}`, 70, top + 10, { width: 455 });
+
+    doc.y = top + 44;
+
+    rows.forEach(([label, value]) => this.drawDetailedFindingField(doc, label, value));
+
+    this.ensurePageSpace(doc, 14);
+    doc
+      .moveTo(52, doc.y)
+      .lineTo(543, doc.y)
+      .lineWidth(1)
+      .strokeColor('#E5EBE7')
+      .stroke();
+    doc.moveDown(0.85);
+    doc.x = 52;
+  }
+
+  private drawDetailedFindingField(doc: PdfDocument, label: string, value: string) {
+    const valueHeight = this.heightForText(doc, value, 491, 10, 'Helvetica');
+    this.ensurePageSpace(doc, valueHeight + 26);
+
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(9.5)
+      .fillColor('#5B6C62')
+      .text(label.toUpperCase(), 52, doc.y, { width: 491, characterSpacing: 0.8 });
+
+    doc.moveDown(0.15);
+
+    doc
+      .font('Helvetica')
+      .fontSize(10)
+      .fillColor('#24362D')
+      .text(value, 52, doc.y, { width: 491, lineGap: 2 });
+
+    doc.moveDown(0.55);
+    doc.x = 52;
   }
 
   private ensurePageSpace(doc: PdfDocument, requiredHeight: number) {
@@ -522,5 +568,18 @@ export class AuditReportService {
     }
 
     return `${value.slice(0, maxLength - 3).trimEnd()}...`;
+  }
+
+  private heightForText(
+    doc: PdfDocument,
+    text: string,
+    width: number,
+    fontSize: number,
+    fontName: string
+  ) {
+    return doc
+      .font(fontName)
+      .fontSize(fontSize)
+      .heightOfString(text || '-', { width, lineGap: 2 });
   }
 }

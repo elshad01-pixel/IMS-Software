@@ -32,8 +32,8 @@ type ReportFilterForm = FormGroup;
     <section class="page-grid">
       <iso-page-header
         [label]="'Reports'"
-        [title]="'Report exports'"
-        [description]="'Generate tenant-scoped exports for operational records, performance summaries, and compliance follow-up.'"
+        [title]="'Report downloads'"
+        [description]="'Download tenant-scoped CSV reports for operational records, compliance review, and follow-up tracking.'"
         [breadcrumbs]="[{ label: 'Reports' }]"
       />
 
@@ -42,8 +42,8 @@ type ReportFilterForm = FormGroup;
           <div class="section-head">
             <div>
               <span class="section-eyebrow">Exports</span>
-              <h3>Available reports</h3>
-              <p class="subtle">Each export is built from current tenant data and downloaded as CSV.</p>
+              <h3>Available downloads</h3>
+              <p class="subtle">Each report uses current tenant data and downloads as a CSV file.</p>
             </div>
           </div>
 
@@ -92,7 +92,7 @@ type ReportFilterForm = FormGroup;
 
                 <div class="button-row">
                   <button type="button" (click)="exportReport(report)" [disabled]="loadingReport() === report.type">
-                    {{ loadingReport() === report.type ? 'Generating...' : 'Export CSV' }}
+                    {{ loadingReport() === report.type ? 'Preparing CSV...' : 'Download CSV' }}
                   </button>
                 </div>
               </form>
@@ -207,11 +207,11 @@ export class ReportsPageComponent implements OnInit {
       next: (response) => {
         this.loadingReport.set(null);
         this.downloadResponse(response, `${report.type}.csv`);
-        this.message.set(`${report.title} exported successfully.`);
+        this.message.set(`${report.title} CSV download started.`);
       },
       error: (error: HttpErrorResponse) => {
         this.loadingReport.set(null);
-        this.error.set(this.readError(error, 'Report export failed.'));
+        this.error.set(this.readError(error, 'Report download failed.'));
       }
     });
   }
