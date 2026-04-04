@@ -191,9 +191,6 @@ export class AttachmentPanelComponent implements OnChanges {
     this.selectedFile.set(file);
     this.message.set('');
     this.error.set('');
-    if (file) {
-      this.uploadAttachment(input);
-    }
   }
 
   uploadAttachment(input?: HTMLInputElement) {

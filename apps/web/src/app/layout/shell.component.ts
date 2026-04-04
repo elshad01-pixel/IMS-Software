@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, inject, signal } from '@angular/core';
+import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthStore } from '../core/auth.store';
 
@@ -9,6 +9,7 @@ type NavItem = {
   hint: string;
   icon: string;
   exact?: boolean;
+  permission?: string;
 };
 
 const SIDEBAR_PIN_KEY = 'ims.sidebar.pinned';
@@ -54,7 +55,7 @@ const SIDEBAR_PIN_KEY = 'ims.sidebar.pinned';
 
         <nav>
           <a
-            *ngFor="let item of navItems"
+            *ngFor="let item of visibleNavItems()"
             [routerLink]="item.path"
             routerLinkActive="active"
             [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
@@ -628,22 +629,25 @@ export class ShellComponent {
   protected readonly sidebarHovered = signal(false);
   protected readonly compactViewport = signal(this.readCompactViewport());
   protected readonly navItems: NavItem[] = [
-    { path: '/dashboard', label: 'Dashboard', hint: 'Executive overview', icon: 'DB', exact: true },
-    { path: '/documents', label: 'Documents', hint: 'Controlled library', icon: 'DC' },
-    { path: '/risks', label: 'Risks', hint: 'Assessment and treatment', icon: 'RK' },
-    { path: '/capa', label: 'CAPA', hint: 'Corrective workflows', icon: 'CP' },
-    { path: '/audits', label: 'Audits', hint: 'Plans and findings', icon: 'AU' },
-    { path: '/management-review', label: 'Management Review', hint: 'Meetings and decisions', icon: 'MR' },
-    { path: '/kpis', label: 'KPIs', hint: 'Targets and trends', icon: 'KP' },
-    { path: '/training', label: 'Training', hint: 'Assignments and evidence', icon: 'TR' },
-    { path: '/actions', label: 'Actions', hint: 'Global follow-up tracker', icon: 'AC' },
-    { path: '/ncr', label: 'NCR', hint: 'Nonconformance control', icon: 'NC' },
-    { path: '/context', label: 'Context', hint: 'Clause 4 issues and parties', icon: 'CX' },
-    { path: '/process-register', label: 'Process Register', hint: 'Business process links', icon: 'PR' },
-    { path: '/reports', label: 'Reports', hint: 'Exports and summaries', icon: 'RP' },
-    { path: '/users', label: 'Users', hint: 'Access and ownership', icon: 'US' },
-    { path: '/settings', label: 'Settings', hint: 'System configuration', icon: 'ST' }
+    { path: '/dashboard', label: 'Dashboard', hint: 'Executive overview', icon: 'DB', exact: true, permission: 'dashboard.read' },
+    { path: '/documents', label: 'Documents', hint: 'Controlled library', icon: 'DC', permission: 'documents.read' },
+    { path: '/risks', label: 'Risks', hint: 'Assessment and treatment', icon: 'RK', permission: 'risks.read' },
+    { path: '/capa', label: 'CAPA', hint: 'Corrective workflows', icon: 'CP', permission: 'capa.read' },
+    { path: '/audits', label: 'Audits', hint: 'Plans and findings', icon: 'AU', permission: 'audits.read' },
+    { path: '/management-review', label: 'Management Review', hint: 'Meetings and decisions', icon: 'MR', permission: 'management-review.read' },
+    { path: '/kpis', label: 'KPIs', hint: 'Targets and trends', icon: 'KP', permission: 'kpis.read' },
+    { path: '/training', label: 'Training', hint: 'Assignments and evidence', icon: 'TR', permission: 'training.read' },
+    { path: '/actions', label: 'Actions', hint: 'Global follow-up tracker', icon: 'AC', permission: 'dashboard.read' },
+    { path: '/ncr', label: 'NCR', hint: 'Nonconformance control', icon: 'NC', permission: 'ncr.read' },
+    { path: '/context', label: 'Context', hint: 'Clause 4 issues and parties', icon: 'CX', permission: 'context.read' },
+    { path: '/process-register', label: 'Process Register', hint: 'Business process links', icon: 'PR', permission: 'processes.read' },
+    { path: '/reports', label: 'Reports', hint: 'Exports and summaries', icon: 'RP', permission: 'reports.read' },
+    { path: '/users', label: 'Users', hint: 'Access and ownership', icon: 'US', permission: 'users.read' },
+    { path: '/settings', label: 'Settings', hint: 'System configuration', icon: 'ST', permission: 'settings.read' }
   ];
+  protected readonly visibleNavItems = computed(() =>
+    this.navItems.filter((item) => !item.permission || this.authStore.hasPermission(item.permission))
+  );
 
   protected sidebarExpanded() {
     if (this.isCompactViewport()) {

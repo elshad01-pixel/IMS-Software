@@ -65,8 +65,8 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
-        <a *ngIf="mode() === 'list'" routerLink="/documents/new" class="button-link">+ New document</a>
-        <a *ngIf="mode() === 'detail' && selectedDocument()" [routerLink]="['/documents', selectedDocument()?.id, 'edit']" class="button-link">Edit document</a>
+        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/documents/new" class="button-link">+ New document</a>
+        <a *ngIf="mode() === 'detail' && selectedDocument() && canWrite()" [routerLink]="['/documents', selectedDocument()?.id, 'edit']" class="button-link">Edit document</a>
         <button *ngIf="mode() === 'detail' && canArchiveDocument()" type="button" class="button-link secondary" (click)="archiveDocument()">Obsolete document</button>
         <button *ngIf="mode() === 'detail' && canDeleteDocument()" type="button" class="button-link danger" (click)="deleteDocument()">Delete draft</button>
         <a *ngIf="mode() !== 'list'" routerLink="/documents" class="button-link secondary">Back to register</a>
@@ -242,7 +242,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
           </section>
 
           <div class="button-row">
-            <button type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Saving...' : 'Save document' }}</button>
+            <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save document' }}</button>
             <a [routerLink]="selectedId() ? ['/documents', selectedId()] : ['/documents']" class="button-link secondary">Cancel</a>
           </div>
         </form>
@@ -307,7 +307,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
               </div>
             </div>
 
-            <div class="button-row top-space">
+            <div class="button-row top-space" *ngIf="canWrite()">
               <button *ngFor="let status of availableTransitions()" type="button" class="secondary" (click)="changeStatus(status)" [disabled]="saving()">
                 {{ documentActionLabel(status) }}
               </button>
@@ -475,6 +475,11 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
   }
 
   protected save() {
+    if (!this.canWrite()) {
+      this.error.set('You do not have permission to update documents.');
+      return;
+    }
+
     if (this.form.invalid) {
       this.error.set('Complete the required document fields.');
       return;
@@ -502,6 +507,10 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
 
   protected canDeleteDocument() {
     return this.authStore.hasPermission('admin.delete') && this.selectedDocument()?.status === 'DRAFT';
+  }
+
+  protected canWrite() {
+    return this.authStore.hasPermission('documents.write');
   }
 
   protected canArchiveDocument() {
@@ -559,7 +568,7 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
   }
 
   protected changeStatus(status: DocumentStatus) {
-    if (!this.selectedId()) {
+    if (!this.selectedId() || !this.canWrite()) {
       return;
     }
 

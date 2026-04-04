@@ -140,19 +140,31 @@ async function main() {
 
     roleIds.set(roleDefinition.name, role.id);
 
-    for (const permission of permissions.filter((entry) => roleDefinition.permissions.includes(entry.key))) {
+    const expectedPermissions = permissions
+      .filter((entry) => roleDefinition.permissions.includes(entry.key))
+      .map((entry) => ({
+        roleId: role.id,
+        permissionId: entry.id
+      }));
+
+    await prisma.rolePermission.deleteMany({
+      where: {
+        roleId: role.id,
+        permission: {
+          key: {
+            notIn: roleDefinition.permissions
+          }
+        }
+      }
+    });
+
+    for (const permission of expectedPermissions) {
       await prisma.rolePermission.upsert({
         where: {
-          roleId_permissionId: {
-            roleId: role.id,
-            permissionId: permission.id
-          }
+          roleId_permissionId: permission
         },
         update: {},
-        create: {
-          roleId: role.id,
-          permissionId: permission.id
-        }
+        create: permission
       });
     }
   }

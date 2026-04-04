@@ -66,8 +66,8 @@ type SourceOption = {
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
-        <a *ngIf="mode() === 'list'" routerLink="/management-review/new" class="button-link">+ New review meeting</a>
-        <a *ngIf="mode() === 'detail' && selectedReview()" [routerLink]="['/management-review', selectedReview()?.id, 'edit']" class="button-link">Edit meeting</a>
+        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/management-review/new" class="button-link">+ New review meeting</a>
+        <a *ngIf="mode() === 'detail' && selectedReview() && canWrite()" [routerLink]="['/management-review', selectedReview()?.id, 'edit']" class="button-link">Edit meeting</a>
         <button *ngIf="mode() === 'detail' && canArchiveReview()" type="button" class="button-link secondary" (click)="archiveReview()">Archive meeting</button>
         <a *ngIf="mode() !== 'list'" routerLink="/management-review" class="button-link secondary">Back to meetings</a>
       </iso-page-header>
@@ -171,7 +171,7 @@ type SourceOption = {
           </section>
 
           <div class="button-row">
-            <button type="submit" [disabled]="reviewForm.invalid || saving()">{{ saving() ? 'Saving...' : 'Save meeting' }}</button>
+            <button type="submit" [disabled]="reviewForm.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save meeting' }}</button>
             <a [routerLink]="selectedId() ? ['/management-review', selectedId()] : ['/management-review']" class="button-link secondary">Cancel</a>
           </div>
         </form>
@@ -219,7 +219,7 @@ type SourceOption = {
                     <h4>{{ section.label }}</h4>
                     <p class="subtle">{{ section.value || 'No content recorded yet.' }}</p>
                   </div>
-                  <button type="button" class="secondary" (click)="prepareAction(section.label, section.value)">Create action</button>
+                  <button type="button" class="secondary" [disabled]="!canCreateActions()" (click)="prepareAction(section.label, section.value)">Create action</button>
                 </div>
               </section>
             </div>
@@ -371,6 +371,11 @@ export class ManagementReviewPageComponent {
   }
 
   protected saveReview() {
+    if (!this.canWrite()) {
+      this.error.set('You do not have permission to update management reviews.');
+      return;
+    }
+
     if (this.reviewForm.invalid) {
       this.error.set('Complete the required management review fields.');
       return;
@@ -432,9 +437,22 @@ export class ManagementReviewPageComponent {
   }
 
   protected prepareAction(sectionLabel: string, content?: string | null) {
+    if (!this.canCreateActions()) {
+      this.error.set('You do not have permission to create actions.');
+      return;
+    }
+
     this.draftActionTitle.set(`Management review action: ${sectionLabel}`);
     this.draftActionDescription.set(content || '');
     this.message.set(`Action form prepared from ${sectionLabel.toLowerCase()}.`);
+  }
+
+  protected canWrite() {
+    return this.authStore.hasPermission('management-review.write');
+  }
+
+  protected canCreateActions() {
+    return this.authStore.hasPermission('action-items.write');
   }
 
   protected canArchiveReview() {

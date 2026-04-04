@@ -111,12 +111,12 @@ type AuditRecord = {
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
-        <a *ngIf="mode() === 'list'" routerLink="/audits/new" class="button-link">+ New audit</a>
+        <a *ngIf="mode() === 'list' && canWriteAudit()" routerLink="/audits/new" class="button-link">+ New audit</a>
         <a *ngIf="mode() === 'list' && canManageQuestionBank()" routerLink="/audits/checklist-question-bank" class="button-link secondary">Checklist question bank</a>
         <button *ngIf="mode() === 'detail' && selectedAudit()" type="button" class="button-link secondary" [disabled]="generatingReport()" (click)="generateReport()">
           {{ generatingReport() ? 'Generating report...' : 'Generate Report' }}
         </button>
-        <a *ngIf="mode() === 'detail' && selectedAudit()" [routerLink]="['/audits', selectedAudit()?.id, 'edit']" class="button-link">Edit audit</a>
+        <a *ngIf="mode() === 'detail' && selectedAudit() && canWriteAudit()" [routerLink]="['/audits', selectedAudit()?.id, 'edit']" class="button-link">Edit audit</a>
         <button *ngIf="mode() === 'detail' && canDeleteAudit()" type="button" class="button-link danger" (click)="deleteAudit()">Delete audit</button>
         <button *ngIf="mode() === 'detail' && canArchiveAudit()" type="button" class="button-link secondary" (click)="archiveAudit()">Archive audit</button>
         <a *ngIf="mode() !== 'list'" routerLink="/audits" class="button-link secondary">Back to audits</a>
@@ -233,7 +233,7 @@ type AuditRecord = {
           <label class="field"><span>Summary</span><textarea rows="3" formControlName="summary" placeholder="Audit objective, site, and expected outputs"></textarea></label>
 
           <div class="button-row">
-            <button type="submit" [disabled]="auditForm.invalid || saving()">{{ saving() ? 'Saving...' : 'Save audit' }}</button>
+            <button type="submit" [disabled]="auditForm.invalid || saving() || !canWriteAudit()">{{ saving() ? 'Saving...' : 'Save audit' }}</button>
             <a [routerLink]="selectedId() ? ['/audits', selectedId()] : ['/audits']" class="button-link secondary">Cancel</a>
           </div>
         </form>
@@ -667,12 +667,13 @@ type AuditRecord = {
                 </div>
                 <p class="subtle">{{ cleanFindingDescription(finding.description) }}</p>
                 <div class="button-row compact-row">
-                  <button type="button" class="secondary" (click)="focusChecklistQuestion(finding)" [disabled]="!finding.checklistItemId">Open checklist question</button>
-                  <button type="button" class="secondary" [disabled]="!!finding.linkedCapaId || saving()" (click)="createCapaFromFinding(finding)">
+                  <button type="button" class="secondary" (click)="focusChecklistQuestion(finding)" [disabled]="!finding.checklistItemId">Open question & evidence</button>
+                  <button type="button" class="secondary" [disabled]="!!finding.linkedCapaId || saving() || !canCreateCapa()" (click)="createCapaFromFinding(finding)">
                     {{ finding.linkedCapaId ? 'CAPA linked' : 'Create CAPA' }}
                   </button>
-                  <button type="button" class="secondary" [disabled]="saving()" (click)="prepareActionFromFinding(finding)">Create corrective action</button>
-                  <button type="button" class="secondary" [disabled]="saving() || finding.status === 'CLOSED'" (click)="updateFindingStatus(finding, 'CLOSED')">Close finding</button>
+                  <a *ngIf="finding.linkedCapaId" [routerLink]="['/capa', finding.linkedCapaId]" class="button-link secondary compact">Open CAPA</a>
+                  <button type="button" class="secondary" [disabled]="saving() || !canCreateActions()" (click)="prepareActionFromFinding(finding)">Create corrective action</button>
+                  <button type="button" class="secondary" [disabled]="saving() || finding.status === 'CLOSED' || !canWriteAudit()" (click)="updateFindingStatus(finding, 'CLOSED')">Close finding</button>
                 </div>
               </article>
             </div>
@@ -717,7 +718,7 @@ type AuditRecord = {
                 </label>
               </div>
               <div class="button-row">
-                <button type="button" class="secondary" (click)="saveCloseoutDraft()" [disabled]="saving() || selectedAudit()?.status === 'COMPLETED'">Save close-out draft</button>
+                <button type="button" class="secondary" (click)="saveCloseoutDraft()" [disabled]="saving() || selectedAudit()?.status === 'COMPLETED' || !canWriteAudit()">Save close-out draft</button>
                 <button type="submit" [disabled]="saving() || !canCompleteAudit()">Complete Audit</button>
               </div>
             </form>
@@ -1197,6 +1198,11 @@ export class AuditsPageComponent {
   }
 
   protected saveAudit() {
+    if (!this.canWriteAudit()) {
+      this.error.set('You do not have permission to update audits.');
+      return;
+    }
+
     if (this.auditForm.invalid) {
       this.error.set('Complete the required audit fields.');
       return;
@@ -1240,7 +1246,7 @@ export class AuditsPageComponent {
   }
 
   protected addChecklistItem() {
-    if (!this.selectedId() || this.checklistForm.invalid) {
+    if (!this.selectedId() || this.checklistForm.invalid || !this.canWriteAudit()) {
       return;
     }
 
@@ -1278,6 +1284,11 @@ export class AuditsPageComponent {
     patch: { response?: ChecklistResponse | null; notes?: string },
     options?: { nextStepOnSuccess?: AuditStep }
   ) {
+    if (!this.canWriteAudit()) {
+      this.error.set('You do not have permission to update audits.');
+      return;
+    }
+
     this.saving.set(true);
     this.error.set('');
     this.message.set('');
@@ -1358,7 +1369,7 @@ export class AuditsPageComponent {
   }
 
   protected addFinding() {
-    if (!this.selectedId() || this.findingForm.invalid) {
+    if (!this.selectedId() || this.findingForm.invalid || !this.canWriteAudit()) {
       return;
     }
 
@@ -1385,7 +1396,7 @@ export class AuditsPageComponent {
   }
 
   protected addFindingFromChecklist(item: AuditChecklistItem) {
-    if (!this.selectedId() || this.findingForm.invalid) {
+    if (!this.selectedId() || this.findingForm.invalid || !this.canWriteAudit()) {
       this.findingForm.markAllAsTouched();
       return;
     }
@@ -1419,6 +1430,11 @@ export class AuditsPageComponent {
   }
 
   protected updateFindingStatus(finding: AuditFinding, status: FindingStatus) {
+    if (!this.canWriteAudit()) {
+      this.error.set('You do not have permission to update audits.');
+      return;
+    }
+
     this.saving.set(true);
     this.error.set('');
     this.message.set('');
@@ -1436,6 +1452,11 @@ export class AuditsPageComponent {
   }
 
   protected createCapaFromFinding(finding: AuditFinding) {
+    if (!this.canCreateCapa()) {
+      this.error.set('You do not have permission to create CAPA records.');
+      return;
+    }
+
     this.saving.set(true);
     this.error.set('');
     this.message.set('');
@@ -1458,6 +1479,11 @@ export class AuditsPageComponent {
   }
 
   protected prepareActionFromFinding(finding: AuditFinding) {
+    if (!this.canCreateActions()) {
+      this.error.set('You do not have permission to create actions.');
+      return;
+    }
+
     this.draftActionTitle.set(`Audit action: ${finding.title}`);
     this.draftActionDescription.set(this.cleanFindingDescription(finding.description));
     this.message.set('Action form prepared from the selected finding.');
@@ -1661,7 +1687,7 @@ export class AuditsPageComponent {
   }
 
   protected isChecklistReadOnly() {
-    return this.selectedAudit()?.status === 'COMPLETED' || this.selectedAudit()?.status === 'CLOSED';
+    return !this.canWriteAudit() || this.selectedAudit()?.status === 'COMPLETED' || this.selectedAudit()?.status === 'CLOSED';
   }
 
   protected isChecklistComplete() {
@@ -1669,11 +1695,11 @@ export class AuditsPageComponent {
   }
 
   protected canCompleteAudit() {
-    return this.isChecklistComplete() && this.closeoutForm.valid && this.selectedAudit()?.status !== 'COMPLETED';
+    return this.canWriteAudit() && this.isChecklistComplete() && this.closeoutForm.valid && this.selectedAudit()?.status !== 'COMPLETED';
   }
 
   protected saveCloseoutDraft() {
-    if (!this.selectedId()) {
+    if (!this.selectedId() || !this.canWriteAudit()) {
       return;
     }
 
@@ -1701,7 +1727,7 @@ export class AuditsPageComponent {
   }
 
   protected completeAudit() {
-    if (!this.selectedId()) {
+    if (!this.selectedId() || !this.canWriteAudit()) {
       return;
     }
 
@@ -1770,6 +1796,18 @@ export class AuditsPageComponent {
 
   protected canManageQuestionBank() {
     return this.authStore.hasPermission('audits.write');
+  }
+
+  protected canWriteAudit() {
+    return this.authStore.hasPermission('audits.write');
+  }
+
+  protected canCreateCapa() {
+    return this.authStore.hasPermission('capa.write');
+  }
+
+  protected canCreateActions() {
+    return this.authStore.hasPermission('action-items.write');
   }
 
   protected canArchiveAudit() {

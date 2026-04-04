@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Input, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiService } from '../core/api.service';
+import { AuthStore } from '../core/auth.store';
 
 type UserOption = {
   id: string;
@@ -64,7 +65,7 @@ type ActionItem = {
               type="button"
               class="ghost"
               (click)="completeActionItem(item.id)"
-              [disabled]="item.status === 'DONE' || actionsSaving()"
+              [disabled]="item.status === 'DONE' || actionsSaving() || !canWriteActions()"
             >
               {{ item.status === 'DONE' ? 'Done' : 'Complete' }}
             </button>
@@ -72,12 +73,12 @@ type ActionItem = {
         </ul>
 
         <div class="actions-toolbar top-space">
-          <button type="button" class="secondary reveal-button" (click)="toggleComposer()">
+          <button type="button" class="secondary reveal-button" [disabled]="!canWriteActions()" (click)="toggleComposer()">
             {{ composerOpen() ? 'Hide form' : addButtonLabel() }}
           </button>
         </div>
 
-        <div class="actions-section form-section top-space" *ngIf="composerOpen()">
+        <div class="actions-section form-section top-space" *ngIf="composerOpen() && canWriteActions()">
           <div class="section-copy">
             <strong>{{ createActionTitle() }}</strong>
             <small>{{ createActionDescription() }}</small>
@@ -107,13 +108,17 @@ type ActionItem = {
                 <input formControlName="dueDate" type="date">
               </label>
             </div>
-            <button type="submit" [disabled]="actionForm.invalid || actionsSaving()">
+            <button type="submit" [disabled]="actionForm.invalid || actionsSaving() || !canWriteActions()">
               {{ actionsSaving() ? savingLabel() : submitLabel() }}
             </button>
             <p class="feedback" [class.is-empty]="!actionsError() && !actionsMessage()" [class.error]="actionsError()" [class.success]="actionsMessage() && !actionsError()">
               {{ actionsError() || actionsMessage() }}
             </p>
           </form>
+        </div>
+        <div class="empty-state top-space compact-write-state" *ngIf="!canWriteActions()">
+          <strong>Read-only actions</strong>
+          <span>You can review linked actions here, but creating or completing actions requires action write access.</span>
         </div>
       </div>
     </section>
@@ -276,6 +281,7 @@ export class RecordWorkItemsComponent implements OnChanges {
   @Input() draftDescription: string | null = null;
 
   private readonly api = inject(ApiService);
+  private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
 
   protected readonly users = signal<UserOption[]>([]);
@@ -314,7 +320,7 @@ export class RecordWorkItemsComponent implements OnChanges {
   }
 
   createActionItem() {
-    if (!this.sourceId || this.actionForm.invalid) {
+    if (!this.sourceId || this.actionForm.invalid || !this.canWriteActions()) {
       return;
     }
 
@@ -344,6 +350,11 @@ export class RecordWorkItemsComponent implements OnChanges {
   }
 
   completeActionItem(id: string) {
+    if (!this.canWriteActions()) {
+      this.actionsError.set('You do not have permission to update actions.');
+      return;
+    }
+
     this.actionsSaving.set(true);
     this.actionsMessage.set('');
     this.actionsError.set('');
@@ -387,7 +398,15 @@ export class RecordWorkItemsComponent implements OnChanges {
   }
 
   protected toggleComposer() {
+    if (!this.canWriteActions()) {
+      return;
+    }
+
     this.composerOpen.set(!this.composerOpen());
+  }
+
+  protected canWriteActions() {
+    return this.authStore.hasPermission('action-items.write');
   }
 
   protected sectionEyebrow() {

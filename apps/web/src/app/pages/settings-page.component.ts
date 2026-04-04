@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiService } from '../core/api.service';
+import { AuthStore } from '../core/auth.store';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
@@ -112,7 +113,7 @@ type SettingsConfig = {
               </div>
 
               <div class="button-row">
-                <button type="submit" [disabled]="organizationForm.invalid || savingSection() === 'organization'">
+                <button type="submit" [disabled]="organizationForm.invalid || savingSection() === 'organization' || !canWrite()">
                   {{ savingSection() === 'organization' ? 'Saving...' : 'Save organization' }}
                 </button>
               </div>
@@ -141,15 +142,15 @@ type SettingsConfig = {
 
                 <div class="role-toggle-grid top-space">
                   <label class="toggle-row">
-                    <input type="checkbox" [checked]="role.capabilities.createRecords" (change)="updateRoleCapability(role.id, 'createRecords', readCheckbox($event))">
+                    <input type="checkbox" [checked]="role.capabilities.createRecords" [disabled]="!canWrite()" (change)="updateRoleCapability(role.id, 'createRecords', readCheckbox($event))">
                     <span>Create records</span>
                   </label>
                   <label class="toggle-row">
-                    <input type="checkbox" [checked]="role.capabilities.approveDocuments" (change)="updateRoleCapability(role.id, 'approveDocuments', readCheckbox($event))">
+                    <input type="checkbox" [checked]="role.capabilities.approveDocuments" [disabled]="!canWrite()" (change)="updateRoleCapability(role.id, 'approveDocuments', readCheckbox($event))">
                     <span>Approve documents</span>
                   </label>
                   <label class="toggle-row">
-                    <input type="checkbox" [checked]="role.capabilities.closeCapa" (change)="updateRoleCapability(role.id, 'closeCapa', readCheckbox($event))">
+                    <input type="checkbox" [checked]="role.capabilities.closeCapa" [disabled]="!canWrite()" (change)="updateRoleCapability(role.id, 'closeCapa', readCheckbox($event))">
                     <span>Close CAPA</span>
                   </label>
                 </div>
@@ -184,7 +185,7 @@ type SettingsConfig = {
               </div>
 
               <div class="button-row">
-                <button type="submit" [disabled]="documentForm.invalid || savingSection() === 'document'">
+                <button type="submit" [disabled]="documentForm.invalid || savingSection() === 'document' || !canWrite()">
                   {{ savingSection() === 'document' ? 'Saving...' : 'Save document settings' }}
                 </button>
               </div>
@@ -219,7 +220,7 @@ type SettingsConfig = {
               </div>
 
               <div class="button-row">
-                <button type="submit" [disabled]="riskForm.invalid || savingSection() === 'risk'">
+                <button type="submit" [disabled]="riskForm.invalid || savingSection() === 'risk' || !canWrite()">
                   {{ savingSection() === 'risk' ? 'Saving...' : 'Save risk settings' }}
                 </button>
               </div>
@@ -252,7 +253,7 @@ type SettingsConfig = {
               </div>
 
               <div class="button-row">
-                <button type="submit" [disabled]="kpiForm.invalid || savingSection() === 'kpi'">
+                <button type="submit" [disabled]="kpiForm.invalid || savingSection() === 'kpi' || !canWrite()">
                   {{ savingSection() === 'kpi' ? 'Saving...' : 'Save KPI settings' }}
                 </button>
               </div>
@@ -270,12 +271,12 @@ type SettingsConfig = {
 
             <form [formGroup]="notificationsForm" class="page-stack" (ngSubmit)="saveSection('notifications')">
               <label class="toggle-row">
-                <input type="checkbox" formControlName="enabled">
+                <input type="checkbox" formControlName="enabled" [disabled]="!canWrite()">
                 <span>Enable notifications</span>
               </label>
 
               <div class="button-row">
-                <button type="submit" [disabled]="notificationsForm.invalid || savingSection() === 'notifications'">
+                <button type="submit" [disabled]="notificationsForm.invalid || savingSection() === 'notifications' || !canWrite()">
                   {{ savingSection() === 'notifications' ? 'Saving...' : 'Save notification settings' }}
                 </button>
               </div>
@@ -355,6 +356,7 @@ type SettingsConfig = {
 })
 export class SettingsPageComponent {
   private readonly api = inject(ApiService);
+  private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
 
   protected readonly activeSection = signal<'organization' | 'roles' | 'document' | 'risk' | 'kpi' | 'notifications'>('organization');
@@ -394,7 +396,16 @@ export class SettingsPageComponent {
     this.reload();
   }
 
+  protected canWrite() {
+    return this.authStore.hasPermission('settings.write');
+  }
+
   protected saveSection(section: 'organization' | 'document' | 'risk' | 'kpi' | 'notifications') {
+    if (!this.canWrite()) {
+      this.error.set('You do not have permission to update settings.');
+      return;
+    }
+
     const formMap = {
       organization: this.organizationForm,
       document: this.documentForm,
@@ -434,6 +445,11 @@ export class SettingsPageComponent {
   }
 
   protected updateRoleCapability(roleId: string, capability: 'createRecords' | 'approveDocuments' | 'closeCapa', checked: boolean) {
+    if (!this.canWrite()) {
+      this.error.set('You do not have permission to update settings.');
+      return;
+    }
+
     const role = this.config()?.usersRoles.find((entry) => entry.id === roleId);
     if (!role) return;
 

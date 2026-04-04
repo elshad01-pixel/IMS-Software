@@ -51,8 +51,8 @@ type CapaRow = {
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
-        <a *ngIf="mode() === 'list'" routerLink="/capa/new" class="button-link">+ New CAPA</a>
-        <a *ngIf="mode() === 'detail' && selectedCapa()" [routerLink]="['/capa', selectedCapa()?.id, 'edit']" class="button-link">Edit CAPA</a>
+        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/capa/new" class="button-link">+ New CAPA</a>
+        <a *ngIf="mode() === 'detail' && selectedCapa() && canWrite()" [routerLink]="['/capa', selectedCapa()?.id, 'edit']" class="button-link">Edit CAPA</a>
         <button *ngIf="mode() === 'detail' && canDeleteCapa()" type="button" class="button-link danger" (click)="deleteCapa()">Delete CAPA</button>
         <a *ngIf="mode() !== 'list'" routerLink="/capa" class="button-link secondary">Back to register</a>
       </iso-page-header>
@@ -258,7 +258,7 @@ type CapaRow = {
           </section>
 
           <div class="button-row">
-            <button type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Saving...' : 'Save CAPA' }}</button>
+            <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save CAPA' }}</button>
             <a [routerLink]="selectedId() ? ['/capa', selectedId()] : ['/capa']" class="button-link secondary">Cancel</a>
           </div>
         </form>
@@ -477,6 +477,11 @@ export class CapaPageComponent implements OnInit, OnChanges {
   }
 
   protected save() {
+    if (!this.canWrite()) {
+      this.error.set('You do not have permission to update CAPA records.');
+      return;
+    }
+
     if (this.form.invalid) {
       this.error.set('Complete the required CAPA fields.');
       return;
@@ -504,6 +509,10 @@ export class CapaPageComponent implements OnInit, OnChanges {
 
   protected canDeleteCapa() {
     return this.authStore.hasPermission('admin.delete') && !!this.selectedId() && this.selectedCapa()?.status !== 'CLOSED';
+  }
+
+  protected canWrite() {
+    return this.authStore.hasPermission('capa.write');
   }
 
   protected deleteCapa() {

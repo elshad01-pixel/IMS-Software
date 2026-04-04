@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 import { PageHeaderComponent } from '../shared/page-header.component';
+import { RouterLink } from '@angular/router';
 
 type UserOption = {
   id: string;
@@ -31,7 +32,7 @@ type ActionRecord = {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, RouterLink],
   template: `
     <section class="page-grid">
       <iso-page-header
@@ -131,12 +132,15 @@ type ActionRecord = {
                     <div class="table-title">
                       <strong>{{ action.sourceLabel }}</strong>
                       <small>{{ action.sourceTitle }}</small>
+                      <small *ngIf="sourceRoute(action) as route">
+                        <a [routerLink]="route" class="table-link">Open source record</a>
+                      </small>
                     </div>
                   </td>
                   <td>{{ action.owner ? action.owner.firstName + ' ' + action.owner.lastName : 'Unassigned' }}</td>
                   <td>{{ action.dueDate ? (action.dueDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
                   <td>
-                    <select [value]="action.status" (change)="updateStatus(action, readStatus($event))">
+                    <select [value]="action.status" [disabled]="!canWriteActions()" (change)="updateStatus(action, readStatus($event))">
                       <option>OPEN</option>
                       <option>IN_PROGRESS</option>
                       <option>DONE</option>
@@ -153,7 +157,18 @@ type ActionRecord = {
         </div>
       </section>
     </section>
-  `
+  `,
+  styles: [`
+    .table-link {
+      color: var(--brand-strong);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .table-link:hover {
+      text-decoration: underline;
+    }
+  `]
 })
 export class ActionsPageComponent {
   private readonly api = inject(ApiService);
@@ -165,6 +180,15 @@ export class ActionsPageComponent {
   protected readonly loading = signal(false);
   protected readonly message = signal('');
   protected readonly error = signal('');
+  protected readonly sourceTypeLabels = computed(() => ({
+    risk: 'Risk',
+    capa: 'CAPA',
+    audit: 'Audit',
+    'management-review': 'Management Review',
+    ncr: 'NCR',
+    document: 'Document',
+    context: 'Context issue'
+  }));
 
   protected readonly filtersForm = this.fb.nonNullable.group({
     sourceType: [''],
@@ -201,6 +225,11 @@ export class ActionsPageComponent {
   }
 
   protected updateStatus(action: ActionRecord, status: ActionStatus) {
+    if (!this.canWriteActions()) {
+      this.error.set('You do not have permission to update actions.');
+      return;
+    }
+
     if (status === action.status) {
       return;
     }
@@ -218,6 +247,10 @@ export class ActionsPageComponent {
 
   protected canDeleteActions() {
     return this.authStore.hasPermission('admin.delete');
+  }
+
+  protected canWriteActions() {
+    return this.authStore.hasPermission('action-items.write');
   }
 
   protected deleteAction(action: ActionRecord) {
@@ -242,6 +275,25 @@ export class ActionsPageComponent {
 
   protected readStatus(event: Event) {
     return (event.target as HTMLSelectElement).value as ActionStatus;
+  }
+
+  protected sourceRoute(action: ActionRecord) {
+    switch (action.sourceType) {
+      case 'risk':
+        return ['/risks', action.sourceId];
+      case 'capa':
+        return ['/capa', action.sourceId];
+      case 'audit':
+        return ['/audits', action.sourceId];
+      case 'management-review':
+        return ['/management-review', action.sourceId];
+      case 'ncr':
+        return ['/ncr', action.sourceId];
+      case 'document':
+        return ['/documents', action.sourceId];
+      default:
+        return null;
+    }
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

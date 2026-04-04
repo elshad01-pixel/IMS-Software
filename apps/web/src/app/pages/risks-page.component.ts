@@ -82,8 +82,8 @@ type SourceContextNavigation = {
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
-        <a *ngIf="mode() === 'list'" routerLink="/risks/new" class="button-link">+ New record</a>
-        <a *ngIf="mode() === 'detail' && selectedRisk()" [routerLink]="['/risks', selectedRisk()?.id, 'edit']" [state]="routeStateWithSource()" class="button-link">Edit {{ assessmentEntityLabel(selectedRisk()?.assessmentType || 'RISK').toLowerCase() }}</a>
+        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/risks/new" class="button-link">+ New record</a>
+        <a *ngIf="mode() === 'detail' && selectedRisk() && canWrite()" [routerLink]="['/risks', selectedRisk()?.id, 'edit']" [state]="routeStateWithSource()" class="button-link">Edit {{ assessmentEntityLabel(selectedRisk()?.assessmentType || 'RISK').toLowerCase() }}</a>
         <button *ngIf="mode() === 'detail' && canDeleteRisk()" type="button" class="button-link danger" (click)="deleteRisk()">Delete {{ assessmentEntityLabel(selectedRisk()?.assessmentType || 'RISK').toLowerCase() }}</button>
         <a *ngIf="sourceContextNavigation()" [routerLink]="sourceContextNavigation()!.route" class="button-link tertiary">Back to {{ sourceContextNavigation()!.label }}</a>
         <a *ngIf="mode() !== 'list'" routerLink="/risks" class="button-link secondary">Back to register</a>
@@ -370,7 +370,7 @@ type SourceContextNavigation = {
           </section>
 
           <div class="button-row">
-            <button type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Saving...' : 'Save ' + assessmentEntityLabel(form.getRawValue().assessmentType).toLowerCase() }}</button>
+            <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save ' + assessmentEntityLabel(form.getRawValue().assessmentType).toLowerCase() }}</button>
             <a [routerLink]="cancelRoute()" [state]="cancelState()" class="button-link secondary">Cancel</a>
           </div>
         </form>
@@ -1061,6 +1061,11 @@ export class RisksPageComponent implements OnInit, OnChanges {
   }
 
   protected save() {
+    if (!this.canWrite()) {
+      this.error.set('You do not have permission to update risks.');
+      return;
+    }
+
     if (this.form.invalid) {
       this.error.set('Complete the required risk fields.');
       return;
@@ -1111,6 +1116,10 @@ export class RisksPageComponent implements OnInit, OnChanges {
 
   protected canDeleteRisk() {
     return this.authStore.hasPermission('admin.delete') && !!this.selectedId();
+  }
+
+  protected canWrite() {
+    return this.authStore.hasPermission('risks.write');
   }
 
   protected deleteRisk() {

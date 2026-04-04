@@ -146,6 +146,7 @@ export class ProcessRegisterService {
 
   async create(tenantId: string, actorId: string, dto: CreateProcessRegisterDto) {
     await this.ensureOwnerBelongsToTenant(tenantId, dto.ownerUserId);
+    await this.assertNameAvailable(tenantId, dto.name);
     await this.assertReferenceAvailable(tenantId, dto.referenceNo);
 
     const process = (await getProcessRegisterDelegate(this.prisma).create({
@@ -185,6 +186,9 @@ export class ProcessRegisterService {
     }
 
     await this.ensureOwnerBelongsToTenant(tenantId, dto.ownerUserId);
+    if (dto.name !== undefined && this.normalizeComparableText(dto.name) !== this.normalizeComparableText(existing.name)) {
+      await this.assertNameAvailable(tenantId, dto.name, id);
+    }
     if (dto.referenceNo !== undefined && this.normalizeText(dto.referenceNo) !== existing.referenceNo) {
       await this.assertReferenceAvailable(tenantId, dto.referenceNo, id);
     }
@@ -479,6 +483,27 @@ export class ProcessRegisterService {
     }
   }
 
+  private async assertNameAvailable(tenantId: string, name: string, excludeId?: string) {
+    const normalized = this.normalizeComparableText(name);
+    if (!normalized) {
+      throw new BadRequestException('Process name is required.');
+    }
+
+    const items = (await getProcessRegisterDelegate(this.prisma).findMany({
+      where: {
+        tenantId,
+        deletedAt: null,
+        id: excludeId ? { not: excludeId } : undefined
+      },
+      select: { id: true, name: true }
+    })) as Array<{ id: string; name: string }>;
+
+    const duplicate = items.find((item) => this.normalizeComparableText(item.name) === normalized);
+    if (duplicate) {
+      throw new ConflictException('A process with this name already exists.');
+    }
+  }
+
   private async loadOwners(tenantId: string, items: ProcessRecord[]) {
     const ownerIds = Array.from(new Set(items.map((item) => item.ownerUserId).filter(Boolean))) as string[];
     if (!ownerIds.length) {
@@ -536,5 +561,9 @@ export class ProcessRegisterService {
   private normalizeText(value?: string | null) {
     const trimmed = value?.trim();
     return trimmed ? trimmed : null;
+  }
+
+  private normalizeComparableText(value?: string | null) {
+    return value?.trim().replace(/\s+/g, ' ').toLowerCase() || '';
   }
 }

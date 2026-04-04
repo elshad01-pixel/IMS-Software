@@ -4,6 +4,7 @@ import { Component, Input, OnChanges, OnInit, SimpleChanges, inject, signal } fr
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
+import { AuthStore } from '../core/auth.store';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
 type PageMode = 'list' | 'create' | 'detail' | 'edit';
@@ -39,8 +40,8 @@ type UserRow = {
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
-        <a *ngIf="mode() === 'list'" routerLink="/users/new" class="button-link">+ New user</a>
-        <a *ngIf="mode() === 'detail' && selectedUser()" [routerLink]="['/users', selectedUser()?.id, 'edit']" class="button-link">Edit user</a>
+        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/users/new" class="button-link">+ New user</a>
+        <a *ngIf="mode() === 'detail' && selectedUser() && canWrite()" [routerLink]="['/users', selectedUser()?.id, 'edit']" class="button-link">Edit user</a>
         <a *ngIf="mode() !== 'list'" routerLink="/users" class="button-link secondary">Back to users</a>
       </iso-page-header>
 
@@ -190,7 +191,7 @@ type UserRow = {
           </section>
 
           <div class="button-row">
-            <button type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Saving...' : 'Save user' }}</button>
+            <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save user' }}</button>
             <a [routerLink]="selectedId() ? ['/users', selectedId()] : ['/users']" class="button-link secondary">Cancel</a>
           </div>
         </form>
@@ -266,6 +267,7 @@ export class UsersPageComponent implements OnInit, OnChanges {
   @Input() forcedMode: PageMode | null = null;
 
   private readonly api = inject(ApiService);
+  private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -367,11 +369,20 @@ export class UsersPageComponent implements OnInit, OnChanges {
     return this.roles().find((role) => role.id === this.form.getRawValue().roleId) ?? null;
   }
 
+  protected canWrite() {
+    return this.authStore.hasPermission('users.write');
+  }
+
   protected fullName(user: UserRow) {
     return `${user.firstName} ${user.lastName}`.trim();
   }
 
   protected save() {
+    if (!this.canWrite()) {
+      this.error.set('You do not have permission to update users.');
+      return;
+    }
+
     if (this.form.invalid) {
       this.error.set('Complete the required user fields.');
       return;
