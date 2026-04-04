@@ -289,6 +289,20 @@ type AuditRecord = {
             </article>
           </div>
 
+          <section class="feedback next-steps-banner success top-space" *ngIf="message() && !error()">
+            <strong>{{ message() }}</strong>
+            <span>{{ auditNextStepsCopy() }}</span>
+            <div class="button-row top-space">
+              <button *ngIf="selectedAudit()?.status !== 'COMPLETED' && selectedAudit()?.status !== 'CLOSED'" type="button" (click)="setActiveStep(selectedAudit()?.isChecklistCompleted ? 'review' : 'conduct')">
+                {{ selectedAudit()?.isChecklistCompleted ? 'Review findings' : 'Continue checklist' }}
+              </button>
+              <button *ngIf="selectedAudit()?.status === 'COMPLETED' || selectedAudit()?.status === 'CLOSED'" type="button" class="secondary" [disabled]="generatingReport()" (click)="generateReport()">
+                {{ generatingReport() ? 'Generating report...' : 'Generate Report' }}
+              </button>
+              <button *ngIf="selectedAudit()?.findingCount" type="button" class="secondary" (click)="setActiveStep('review')">Review findings</button>
+            </div>
+          </section>
+
           <nav class="audit-steps top-space" aria-label="Audit steps">
             <button type="button" class="audit-step" [class.active]="activeStep() === 'plan'" (click)="setActiveStep('plan')">
               <span>1</span>
@@ -736,6 +750,15 @@ type AuditRecord = {
     .workflow-card {
       display: grid;
       gap: 1rem;
+    }
+
+    .next-steps-banner {
+      display: grid;
+      gap: 0.35rem;
+      padding: 1rem 1.1rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(47, 107, 69, 0.16);
+      background: rgba(47, 107, 69, 0.08);
     }
 
     .summary-grid {
@@ -1621,6 +1644,20 @@ export class AuditsPageComponent {
 
   protected cleanFindingDescription(description: string) {
     return description.trim();
+  }
+
+  protected auditNextStepsCopy() {
+    const audit = this.selectedAudit();
+    if (!audit) {
+      return 'Next: continue the audit from the current workflow step.';
+    }
+    if (audit.status === 'COMPLETED' || audit.status === 'CLOSED') {
+      return 'Next: review the completed audit record, its findings, and the formal report output.';
+    }
+    if (audit.isChecklistCompleted) {
+      return 'Next: review findings, complete the close-out, and then finish the audit from the review step.';
+    }
+    return 'Next: continue the checklist, record findings where needed, and return to the review step when the checklist is complete.';
   }
 
   protected isChecklistReadOnly() {

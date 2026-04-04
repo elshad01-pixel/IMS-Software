@@ -18,6 +18,9 @@ import { TrainingModule } from './modules/training/training.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { NcrModule } from './modules/ncr/ncr.module';
+import { ProcessRegisterModule } from './modules/process-register/process-register.module';
+import { ContextModule } from './modules/context/context.module';
+import { ContentLibraryModule } from './modules/content-library/content-library.module';
 
 @Module({
   imports: [
@@ -38,7 +41,10 @@ import { NcrModule } from './modules/ncr/ncr.module';
     TrainingModule,
     ReportsModule,
     SettingsModule,
-    NcrModule
+    NcrModule,
+    ProcessRegisterModule,
+    ContextModule,
+    ContentLibraryModule
   ]
 })
 export class AppModule implements NestModule {

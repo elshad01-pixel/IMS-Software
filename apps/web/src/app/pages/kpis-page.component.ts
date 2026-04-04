@@ -94,7 +94,7 @@ type KpiRecord = {
         </div>
       </section>
 
-      <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-columns">
+      <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-stack">
         <form class="card form-card page-stack" [formGroup]="kpiForm" (ngSubmit)="saveKpi()">
           <div class="section-head">
             <div>
@@ -136,24 +136,6 @@ type KpiRecord = {
           </div>
         </form>
 
-        <section class="card panel-card">
-          <div class="section-head">
-            <div>
-              <h3>Definition guidance</h3>
-              <p class="subtle">Targets and thresholds stay readable here; trend history belongs on the KPI record.</p>
-            </div>
-          </div>
-          <div class="entity-list top-space">
-            <div class="entity-item">
-              <strong>Define the KPI</strong>
-              <small>Set the direction, target, threshold, unit, and period clearly.</small>
-            </div>
-            <div class="entity-item">
-              <strong>Add readings later</strong>
-              <small>Use the detail page for current value updates and trend history.</small>
-            </div>
-          </div>
-        </section>
       </section>
 
       <section *ngIf="mode() === 'detail' && selectedKpi()" class="page-columns">

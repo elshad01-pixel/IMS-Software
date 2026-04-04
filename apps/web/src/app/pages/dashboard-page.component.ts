@@ -12,12 +12,7 @@ type DashboardResponse = {
   auditSummary: { planned: number; inProgress: number; completed: number };
   kpiSummaryCounts: { watch: number; breach: number };
   trainingSummaryCounts: { assigned: number; inProgress: number; completed: number };
-  highRisks: Array<{ id: string; title: string; score: number; status: string }>;
-  recentDocuments: Array<{ id: string; code: string; title: string; status: string; version: number; revision: number }>;
-  recentCapas: Array<{ id: string; title: string; status: string; dueDate?: string }>;
-  recentAudits: Array<{ id: string; title: string; status: string; scheduledAt?: string }>;
   kpiSummary: Array<{ id: string; name: string; actual: number; target: number; unit: string; status: string }>;
-  trainingSummary: Array<{ id: string; title: string; completion: number; dueDate?: string }>;
   actionItems: Array<{
     id: string;
     title: string;
@@ -28,10 +23,25 @@ type DashboardResponse = {
   }>;
 };
 
-type ChartSegment = {
+type ContextDashboardResponse = {
+  summary: {
+    internalIssues: number;
+    externalIssues: number;
+    interestedParties: number;
+    needsExpectations: number;
+  };
+};
+
+type DashboardModule = 'risks' | 'capa' | 'actions' | 'audits' | 'context';
+type DashboardRange = 'month' | 'quarter' | 'year';
+type DashboardChartType = 'bar' | 'line' | 'pie' | 'donut';
+
+type DashboardPoint = {
   label: string;
   value: number;
   color: string;
+  link: string | any[];
+  width: number;
 };
 
 @Component({
@@ -43,81 +53,87 @@ type ChartSegment = {
         [label]="'Dashboard'"
         [title]="'Integrated Management System'"
         [description]="'A structured operational workspace for quality, environmental, and health and safety management.'"
-        [supportingLine]="'ISO 9001 • ISO 14001 • ISO 45001'"
+        [supportingLine]="'ISO 9001 &bull; ISO 14001 &bull; ISO 45001'"
         [breadcrumbs]="[{ label: 'Dashboard' }]"
-      >
-        <a routerLink="/documents/new" class="button-link">Create document</a>
-      </iso-page-header>
+      />
 
-      <section class="dashboard-section">
-        <div class="section-head">
+      <section class="dashboard-section dashboard-strip">
+        <div class="section-head compact">
           <div>
             <span class="section-eyebrow">Summary</span>
             <h3>KPI summary</h3>
-            <p class="subtle">Keep the top of the dashboard focused on the few indicators leadership needs first.</p>
+            <p class="subtle">Key metrics</p>
           </div>
         </div>
 
-        <div class="kpi-card-grid top-space">
-          <article class="card kpi-card" *ngFor="let item of summaryCards()">
-            <div class="kpi-card__head">
+        <div class="kpi-strip top-space">
+          <a class="kpi-item" *ngFor="let item of summaryCards()" [ngClass]="item.tone" [routerLink]="item.link">
+            <div class="kpi-item__head">
               <span>{{ item.label }}</span>
-              <a [routerLink]="item.link" class="mini-link">Open</a>
             </div>
             <strong>{{ item.value }}</strong>
             <p>{{ item.copy }}</p>
-          </article>
+          </a>
         </div>
       </section>
 
-      <section class="dashboard-section">
-        <div class="section-head">
+      <section class="dashboard-section dashboard-control-shell">
+        <div class="section-head compact">
           <div>
-            <span class="section-eyebrow">Charts</span>
-            <h3>Operational distribution</h3>
-            <p class="subtle">Visualize risk concentration and CAPA movement without crowding the page.</p>
+            <span class="section-eyebrow">Controls</span>
+            <h3>Dashboard view</h3>
           </div>
         </div>
 
-        <div class="chart-grid top-space">
-          <a routerLink="/risks" class="card chart-card chart-link">
-            <div class="section-head compact">
-              <div>
-                <h4>Risk distribution</h4>
-                <p class="subtle">Open and active risks grouped by score band.</p>
-              </div>
-            </div>
+        <div class="dashboard-controls top-space">
+          <label class="control-field">
+            <span class="sr-only">Module</span>
+            <select aria-label="Module" [value]="selectedModule()" (change)="setModule($any($event.target).value)">
+              <option value="risks">Risks</option>
+              <option value="capa">CAPA</option>
+              <option value="actions">Actions</option>
+              <option value="audits">Audits</option>
+              <option value="context">Context</option>
+            </select>
+          </label>
 
-            <div class="donut-layout top-space">
-              <div class="donut-chart" [style.background]="donutBackground(riskSegments())">
-                <div class="donut-center">
-                  <strong>{{ activeRiskCount() }}</strong>
-                  <span>Active risks</span>
-                </div>
-              </div>
+          <label class="control-field">
+            <span class="sr-only">Time range</span>
+            <select aria-label="Time range" [value]="selectedTimeRange()" (change)="setTimeRange($any($event.target).value)">
+              <option value="month">Month</option>
+              <option value="quarter">Quarter</option>
+              <option value="year">Year</option>
+            </select>
+          </label>
 
-              <div class="chart-legend">
-                <div class="legend-item" *ngFor="let segment of riskSegments()">
-                  <span class="legend-swatch" [style.background]="segment.color"></span>
-                  <div>
-                    <strong>{{ segment.label }}</strong>
-                    <small>{{ segment.value }} risk{{ segment.value === 1 ? '' : 's' }}</small>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </a>
+          <label class="control-field">
+            <span class="sr-only">Chart type</span>
+            <select aria-label="Chart type" [value]="selectedChartType()" (change)="setChartType($any($event.target).value)">
+              <option value="bar">Bar</option>
+              <option value="line">Line</option>
+              <option value="pie">Pie</option>
+              <option value="donut">Donut</option>
+            </select>
+          </label>
+        </div>
+      </section>
 
-          <a routerLink="/capa" class="card chart-card chart-link">
-            <div class="section-head compact">
-              <div>
-                <h4>CAPA status</h4>
-                <p class="subtle">A clean view of open, in-progress, and closed corrective workflow volume.</p>
-              </div>
-            </div>
+      <section class="dashboard-section dashboard-main-chart">
+        <div class="section-head dashboard-chart-head">
+          <div>
+            <span class="section-eyebrow">{{ currentRangeLabel() }}</span>
+            <h3>{{ mainChartTitle() }}</h3>
+            <p class="subtle">{{ mainChartDescription() }}</p>
+          </div>
+          <div class="dashboard-chart-action">
+            <a [routerLink]="mainChartLink()" class="mini-link">Open {{ currentModuleLabel() }}</a>
+          </div>
+        </div>
 
-            <div class="bar-chart top-space">
-              <article class="bar-row" *ngFor="let item of capaBars()">
+        <div class="main-chart-surface top-space">
+          <ng-container [ngSwitch]="selectedChartType()">
+            <div *ngSwitchCase="'bar'" class="bar-chart">
+              <a class="bar-row bar-row--interactive" *ngFor="let item of mainChartPoints()" [routerLink]="item.link">
                 <div class="bar-row__label">
                   <strong>{{ item.label }}</strong>
                   <small>{{ item.value }}</small>
@@ -125,168 +141,122 @@ type ChartSegment = {
                 <div class="bar-track">
                   <div class="bar-fill" [style.width.%]="item.width" [style.background]="item.color"></div>
                 </div>
-              </article>
+              </a>
             </div>
-          </a>
 
-          <a routerLink="/kpis" class="card chart-card chart-link">
-            <div class="section-head compact">
-              <div>
-                <h4>Performance overview</h4>
-                <p class="subtle">Current performance and compliance signals requiring attention.</p>
+            <div *ngSwitchCase="'line'" class="line-chart-shell">
+              <svg class="line-chart" viewBox="0 0 100 42" preserveAspectRatio="none" aria-hidden="true">
+                <polyline class="line-chart__stroke" [attr.points]="lineChartPoints()" />
+              </svg>
+              <div class="line-chart__labels">
+                <a class="line-chart__item" *ngFor="let item of mainChartPoints()" [routerLink]="item.link">
+                  <span class="line-chart__swatch" [style.background]="item.color"></span>
+                  <strong>{{ item.value }}</strong>
+                  <small>{{ item.label }}</small>
+                </a>
               </div>
             </div>
 
-            <div class="bar-chart top-space">
-              <article class="bar-row" *ngFor="let item of pressureBars()">
-                <div class="bar-row__label">
-                  <strong>{{ item.label }}</strong>
-                  <small>{{ item.value }}</small>
+            <div *ngSwitchDefault class="donut-layout donut-layout--main">
+              <div class="donut-chart" [class.is-pie]="selectedChartType() === 'pie'" [style.background]="donutBackground(mainChartPoints())">
+                <div class="donut-center" *ngIf="selectedChartType() !== 'pie'">
+                  <strong>{{ mainChartTotal() }}</strong>
+                  <span>{{ currentModuleLabel() }}</span>
                 </div>
-                <div class="bar-track soft">
-                  <div class="bar-fill" [style.width.%]="item.width" [style.background]="item.color"></div>
-                </div>
-              </article>
+              </div>
+
+              <div class="chart-legend">
+                <a class="legend-item legend-button" *ngFor="let item of mainChartPoints()" [routerLink]="item.link">
+                  <span class="legend-swatch" [style.background]="item.color"></span>
+                  <div>
+                    <strong>{{ item.label }}</strong>
+                    <small>{{ item.value }}</small>
+                  </div>
+                </a>
+              </div>
             </div>
-          </a>
+          </ng-container>
         </div>
-      </section>
 
-      <section class="dashboard-section">
-        <div class="section-head">
-          <div>
-            <span class="section-eyebrow">Activity</span>
-            <h3>Recent activity and action items</h3>
-            <p class="subtle">Keep execution visible, but secondary to the operational indicators above.</p>
-          </div>
-        </div>
-
-        <div class="activity-grid top-space">
-          <section class="card panel-card">
-            <div class="section-head compact">
-              <div>
-                <h4>Recent records</h4>
-                <p class="subtle">Latest updates across documents, CAPA, and audits.</p>
-              </div>
-            </div>
-
-            <div class="activity-groups top-space">
-              <div class="activity-group">
-                <h5>Documents</h5>
-                <div class="empty-state" *ngIf="!data().recentDocuments.length">
-                  <span>No recent documents.</span>
-                </div>
-                <div class="entity-list" *ngIf="data().recentDocuments.length">
-                  <article class="entity-item" *ngFor="let document of data().recentDocuments">
-                    <strong>{{ document.code }}</strong>
-                    <small>{{ document.title }} | {{ document.status }} | V{{ document.version }}.{{ document.revision }}</small>
-                  </article>
-                </div>
-              </div>
-
-              <div class="activity-group">
-                <h5>CAPA</h5>
-                <div class="empty-state" *ngIf="!data().recentCapas.length">
-                  <span>No recent CAPA records.</span>
-                </div>
-                <div class="entity-list" *ngIf="data().recentCapas.length">
-                  <article class="entity-item" *ngFor="let capa of data().recentCapas">
-                    <strong>{{ capa.title }}</strong>
-                    <small>{{ capa.status }}{{ capa.dueDate ? ' | ' + (capa.dueDate | date:'yyyy-MM-dd') : '' }}</small>
-                  </article>
-                </div>
-              </div>
-
-              <div class="activity-group">
-                <h5>Audits</h5>
-                <div class="empty-state" *ngIf="!data().recentAudits.length">
-                  <span>No recent audits.</span>
-                </div>
-                <div class="entity-list" *ngIf="data().recentAudits.length">
-                  <article class="entity-item" *ngFor="let audit of data().recentAudits">
-                    <strong>{{ audit.title }}</strong>
-                    <small>{{ audit.status }}{{ audit.scheduledAt ? ' | ' + (audit.scheduledAt | date:'yyyy-MM-dd') : '' }}</small>
-                  </article>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="card panel-card">
-            <div class="section-head compact">
-              <div>
-                <h4>Open action items</h4>
-                <p class="subtle">Cross-system work that still needs ownership or completion.</p>
-              </div>
-            </div>
-
-            <div class="empty-state top-space" *ngIf="!data().actionItems.length">
-              <strong>No open action items</strong>
-              <span>Action-driven follow-up across modules will appear here.</span>
-            </div>
-
-            <div class="entity-list top-space" *ngIf="data().actionItems.length">
-              <article class="entity-item action-item" *ngFor="let item of data().actionItems">
-                <div class="action-item__copy">
-                  <strong>{{ item.title }}</strong>
-                  <small>
-                    {{ item.sourceType }} | {{ item.status }}
-                    {{ item.owner ? ' | ' + item.owner.firstName + ' ' + item.owner.lastName : '' }}
-                    {{ item.dueDate ? ' | due ' + (item.dueDate | date:'yyyy-MM-dd') : '' }}
-                  </small>
-                </div>
-                <span class="status-badge" [class.warn]="item.status === 'IN_PROGRESS'">{{ item.status }}</span>
-              </article>
-            </div>
-          </section>
-        </div>
       </section>
     </section>
   `,
   styles: [`
     .dashboard-section {
       display: grid;
-      gap: 0.9rem;
+      gap: 0.75rem;
     }
 
-    .kpi-card-grid {
+    .dashboard-strip {
+      gap: 0.45rem;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .kpi-strip {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 0.45rem;
+      padding-top: 0.15rem;
     }
 
-    .kpi-card {
-      padding: 1.2rem 1.25rem;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(242, 246, 240, 0.96));
+    .kpi-item {
+      display: grid;
+      gap: 0.2rem;
+      padding: 0.85rem 0.9rem 0.7rem;
+      border-left: 1px solid rgba(23, 50, 37, 0.08);
+      background: transparent;
+      text-decoration: none;
+      color: inherit;
     }
 
-    .kpi-card__head {
+    .kpi-item.warning {
+      border-left-color: rgba(195, 149, 69, 0.38);
+      background: linear-gradient(90deg, rgba(195, 149, 69, 0.06), transparent 72%);
+    }
+
+    .kpi-item.critical {
+      border-left-color: rgba(180, 90, 71, 0.42);
+      background: linear-gradient(90deg, rgba(180, 90, 71, 0.07), transparent 74%);
+    }
+
+    .kpi-item__head {
       display: flex;
+      align-items: center;
       justify-content: space-between;
       gap: 0.75rem;
-      align-items: center;
     }
 
-    .kpi-card__head span {
+    .kpi-item__head span {
       color: var(--muted-strong);
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 800;
       letter-spacing: 0.05em;
       text-transform: uppercase;
     }
 
-    .kpi-card strong {
+    .kpi-item strong {
       display: block;
-      margin-top: 1rem;
-      font-size: 2.35rem;
-      line-height: 1;
-      letter-spacing: -0.05em;
+      margin-top: 0.45rem;
+      font-size: 2.7rem;
+      line-height: 0.95;
+      letter-spacing: -0.07em;
     }
 
-    .kpi-card p {
-      margin: 0.55rem 0 0;
+    .kpi-item p {
+      margin: 0.08rem 0 0;
       color: var(--muted);
-      line-height: 1.5;
+      line-height: 1.35;
     }
 
     .mini-link {
@@ -296,45 +266,153 @@ type ChartSegment = {
       font-weight: 700;
     }
 
-    .chart-grid {
+    .dashboard-controls {
       display: grid;
-      grid-template-columns: minmax(0, 1.1fr) repeat(2, minmax(0, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.55rem;
+      align-items: center;
+      padding: 0.35rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(23, 50, 37, 0.05);
+      box-shadow: 0 10px 22px rgba(29, 42, 33, 0.025);
     }
 
-    .chart-card {
-      display: block;
-      padding: 1.3rem;
+    .control-field {
+      display: grid;
+      gap: 0;
+    }
+
+    .control-field select {
+      min-height: 2.7rem;
+      padding-inline: 0.95rem 2.1rem;
+      border-radius: 999px;
+      border-color: transparent;
+      background: rgba(255, 255, 255, 0.88);
+      font-weight: 600;
+      box-shadow: inset 0 0 0 1px rgba(23, 50, 37, 0.05);
+    }
+
+    .main-chart-surface {
+      padding: 1rem 1rem 0.95rem;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.52);
+      border: 1px solid rgba(23, 50, 37, 0.05);
+      box-shadow: 0 12px 26px rgba(29, 42, 33, 0.035);
+    }
+
+    .dashboard-chart-head {
+      padding-inline-end: 1.6rem;
+    }
+
+    .dashboard-chart-action {
+      margin-inline-end: 1.6rem;
+      padding-inline-start: 0.4rem;
+      flex-shrink: 0;
+    }
+
+    .bar-chart {
+      display: grid;
+      gap: 0.95rem;
+    }
+
+    .bar-row {
+      display: grid;
+      gap: 0.5rem;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .bar-row--interactive {
+      padding: 0.35rem 0;
+    }
+
+    .bar-row__label {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .bar-row__label strong {
+      font-size: 0.96rem;
+    }
+
+    .bar-row__label small {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .bar-track {
+      height: 0.85rem;
+      border-radius: 999px;
+      background: rgba(23, 50, 37, 0.08);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      min-width: 0.8rem;
+    }
+
+    .line-chart-shell {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .line-chart {
+      width: 100%;
+      height: 220px;
+      overflow: visible;
+    }
+
+    .line-chart__stroke {
+      fill: none;
+      stroke: #244f3d;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .line-chart__labels {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.55rem;
+    }
+
+    .line-chart__item {
+      display: grid;
+      gap: 0.18rem;
+      padding: 0.55rem 0.1rem 0;
+      border-radius: 0;
       text-decoration: none;
       color: inherit;
+      background: transparent;
+      border: none;
     }
 
-    .chart-link {
-      cursor: pointer;
-      transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
-    }
-
-    .chart-link:hover {
-      transform: translateY(-2px);
-      border-color: rgba(36, 79, 61, 0.18);
-      box-shadow: 0 18px 36px rgba(29, 42, 33, 0.1);
-    }
-
-    .compact {
-      align-items: start;
+    .line-chart__swatch {
+      width: 0.85rem;
+      height: 0.3rem;
+      border-radius: 999px;
     }
 
     .donut-layout {
       display: grid;
-      grid-template-columns: 220px minmax(0, 1fr);
-      gap: 1.25rem;
+      grid-template-columns: 190px minmax(0, 1fr);
+      gap: 0.8rem;
       align-items: center;
+    }
+
+    .donut-layout--main {
+      min-height: 232px;
     }
 
     .donut-chart {
       position: relative;
-      width: 220px;
-      height: 220px;
+      width: 190px;
+      height: 190px;
       border-radius: 50%;
       display: grid;
       place-items: center;
@@ -343,10 +421,14 @@ type ChartSegment = {
     .donut-chart::after {
       content: '';
       position: absolute;
-      inset: 26px;
+      inset: 22px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.94);
+      background: rgba(255, 255, 255, 0.95);
       box-shadow: inset 0 0 0 1px rgba(23, 50, 37, 0.06);
+    }
+
+    .donut-chart.is-pie::after {
+      display: none;
     }
 
     .donut-center {
@@ -371,7 +453,7 @@ type ChartSegment = {
 
     .chart-legend {
       display: grid;
-      gap: 0.8rem;
+      gap: 0.55rem;
     }
 
     .legend-item {
@@ -379,6 +461,16 @@ type ChartSegment = {
       grid-template-columns: auto 1fr;
       gap: 0.7rem;
       align-items: center;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .legend-button {
+      width: 100%;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.48);
+      padding: 0.55rem 0.7rem;
+      border: 1px solid rgba(23, 50, 37, 0.04);
     }
 
     .legend-item strong {
@@ -391,92 +483,39 @@ type ChartSegment = {
     }
 
     .legend-swatch {
-      width: 0.8rem;
-      height: 0.8rem;
+      width: 0.78rem;
+      height: 0.78rem;
       border-radius: 50%;
-      box-shadow: 0 0 0 4px rgba(23, 50, 37, 0.04);
-    }
-
-    .bar-chart {
-      display: grid;
-      gap: 1rem;
-    }
-
-    .bar-row {
-      display: grid;
-      gap: 0.5rem;
-    }
-
-    .bar-row__label {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      align-items: center;
-    }
-
-    .bar-row__label strong {
-      font-size: 0.95rem;
-    }
-
-    .bar-row__label small {
-      color: var(--muted);
-      font-weight: 700;
-    }
-
-    .bar-track {
-      height: 0.8rem;
-      border-radius: 999px;
-      background: rgba(23, 50, 37, 0.08);
-      overflow: hidden;
-    }
-
-    .bar-track.soft {
-      background: rgba(184, 132, 51, 0.1);
-    }
-
-    .bar-fill {
-      height: 100%;
-      border-radius: inherit;
-      min-width: 0.8rem;
-    }
-
-    .activity-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.95fr);
-      gap: 1rem;
-    }
-
-    .activity-groups {
-      display: grid;
-      gap: 1rem;
-    }
-
-    .activity-group h5 {
-      margin: 0 0 0.65rem;
-      font-size: 0.94rem;
-      letter-spacing: -0.01em;
-    }
-
-    .action-item {
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: center;
-    }
-
-    .action-item__copy {
-      display: grid;
-      gap: 0.25rem;
-      min-width: 0;
+      box-shadow: 0 0 0 4px rgba(23, 50, 37, 0.035);
     }
 
     @media (max-width: 1200px) {
-      .kpi-card-grid,
-      .chart-grid,
-      .activity-grid {
+      .dashboard-controls {
         grid-template-columns: 1fr;
+        border-radius: 22px;
       }
     }
 
     @media (max-width: 760px) {
+      .kpi-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .kpi-item {
+        border-left: none;
+        border-top: 1px solid rgba(23, 50, 37, 0.08);
+        padding-left: 0;
+      }
+
+      .dashboard-chart-action {
+        margin-inline-end: 0;
+        padding-inline-start: 0;
+      }
+
+      .dashboard-chart-head {
+        padding-inline-end: 0;
+      }
+
       .donut-layout {
         grid-template-columns: 1fr;
         justify-items: center;
@@ -491,18 +530,15 @@ type ChartSegment = {
         inset: 22px;
       }
 
-      .kpi-card strong {
-        font-size: 2rem;
-      }
-
-      .action-item {
-        grid-template-columns: 1fr;
+      .kpi-item strong {
+        font-size: 2.2rem;
       }
     }
   `]
 })
 export class DashboardPageComponent {
   private readonly api = inject(ApiService);
+
   protected readonly data = signal<DashboardResponse>({
     metrics: {},
     riskSummary: { open: 0, inTreatment: 0, mitigated: 0 },
@@ -511,17 +547,36 @@ export class DashboardPageComponent {
     auditSummary: { planned: 0, inProgress: 0, completed: 0 },
     kpiSummaryCounts: { watch: 0, breach: 0 },
     trainingSummaryCounts: { assigned: 0, inProgress: 0, completed: 0 },
-    highRisks: [],
-    recentDocuments: [],
-    recentCapas: [],
-    recentAudits: [],
     kpiSummary: [],
-    trainingSummary: [],
     actionItems: []
   });
 
+  protected readonly contextSummary = signal<ContextDashboardResponse | null>(null);
+  protected readonly selectedModule = signal<DashboardModule>('risks');
+  protected readonly selectedTimeRange = signal<DashboardRange>('quarter');
+  protected readonly selectedChartType = signal<DashboardChartType>('donut');
+
   constructor() {
-    this.api.get<DashboardResponse>('dashboard/summary').subscribe((result) => this.data.set(result));
+    this.api.get<DashboardResponse>('dashboard/summary').subscribe({
+      next: (result) => this.data.set(result),
+      error: () => this.data.set(this.data())
+    });
+    this.api.get<ContextDashboardResponse>('context/dashboard').subscribe({
+      next: (result) => this.contextSummary.set(result),
+      error: () => this.contextSummary.set(null)
+    });
+  }
+
+  protected setModule(value: DashboardModule) {
+    this.selectedModule.set(value);
+  }
+
+  protected setTimeRange(value: DashboardRange) {
+    this.selectedTimeRange.set(value);
+  }
+
+  protected setChartType(value: DashboardChartType) {
+    this.selectedChartType.set(value);
   }
 
   protected summaryCards() {
@@ -530,97 +585,196 @@ export class DashboardPageComponent {
       {
         label: 'Open risks',
         value: this.data().riskSummary.open + this.data().riskSummary.inTreatment,
-        copy: 'Awaiting treatment',
-        link: '/risks'
+        copy: 'Open',
+        link: '/risks',
+        tone: 'focus'
       },
       {
         label: 'Open CAPA',
         value: metrics['openCapas'] ?? 0,
-        copy: 'Active CAPAs',
-        link: '/capa'
+        copy: 'In progress',
+        link: '/capa',
+        tone: (metrics['openCapas'] ?? 0) > 0 ? 'warning' : 'focus'
       },
       {
         label: 'Active audits',
         value: metrics['openAudits'] ?? 0,
-        copy: 'Audits in progress',
-        link: '/audits'
+        copy: 'In progress',
+        link: '/audits',
+        tone: 'focus'
       },
       {
         label: 'Overdue actions',
         value: metrics['overdueActions'] ?? 0,
-        copy: 'Past due follow-up',
-        link: '/dashboard'
+        copy: 'Overdue',
+        link: '/actions',
+        tone: (metrics['overdueActions'] ?? 0) > 0 ? 'critical' : 'focus'
       },
       {
         label: 'KPI breaches',
         value: this.data().kpiSummaryCounts.breach,
-        copy: 'Outside target',
-        link: '/kpis'
+        copy: 'Breaches',
+        link: '/kpis',
+        tone: this.data().kpiSummaryCounts.breach > 0 ? 'critical' : 'focus'
       }
     ];
   }
 
-  protected riskSegments(): ChartSegment[] {
-    return [
-      { label: 'Low', value: this.data().riskDistribution.low, color: '#6f9d7f' },
-      { label: 'Medium', value: this.data().riskDistribution.medium, color: '#c39545' },
-      { label: 'High', value: this.data().riskDistribution.high, color: '#b45a47' }
-    ];
+  protected currentModuleLabel() {
+    return {
+      risks: 'Risks',
+      capa: 'CAPA',
+      actions: 'Actions',
+      audits: 'Audits',
+      context: 'Context'
+    }[this.selectedModule()];
   }
 
-  protected capaBars() {
-    const total = Math.max(this.totalCapasForChart(), 1);
-    const open = this.data().capaSummary.investigating + this.actionPlannedCount();
-    const inProgress = this.data().capaSummary.inProgress;
-    const closed = Math.max((this.data().metrics['capas'] ?? 0) - (this.data().metrics['openCapas'] ?? 0), 0);
-
-    return [
-      { label: 'Open', value: open, width: (open / total) * 100, color: '#9a6e2d' },
-      { label: 'In progress', value: inProgress, width: (inProgress / total) * 100, color: '#3f6f59' },
-      { label: 'Closed', value: closed, width: (closed / total) * 100, color: '#244f3d' }
-    ];
+  protected currentRangeLabel() {
+    return {
+      month: 'This month',
+      quarter: 'This quarter',
+      year: 'This year'
+    }[this.selectedTimeRange()];
   }
 
-  protected pressureBars() {
-    const overdueActions = this.data().metrics['overdueActions'] ?? 0;
-    const kpiBreaches = this.data().kpiSummaryCounts.breach;
-    const kpiWatch = this.data().kpiSummaryCounts.watch;
-    const overdueTraining = this.data().metrics['overdueTrainingAssignments'] ?? 0;
-    const total = Math.max(overdueActions, kpiBreaches, kpiWatch, overdueTraining, 1);
-
-    return [
-      { label: 'KPI breaches', value: kpiBreaches, width: (kpiBreaches / total) * 100, color: '#b45a47' },
-      { label: 'KPI watch', value: kpiWatch, width: (kpiWatch / total) * 100, color: '#c39545' },
-      { label: 'Overdue actions', value: overdueActions, width: (overdueActions / total) * 100, color: '#7b8f55' },
-      { label: 'Overdue training', value: overdueTraining, width: (overdueTraining / total) * 100, color: '#446d8e' }
-    ];
+  protected mainChartTitle() {
+    return `${this.currentModuleLabel()} — ${this.mainChartMetricLabel()}`;
   }
 
-  protected donutBackground(segments: ChartSegment[]) {
-    const total = Math.max(segments.reduce((sum, segment) => sum + segment.value, 0), 1);
+  protected mainChartDescription() {
+    return `${this.currentRangeLabel()} • ${this.currentChartTypeLabel()}`;
+  }
+
+  protected mainChartLink() {
+    return {
+      risks: '/risks',
+      capa: '/capa',
+      actions: '/actions',
+      audits: '/audits',
+      context: '/context'
+    }[this.selectedModule()];
+  }
+
+  protected mainChartPoints(): DashboardPoint[] {
+    const raw = this.baseChartPoints();
+    const total = Math.max(raw.reduce((sum, item) => sum + item.value, 0), 1);
+    return raw.map((item) => ({
+      ...item,
+      width: (item.value / total) * 100
+    }));
+  }
+
+  protected mainChartTotal() {
+    return this.mainChartPoints().reduce((sum, item) => sum + item.value, 0);
+  }
+
+  protected currentChartTypeLabel() {
+    return {
+      bar: 'Bar chart',
+      line: 'Line chart',
+      pie: 'Pie chart',
+      donut: 'Donut chart'
+    }[this.selectedChartType()];
+  }
+
+  protected donutBackground(points: DashboardPoint[]) {
+    const total = Math.max(points.reduce((sum, point) => sum + point.value, 0), 1);
     let cursor = 0;
-    const stops = segments.map((segment) => {
+    const stops = points.map((point) => {
       const start = cursor;
-      cursor += (segment.value / total) * 100;
-      return `${segment.color} ${start}% ${cursor}%`;
+      cursor += (point.value / total) * 100;
+      return `${point.color} ${start}% ${cursor}%`;
     });
 
     return `conic-gradient(${stops.join(', ')})`;
   }
 
-  protected activeRiskCount() {
-    return this.riskSegments().reduce((sum, segment) => sum + segment.value, 0);
+  protected lineChartPoints() {
+    const points = this.mainChartPoints();
+    if (!points.length) {
+      return '0,34 100,34';
+    }
+    const max = Math.max(...points.map((point) => point.value), 1);
+    const step = points.length === 1 ? 100 : 100 / (points.length - 1);
+    return points
+      .map((point, index) => {
+        const x = Number((index * step).toFixed(2));
+        const y = Number((38 - (point.value / max) * 30).toFixed(2));
+        return `${x},${y}`;
+      })
+      .join(' ');
   }
 
-  private totalCapasForChart() {
-    const open = this.data().capaSummary.investigating + this.actionPlannedCount();
-    const inProgress = this.data().capaSummary.inProgress;
-    const closed = Math.max((this.data().metrics['capas'] ?? 0) - (this.data().metrics['openCapas'] ?? 0), 0);
-    return open + inProgress + closed;
+  private mainChartMetricLabel() {
+    return {
+      risks: 'Risk distribution',
+      capa: 'Status distribution',
+      actions: 'Status distribution',
+      audits: 'Program status',
+      context: 'Issue distribution'
+    }[this.selectedModule()];
+  }
+
+  private baseChartPoints(): Omit<DashboardPoint, 'width'>[] {
+    switch (this.selectedModule()) {
+      case 'capa': {
+        const open = this.data().capaSummary.investigating + this.actionPlannedCount();
+        const inProgress = this.data().capaSummary.inProgress;
+        const closed = Math.max((this.data().metrics['capas'] ?? 0) - (this.data().metrics['openCapas'] ?? 0), 0);
+        return [
+          { label: 'Open', value: open, color: '#9a6e2d', link: '/capa' },
+          { label: 'In progress', value: inProgress, color: '#3f6f59', link: '/capa' },
+          { label: 'Closed', value: closed, color: '#244f3d', link: '/capa' }
+        ];
+      }
+      case 'actions': {
+        const actionItems = this.data().actionItems;
+        const open = actionItems.filter((item) => item.status === 'OPEN').length;
+        const inProgress = actionItems.filter((item) => item.status === 'IN_PROGRESS').length;
+        const done = actionItems.filter((item) => item.status === 'DONE').length;
+        const overdue = actionItems.filter((item) => this.isOverdue(item.dueDate)).length;
+        return [
+          { label: 'Open', value: open, color: '#446d8e', link: '/actions' },
+          { label: 'In progress', value: inProgress, color: '#3f6f59', link: '/actions' },
+          { label: 'Done', value: done, color: '#6f9d7f', link: '/actions' },
+          { label: 'Overdue', value: overdue, color: '#b45a47', link: '/actions' }
+        ];
+      }
+      case 'audits':
+        return [
+          { label: 'Planned', value: this.data().auditSummary.planned, color: '#446d8e', link: '/audits' },
+          { label: 'In progress', value: this.data().auditSummary.inProgress, color: '#c39545', link: '/audits' },
+          { label: 'Completed', value: this.data().auditSummary.completed, color: '#244f3d', link: '/audits' }
+        ];
+      case 'context': {
+        const summary = this.contextSummary()?.summary;
+        return [
+          { label: 'Internal issues', value: summary?.internalIssues ?? 0, color: '#3f6f59', link: '/context/internal-issues' },
+          { label: 'External issues', value: summary?.externalIssues ?? 0, color: '#9a6e2d', link: '/context/external-issues' },
+          { label: 'Interested parties', value: summary?.interestedParties ?? 0, color: '#446d8e', link: '/context/interested-parties' },
+          { label: 'Needs', value: summary?.needsExpectations ?? 0, color: '#6f9d7f', link: '/context/needs-expectations' }
+        ];
+      }
+      case 'risks':
+      default:
+        return [
+          { label: 'Low', value: this.data().riskDistribution.low, color: '#6f9d7f', link: '/risks' },
+          { label: 'Medium', value: this.data().riskDistribution.medium, color: '#c39545', link: '/risks' },
+          { label: 'High', value: this.data().riskDistribution.high, color: '#b45a47', link: '/risks' }
+        ];
+    }
   }
 
   private actionPlannedCount() {
     const openCapas = this.data().metrics['openCapas'] ?? 0;
     return Math.max(openCapas - this.data().capaSummary.investigating - this.data().capaSummary.inProgress - this.data().capaSummary.verified, 0);
+  }
+
+  private isOverdue(dueDate?: string) {
+    if (!dueDate) {
+      return false;
+    }
+    return new Date(dueDate).getTime() < Date.now();
   }
 }

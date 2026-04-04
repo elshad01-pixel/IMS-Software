@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { hash } from 'bcryptjs';
+import { createDigitXDemoDataset } from './demo-dataset';
 import { getAuditChecklistQuestionDelegate } from '../src/common/prisma/prisma-delegate-compat';
 import { createStarterQuestionSeedData } from '../src/modules/audits/audit-question-bank';
 
@@ -29,6 +30,10 @@ const permissionKeys = [
   'kpis.write',
   'training.read',
   'training.write',
+  'context.read',
+  'context.write',
+  'processes.read',
+  'processes.write',
   'ncr.read',
   'ncr.write',
   'reports.read',
@@ -228,6 +233,12 @@ async function main() {
       data: createStarterQuestionSeedData(tenant.id)
     });
   }
+
+  await createDigitXDemoDataset(prisma, {
+    tenantId: tenant.id,
+    roleIds,
+    passwordHash
+  });
 }
 
 main()

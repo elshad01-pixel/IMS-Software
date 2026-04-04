@@ -638,6 +638,8 @@ export class ShellComponent {
     { path: '/training', label: 'Training', hint: 'Assignments and evidence', icon: 'TR' },
     { path: '/actions', label: 'Actions', hint: 'Global follow-up tracker', icon: 'AC' },
     { path: '/ncr', label: 'NCR', hint: 'Nonconformance control', icon: 'NC' },
+    { path: '/context', label: 'Context', hint: 'Clause 4 issues and parties', icon: 'CX' },
+    { path: '/process-register', label: 'Process Register', hint: 'Business process links', icon: 'PR' },
     { path: '/reports', label: 'Reports', hint: 'Exports and summaries', icon: 'RP' },
     { path: '/users', label: 'Users', hint: 'Access and ownership', icon: 'US' },
     { path: '/settings', label: 'Settings', hint: 'System configuration', icon: 'ST' }

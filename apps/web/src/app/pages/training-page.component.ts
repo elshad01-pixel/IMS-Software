@@ -87,7 +87,7 @@ type TrainingRecord = {
         </div>
       </section>
 
-      <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-columns">
+      <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-stack">
         <form class="card form-card page-stack" [formGroup]="trainingForm" (ngSubmit)="saveTraining()">
           <div class="section-head">
             <div>
@@ -121,24 +121,6 @@ type TrainingRecord = {
           </div>
         </form>
 
-        <section class="card panel-card">
-          <div class="section-head">
-            <div>
-              <h3>Course workflow</h3>
-              <p class="subtle">Assignments and evidence stay on the course record so the editor remains calm and clear.</p>
-            </div>
-          </div>
-          <div class="entity-list top-space">
-            <div class="entity-item">
-              <strong>Define the course</strong>
-              <small>Set audience, delivery method, owner, and due date.</small>
-            </div>
-            <div class="entity-item">
-              <strong>Assign from the detail page</strong>
-              <small>Use the course page for user assignments, progress, and evidence tracking.</small>
-            </div>
-          </div>
-        </section>
       </section>
 
       <section *ngIf="mode() === 'detail' && selectedTraining()" class="page-columns">

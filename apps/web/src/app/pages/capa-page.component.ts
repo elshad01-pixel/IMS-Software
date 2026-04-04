@@ -147,7 +147,7 @@ type CapaRow = {
         </div>
       </section>
 
-      <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-columns">
+      <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-stack">
         <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
           <div class="section-head">
             <div>
@@ -263,30 +263,7 @@ type CapaRow = {
           </div>
         </form>
 
-        <section class="card panel-card">
-          <div class="section-head">
-            <div>
-              <span class="section-eyebrow">Control pattern</span>
-              <h3>Workflow guidance</h3>
-              <p class="subtle">Raise the issue here, then use the record page for follow-up actions, evidence, and closure review.</p>
-            </div>
-          </div>
-          <div class="entity-list top-space">
-            <div class="entity-item">
-              <strong>Raise the nonconformity</strong>
-              <small>Keep the initial problem statement and source tight and factual.</small>
-            </div>
-            <div class="entity-item">
-              <strong>Capture the root cause and actions</strong>
-              <small>Separate correction, corrective action, and preventive action to avoid crowding the record.</small>
-            </div>
-            <div class="entity-item">
-              <strong>Close from the detail page</strong>
-              <small>Review due dates, closure evidence, and linked actions before moving to verified or closed.</small>
-            </div>
-          </div>
-          <iso-attachment-panel *ngIf="selectedId()" [sourceType]="'capa'" [sourceId]="selectedId()" />
-        </section>
+        <iso-attachment-panel *ngIf="selectedId()" [sourceType]="'capa'" [sourceId]="selectedId()" />
       </section>
 
       <section *ngIf="mode() === 'detail' && selectedCapa()" class="page-columns">

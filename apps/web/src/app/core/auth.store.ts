@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { tap } from 'rxjs';
+import { catchError, of, tap } from 'rxjs';
 
 type Session = {
   accessToken: string;
@@ -21,6 +21,10 @@ export class AuthStore {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly sessionState = signal<Session | null>(this.readSession());
+
+  constructor() {
+    this.refreshSession();
+  }
 
   readonly session = computed(() => this.sessionState());
   readonly isAuthenticated = computed(() => !!this.sessionState()?.accessToken);
@@ -64,6 +68,45 @@ export class AuthStore {
           void this.router.navigateByUrl('/');
         })
       );
+  }
+
+  refreshSession() {
+    const current = this.sessionState();
+    if (!current?.accessToken) {
+      return;
+    }
+
+    this.http
+      .get<{
+        id: string;
+        tenantId: string;
+        email: string;
+        role?: {
+          id: string;
+          name: string;
+          permissions: Array<{ permission: { key: string } }>;
+        } | null;
+      }>('/api/auth/me')
+      .pipe(
+        tap((me) => {
+          const next: Session = {
+            accessToken: current.accessToken,
+            tenantSlug: current.tenantSlug,
+            user: {
+              sub: me.id,
+              tenantId: me.tenantId,
+              email: me.email,
+              roleId: me.role?.id,
+              roleName: me.role?.name,
+              permissions: me.role?.permissions.map((entry) => entry.permission.key) ?? []
+            }
+          };
+          this.sessionState.set(next);
+          localStorage.setItem('iso-session', JSON.stringify(next));
+        }),
+        catchError(() => of(null))
+      )
+      .subscribe();
   }
 
   logout() {

@@ -26,6 +26,15 @@ import { RecordWorkItemsComponent } from '../shared/record-work-items.component'
 
 type PageMode = 'list' | 'create' | 'detail' | 'edit';
 type UserOption = NcrUserSummary;
+type ProcessOption = {
+  id: string;
+  name: string;
+  referenceNo?: string | null;
+  department?: string | null;
+  status?: string;
+  ownerUserId?: string | null;
+  owner?: NcrUserSummary | null;
+};
 
 const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
   OPEN: ['UNDER_REVIEW', 'INVESTIGATION', 'ARCHIVED'],
@@ -192,6 +201,14 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
           </div>
 
           <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+          <section class="feedback next-steps-banner success" *ngIf="mode() === 'edit' && message() && !error()">
+            <strong>{{ message() }}</strong>
+            <span>{{ ncrNextStepsCopy() }}</span>
+            <div class="button-row top-space">
+              <a *ngIf="selectedId()" [routerLink]="['/ncr', selectedId()]" class="button-link secondary">Review NCR</a>
+              <a routerLink="/ncr" class="button-link tertiary">Review register</a>
+            </div>
+          </section>
 
           <section class="detail-section">
             <h4>Overview</h4>
@@ -215,8 +232,21 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
           <section class="detail-section">
             <h4>Ownership</h4>
             <div class="form-grid-2 top-space">
+              <label class="field">
+                <span>Process filter</span>
+                <select [value]="ownerProcessFilterId()" (change)="setOwnerProcessFilter(readSelect($event))">
+                  <option value="">All processes</option>
+                  <option *ngFor="let process of processOptions()" [value]="process.id">{{ processLabel(process) }}</option>
+                </select>
+              </label>
+              <div class="detail-section compact-note">
+                <h4>Owner guidance</h4>
+                <p>{{ ownerFilterCopy() }}</p>
+              </div>
+            </div>
+            <div class="form-grid-2 top-space">
               <label class="field"><span>Reported by</span><select formControlName="reportedByUserId"><option value="">Unassigned</option><option *ngFor="let item of users()" [value]="item.id">{{ fullName(item) }}</option></select></label>
-              <label class="field"><span>Owner</span><select formControlName="ownerUserId"><option value="">Unassigned</option><option *ngFor="let item of users()" [value]="item.id">{{ fullName(item) }}</option></select></label>
+              <label class="field"><span>Owner</span><select formControlName="ownerUserId"><option value="">Unassigned</option><option *ngFor="let item of ownerOptions()" [value]="item.id">{{ fullName(item) }}</option></select></label>
             </div>
             <div class="form-grid-3 top-space">
               <label class="field"><span>Department</span><input formControlName="department" placeholder="Quality"></label>
@@ -232,6 +262,34 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
             <div class="form-grid-2 top-space">
               <label class="field"><span>Root cause</span><textarea rows="3" formControlName="rootCause"></textarea></label>
               <label class="field"><span>RCA method</span><select formControlName="rcaMethod"><option value="">Not set</option><option *ngFor="let item of rcaMethodOptions" [value]="item">{{ labelize(item) }}</option></select></label>
+            </div>
+            <div class="detail-section top-space structured-rca" *ngIf="selectedRcaMethod() === 'FIVE_WHY'">
+              <div class="section-head compact-head">
+                <div>
+                  <h4>5 Why prompt</h4>
+                  <p class="subtle">Work step by step through the causal chain. If the root cause summary is left blank, these answers will be combined into it on save.</p>
+                </div>
+              </div>
+              <div class="page-stack top-space">
+                <label class="field" *ngFor="let why of fiveWhySteps; let index = index">
+                  <span>{{ why }}</span>
+                  <textarea rows="2" [value]="fiveWhyAnswers()[index]" (input)="updateFiveWhy(index, $event)"></textarea>
+                </label>
+              </div>
+            </div>
+            <div class="detail-section top-space structured-rca" *ngIf="selectedRcaMethod() === 'FISHBONE'">
+              <div class="section-head compact-head">
+                <div>
+                  <h4>Fishbone prompt</h4>
+                  <p class="subtle">Capture likely causes by category. If the root cause summary is left blank, these notes will be combined into it on save.</p>
+                </div>
+              </div>
+              <div class="form-grid-2 top-space">
+                <label class="field" *ngFor="let group of fishboneCategories">
+                  <span>{{ group.label }}</span>
+                  <textarea rows="2" [value]="fishboneAnswers()[group.key]" (input)="updateFishbone(group.key, $event)"></textarea>
+                </label>
+              </div>
             </div>
             <label class="field top-space"><span>Corrective action summary</span><textarea rows="3" formControlName="correctiveActionSummary"></textarea></label>
           </section>
@@ -251,20 +309,6 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
           </div>
         </form>
 
-        <section class="card panel-card">
-          <div class="section-head">
-            <div>
-              <span class="section-eyebrow">Workflow</span>
-              <h3>NCR workflow guidance</h3>
-              <p class="subtle">Use the detail record for comments, attachments, activity, and linked actions after the NCR has been created.</p>
-            </div>
-          </div>
-          <div class="entity-list top-space">
-            <div class="entity-item"><strong>1. Capture the issue</strong><small>Log the core issue, source, severity, owner, and due date.</small></div>
-            <div class="entity-item"><strong>2. Investigate</strong><small>Add containment, root cause, and corrective action summary as the NCR progresses.</small></div>
-            <div class="entity-item"><strong>3. Verify and close</strong><small>Verification data is required before the backend allows final closure.</small></div>
-          </div>
-        </section>
       </section>
 
       <section *ngIf="canRead() && mode() === 'detail' && selectedNcr()" class="page-stack detail-layout">
@@ -284,6 +328,16 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
               <article class="summary-item"><span>Due date</span><strong>{{ selectedNcr()?.dueDate ? (selectedNcr()?.dueDate | date:'yyyy-MM-dd') : 'Not set' }}</strong></article>
               <article class="summary-item"><span>Comments</span><strong>{{ comments().length }}</strong></article>
             </div>
+            <section class="feedback next-steps-banner success top-space" *ngIf="message() && !error()">
+              <strong>{{ message() }}</strong>
+              <span>{{ ncrNextStepsCopy() }}</span>
+              <div class="button-row top-space">
+                <button type="button" (click)="setDetailTab(selectedNcr()?.status === 'OPEN' || selectedNcr()?.status === 'UNDER_REVIEW' ? 'investigation' : 'actions')">
+                  {{ selectedNcr()?.status === 'OPEN' || selectedNcr()?.status === 'UNDER_REVIEW' ? 'Continue investigation' : 'Review actions' }}
+                </button>
+                <button type="button" class="secondary" (click)="setDetailTab('comments')">Open comments</button>
+              </div>
+            </section>
           </section>
 
           <section class="card panel-card">
@@ -393,19 +447,15 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
     </section>
   `,
   styles: [`
-    .debug-render-banner {
-      padding: 0.9rem 1rem;
-      border-radius: 14px;
-      border: 1px solid rgba(176, 73, 58, 0.45);
-      background: #b0493a;
-      color: #fff7f4;
-      font-weight: 800;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-      box-shadow: var(--shadow-soft);
-    }
-
     .top-space { margin-top: 1rem; }
+    .next-steps-banner {
+      display: grid;
+      gap: 0.35rem;
+      padding: 1rem 1.1rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(47, 107, 69, 0.16);
+      background: rgba(47, 107, 69, 0.08);
+    }
     .filter-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .toggle-line { display: inline-flex; gap: 0.55rem; align-items: center; font-weight: 600; color: var(--muted-strong); }
     .inline-actions { display: flex; gap: 0.45rem; flex-wrap: wrap; justify-content: flex-end; }
@@ -432,6 +482,10 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
       color: var(--brand-strong);
       box-shadow: var(--shadow-soft);
     }
+    .compact-note { padding: 0.9rem 1rem; border: 1px solid var(--border-subtle); border-radius: 1rem; background: color-mix(in srgb, var(--surface-strong) 90%, white); }
+    .compact-note h4 { margin: 0 0 0.35rem; font-size: 0.95rem; }
+    .compact-note p { margin: 0; color: var(--text-soft); }
+    .structured-rca { border: 1px dashed var(--border-subtle); border-radius: 1rem; padding: 1rem; background: color-mix(in srgb, var(--surface-strong) 86%, white); }
     .comment-item p { margin: 0.45rem 0 0; color: var(--text-soft); line-height: 1.5; }
     tr[routerLink] { cursor: pointer; }
     @media (max-width: 1100px) { .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -454,6 +508,8 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected readonly selectedId = signal<string | null>(null);
   protected readonly activeDetailTab = signal<'overview' | 'investigation' | 'actions' | 'comments' | 'activity'>('overview');
   protected readonly users = signal<UserOption[]>([]);
+  protected readonly processOptions = signal<ProcessOption[]>([]);
+  protected readonly ownerProcessFilterId = signal('');
   protected readonly comments = signal<NcrComment[]>([]);
   protected readonly activity = signal<NcrActivityItem[]>([]);
   protected readonly loading = signal(false);
@@ -475,6 +531,24 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected readonly priorityOptions: NcrPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
   protected readonly rcaMethodOptions: NcrRcaMethod[] = ['FIVE_WHY', 'FISHBONE', 'IS_IS_NOT', 'OTHER'];
   protected readonly verificationOptions: NcrVerificationStatus[] = ['PENDING', 'VERIFIED', 'REJECTED'];
+  protected readonly fiveWhySteps = ['Why 1', 'Why 2', 'Why 3', 'Why 4', 'Why 5'];
+  protected readonly fishboneCategories = [
+    { key: 'people', label: 'People' },
+    { key: 'process', label: 'Process' },
+    { key: 'equipment', label: 'Equipment' },
+    { key: 'materials', label: 'Materials' },
+    { key: 'environment', label: 'Environment' },
+    { key: 'measurement', label: 'Measurement' }
+  ] as const;
+  protected readonly fiveWhyAnswers = signal(['', '', '', '', '']);
+  protected readonly fishboneAnswers = signal<Record<string, string>>({
+    people: '',
+    process: '',
+    equipment: '',
+    materials: '',
+    environment: '',
+    measurement: ''
+  });
   protected readonly form = this.fb.nonNullable.group({
     referenceNo: ['', [Validators.required, Validators.maxLength(40)]],
     title: ['', [Validators.required, Validators.maxLength(180)]],
@@ -519,6 +593,7 @@ export class NcrPageComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.loadUsers();
+    this.loadProcesses();
     if (this.forcedMode) {
       this.mode.set(this.forcedMode);
       this.handleRoute(this.route.snapshot.paramMap);
@@ -560,6 +635,7 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected canDeleteRow(item: NcrRecord) { return this.authStore.hasPermission('admin.delete') && item.status !== 'CLOSED' && item.status !== 'ARCHIVED'; }
   protected canArchiveRow(item: NcrRecord) { return this.authStore.hasPermission('admin.delete') && item.status !== 'ARCHIVED' && item.status !== 'OPEN'; }
   protected fullName(user: NcrUserSummary) { return `${user.firstName} ${user.lastName}`.trim(); }
+  protected processLabel(process: ProcessOption) { return `${process.referenceNo || 'Uncoded'} - ${process.name}`; }
   protected labelize(value: string) { return value.toLowerCase().split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' '); }
   protected statusClass(status: NcrStatus) { if (status === 'CLOSED') return 'success'; if (status === 'ARCHIVED') return 'neutral'; if (status === 'PENDING_VERIFICATION' || status === 'UNDER_REVIEW') return 'warn'; return 'attention'; }
   protected severityClass(severity: NcrSeverity) { if (severity === 'CRITICAL') return 'danger'; if (severity === 'HIGH') return 'warn'; if (severity === 'LOW') return 'neutral'; return 'attention'; }
@@ -568,6 +644,61 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected readSelect(event: Event) { return (event.target as HTMLSelectElement).value; }
   protected readChecked(event: Event) { return (event.target as HTMLInputElement).checked; }
   protected setDetailTab(tab: 'overview' | 'investigation' | 'actions' | 'comments' | 'activity') { this.activeDetailTab.set(tab); }
+  protected selectedRcaMethod() { return this.form.getRawValue().rcaMethod as NcrRcaMethod | ''; }
+  protected ownerOptions() {
+    const processId = this.ownerProcessFilterId();
+    if (!processId) {
+      return this.users();
+    }
+    const process = this.processOptions().find((item) => item.id === processId);
+    if (!process?.ownerUserId) {
+      return this.users();
+    }
+    return this.users().filter((user) => user.id === process.ownerUserId);
+  }
+  protected ownerFilterCopy() {
+    const processId = this.ownerProcessFilterId();
+    if (!processId) {
+      return 'Select a process if you want to narrow the owner list to the process owner.';
+    }
+    const process = this.processOptions().find((item) => item.id === processId);
+    return process?.owner
+      ? `Owner options are narrowed to ${this.fullName(process.owner)} from ${process.name}.`
+      : 'This process does not have an assigned process owner yet, so all users remain available.';
+  }
+  protected ncrNextStepsCopy() {
+    const record = this.selectedNcr();
+    if (!record) {
+      return this.mode() === 'create'
+        ? 'Next: review the saved NCR and continue the investigation from the record.'
+        : 'Next: continue the NCR from the relevant workflow tab.';
+    }
+    if (record.status === 'OPEN' || record.status === 'UNDER_REVIEW') {
+      return 'Next: continue the investigation, capture root cause, and then move into corrective actions.';
+    }
+    if (record.status === 'INVESTIGATION' || record.status === 'ACTION_IN_PROGRESS') {
+      return 'Next: review corrective actions, keep comments and evidence current, and prepare for verification.';
+    }
+    if (record.status === 'PENDING_VERIFICATION') {
+      return 'Next: complete verification and confirm whether the NCR can be closed or needs more action.';
+    }
+    return 'Next: review the investigation trail, linked actions, and evidence as part of the NCR record.';
+  }
+  protected setOwnerProcessFilter(processId: string) {
+    this.ownerProcessFilterId.set(processId);
+    const currentOwnerId = this.form.getRawValue().ownerUserId;
+    if (currentOwnerId && !this.ownerOptions().some((user) => user.id === currentOwnerId)) {
+      this.form.patchValue({ ownerUserId: '' });
+    }
+  }
+  protected updateFiveWhy(index: number, event: Event) {
+    const next = [...this.fiveWhyAnswers()];
+    next[index] = this.readInput(event);
+    this.fiveWhyAnswers.set(next);
+  }
+  protected updateFishbone(key: string, event: Event) {
+    this.fishboneAnswers.set({ ...this.fishboneAnswers(), [key]: this.readInput(event) });
+  }
 
   protected save() {
     if (this.form.invalid || !this.canWrite()) {
@@ -730,7 +861,15 @@ export class NcrPageComponent implements OnInit, OnChanges {
     this.api.get<UserOption[]>('users').subscribe((users) => this.users.set(users));
   }
 
+  private loadProcesses() {
+    this.api.get<ProcessOption[]>('process-register').subscribe({
+      next: (processes) => this.processOptions.set(processes.filter((process) => process.status !== 'ARCHIVED')),
+      error: () => this.processOptions.set([])
+    });
+  }
+
   private patchForm(record: NcrRecord) {
+    this.ownerProcessFilterId.set('');
     this.form.patchValue({
       referenceNo: record.referenceNo,
       title: record.title,
@@ -755,9 +894,12 @@ export class NcrPageComponent implements OnInit, OnChanges {
       verifiedByUserId: record.verifiedByUserId || '',
       verificationDate: record.verificationDate?.slice(0, 10) || ''
     }, { emitEvent: false });
+    this.fiveWhyAnswers.set(['', '', '', '', '']);
+    this.fishboneAnswers.set({ people: '', process: '', equipment: '', materials: '', environment: '', measurement: '' });
   }
 
   private resetForm() {
+    this.ownerProcessFilterId.set('');
     this.form.reset({
       referenceNo: '',
       title: '',
@@ -782,6 +924,8 @@ export class NcrPageComponent implements OnInit, OnChanges {
       verifiedByUserId: '',
       verificationDate: ''
     });
+    this.fiveWhyAnswers.set(['', '', '', '', '']);
+    this.fishboneAnswers.set({ people: '', process: '', equipment: '', materials: '', environment: '', measurement: '' });
   }
 
   private patchCurrent(payload: Partial<NcrUpsertPayload>, successMessage: string, fallback: string) {
@@ -825,7 +969,7 @@ export class NcrPageComponent implements OnInit, OnChanges {
       dueDate: raw.dueDate || undefined,
       containmentAction: raw.containmentAction.trim() || undefined,
       investigationSummary: raw.investigationSummary.trim() || undefined,
-      rootCause: raw.rootCause.trim() || undefined,
+      rootCause: (raw.rootCause.trim() || this.structuredRootCauseSummary()) || undefined,
       rcaMethod: (raw.rcaMethod as NcrRcaMethod) || undefined,
       correctiveActionSummary: raw.correctiveActionSummary.trim() || undefined,
       verificationStatus: raw.verificationStatus,
@@ -841,6 +985,24 @@ export class NcrPageComponent implements OnInit, OnChanges {
 
   private today() {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  private structuredRootCauseSummary() {
+    if (this.selectedRcaMethod() === 'FIVE_WHY') {
+      const answered = this.fiveWhyAnswers()
+        .map((value, index) => ({ label: this.fiveWhySteps[index], value: value.trim() }))
+        .filter((item) => item.value);
+      return answered.length ? answered.map((item) => `${item.label}: ${item.value}`).join('\n') : '';
+    }
+
+    if (this.selectedRcaMethod() === 'FISHBONE') {
+      const answered = this.fishboneCategories
+        .map((group) => ({ label: group.label, value: (this.fishboneAnswers()[group.key] || '').trim() }))
+        .filter((item) => item.value);
+      return answered.length ? answered.map((item) => `${item.label}: ${item.value}`).join('\n') : '';
+    }
+
+    return '';
   }
 }
 

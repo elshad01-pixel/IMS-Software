@@ -164,7 +164,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
         </div>
       </section>
 
-      <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-columns">
+      <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-stack">
         <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
           <div class="section-head">
             <div>
@@ -247,34 +247,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
           </div>
         </form>
 
-        <div class="page-stack">
-          <section class="card panel-card">
-            <div class="section-head">
-              <div>
-                <span class="section-eyebrow">Control pattern</span>
-                <h3>Workflow guidance</h3>
-                <p class="subtle">Register the document first. Evidence, review support, and follow-up remain on the record after save.</p>
-              </div>
-            </div>
-
-            <div class="entity-list top-space">
-              <div class="entity-item">
-                <strong>1. Register the document</strong>
-                <small>Save the controlled document with its code, title, owner, and review dates.</small>
-              </div>
-              <div class="entity-item">
-                <strong>2. Review the record</strong>
-                <small>Use the detail page for approval status changes, attachments, and action items.</small>
-              </div>
-              <div class="entity-item">
-                <strong>3. Maintain revision history</strong>
-                <small>Update the change summary whenever a substantive revision is made.</small>
-              </div>
-            </div>
-          </section>
-
-          <iso-attachment-panel *ngIf="selectedId()" [sourceType]="'document'" [sourceId]="selectedId()" />
-        </div>
+        <iso-attachment-panel *ngIf="selectedId()" [sourceType]="'document'" [sourceId]="selectedId()" />
       </section>
 
       <section *ngIf="mode() === 'detail' && selectedDocument()" class="page-columns">

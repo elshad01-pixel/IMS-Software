@@ -422,14 +422,18 @@ export class RecordWorkItemsComponent implements OnChanges {
 
   protected createActionTitle() {
     if (this.sourceType === 'ncr') return 'Add corrective action';
-    if (this.sourceType === 'risk') return 'Add mitigation action';
+    if (this.sourceType === 'risk') return 'Create action';
     return 'Add action';
   }
 
   protected createActionDescription() {
-    return this.sourceType === 'ncr'
-      ? 'Use this only when a new action is needed to resolve the NCR.'
-      : 'Create another linked action for this record only when additional follow-up is needed.';
+    if (this.sourceType === 'ncr') {
+      return 'Use this only when a new action is needed to resolve the NCR.';
+    }
+    if (this.sourceType === 'risk') {
+      return 'Create a mitigation action directly from this record when ownership and due dates are ready.';
+    }
+    return 'Create another linked action for this record only when additional follow-up is needed.';
   }
 
   protected titlePlaceholder() {
@@ -444,19 +448,19 @@ export class RecordWorkItemsComponent implements OnChanges {
 
   protected submitLabel() {
     if (this.sourceType === 'ncr') return 'Add Corrective Action';
-    if (this.sourceType === 'risk') return 'Add Mitigation Action';
+    if (this.sourceType === 'risk') return 'Create Action';
     return 'Add Action';
   }
 
   protected savingLabel() {
     if (this.sourceType === 'ncr') return 'Saving corrective action...';
-    if (this.sourceType === 'risk') return 'Saving mitigation action...';
+    if (this.sourceType === 'risk') return 'Saving action...';
     return 'Saving action...';
   }
 
   protected addButtonLabel() {
     if (this.sourceType === 'ncr') return 'Add Corrective Action';
-    if (this.sourceType === 'risk') return 'Add Mitigation Action';
+    if (this.sourceType === 'risk') return 'Create Action';
     return 'Add Action';
   }
 

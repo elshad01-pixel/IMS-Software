@@ -137,6 +137,46 @@ enum TrainingAssignmentStatus {
   COMPLETED
 }
 
+enum ProcessRegisterStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum ProcessRegisterLinkType {
+  DOCUMENT
+  RISK
+  AUDIT
+  KPI
+  ACTION
+  NCR
+  CONTEXT_ISSUE
+}
+
+enum RiskAssessmentType {
+  RISK
+  OPPORTUNITY
+}
+
+enum ContextIssueType {
+  INTERNAL
+  EXTERNAL
+}
+
+enum ContextIssueStatus {
+  OPEN
+  MONITORING
+  RESOLVED
+  ARCHIVED
+}
+
+enum InterestedPartyType {
+  CUSTOMER
+  REGULATOR
+  EMPLOYEE
+  SUPPLIER
+  OTHER
+}
+
 model Tenant {
   id                String             @id @default(cuid())
   name              String
@@ -165,6 +205,12 @@ model Tenant {
   settings          TenantSetting[]
   ncrs              Ncr[]
   ncrComments       NcrComment[]
+  processRegisters  ProcessRegister[]
+  processRegisterLinks ProcessRegisterLink[]
+  contextIssues     ContextIssue[]
+  interestedParties InterestedParty[]
+  needExpectations  NeedExpectation[]
+  contextIssueRiskLinks ContextIssueRiskLink[]
 }
 
 model User {
@@ -184,6 +230,9 @@ model User {
   attachments  Attachment[]
   actionItems  ActionItem[] @relation("ActionItemOwner")
   ncrComments  NcrComment[] @relation("NcrCommentAuthor")
+  ownedProcesses ProcessRegister[] @relation("ProcessOwner")
+  deletedProcesses ProcessRegister[] @relation("ProcessDeletedBy")
+  createdProcessLinks ProcessRegisterLink[] @relation("ProcessLinkCreator")
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -307,6 +356,7 @@ model Risk {
   id               String     @id @default(cuid())
   tenantId         String
   deletedById      String?
+  assessmentType   RiskAssessmentType @default(RISK)
   title            String
   description      String?
   category         String?
@@ -414,6 +464,116 @@ model NcrComment {
   author    User     @relation("NcrCommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, ncrId, createdAt])
+}
+
+model ProcessRegister {
+  id          String                @id @default(cuid())
+  tenantId    String
+  referenceNo String?
+  name        String
+  purpose     String?
+  ownerUserId String?
+  department  String?
+  scope       String?
+  inputsText  String?
+  outputsText String?
+  status      ProcessRegisterStatus @default(ACTIVE)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  deletedAt   DateTime?
+  deletedById String?
+  tenant      Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  owner       User?                 @relation("ProcessOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  deletedBy   User?                 @relation("ProcessDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  links       ProcessRegisterLink[]
+
+  @@unique([tenantId, referenceNo])
+  @@index([tenantId, status])
+  @@index([tenantId, ownerUserId])
+  @@index([tenantId, deletedAt])
+}
+
+model ProcessRegisterLink {
+  id          String                  @id @default(cuid())
+  tenantId    String
+  processId   String
+  linkType    ProcessRegisterLinkType
+  linkedId    String
+  note        String?
+  createdAt   DateTime                @default(now())
+  createdById String?
+  tenant      Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  process     ProcessRegister         @relation(fields: [processId], references: [id], onDelete: Cascade)
+  createdBy   User?                   @relation("ProcessLinkCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([processId, linkType, linkedId])
+  @@index([tenantId, processId])
+  @@index([tenantId, linkType, linkedId])
+}
+
+model ContextIssue {
+  id          String             @id @default(cuid())
+  tenantId    String
+  type        ContextIssueType
+  title       String
+  description String
+  impactOnBusiness String?
+  category    String?
+  status      ContextIssueStatus @default(OPEN)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  deletedAt   DateTime?
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  riskLinks   ContextIssueRiskLink[]
+
+  @@index([tenantId, type, status])
+  @@index([tenantId, deletedAt])
+}
+
+model InterestedParty {
+  id          String              @id @default(cuid())
+  tenantId    String
+  name        String
+  type        InterestedPartyType
+  description String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  deletedAt   DateTime?
+  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  needs       NeedExpectation[]
+
+  @@index([tenantId, type])
+  @@index([tenantId, deletedAt])
+}
+
+model NeedExpectation {
+  id                String           @id @default(cuid())
+  tenantId          String
+  interestedPartyId String
+  description       String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  deletedAt         DateTime?
+  tenant            Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  interestedParty   InterestedParty  @relation(fields: [interestedPartyId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, interestedPartyId])
+  @@index([tenantId, deletedAt])
+}
+
+model ContextIssueRiskLink {
+  id          String   @id @default(cuid())
+  tenantId    String
+  issueId     String
+  riskId      String
+  createdAt   DateTime @default(now())
+  createdById String?
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  issue       ContextIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@unique([issueId, riskId])
+  @@index([tenantId, issueId])
+  @@index([tenantId, riskId])
 }
 
 model Audit {

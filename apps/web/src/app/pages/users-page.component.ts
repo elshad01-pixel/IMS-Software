@@ -130,7 +130,7 @@ type UserRow = {
         </div>
       </section>
 
-      <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-columns">
+      <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-stack">
         <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
           <div class="section-head">
             <div>
@@ -195,25 +195,9 @@ type UserRow = {
           </div>
         </form>
 
-        <section class="card panel-card">
-          <div class="section-head">
-            <div>
-              <span class="section-eyebrow">Role guide</span>
-              <h3>Access model</h3>
-              <p class="subtle">Keep role assignment simple at this stage: Admin, Manager, and User.</p>
-            </div>
-          </div>
-
-          <div class="entity-list top-space">
-            <div class="entity-item" *ngFor="let role of roles()">
-              <strong>{{ role.name }}</strong>
-              <small>{{ role.description || 'No role description provided.' }}</small>
-            </div>
-          </div>
-        </section>
       </section>
 
-      <section *ngIf="mode() === 'detail' && selectedUser()" class="page-columns">
+      <section *ngIf="mode() === 'detail' && selectedUser()" class="page-stack">
         <div class="page-stack">
           <section class="card detail-card">
             <div class="section-head">
@@ -252,27 +236,6 @@ type UserRow = {
             </dl>
           </section>
         </div>
-
-        <section class="card panel-card">
-          <div class="section-head">
-            <div>
-              <span class="section-eyebrow">Access summary</span>
-              <h3>Role assignment</h3>
-              <p class="subtle">Review the assigned access level before making changes from the edit screen.</p>
-            </div>
-          </div>
-
-          <div class="entity-list top-space">
-            <div class="entity-item">
-              <strong>{{ selectedUser()?.role?.name || 'Unassigned' }}</strong>
-              <small>{{ selectedUser()?.role?.description || 'No role description provided.' }}</small>
-            </div>
-            <div class="entity-item">
-              <strong>Account status</strong>
-              <small>{{ selectedUser()?.isActive ? 'This user can sign in and access the tenant.' : 'This user is inactive and cannot sign in.' }}</small>
-            </div>
-          </div>
-        </section>
       </section>
     </section>
   `,

@@ -12,6 +12,11 @@ import {
 } from 'class-validator';
 
 export class CreateRiskDto {
+  @ApiPropertyOptional({ enum: ['RISK', 'OPPORTUNITY'], default: 'RISK' })
+  @IsOptional()
+  @IsIn(['RISK', 'OPPORTUNITY'])
+  assessmentType?: 'RISK' | 'OPPORTUNITY';
+
   @IsString()
   @MaxLength(160)
   title!: string;

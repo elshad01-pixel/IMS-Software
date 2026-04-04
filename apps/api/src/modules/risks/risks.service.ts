@@ -41,6 +41,7 @@ export class RisksService {
     const risk = await this.prisma.risk.create({
       data: {
         tenantId,
+        assessmentType: dto.assessmentType ?? 'RISK',
         title: dto.title.trim(),
         description: this.normalizeText(dto.description),
         category: this.normalizeText(dto.category),
@@ -58,7 +59,7 @@ export class RisksService {
         treatmentSummary: this.normalizeText(dto.treatmentSummary) ?? this.normalizeText(dto.existingControls),
         ownerId: dto.ownerId || null,
         targetDate: dto.targetDate ? new Date(dto.targetDate) : null,
-        status: dto.status ?? RiskStatus.OPEN
+        status: this.deriveStatus(dto, dto.status ?? RiskStatus.OPEN)
       } as any
     });
 
@@ -149,6 +150,7 @@ export class RisksService {
     }
 
     return {
+      assessmentType: dto.assessmentType ?? existing?.assessmentType ?? 'RISK',
       title: dto.title?.trim(),
       description: dto.description !== undefined ? this.normalizeText(dto.description) : undefined,
       category: dto.category !== undefined ? this.normalizeText(dto.category) : undefined,
@@ -193,7 +195,16 @@ export class RisksService {
       ownerId: dto.ownerId !== undefined ? dto.ownerId || null : undefined,
       targetDate:
         dto.targetDate !== undefined ? (dto.targetDate ? new Date(dto.targetDate) : null) : undefined,
-      status: dto.status ?? existing?.status ?? RiskStatus.OPEN
+      status: this.deriveStatus({
+        ...existing,
+        ...dto,
+        existingControls:
+          dto.existingControls !== undefined ? dto.existingControls : existing?.existingControls,
+        plannedMitigationActions:
+          dto.plannedMitigationActions !== undefined ? dto.plannedMitigationActions : existing?.plannedMitigationActions,
+        ownerId: dto.ownerId !== undefined ? dto.ownerId : existing?.ownerId,
+        targetDate: dto.targetDate !== undefined ? dto.targetDate : existing?.targetDate
+      }, dto.status ?? existing?.status ?? RiskStatus.OPEN)
     };
   }
 
@@ -267,5 +278,31 @@ export class RisksService {
   private normalizeText(value?: string) {
     const trimmed = value?.trim();
     return trimmed ? trimmed : null;
+  }
+
+  private deriveStatus(
+    source: {
+      existingControls?: string | null;
+      plannedMitigationActions?: string | null;
+      residualLikelihood?: number | null;
+      residualImpact?: number | null;
+      ownerId?: string | null;
+      targetDate?: string | Date | null;
+    },
+    requestedStatus: RiskStatus
+  ) {
+    if (requestedStatus !== RiskStatus.OPEN) {
+      return requestedStatus;
+    }
+
+    const hasActiveAssessment =
+      !!this.normalizeText(source.existingControls ?? undefined) ||
+      !!this.normalizeText(source.plannedMitigationActions ?? undefined) ||
+      !!source.residualLikelihood ||
+      !!source.residualImpact ||
+      !!source.ownerId ||
+      !!source.targetDate;
+
+    return hasActiveAssessment ? RiskStatus.IN_TREATMENT : RiskStatus.OPEN;
   }
 }
