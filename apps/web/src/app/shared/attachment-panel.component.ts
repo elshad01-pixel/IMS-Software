@@ -173,6 +173,8 @@ export class AttachmentPanelComponent implements OnChanges {
 
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
+  private readonly maxUploadBytes = 15 * 1024 * 1024;
+  private readonly blockedExtensions = new Set(['exe', 'bat', 'cmd', 'com', 'msi', 'scr', 'ps1', 'sh', 'jar']);
 
   protected readonly attachments = signal<Attachment[]>([]);
   protected readonly selectedFile = signal<File | null>(null);
@@ -192,6 +194,16 @@ export class AttachmentPanelComponent implements OnChanges {
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
+    if (file) {
+      const validationError = this.readFileValidationError(file);
+      if (validationError) {
+        input.value = '';
+        this.selectedFile.set(null);
+        this.message.set('');
+        this.error.set(validationError);
+        return;
+      }
+    }
     this.selectedFile.set(file);
     this.message.set('');
     this.error.set('');
@@ -335,6 +347,21 @@ export class AttachmentPanelComponent implements OnChanges {
   }
 
   protected uploadHintCopy() {
-    return this.canUploadAttachments() ? 'Choose a file to add as evidence' : 'Evidence upload is read-only for your current role';
+    return this.canUploadAttachments()
+      ? 'Choose a file up to 15 MB. Executable or script files are not allowed.'
+      : 'Evidence upload is read-only for your current role';
+  }
+
+  private readFileValidationError(file: File) {
+    if (file.size > this.maxUploadBytes) {
+      return 'Evidence files must be 15 MB or smaller.';
+    }
+
+    const extension = file.name.includes('.') ? file.name.split('.').pop()!.toLowerCase() : '';
+    if (this.blockedExtensions.has(extension)) {
+      return 'Executable or script files are not allowed as evidence uploads.';
+    }
+
+    return '';
   }
 }

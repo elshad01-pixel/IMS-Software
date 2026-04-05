@@ -134,35 +134,35 @@ type ReturnNavigation = { route: string[]; label: string };
             </div>
           </section>
 
-          <section class="detail-section" *ngIf="processTemplates().length">
+          <section class="detail-section" *ngIf="mode() === 'create' && processTemplates().length">
             <h4>How do you want to start?</h4>
-            <div class="entity-list top-space">
-              <div class="entity-item">
-                <strong>Use a starter template</strong>
-                <small>Prefill the process with common inputs, outputs, and purpose. You can edit every field before saving.</small>
-              </div>
-              <div class="entity-item">
-                <strong>Create a custom process</strong>
-                <small>Leave the template blank and write the process definition manually if this process is unique to your organization.</small>
-              </div>
+            <div class="segmented-control top-space" role="group" aria-label="Process creation mode">
+              <button type="button" [class.active]="startMode() === 'template'" (click)="setStartMode('template')">Use a starter template</button>
+              <button type="button" [class.active]="startMode() === 'custom'" (click)="setStartMode('custom')">Start from scratch</button>
             </div>
 
-            <h4>Starter process template</h4>
-            <div class="form-grid-2 top-space">
+            <p class="subtle top-space" *ngIf="startMode() === 'template'">
+              Choose a standard process, preview it, then apply it to the form and edit every field before saving.
+            </p>
+            <p class="subtle top-space" *ngIf="startMode() === 'custom'">
+              Use the blank form for processes that are unique to your organization. You can still switch back to a starter later.
+            </p>
+
+            <div class="form-grid-2 top-space" *ngIf="startMode() === 'template'">
               <label class="field">
-                <span>Template</span>
+                <span>Starter template</span>
                 <select [value]="selectedTemplateId()" (change)="selectedTemplateId.set(readSelectValue($event))">
-                  <option value="">Start from a blank process</option>
+                  <option value="">Choose a starter process</option>
                   <option *ngFor="let template of processTemplates()" [value]="template.id">{{ template.name }}</option>
                 </select>
               </label>
               <div class="button-row align-end">
-                <button type="button" class="secondary" (click)="clearTemplateSelection()">Start custom</button>
-                <button type="button" [disabled]="!selectedTemplate()" (click)="applyTemplate()">Use template</button>
+                <button type="button" class="secondary" (click)="setStartMode('custom')">Use blank form</button>
+                <button type="button" [disabled]="!selectedTemplate()" (click)="applyTemplate()">Apply starter</button>
               </div>
             </div>
 
-            <div class="content-guidance top-space" *ngIf="selectedTemplate() as template">
+            <div class="content-guidance top-space" *ngIf="startMode() === 'template' && selectedTemplate() as template">
               <div class="section-head compact-head">
                 <div>
                   <h4>{{ template.name }}</h4>
@@ -175,6 +175,20 @@ type ReturnNavigation = { route: string[]; label: string };
                 <section class="detail-section"><h4>Inputs</h4><p>{{ template.inputsText }}</p></section>
                 <section class="detail-section"><h4>Outputs</h4><p>{{ template.outputsText }}</p></section>
               </div>
+            </div>
+          </section>
+
+          <section class="content-guidance">
+            <div class="section-head compact-head">
+              <div>
+                <h4>Process-control position</h4>
+                <p class="subtle">{{ processDefinitionGuidance() }}</p>
+              </div>
+            </div>
+            <div class="summary-strip top-space">
+              <article class="summary-item"><span>Owner</span><strong>{{ form.getRawValue().ownerUserId ? 'Assigned' : 'Needed' }}</strong></article>
+              <article class="summary-item"><span>Purpose</span><strong>{{ hasMeaningfulText(form.getRawValue().purpose) ? 'Recorded' : 'Needed' }}</strong></article>
+              <article class="summary-item"><span>Interfaces</span><strong>{{ hasMeaningfulText(form.getRawValue().inputsText) && hasMeaningfulText(form.getRawValue().outputsText) ? 'Defined' : 'Clarify' }}</strong></article>
             </div>
           </section>
 
@@ -226,6 +240,20 @@ type ReturnNavigation = { route: string[]; label: string };
               <article class="summary-item"><span>Department</span><strong>{{ selectedProcess()?.department || 'Not set' }}</strong></article>
               <article class="summary-item"><span>Linked records</span><strong>{{ selectedProcess()?.links?.length || 0 }}</strong></article>
             </div>
+
+            <section class="content-guidance top-space">
+              <div class="section-head compact-head">
+                <div>
+                  <h4>Process assurance position</h4>
+                  <p class="subtle">{{ processAssuranceNarrative() }}</p>
+                </div>
+              </div>
+              <div class="summary-strip top-space">
+                <article class="summary-item"><span>Risks</span><strong>{{ linkCountByType('RISK') }}</strong></article>
+                <article class="summary-item"><span>Documents</span><strong>{{ linkCountByType('DOCUMENT') }}</strong></article>
+                <article class="summary-item"><span>Audits / NCR</span><strong>{{ linkCountByType('AUDIT') + linkCountByType('NCR') }}</strong></article>
+              </div>
+            </section>
 
             <section class="feedback next-steps-banner success top-space" *ngIf="message() && !error()">
               <strong>{{ message() }}</strong>
@@ -403,6 +431,7 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
   protected readonly linkCandidates = signal<LinkCandidate[]>([]);
   protected readonly activeLinkComposerType = signal<LinkType | null>(null);
   protected readonly selectedTemplateId = signal('');
+  protected readonly startMode = signal<'template' | 'custom'>('template');
   protected readonly returnNavigation = signal<ReturnNavigation | null>(null);
   protected readonly linkTypes: LinkType[] = ['DOCUMENT', 'RISK', 'AUDIT', 'KPI', 'ACTION', 'NCR', 'CONTEXT_ISSUE'];
   protected readonly visibleLinkTypes: LinkType[] = ['RISK', 'AUDIT', 'DOCUMENT', 'NCR', 'ACTION', 'CONTEXT_ISSUE'];
@@ -508,6 +537,29 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
       return 'Next: review the linked records and add any missing risks, audits, documents, NCRs, actions, or context issues.';
     }
     return 'Next: link the first related record so this process becomes a useful hub instead of a standalone definition.';
+  }
+  protected hasMeaningfulText(value?: string | null) {
+    return !!(value || '').trim();
+  }
+  protected processDefinitionGuidance() {
+    const raw = this.form.getRawValue();
+    if (raw.ownerUserId && this.hasMeaningfulText(raw.purpose) && this.hasMeaningfulText(raw.inputsText) && this.hasMeaningfulText(raw.outputsText)) {
+      return 'The process definition is taking shape as a controlled record with ownership and clear interfaces.';
+    }
+    return 'A useful process record should show who owns it, why it exists, and what inputs and outputs define the interface.';
+  }
+  protected processAssuranceNarrative() {
+    const process = this.selectedProcess();
+    if (!process) {
+      return 'Save the process first, then link the risks, audits, documents, and actions that provide assurance around it.';
+    }
+    if ((process.links?.length || 0) === 0) {
+      return 'This process is defined, but it is not yet supported by linked evidence. Add risks, audits, documents, or NCRs so the process can be reviewed in context.';
+    }
+    if (!this.linkCountByType('RISK') || !this.linkCountByType('DOCUMENT')) {
+      return 'The process already has some linkage, but it would benefit from both risk visibility and document control evidence.';
+    }
+    return 'This process already has linked assurance records, making it more useful for audit and management review.';
   }
   protected processTemplates() {
     return this.library()?.processRegister.templates ?? [];
@@ -662,9 +714,17 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
       inputsText: template.inputsText,
       outputsText: template.outputsText
     });
+    this.message.set(`Starter applied from ${template.name}. Review and customize the process before saving.`);
   }
   protected clearTemplateSelection() {
     this.selectedTemplateId.set('');
+    this.startMode.set('custom');
+  }
+  protected setStartMode(mode: 'template' | 'custom') {
+    this.startMode.set(mode);
+    if (mode === 'custom') {
+      this.selectedTemplateId.set('');
+    }
   }
   protected openSuggestedLinkComposer() {
     const preferredType = this.linksByType('RISK').length ? 'DOCUMENT' : 'RISK';
@@ -695,6 +755,7 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
     this.linkCandidates.set([]);
     this.activeLinkComposerType.set(null);
     this.selectedTemplateId.set('');
+    this.startMode.set('template');
   }
 
   private reloadProcesses() {

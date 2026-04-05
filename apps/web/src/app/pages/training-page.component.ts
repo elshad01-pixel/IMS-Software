@@ -73,6 +73,7 @@ type TrainingRecord = {
                 <th>Method</th>
                 <th>Due</th>
                 <th>Completion</th>
+                <th>Follow-up</th>
               </tr>
             </thead>
             <tbody>
@@ -81,6 +82,7 @@ type TrainingRecord = {
                 <td>{{ item.deliveryMethod || 'Unspecified' }}</td>
                 <td>{{ item.dueDate ? (item.dueDate | date:'yyyy-MM-dd') : 'Open' }}</td>
                 <td>{{ item.completion | number:'1.0-0' }}%</td>
+                <td>{{ trainingFollowUpLabel(item) }}</td>
               </tr>
             </tbody>
           </table>
@@ -97,6 +99,12 @@ type TrainingRecord = {
           </div>
 
           <p class="feedback" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+
+          <section class="guidance-card">
+            <strong>Competence planning</strong>
+            <p>Define the expected audience, delivery method, and due date so the course can be assigned and later evidenced as completed.</p>
+            <small>Training becomes audit-ready when assignment records clearly show due date, completion status, and evidence summary by person.</small>
+          </section>
 
           <label class="field"><span>Title</span><input formControlName="title" placeholder="Internal auditor awareness"></label>
           <div class="form-grid-2">
@@ -134,6 +142,31 @@ type TrainingRecord = {
               <span class="status-badge success">{{ selectedTraining()?.completion | number:'1.0-0' }}% complete</span>
             </div>
 
+            <section class="summary-strip top-space">
+              <article class="summary-item">
+                <span>Assigned</span>
+                <strong>{{ assignmentCount('ASSIGNED') }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>In progress</span>
+                <strong>{{ assignmentCount('IN_PROGRESS') }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Completed</span>
+                <strong>{{ assignmentCount('COMPLETED') }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Overdue</span>
+                <strong>{{ overdueAssignmentCount() }}</strong>
+              </article>
+            </section>
+
+            <section class="guidance-card top-space">
+              <strong>{{ trainingReadinessHeadline() }}</strong>
+              <p>{{ trainingReadinessNarrative() }}</p>
+              <small>{{ trainingReadinessHint() }}</small>
+            </section>
+
             <dl class="key-value top-space">
               <dt>Description</dt>
               <dd>{{ selectedTraining()?.description || 'No description provided.' }}</dd>
@@ -148,7 +181,7 @@ type TrainingRecord = {
             <div class="section-head">
               <div>
                 <h3>Assignments</h3>
-                <p class="subtle">Assign training, track completion, and store evidence by user.</p>
+                <p class="subtle">Assign training, track completion, and keep evidence of competence by user.</p>
               </div>
             </div>
 
@@ -173,6 +206,7 @@ type TrainingRecord = {
               </div>
               <label class="field"><span>Notes</span><textarea rows="2" formControlName="notes" placeholder="Assignment notes"></textarea></label>
               <label class="field"><span>Evidence summary</span><textarea rows="2" formControlName="evidenceSummary" placeholder="Completion evidence or notes"></textarea></label>
+              <p class="subtle form-note">When an assignment is marked complete, the evidence summary should explain what demonstrated competence: attendance, test result, observation, or signed record.</p>
               <button type="submit" [disabled]="assignmentForm.invalid || saving()">Assign training</button>
             </form>
 
@@ -187,7 +221,7 @@ type TrainingRecord = {
                     {{ assignment.status === 'COMPLETED' ? 'Completed' : 'Mark complete' }}
                   </button>
                 </div>
-                <p class="subtle">{{ assignment.evidenceSummary || assignment.notes || 'No notes' }}</p>
+                <p class="subtle">{{ assignment.evidenceSummary || assignment.notes || assignmentGuidance(assignment) }}</p>
               </article>
             </div>
           </section>
@@ -202,6 +236,30 @@ type TrainingRecord = {
 
     tr[routerLink] {
       cursor: pointer;
+    }
+
+    .guidance-card {
+      padding: 1rem 1.1rem;
+      border: 1px solid rgba(46, 67, 56, 0.1);
+      border-radius: 1rem;
+      background: rgba(252, 253, 250, 0.82);
+    }
+
+    .guidance-card strong,
+    .guidance-card p,
+    .guidance-card small {
+      display: block;
+    }
+
+    .guidance-card p,
+    .guidance-card small {
+      margin-top: 0.4rem;
+      color: #617165;
+      line-height: 1.45;
+    }
+
+    .form-note {
+      margin: 0;
     }
   `]
 })
@@ -353,6 +411,91 @@ export class TrainingPageComponent {
         this.error.set(this.readError(error, 'Training assignment update failed.'));
       }
     });
+  }
+
+  protected trainingFollowUpLabel(training: TrainingRecord) {
+    if (training.completion >= 100) {
+      return 'Complete';
+    }
+    if (training.assignments.some((assignment) => assignment.displayStatus === 'OVERDUE')) {
+      return 'Overdue follow-up';
+    }
+    if (training.assignments.some((assignment) => assignment.status === 'IN_PROGRESS')) {
+      return 'Evidence in progress';
+    }
+    if (training.assignments.length) {
+      return 'Assignments open';
+    }
+    return 'Assign learners';
+  }
+
+  protected assignmentCount(status: TrainingAssignmentStatus) {
+    return (this.selectedTraining()?.assignments || []).filter((assignment) => assignment.status === status).length;
+  }
+
+  protected overdueAssignmentCount() {
+    return (this.selectedTraining()?.assignments || []).filter((assignment) => assignment.displayStatus === 'OVERDUE').length;
+  }
+
+  protected trainingReadinessHeadline() {
+    const training = this.selectedTraining();
+    if (!training) {
+      return 'Training follow-up';
+    }
+    if (training.completion >= 100) {
+      return 'Training completion is evidenced';
+    }
+    if (this.overdueAssignmentCount() > 0) {
+      return 'Training follow-up is overdue';
+    }
+    if (this.assignmentCount('IN_PROGRESS') > 0) {
+      return 'Competence evidence is still being gathered';
+    }
+    return 'Assignments are in place';
+  }
+
+  protected trainingReadinessNarrative() {
+    const training = this.selectedTraining();
+    if (!training) {
+      return 'Assignments and evidence will appear once the course is saved.';
+    }
+    if (training.completion >= 100) {
+      return 'All current assignments are complete. Keep the evidence summaries clear enough to demonstrate competence during review or audit.';
+    }
+    if (this.overdueAssignmentCount() > 0) {
+      return 'At least one learner is past due. Management follow-up should confirm whether the course is delayed, reassigned, or needs additional support.';
+    }
+    if (this.assignmentCount('IN_PROGRESS') > 0) {
+      return 'Learners are progressing through the course, but the record still needs completion evidence before competence can be treated as verified.';
+    }
+    return 'The course is defined, but ongoing evidence depends on assigning people and maintaining assignment updates.';
+  }
+
+  protected trainingReadinessHint() {
+    const training = this.selectedTraining();
+    if (!training) {
+      return 'Save the course first, then assign people and record their evidence of completion.';
+    }
+    if (training.completion >= 100) {
+      return 'Next step: keep refresher timing and reassignment under control if this competence needs periodic renewal.';
+    }
+    if (this.overdueAssignmentCount() > 0) {
+      return 'Next step: review the overdue learners and update due dates or status before the record falls behind further.';
+    }
+    return 'Next step: keep assignment notes and evidence summaries current so auditors can see how competence was confirmed.';
+  }
+
+  protected assignmentGuidance(assignment: TrainingAssignment) {
+    if (assignment.displayStatus === 'OVERDUE') {
+      return 'Assignment is overdue. Update the learner status or due date and record the current follow-up.';
+    }
+    if (assignment.status === 'COMPLETED') {
+      return 'Completion should be supported by a short evidence summary.';
+    }
+    if (assignment.status === 'IN_PROGRESS') {
+      return 'Record how the learner is progressing and what evidence is still expected.';
+    }
+    return 'Assignment created. Add evidence once the learner completes the course.';
   }
 
   private handleRoute(params: ParamMap) {

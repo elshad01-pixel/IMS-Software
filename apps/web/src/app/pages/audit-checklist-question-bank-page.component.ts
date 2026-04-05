@@ -54,11 +54,11 @@ const CLAUSES: ClauseKey[] = ['4', '5', '6', '7', '8', '9', '10'];
 
         <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
-        <div class="toolbar">
-          <div class="toolbar-meta">
-            <div>
-              <p class="toolbar-title">Standards</p>
-              <p class="toolbar-copy">Switch between standards, then manage the questions under each clause.</p>
+          <div class="toolbar">
+            <div class="toolbar-meta">
+              <div>
+                <p class="toolbar-title">Standards</p>
+                <p class="toolbar-copy">Switch between standards, then manage the questions under each clause.</p>
             </div>
             <div class="toolbar-stats">
               <article class="toolbar-stat">
@@ -71,6 +71,11 @@ const CLAUSES: ClauseKey[] = ['4', '5', '6', '7', '8', '9', '10'];
               </article>
             </div>
           </div>
+
+          <label class="toggle-row compact-toggle">
+            <input type="checkbox" [checked]="showArchived()" (change)="showArchived.set(readCheckbox($event))">
+            <span>Show archived questions in the clause view</span>
+          </label>
 
           <div class="standard-tabs">
             <button
@@ -229,6 +234,20 @@ const CLAUSES: ClauseKey[] = ['4', '5', '6', '7', '8', '9', '10'];
       gap: 0.75rem;
     }
 
+    .compact-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      color: var(--text-soft);
+      font-weight: 600;
+      margin-top: 0.9rem;
+    }
+
+    .compact-toggle input {
+      width: auto;
+      margin: 0;
+    }
+
     .standard-tab {
       min-width: 11rem;
       padding: 0.95rem 1rem;
@@ -350,6 +369,7 @@ export class AuditChecklistQuestionBankPageComponent implements OnInit {
   protected readonly saving = signal(false);
   protected readonly message = signal('');
   protected readonly error = signal('');
+  protected readonly showArchived = signal(false);
   protected readonly modalOpen = signal(false);
   protected readonly editingQuestionId = signal<string | null>(null);
 
@@ -535,6 +555,10 @@ export class AuditChecklistQuestionBankPageComponent implements OnInit {
     });
   }
 
+  protected readCheckbox(event: Event) {
+    return (event.target as HTMLInputElement).checked;
+  }
+
   private loadQuestions() {
     this.loading.set(true);
     this.api.get<ChecklistQuestion[]>('audits/checklist-questions?includeInactive=true').subscribe({
@@ -551,7 +575,12 @@ export class AuditChecklistQuestionBankPageComponent implements OnInit {
 
   private questionsForClause(clause: ClauseKey) {
     return this.questions()
-      .filter((question) => question.standard === this.selectedStandard() && question.clause === clause)
+      .filter(
+        (question) =>
+          question.standard === this.selectedStandard() &&
+          question.clause === clause &&
+          (this.showArchived() || question.isActive)
+      )
       .sort((left, right) => left.sortOrder - right.sortOrder);
   }
 

@@ -411,6 +411,8 @@ const SIDEBAR_PIN_KEY = 'ims.sidebar.pinned';
       display: flex;
       gap: 0.75rem;
       align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     .nav-toggle,
@@ -441,6 +443,7 @@ const SIDEBAR_PIN_KEY = 'ims.sidebar.pinned';
 
     .user-menu {
       position: relative;
+      max-width: 100%;
     }
 
     .user-trigger {
@@ -448,6 +451,7 @@ const SIDEBAR_PIN_KEY = 'ims.sidebar.pinned';
       align-items: center;
       gap: 0.8rem;
       min-width: 13.5rem;
+      max-width: min(100%, 18.5rem);
       padding: 0.72rem 0.85rem;
       border-radius: 16px;
       border: 1px solid rgba(23, 50, 37, 0.08);
@@ -606,6 +610,11 @@ const SIDEBAR_PIN_KEY = 'ims.sidebar.pinned';
       .topbar {
         display: grid;
         align-items: start;
+      }
+
+      .topbar-copy,
+      .topbar-actions {
+        min-width: 0;
       }
 
       .topbar-actions {

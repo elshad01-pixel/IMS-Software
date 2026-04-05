@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, Input, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
+import { Component, ElementRef, Input, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
@@ -87,7 +87,7 @@ type ReturnNavigation = {
           </button>
         </div>
 
-        <div class="actions-section form-section top-space" *ngIf="composerOpen() && canWriteActions()">
+        <div class="actions-section form-section top-space" *ngIf="composerOpen() && canWriteActions()" [class.highlighted]="composerHighlighted()">
           <div class="section-copy">
             <strong>{{ createActionTitle() }}</strong>
             <small>{{ createActionDescription() }}</small>
@@ -96,7 +96,7 @@ type ReturnNavigation = {
           <form [formGroup]="actionForm" (ngSubmit)="createActionItem()" class="stack">
             <label>
               <span>Title</span>
-              <input formControlName="title" [placeholder]="titlePlaceholder()">
+              <input formControlName="title" [placeholder]="titlePlaceholder()" data-action-title-input>
             </label>
             <label>
               <span>Description</span>
@@ -284,6 +284,14 @@ type ReturnNavigation = {
     .form-section {
       padding-top: 1rem;
       border-top: 1px solid rgba(23, 50, 37, 0.08);
+      scroll-margin-top: 7rem;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .form-section.highlighted {
+      border-color: rgba(40, 89, 67, 0.22);
+      box-shadow: 0 0 0 4px rgba(40, 89, 67, 0.08);
+      background: rgba(248, 251, 247, 0.9);
     }
 
     .overdue {
@@ -308,6 +316,7 @@ export class RecordWorkItemsComponent implements OnChanges {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
+  private readonly host = inject(ElementRef<HTMLElement>);
 
   protected readonly users = signal<UserOption[]>([]);
   protected readonly actionItems = signal<ActionItem[]>([]);
@@ -316,6 +325,7 @@ export class RecordWorkItemsComponent implements OnChanges {
   protected readonly actionsMessage = signal('');
   protected readonly actionsError = signal('');
   protected readonly composerOpen = signal(false);
+  protected readonly composerHighlighted = signal(false);
 
   protected readonly actionForm = this.fb.nonNullable.group({
     title: ['', Validators.required],
@@ -341,6 +351,12 @@ export class RecordWorkItemsComponent implements OnChanges {
         title: this.draftTitle || this.actionForm.getRawValue().title,
         description: this.draftDescription ?? this.actionForm.getRawValue().description
       }, { emitEvent: false });
+
+      if (this.canWriteActions() && (this.draftTitle || this.draftDescription)) {
+        this.composerOpen.set(true);
+        this.actionsMessage.set('Follow-up action draft opened below. Confirm owner and due date before saving.');
+        setTimeout(() => this.revealComposer(), 0);
+      }
     }
   }
 
@@ -428,6 +444,9 @@ export class RecordWorkItemsComponent implements OnChanges {
     }
 
     this.composerOpen.set(!this.composerOpen());
+    if (this.composerOpen()) {
+      setTimeout(() => this.revealComposer(false), 0);
+    }
   }
 
   protected canWriteActions() {
@@ -517,5 +536,18 @@ export class RecordWorkItemsComponent implements OnChanges {
       return false;
     }
     return new Date(item.dueDate) < new Date();
+  }
+
+  private revealComposer(shouldHighlight = true) {
+    const formSection = this.host.nativeElement.querySelector('.form-section') as HTMLElement | null;
+    const titleInput = this.host.nativeElement.querySelector('[data-action-title-input]') as HTMLInputElement | null;
+
+    if (shouldHighlight) {
+      this.composerHighlighted.set(true);
+      setTimeout(() => this.composerHighlighted.set(false), 1800);
+    }
+
+    formSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    titleInput?.focus();
   }
 }

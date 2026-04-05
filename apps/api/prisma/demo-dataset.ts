@@ -716,7 +716,13 @@ export async function createDigitXDemoDataset(
     });
   }
 
-  await ensureTenantSetting(prisma, params.tenantId, 'companyName', 'DigitX Manufacturing', ['Demo Tenant']);
+  await ensureTenantSetting(
+    prisma,
+    params.tenantId,
+    'organization.companyName',
+    'DigitX Manufacturing',
+    ['Demo Tenant', 'Integrated Management System']
+  );
   await ensureTenantSetting(prisma, params.tenantId, 'industry', 'Precision metal components manufacturing');
   await ensureTenantSetting(prisma, params.tenantId, 'location', 'Baku, Azerbaijan');
 

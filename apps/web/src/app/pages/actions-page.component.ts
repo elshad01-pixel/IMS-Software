@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { IconActionButtonComponent } from '../shared/icon-action-button.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
 type UserOption = {
@@ -37,7 +38,7 @@ type ReturnNavigation = {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, RouterLink, IconActionButtonComponent],
   template: `
     <section class="page-grid">
       <iso-page-header
@@ -113,6 +114,30 @@ type ReturnNavigation = {
               <p class="subtle">A single action view for owners, due dates, status, and source context.</p>
             </div>
           </div>
+
+          <section class="summary-strip top-space">
+            <article class="summary-item">
+              <span>Open</span>
+              <strong>{{ countByStatus('OPEN') }}</strong>
+            </article>
+            <article class="summary-item">
+              <span>In progress</span>
+              <strong>{{ countByStatus('IN_PROGRESS') }}</strong>
+            </article>
+            <article class="summary-item">
+              <span>Overdue</span>
+              <strong>{{ overdueCount() }}</strong>
+            </article>
+            <article class="summary-item">
+              <span>Done</span>
+              <strong>{{ countByStatus('DONE') }}</strong>
+            </article>
+          </section>
+
+          <section class="guidance-card top-space">
+            <strong>{{ followUpHeadline() }}</strong>
+            <p>{{ followUpNarrative() }}</p>
+          </section>
 
           <form class="toolbar top-space" [formGroup]="filtersForm" (ngSubmit)="reload()">
             <div class="filter-row">
@@ -210,7 +235,13 @@ type ReturnNavigation = {
                     </select>
                   </td>
                   <td *ngIf="canDeleteActions()">
-                    <button type="button" class="secondary" [disabled]="action.status === 'DONE'" (click)="deleteAction(action)">Delete</button>
+                    <iso-icon-action-button
+                      [icon]="'delete'"
+                      [label]="'Delete action'"
+                      [variant]="'danger'"
+                      [disabled]="action.status === 'DONE'"
+                      (pressed)="deleteAction(action)"
+                    />
                   </td>
                 </tr>
               </tbody>
@@ -221,6 +252,24 @@ type ReturnNavigation = {
     </section>
   `,
   styles: [`
+    .guidance-card {
+      padding: 1rem 1.1rem;
+      border: 1px solid rgba(46, 67, 56, 0.1);
+      border-radius: 1rem;
+      background: rgba(252, 253, 250, 0.82);
+    }
+
+    .guidance-card strong,
+    .guidance-card p {
+      display: block;
+    }
+
+    .guidance-card p {
+      margin-top: 0.4rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
     .table-link {
       color: var(--brand-strong);
       font-weight: 700;
@@ -326,6 +375,34 @@ export class ActionsPageComponent {
     });
   }
 
+  protected countByStatus(status: ActionStatus) {
+    return this.actions().filter((action) => action.status === status).length;
+  }
+
+  protected overdueCount() {
+    return this.actions().filter((action) => this.isOverdueRecord(action)).length;
+  }
+
+  protected followUpHeadline() {
+    if (this.overdueCount() > 0) {
+      return 'Some follow-up is overdue';
+    }
+    if (this.countByStatus('OPEN') > 0 || this.countByStatus('IN_PROGRESS') > 0) {
+      return 'Follow-up is active across the system';
+    }
+    return 'Follow-up is currently under control';
+  }
+
+  protected followUpNarrative() {
+    if (this.overdueCount() > 0) {
+      return 'Use the overdue actions as the first management attention point. They represent follow-up that has already missed the committed due date.';
+    }
+    if (this.countByStatus('OPEN') > 0 || this.countByStatus('IN_PROGRESS') > 0) {
+      return 'Open and in-progress actions are visible here across risks, audits, CAPA, and management review so ownership stays clear.';
+    }
+    return 'Current action records are either complete or not yet requiring additional intervention.';
+  }
+
   protected canDeleteActions() {
     return this.authStore.hasPermission('admin.delete');
   }
@@ -379,6 +456,13 @@ export class ActionsPageComponent {
 
   protected clearFocusedAction() {
     void this.router.navigate(['/actions']);
+  }
+
+  private isOverdueRecord(action: ActionRecord) {
+    if (!action.dueDate || action.status === 'DONE' || action.status === 'CANCELLED') {
+      return false;
+    }
+    return new Date(action.dueDate) < new Date();
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

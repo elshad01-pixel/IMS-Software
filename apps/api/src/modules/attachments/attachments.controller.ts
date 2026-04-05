@@ -6,6 +6,7 @@ import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { Permissions } from '../../common/auth/permissions.decorator';
 import { PermissionsGuard } from '../../common/auth/permissions.guard';
+import { buildAttachmentContentDisposition } from '../../common/http/download-header.util';
 import { CurrentTenant } from '../../common/tenancy/current-tenant.decorator';
 import { AttachmentsService } from './attachments.service';
 
@@ -26,7 +27,7 @@ export class AttachmentsController {
     const { attachment, stream } = await this.attachmentsService.download(tenantId, user.sub, attachmentId);
     response.setHeader('Content-Type', attachment.mimeType);
     response.setHeader('Content-Length', attachment.size.toString());
-    response.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(attachment.fileName)}"`);
+    response.setHeader('Content-Disposition', buildAttachmentContentDisposition(attachment.fileName));
     return new StreamableFile(stream);
   }
 
@@ -42,7 +43,13 @@ export class AttachmentsController {
 
   @Post(':sourceType/:sourceId')
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: 15 * 1024 * 1024
+      }
+    })
+  )
   upload(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { sub: string },

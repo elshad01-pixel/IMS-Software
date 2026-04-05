@@ -54,6 +54,11 @@ services:
       MINIO_PORT: ${MINIO_PORT:-9000}
       MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
       MINIO_BUCKET: ${MINIO_BUCKET:-attachments}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+      SEED_TENANT_SLUG: ${SEED_TENANT_SLUG:-demo-tenant}
+      SEED_TENANT_NAME: ${SEED_TENANT_NAME:-Demo Tenant}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@demo.local}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-ChangeMe123!}
     ports:
       - "${API_PORT:-3000}:3000"
 

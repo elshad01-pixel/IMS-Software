@@ -54,9 +54,32 @@ type SettingsConfig = {
       <iso-page-header
         [label]="'Settings'"
         [title]="'Tenant configuration'"
-        [description]="'Configure organization details, role capabilities, document and risk defaults, KPI thresholds, and notification behavior.'"
+        [description]="'Manage the live defaults that shape documents, risk assessment, KPIs, and role capabilities for this tenant.'"
         [breadcrumbs]="[{ label: 'Settings' }]"
       />
+
+      <section class="summary-strip settings-summary-strip" *ngIf="config() as current">
+        <article class="summary-item">
+          <span>Organization</span>
+          <strong>{{ current.organization.companyName }}</strong>
+          <small>{{ current.organization.tenantSlug }}</small>
+        </article>
+        <article class="summary-item">
+          <span>Document prefix</span>
+          <strong>{{ current.document.numberingPrefix }}</strong>
+          <small>{{ current.document.types.length }} default type{{ current.document.types.length === 1 ? '' : 's' }}</small>
+        </article>
+        <article class="summary-item">
+          <span>Risk scale</span>
+          <strong>{{ current.risk.likelihoodScale }} x {{ current.risk.severityScale }}</strong>
+          <small>Used in new risk assessments</small>
+        </article>
+        <article class="summary-item">
+          <span>KPI thresholds</span>
+          <strong>{{ current.kpi.greenThreshold }} / {{ current.kpi.warningThreshold }} / {{ current.kpi.breachThreshold }}</strong>
+          <small>Green, warning, breach</small>
+        </article>
+      </section>
 
       <section class="page-columns settings-layout">
         <aside class="card panel-card section-nav">
@@ -64,16 +87,35 @@ type SettingsConfig = {
             <div>
               <span class="section-eyebrow">Sections</span>
               <h3>Configuration areas</h3>
+              <p class="subtle">Review the defaults that already affect live records, then update only what your tenant really needs.</p>
             </div>
           </div>
 
           <nav class="nav-list top-space">
-            <button type="button" class="ghost nav-button" [class.active]="activeSection() === 'organization'" (click)="activeSection.set('organization')">Organization</button>
-            <button type="button" class="ghost nav-button" [class.active]="activeSection() === 'roles'" (click)="activeSection.set('roles')">Users & Roles</button>
-            <button type="button" class="ghost nav-button" [class.active]="activeSection() === 'document'" (click)="activeSection.set('document')">Document Settings</button>
-            <button type="button" class="ghost nav-button" [class.active]="activeSection() === 'risk'" (click)="activeSection.set('risk')">Risk Settings</button>
-            <button type="button" class="ghost nav-button" [class.active]="activeSection() === 'kpi'" (click)="activeSection.set('kpi')">KPI Settings</button>
-            <button type="button" class="ghost nav-button" [class.active]="activeSection() === 'notifications'" (click)="activeSection.set('notifications')">Notifications</button>
+            <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'organization'" (click)="activeSection.set('organization')">
+              <span>Organization</span>
+              <small>Tenant identity and company details</small>
+            </button>
+            <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'roles'" (click)="activeSection.set('roles')">
+              <span>Users & Roles</span>
+              <small>Three shared capability switches</small>
+            </button>
+            <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'document'" (click)="activeSection.set('document')">
+              <span>Documents</span>
+              <small>Numbering and default document types</small>
+            </button>
+            <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'risk'" (click)="activeSection.set('risk')">
+              <span>Risks</span>
+              <small>Assessment scale used in the risk module</small>
+            </button>
+            <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'kpi'" (click)="activeSection.set('kpi')">
+              <span>KPIs</span>
+              <small>Default threshold bands for new KPIs</small>
+            </button>
+            <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'notifications'" (click)="activeSection.set('notifications')">
+              <span>Notifications</span>
+              <small>Tenant preference reserved for later rollout</small>
+            </button>
           </nav>
         </aside>
 
@@ -85,7 +127,7 @@ type SettingsConfig = {
               <div>
                 <span class="section-eyebrow">Organization</span>
                 <h3>Organization settings</h3>
-                <p class="subtle">Update tenant identity, optional company context, and brand assets.</p>
+                <p class="subtle">Update the company identity shown in reports and across the tenant.</p>
               </div>
             </div>
 
@@ -127,7 +169,22 @@ type SettingsConfig = {
               <div>
                 <span class="section-eyebrow">Users & Roles</span>
                 <h3>Role capabilities</h3>
-                <p class="subtle">Keep role control simple: record creation, document approval, and CAPA closure.</p>
+                <p class="subtle">Keep role control simple. These shared capability switches update the managed permissions behind each role.</p>
+              </div>
+            </div>
+
+            <div class="entity-list compact-entity-list">
+              <div class="entity-item">
+                <strong>Create records</strong>
+                <small>Allows users in the role to create and update operational records across the main IMS modules.</small>
+              </div>
+              <div class="entity-item">
+                <strong>Approve documents</strong>
+                <small>Allows controlled documents to be formally approved.</small>
+              </div>
+              <div class="entity-item">
+                <strong>Close CAPA</strong>
+                <small>Allows corrective actions to be closed once effectiveness has been reviewed.</small>
               </div>
             </div>
 
@@ -163,7 +220,7 @@ type SettingsConfig = {
               <div>
                 <span class="section-eyebrow">Documents</span>
                 <h3>Document settings</h3>
-                <p class="subtle">Control document types, numbering prefix, and version display defaults.</p>
+                <p class="subtle">These defaults are used when new controlled documents are created.</p>
               </div>
             </div>
 
@@ -197,7 +254,7 @@ type SettingsConfig = {
               <div>
                 <span class="section-eyebrow">Risks</span>
                 <h3>Risk settings</h3>
-                <p class="subtle">Set the likelihood and severity scales used by risk assessments.</p>
+                <p class="subtle">Choose the assessment scale your tenant uses. The current risk module supports 5x5 and 10x10 scoring.</p>
               </div>
             </div>
 
@@ -232,7 +289,7 @@ type SettingsConfig = {
               <div>
                 <span class="section-eyebrow">KPIs</span>
                 <h3>KPI settings</h3>
-                <p class="subtle">Define the default threshold bands used when new KPIs are created.</p>
+                <p class="subtle">Set the default threshold bands applied when a new KPI is first created.</p>
               </div>
             </div>
 
@@ -265,7 +322,7 @@ type SettingsConfig = {
               <div>
                 <span class="section-eyebrow">Notifications</span>
                 <h3>Notifications</h3>
-                <p class="subtle">Enable or disable tenant notifications now, with email delivery reserved for a later phase.</p>
+                <p class="subtle">Store the tenant notification preference now. Live email delivery is reserved for a later phase.</p>
               </div>
             </div>
 
@@ -287,6 +344,16 @@ type SettingsConfig = {
     </section>
   `,
   styles: [`
+    .settings-summary-strip {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 0.25rem;
+    }
+
+    .settings-summary-strip small {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
     .settings-layout {
       grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1.5fr);
       align-items: start;
@@ -308,6 +375,25 @@ type SettingsConfig = {
       box-shadow: none;
     }
 
+    .nav-card {
+      display: grid;
+      justify-items: start;
+      gap: 0.2rem;
+      padding: 0.85rem 0.95rem;
+      border-radius: 1rem;
+      text-align: left;
+    }
+
+    .nav-card span {
+      font-weight: 800;
+    }
+
+    .nav-card small {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.35;
+    }
+
     .nav-button.active {
       background: rgba(43, 75, 109, 0.12);
       border-color: rgba(43, 75, 109, 0.2);
@@ -322,6 +408,10 @@ type SettingsConfig = {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 1rem;
+    }
+
+    .compact-entity-list {
+      margin-bottom: 1rem;
     }
 
     .role-toggle-grid {
@@ -343,6 +433,7 @@ type SettingsConfig = {
     }
 
     @media (max-width: 1100px) {
+      .settings-summary-strip,
       .settings-layout,
       .role-grid {
         grid-template-columns: 1fr;

@@ -5,6 +5,7 @@ import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { Permissions } from '../../common/auth/permissions.decorator';
 import { PermissionsGuard } from '../../common/auth/permissions.guard';
+import { buildAttachmentContentDisposition } from '../../common/http/download-header.util';
 import { CurrentTenant } from '../../common/tenancy/current-tenant.decorator';
 import { AuditReportService } from './audit-report.service';
 import { CreateAuditChecklistItemDto } from './dto/create-audit-checklist-item.dto';
@@ -60,7 +61,7 @@ export class AuditsController {
   ) {
     const report = await this.auditReportService.generateAuditReport(tenantId, id);
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${report.fileName}"`);
+    res.setHeader('Content-Disposition', buildAttachmentContentDisposition(report.fileName));
     res.setHeader('Content-Length', String(report.buffer.length));
     res.send(report.buffer);
   }

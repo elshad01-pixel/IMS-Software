@@ -2,12 +2,36 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { ConfigService } from '@nestjs/config';
 import { Client } from 'minio';
 import { randomUUID } from 'node:crypto';
+import { extname } from 'node:path';
 import { Readable } from 'node:stream';
+import { normalizeStoredFileName } from '../../common/http/download-header.util';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @Injectable()
 export class AttachmentsService {
+  private readonly maxUploadBytes = 15 * 1024 * 1024;
+  private readonly blockedExtensions = new Set([
+    '.exe',
+    '.bat',
+    '.cmd',
+    '.com',
+    '.msi',
+    '.scr',
+    '.ps1',
+    '.sh',
+    '.jar'
+  ]);
+
+  private readonly blockedMimeTypes = new Set([
+    'application/x-msdownload',
+    'application/x-msdos-program',
+    'application/x-sh',
+    'application/x-bat',
+    'application/x-csh',
+    'application/java-archive'
+  ]);
+
   private readonly attachmentPermissionMap: Record<string, { read: string; write: string }> = {
     document: { read: 'documents.read', write: 'documents.write' },
     risk: { read: 'risks.read', write: 'risks.write' },
@@ -89,8 +113,9 @@ export class AttachmentsService {
   ) {
     await this.ensureSourcePermission(tenantId, actorId, sourceType, 'write');
     await this.ensureSourceRecordExists(tenantId, sourceType, sourceId);
+    const safeFileName = this.validateUploadFile(file);
 
-    const objectKey = `${tenantId}/${sourceType}/${sourceId}/${randomUUID()}-${file.originalname}`;
+    const objectKey = `${tenantId}/${sourceType}/${sourceId}/${randomUUID()}-${safeFileName}`;
     await this.minioClient.putObject(this.bucket, objectKey, file.buffer, file.size, {
       'Content-Type': file.mimetype
     });
@@ -99,7 +124,7 @@ export class AttachmentsService {
       data: {
         tenantId,
         uploadedById: actorId,
-        fileName: file.originalname,
+        fileName: safeFileName,
         objectKey,
         mimeType: file.mimetype,
         size: file.size,
@@ -114,7 +139,7 @@ export class AttachmentsService {
       action: 'attachment.uploaded',
       entityType: sourceType,
       entityId: sourceId,
-      metadata: { attachmentId: attachment.id, fileName: file.originalname }
+      metadata: { attachmentId: attachment.id, fileName: safeFileName }
     });
 
     return attachment;
@@ -149,6 +174,34 @@ export class AttachmentsService {
     });
 
     return { success: true };
+  }
+
+  private validateUploadFile(file: {
+    originalname: string;
+    buffer: Buffer;
+    size: number;
+    mimetype: string;
+  }) {
+    if (!file?.buffer?.length || !file.originalname?.trim()) {
+      throw new BadRequestException('Choose a file before uploading evidence.');
+    }
+
+    if (file.size <= 0) {
+      throw new BadRequestException('The selected file is empty.');
+    }
+
+    if (file.size > this.maxUploadBytes) {
+      throw new BadRequestException('Evidence files must be 15 MB or smaller.');
+    }
+
+    const safeFileName = normalizeStoredFileName(file.originalname, 'attachment');
+    const extension = extname(safeFileName).toLowerCase();
+
+    if (this.blockedExtensions.has(extension) || this.blockedMimeTypes.has(file.mimetype)) {
+      throw new BadRequestException('Executable or script files are not allowed as evidence uploads.');
+    }
+
+    return safeFileName;
   }
 
   private async ensureBucket() {

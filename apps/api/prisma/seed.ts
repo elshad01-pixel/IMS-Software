@@ -14,6 +14,13 @@ const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString })
 });
 
+const seedDemoData = process.env.SEED_DEMO_DATA === 'true';
+const seedTenantSlug = process.env.SEED_TENANT_SLUG || (seedDemoData ? 'demo-tenant' : 'ims-tenant');
+const seedTenantName =
+  process.env.SEED_TENANT_NAME || (seedDemoData ? 'Demo Tenant' : 'Integrated Management System');
+const seedAdminEmail = process.env.SEED_ADMIN_EMAIL || (seedDemoData ? 'admin@demo.local' : 'admin@local');
+const seedAdminPassword = process.env.SEED_ADMIN_PASSWORD || 'ChangeMe123!';
+
 const permissionKeys = [
   'dashboard.read',
   'documents.read',
@@ -88,11 +95,11 @@ async function main() {
   }
 
   const tenant = await prisma.tenant.upsert({
-    where: { slug: 'demo-tenant' },
+    where: { slug: seedTenantSlug },
     update: {},
     create: {
-      slug: 'demo-tenant',
-      name: 'Demo Tenant'
+      slug: seedTenantSlug,
+      name: seedTenantName
     }
   });
 
@@ -168,13 +175,13 @@ async function main() {
     }
   }
 
-  const passwordHash = await hash('ChangeMe123!', 10);
+  const passwordHash = await hash(seedAdminPassword, 10);
 
   await prisma.user.upsert({
     where: {
       tenantId_email: {
         tenantId: tenant.id,
-        email: 'admin@demo.local'
+        email: seedAdminEmail
       }
     },
     update: {
@@ -183,55 +190,57 @@ async function main() {
     },
     create: {
       tenantId: tenant.id,
-      email: 'admin@demo.local',
-      firstName: 'Demo',
+      email: seedAdminEmail,
+      firstName: seedDemoData ? 'Demo' : 'Tenant',
       lastName: 'Admin',
       passwordHash,
       roleId: roleIds.get('Admin')
     }
   });
 
-  const additionalUsers = [
-    { email: 'quality.manager@demo.local', firstName: 'Quality', lastName: 'Manager', roleName: 'Manager' },
-    { email: 'internal.auditor@demo.local', firstName: 'Internal', lastName: 'Auditor', roleName: 'User' },
-    { email: 'ops.supervisor@demo.local', firstName: 'Operations', lastName: 'Supervisor', roleName: 'Manager' }
-  ];
+  if (seedDemoData) {
+    const additionalUsers = [
+      { email: 'quality.manager@demo.local', firstName: 'Quality', lastName: 'Manager', roleName: 'Manager' },
+      { email: 'internal.auditor@demo.local', firstName: 'Internal', lastName: 'Auditor', roleName: 'User' },
+      { email: 'ops.supervisor@demo.local', firstName: 'Operations', lastName: 'Supervisor', roleName: 'Manager' }
+    ];
 
-  for (const user of additionalUsers) {
-    await prisma.user.upsert({
-      where: {
-        tenantId_email: {
+    for (const user of additionalUsers) {
+      await prisma.user.upsert({
+        where: {
+          tenantId_email: {
+            tenantId: tenant.id,
+            email: user.email
+          }
+        },
+        update: {
+          roleId: roleIds.get(user.roleName),
+          passwordHash
+        },
+        create: {
           tenantId: tenant.id,
-          email: user.email
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          passwordHash,
+          roleId: roleIds.get(user.roleName)
         }
-      },
-      update: {
-        roleId: roleIds.get(user.roleName),
-        passwordHash
-      },
-      create: {
-        tenantId: tenant.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        passwordHash,
-        roleId: roleIds.get(user.roleName)
-      }
-    });
+      });
+    }
   }
 
   await prisma.tenantSetting.upsert({
     where: {
       tenantId_key: {
         tenantId: tenant.id,
-        key: 'companyName'
+        key: 'organization.companyName'
       }
     },
     update: {},
     create: {
       tenantId: tenant.id,
-      key: 'companyName',
-      value: 'Demo Tenant'
+      key: 'organization.companyName',
+      value: seedTenantName
     }
   });
 
@@ -245,11 +254,13 @@ async function main() {
     });
   }
 
-  await createDigitXDemoDataset(prisma, {
-    tenantId: tenant.id,
-    roleIds,
-    passwordHash
-  });
+  if (seedDemoData) {
+    await createDigitXDemoDataset(prisma, {
+      tenantId: tenant.id,
+      roleIds,
+      passwordHash
+    });
+  }
 }
 
 main()

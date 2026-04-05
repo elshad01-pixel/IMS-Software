@@ -143,9 +143,10 @@ type AuditRecord = {
                 <tr>
                   <th>Audit</th>
                   <th>Type</th>
+                  <th>Audit date</th>
                   <th>Status</th>
                   <th>Checklist</th>
-                  <th>Findings</th>
+                  <th>Findings follow-up</th>
                 </tr>
               </thead>
               <tbody>
@@ -157,9 +158,20 @@ type AuditRecord = {
                     </div>
                   </td>
                   <td>{{ item.type }}<span *ngIf="item.standard"> | {{ item.standard }}</span></td>
+                  <td>
+                    <div class="table-title">
+                      <strong>{{ auditDateValue(item) }}</strong>
+                      <small>{{ auditDateLabel(item) }}</small>
+                    </div>
+                  </td>
                   <td><span class="status-badge" [class.warn]="item.status === 'IN_PROGRESS' || item.status === 'CHECKLIST_COMPLETED'" [class.success]="item.status === 'COMPLETED'" [class.neutral]="item.status === 'CLOSED'">{{ item.status }}</span></td>
                   <td>{{ item.completedChecklistCount || 0 }}/{{ item.checklistCount || 0 }}</td>
-                  <td>{{ item.findingCount || 0 }}</td>
+                  <td>
+                    <div class="table-title">
+                      <strong>{{ item.findingCount || 0 }} total</strong>
+                      <small [ngClass]="findingsFollowUpClass(item)">{{ findingsFollowUpCopy(item) }}</small>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -637,6 +649,11 @@ type AuditRecord = {
               </article>
             </div>
 
+            <section class="compliance-note top-space" *ngIf="findingSeveritySummary() as severitySummary">
+              <strong>{{ severitySummary.heading }}</strong>
+              <span>{{ severitySummary.copy }}</span>
+            </section>
+
             <div class="empty-state top-space" *ngIf="!isChecklistComplete()">
               <strong>Checklist is not complete yet</strong>
               <span>Answer all required checklist questions before the audit can move into final completion.</span>
@@ -671,10 +688,14 @@ type AuditRecord = {
                 <div class="section-head">
                   <div>
                     <strong>{{ finding.title }}</strong>
-                    <small>{{ finding.severity }} | {{ finding.status }}{{ finding.clause ? ' | clause ' + finding.clause : '' }}{{ finding.dueDate ? ' | due ' + finding.dueDate.slice(0, 10) : '' }}</small>
+                    <small>{{ findingSeverityLabel(finding.severity) }} | {{ findingStatusLabel(finding.status) }}{{ finding.clause ? ' | clause ' + finding.clause : '' }}{{ finding.dueDate ? ' | due ' + finding.dueDate.slice(0, 10) : '' }}</small>
                   </div>
                 </div>
                 <p class="subtle">{{ cleanFindingDescription(finding.description) }}</p>
+                <section class="compliance-note compact-note top-space">
+                  <strong>{{ findingControlHeading(finding) }}</strong>
+                  <span>{{ findingControlCopy(finding) }}</span>
+                </section>
                 <div class="button-row compact-row">
                   <button type="button" class="secondary" (click)="focusChecklistQuestion(finding)" [disabled]="!finding.checklistItemId">Open question & evidence</button>
                   <button type="button" class="secondary" [disabled]="!!finding.linkedCapaId || saving() || !canCreateCapa()" (click)="createCapaFromFinding(finding)">
@@ -708,6 +729,10 @@ type AuditRecord = {
             </div>
 
             <form [formGroup]="closeoutForm" class="page-stack top-space" (ngSubmit)="completeAudit()">
+              <section class="compliance-note">
+                <strong>{{ auditCloseoutHeading() }}</strong>
+                <span>{{ auditCloseoutGuidance() }}</span>
+              </section>
               <label class="field">
                 <span>Audit conclusion</span>
                 <textarea rows="4" formControlName="conclusion" placeholder="Summarize whether the audited area is effective and where the main gaps were found"></textarea>
@@ -772,6 +797,30 @@ type AuditRecord = {
       border-radius: 1rem;
       border: 1px solid rgba(47, 107, 69, 0.16);
       background: rgba(47, 107, 69, 0.08);
+    }
+
+    .compliance-note {
+      display: grid;
+      gap: 0.35rem;
+      padding: 1rem 1.1rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(138, 99, 34, 0.16);
+      background: rgba(138, 99, 34, 0.08);
+    }
+
+    .followup-open {
+      color: #8a6322;
+      font-weight: 700;
+    }
+
+    .followup-closed {
+      color: #2f6b45;
+      font-weight: 700;
+    }
+
+    .followup-neutral {
+      color: var(--muted);
+      font-weight: 600;
     }
 
     .summary-grid {
@@ -1708,6 +1757,125 @@ export class AuditsPageComponent {
       return 'Next: review findings, complete the close-out, and then finish the audit from the review step.';
     }
     return 'Next: continue the checklist, record findings where needed, and return to the review step when the checklist is complete.';
+  }
+
+  protected findingSeverityLabel(severity: FindingSeverity) {
+    if (severity === 'MAJOR') return 'Major nonconformity';
+    if (severity === 'MINOR') return 'Minor nonconformity';
+    return 'Observation';
+  }
+
+  protected findingStatusLabel(status: FindingStatus) {
+    if (status === 'CAPA_CREATED') return 'CAPA raised';
+    return status === 'CLOSED' ? 'Closed' : 'Open';
+  }
+
+  protected findingSeveritySummary() {
+    const findings = this.selectedAudit()?.findings || [];
+    if (!findings.length) {
+      return {
+        heading: 'No findings require formal follow-up',
+        copy: 'This audit can move into close-out once the conclusion and recommendations are recorded.'
+      };
+    }
+
+    const major = findings.filter((finding) => finding.severity === 'MAJOR').length;
+    const minor = findings.filter((finding) => finding.severity === 'MINOR').length;
+    const observations = findings.filter((finding) => finding.severity === 'OBSERVATION').length;
+    return {
+      heading: 'Findings profile',
+      copy: `${major} major, ${minor} minor, and ${observations} observation${observations === 1 ? '' : 's'} are currently linked to this audit. Major findings should move into CAPA before the finding itself is closed.`
+    };
+  }
+
+  protected findingControlHeading(finding: AuditFinding) {
+    if (finding.linkedCapaId) {
+      return 'Corrective action path is active';
+    }
+    if (finding.severity === 'MAJOR') {
+      return 'Major finding requires CAPA';
+    }
+    if (finding.status === 'CLOSED') {
+      return 'Finding has been closed';
+    }
+    return 'Finding still needs follow-up';
+  }
+
+  protected findingControlCopy(finding: AuditFinding) {
+    if (finding.linkedCapaId) {
+      return 'This finding already has a linked CAPA. Keep the corrective workflow and evidence trail current before closing the finding.';
+    }
+    if (finding.severity === 'MAJOR') {
+      return 'A major nonconformity should move into CAPA so the audit trail shows formal corrective action ownership and verification.';
+    }
+    if (finding.status === 'CLOSED') {
+      return 'The finding is closed in the audit record. Keep any linked action or CAPA evidence available for future audit review.';
+    }
+    return 'Use CAPA where formal corrective action is required, or create a corrective action directly when a lighter follow-up is enough.';
+  }
+
+  protected auditCloseoutHeading() {
+    return this.canCompleteAudit() ? 'Audit is ready for completion' : 'Close-out requirements are still open';
+  }
+
+  protected auditCloseoutGuidance() {
+    if (!this.isChecklistComplete()) {
+      return 'Complete all checklist questions before the audit can be finished.';
+    }
+    if (this.closeoutForm.invalid) {
+      return 'Record the conclusion, recommendations, completion date, and auditor before finishing the audit.';
+    }
+    return 'The audit record can be completed now. Findings, actions, and NCR follow-up can continue after audit completion without reopening the audit itself.';
+  }
+
+  protected auditDateValue(audit: AuditRecord) {
+    const date = audit.completedAt || audit.scheduledAt || audit.startedAt;
+    return date ? date.slice(0, 10) : 'Not set';
+  }
+
+  protected auditDateLabel(audit: AuditRecord) {
+    if (audit.completedAt) {
+      return 'Completed date';
+    }
+    if (audit.scheduledAt) {
+      return 'Scheduled date';
+    }
+    if (audit.startedAt) {
+      return 'Started date';
+    }
+    return 'No audit date';
+  }
+
+  protected findingsFollowUpCopy(audit: AuditRecord) {
+    const total = audit.findingCount || 0;
+    const open = audit.openFindingCount || 0;
+    const closed = Math.max(total - open, 0);
+
+    if (!total) {
+      return 'No findings raised';
+    }
+
+    if (!open) {
+      return `${closed} closed`;
+    }
+
+    if (!closed) {
+      return `${open} open`;
+    }
+
+    return `${open} open | ${closed} closed`;
+  }
+
+  protected findingsFollowUpClass(audit: AuditRecord) {
+    const total = audit.findingCount || 0;
+    const open = audit.openFindingCount || 0;
+    if (!total) {
+      return 'followup-neutral';
+    }
+    if (open > 0) {
+      return 'followup-open';
+    }
+    return 'followup-closed';
   }
 
   protected isChecklistReadOnly() {

@@ -9,6 +9,7 @@ import { ContentCategoryGroup, ContentSuggestion } from '../core/content-library
 import { ContentLibraryService } from '../core/content-library.service';
 import { ContextApiService } from '../core/context-api.service';
 import { ContextIssueProcessLink, ContextIssueRecord, ContextIssueRiskLink, ContextIssueStatus, ContextIssueType } from '../core/context.models';
+import { IconActionButtonComponent } from '../shared/icon-action-button.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
 type PageMode = 'list' | 'create' | 'edit';
@@ -17,7 +18,7 @@ type ProcessCandidate = { id: string; name: string; referenceNo?: string | null;
 @Component({
   selector: 'iso-context-issues-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, IconActionButtonComponent],
   template: `
     <section class="page-grid">
       <iso-page-header [label]="'Clause 4'" [title]="pageTitle()" [description]="pageDescription()" [breadcrumbs]="breadcrumbs()">
@@ -90,8 +91,8 @@ type ProcessCandidate = { id: string; name: string; referenceNo?: string | null;
                   <td>{{ item.updatedAt | date:'yyyy-MM-dd' }}</td>
                   <td>
                     <div class="inline-actions">
-                      <a [routerLink]="editRoute(item.id)" class="button-link secondary compact">Open</a>
-                      <button *ngIf="canDelete()" type="button" class="button-link danger compact" (click)="deleteIssue(item.id)">Delete</button>
+                      <iso-icon-action-button [icon]="'view'" [label]="'Open issue'" [routerLink]="editRoute(item.id)" />
+                      <iso-icon-action-button *ngIf="canDelete()" [icon]="'delete'" [label]="'Delete issue'" [variant]="'danger'" (pressed)="deleteIssue(item.id)" />
                     </div>
                   </td>
                 </tr>
@@ -168,8 +169,8 @@ type ProcessCandidate = { id: string; name: string; referenceNo?: string | null;
                 </div>
                 <ng-template #noIssueSuggestions>
                   <div class="empty-state compact-empty">
-                    <strong>No starter suggestion for this category yet</strong>
-                    <span>Keep entering the issue manually, or choose another category for examples.</span>
+                    <strong>{{ suggestionEmptyStateTitle() }}</strong>
+                    <span>{{ suggestionEmptyStateCopy() }}</span>
                   </div>
                 </ng-template>
               </div>
@@ -393,8 +394,21 @@ export class ContextIssuesPageComponent implements OnInit, OnChanges {
   }
   protected suggestionsForCurrentCategory() {
     const currentCategory = this.form.getRawValue().category.trim();
-    const matchingGroup = this.library().find((group) => group.label === currentCategory) || this.library()[0];
+    if (!currentCategory) {
+      return [];
+    }
+    const matchingGroup = this.library().find((group) => group.label === currentCategory);
     return matchingGroup?.suggestions ?? [];
+  }
+  protected suggestionEmptyStateTitle() {
+    const currentCategory = this.form.getRawValue().category.trim();
+    return currentCategory ? 'No starter suggestion for this category yet' : 'Choose a category to see starter issues';
+  }
+  protected suggestionEmptyStateCopy() {
+    const currentCategory = this.form.getRawValue().category.trim();
+    return currentCategory
+      ? 'Keep entering the issue manually, or choose another category for examples.'
+      : 'Starter suggestions appear after you choose a category. You can still complete the issue manually.';
   }
   protected pageTitle() { return { list: this.issueTypeLabel(), create: `New ${this.itemLabel()}`, edit: `Edit ${this.itemLabel()}` }[this.mode()]; }
   protected pageDescription() { return this.mode() === 'list' ? this.registerCopy() : 'Capture the issue first, then link it to existing risks where needed.'; }

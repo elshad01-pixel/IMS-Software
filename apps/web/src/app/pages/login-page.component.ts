@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthStore } from '../core/auth.store';
@@ -147,10 +148,25 @@ export class LoginPageComponent {
     this.error.set('');
     this.authStore.login(this.form.getRawValue()).subscribe({
       next: () => this.loading.set(false),
-      error: () => {
+      error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set('Login failed. Confirm the API is up and the database is seeded.');
+        this.error.set(this.readLoginError(error));
       }
     });
+  }
+
+  private readLoginError(error: HttpErrorResponse) {
+    if (error.status === 0) {
+      return 'Login failed because the API is not reachable. Confirm the platform stack is running.';
+    }
+
+    if (error.status === 401) {
+      return 'Sign in failed. Check the tenant slug, email, and password.';
+    }
+
+    const message = error.error?.message;
+    return Array.isArray(message)
+      ? message.join(', ')
+      : (message as string) || 'Login failed. Confirm the API is up and the database is seeded.';
   }
 }

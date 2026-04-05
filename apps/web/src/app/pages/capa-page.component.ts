@@ -159,6 +159,12 @@ type CapaRow = {
 
           <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
+          <section class="guidance-card">
+            <strong>{{ capaWorkflowHeadline(form.getRawValue().status) }}</strong>
+            <p>{{ capaWorkflowNarrative(form.getRawValue().status) }}</p>
+            <small>{{ capaWorkflowHint() }}</small>
+          </section>
+
           <section class="detail-section">
             <h4>Issue definition</h4>
             <div class="form-grid-2 top-space">
@@ -293,6 +299,12 @@ type CapaRow = {
               </article>
             </div>
 
+            <section class="guidance-card top-space">
+              <strong>{{ capaReadinessHeadline() }}</strong>
+              <p>{{ capaReadinessNarrative() }}</p>
+              <small>{{ capaReadinessHint() }}</small>
+            </section>
+
             <section class="detail-section top-space">
               <h4>Problem statement</h4>
               <p>{{ selectedCapa()?.problemStatement }}</p>
@@ -347,6 +359,26 @@ type CapaRow = {
 
     tr[routerLink] {
       cursor: pointer;
+    }
+
+    .guidance-card {
+      padding: 1rem 1.1rem;
+      border: 1px solid rgba(46, 67, 56, 0.1);
+      border-radius: 1rem;
+      background: rgba(252, 253, 250, 0.82);
+    }
+
+    .guidance-card strong,
+    .guidance-card p,
+    .guidance-card small {
+      display: block;
+    }
+
+    .guidance-card p,
+    .guidance-card small {
+      margin-top: 0.4rem;
+      color: var(--muted);
+      line-height: 1.45;
     }
   `]
 })
@@ -468,6 +500,35 @@ export class CapaPageComponent implements OnInit, OnChanges {
     return 'danger';
   }
 
+  protected capaWorkflowHeadline(status: CapaStatus) {
+    return {
+      OPEN: 'Define the nonconformity clearly',
+      INVESTIGATING: 'The record should now show containment and cause',
+      ACTION_PLANNED: 'Corrective action should be clearly designed',
+      IN_PROGRESS: 'Ownership and due-date follow-up are now critical',
+      VERIFIED: 'Effectiveness should be evidenced before closure',
+      CLOSED: 'Closure should be supported by a clear summary'
+    }[status];
+  }
+
+  protected capaWorkflowNarrative(status: CapaStatus) {
+    return {
+      OPEN: 'Start with a precise problem statement and source so the CAPA can be reviewed consistently later.',
+      INVESTIGATING: 'Containment and root cause should be explicit before the CAPA progresses to action planning.',
+      ACTION_PLANNED: 'At this stage the corrective and preventive response should be clear enough to assign and monitor.',
+      IN_PROGRESS: 'Once actions are underway, owner accountability and due-date control become the main management focus.',
+      VERIFIED: 'Verification should confirm that the action was effective, not only completed.',
+      CLOSED: 'A closed CAPA should explain what evidence supports closure and why recurrence is controlled.'
+    }[status];
+  }
+
+  protected capaWorkflowHint() {
+    const raw = this.form.getRawValue();
+    return raw.ownerId
+      ? 'Owner already assigned. Keep the due date and verification method aligned with the selected status.'
+      : 'Assign an owner once the CAPA moves beyond initial definition so accountability is visible.';
+  }
+
   protected readInputValue(event: Event) {
     return (event.target as HTMLInputElement).value;
   }
@@ -509,6 +570,56 @@ export class CapaPageComponent implements OnInit, OnChanges {
 
   protected canDeleteCapa() {
     return this.authStore.hasPermission('admin.delete') && !!this.selectedId() && this.selectedCapa()?.status !== 'CLOSED';
+  }
+
+  protected capaReadinessHeadline() {
+    const capa = this.selectedCapa();
+    if (!capa) {
+      return 'CAPA readiness';
+    }
+    if (capa.status === 'CLOSED') {
+      return capa.closureSummary ? 'Closure evidence is recorded' : 'Closure status needs support';
+    }
+    if (capa.status === 'VERIFIED') {
+      return 'Verification is the next review point';
+    }
+    if (capa.status === 'IN_PROGRESS' || capa.status === 'ACTION_PLANNED') {
+      return 'Action follow-up is active';
+    }
+    return 'Investigation quality will determine the CAPA outcome';
+  }
+
+  protected capaReadinessNarrative() {
+    const capa = this.selectedCapa();
+    if (!capa) {
+      return 'Save the CAPA first to review readiness and closure cues.';
+    }
+    if (capa.status === 'CLOSED') {
+      return capa.closureSummary
+        ? 'The CAPA is closed and already includes closure evidence in the record.'
+        : 'The CAPA is marked closed, but the closure explanation is still thin.';
+    }
+    if (capa.status === 'VERIFIED') {
+      return 'Verification should now confirm that the corrective response was effective before final closure.';
+    }
+    if (capa.status === 'IN_PROGRESS' || capa.status === 'ACTION_PLANNED') {
+      return 'The CAPA already has an active response. Continue through ownership, due dates, and effectiveness review.';
+    }
+    return 'The record still depends on solid containment, cause analysis, and action design before it can mature.';
+  }
+
+  protected capaReadinessHint() {
+    const capa = this.selectedCapa();
+    if (!capa) {
+      return 'Use the staged sections below to move from problem definition to verified closure.';
+    }
+    if (capa.status === 'CLOSED') {
+      return 'Keep the closure summary strong enough that another reviewer can understand why closure was justified.';
+    }
+    if (!capa.ownerId || !capa.dueDate) {
+      return 'Next step: make sure ownership and due date are set so follow-up is controllable.';
+    }
+    return 'Next step: keep the action, verification, and closure sections aligned with the CAPA status.';
   }
 
   protected canWrite() {

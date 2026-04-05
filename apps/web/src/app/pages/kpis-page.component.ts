@@ -80,6 +80,7 @@ type KpiRecord = {
                 <th>Current</th>
                 <th>Target</th>
                 <th>Status</th>
+                <th>Management view</th>
               </tr>
             </thead>
             <tbody>
@@ -88,6 +89,7 @@ type KpiRecord = {
                 <td>{{ item.actual }} {{ item.unit }}</td>
                 <td>{{ item.target }} {{ item.unit }}</td>
                 <td><span class="status-badge" [class.warn]="item.status === 'WATCH'" [class.danger]="item.status === 'BREACH'" [class.success]="item.status === 'ON_TARGET'">{{ item.status }}</span></td>
+                <td>{{ managementView(item) }}</td>
               </tr>
             </tbody>
           </table>
@@ -104,6 +106,12 @@ type KpiRecord = {
           </div>
 
           <p class="feedback" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+
+          <section class="guidance-card">
+            <strong>{{ directionLabel(kpiForm.getRawValue().direction) }}</strong>
+            <p>{{ directionGuidance(kpiForm.getRawValue().direction) }}</p>
+            <small>Use the warning threshold to define when management attention should start before a full breach occurs.</small>
+          </section>
 
           <label class="field"><span>Name</span><input formControlName="name" placeholder="Supplier OTIF"></label>
           <label class="field"><span>Description</span><textarea rows="3" formControlName="description" placeholder="On-time in-full supplier delivery rate"></textarea></label>
@@ -164,13 +172,21 @@ type KpiRecord = {
               </article>
             </div>
 
+            <section class="guidance-card top-space">
+              <strong>{{ performanceHeadline() }}</strong>
+              <p>{{ performanceNarrative() }}</p>
+              <small>{{ performanceActionHint() }}</small>
+            </section>
+
             <dl class="key-value top-space">
               <dt>Description</dt>
               <dd>{{ selectedKpi()?.description || 'No description provided.' }}</dd>
               <dt>Warning threshold</dt>
               <dd>{{ selectedKpi()?.warningThreshold ?? 'Not set' }}</dd>
               <dt>Direction</dt>
-              <dd>{{ selectedKpi()?.direction }}</dd>
+              <dd>{{ directionLabel(selectedKpi()?.direction || 'AT_LEAST') }}</dd>
+              <dt>Distance to target</dt>
+              <dd>{{ distanceToTarget() }}</dd>
             </dl>
           </section>
 
@@ -178,7 +194,7 @@ type KpiRecord = {
             <div class="section-head">
               <div>
                 <h3>Readings</h3>
-                <p class="subtle">Add current readings and keep recent history visible below.</p>
+                <p class="subtle">Add current readings and keep the recent evidence trail visible below.</p>
               </div>
             </div>
 
@@ -194,7 +210,7 @@ type KpiRecord = {
             <div class="entity-list top-space">
               <article class="entity-item" *ngFor="let reading of selectedKpi()?.readings || []">
                 <strong>{{ reading.value }} {{ selectedKpi()?.unit }}</strong>
-                <small>{{ reading.readingDate | date:'yyyy-MM-dd' }} | {{ reading.notes || 'No notes' }}</small>
+                <small>{{ reading.readingDate | date:'yyyy-MM-dd' }} | {{ reading.notes || readingInterpretation(reading.value) }}</small>
               </article>
             </div>
           </section>
@@ -209,6 +225,31 @@ type KpiRecord = {
 
     tr[routerLink] {
       cursor: pointer;
+    }
+
+    .guidance-card {
+      padding: 1rem 1.1rem;
+      border: 1px solid rgba(46, 67, 56, 0.1);
+      border-radius: 1rem;
+      background: rgba(252, 253, 250, 0.82);
+    }
+
+    .guidance-card strong,
+    .guidance-card p,
+    .guidance-card small {
+      display: block;
+    }
+
+    .guidance-card strong {
+      color: #203427;
+      font-size: 1rem;
+    }
+
+    .guidance-card p,
+    .guidance-card small {
+      margin-top: 0.4rem;
+      color: #617165;
+      line-height: 1.45;
     }
   `]
 })
@@ -341,6 +382,111 @@ export class KpisPageComponent {
         this.error.set(this.readError(error, 'KPI reading save failed.'));
       }
     });
+  }
+
+  protected directionLabel(direction: KpiDirection) {
+    return direction === 'AT_MOST' ? 'Lower result is better' : 'Higher result is better';
+  }
+
+  protected directionGuidance(direction: KpiDirection) {
+    return direction === 'AT_MOST'
+      ? 'Use this for metrics such as complaints, defects, waste, or incident rate where performance improves as the result goes down.'
+      : 'Use this for metrics such as on-time delivery, training completion, or compliance rate where performance improves as the result goes up.';
+  }
+
+  protected managementView(item: KpiRecord) {
+    if (item.status === 'BREACH') {
+      return 'Immediate follow-up';
+    }
+    if (item.status === 'WATCH') {
+      return 'Closer monitoring';
+    }
+    return 'On plan';
+  }
+
+  protected performanceHeadline() {
+    const kpi = this.selectedKpi();
+    if (!kpi) {
+      return 'Performance view';
+    }
+    if (kpi.status === 'BREACH') {
+      return 'Management attention is required';
+    }
+    if (kpi.status === 'WATCH') {
+      return 'Performance is drifting toward breach';
+    }
+    return 'Performance is currently on target';
+  }
+
+  protected performanceNarrative() {
+    const kpi = this.selectedKpi();
+    if (!kpi) {
+      return 'Review the KPI against target, warning threshold, and recent readings.';
+    }
+    if (kpi.status === 'BREACH') {
+      return `This KPI is outside the accepted performance band for ${kpi.periodLabel.toLowerCase()} review. The management response should confirm cause, corrective action, and follow-up timing.`;
+    }
+    if (kpi.status === 'WATCH') {
+      return `This KPI is still within the control range but close enough to the warning threshold that management follow-up is appropriate before performance deteriorates further.`;
+    }
+    return `This KPI is meeting the expected target direction. Continue routine monitoring and keep the reading history current as evidence of sustained performance.`;
+  }
+
+  protected performanceActionHint() {
+    const kpi = this.selectedKpi();
+    if (!kpi) {
+      return 'Save the KPI to start recording evidence-based readings.';
+    }
+    if (kpi.status === 'BREACH') {
+      return 'Next step: update the latest reading notes with cause and planned response.';
+    }
+    if (kpi.status === 'WATCH') {
+      return 'Next step: add the latest reading notes and confirm whether intervention is needed.';
+    }
+    return 'Next step: keep the next planned reading on schedule to demonstrate ongoing control.';
+  }
+
+  protected distanceToTarget() {
+    const kpi = this.selectedKpi();
+    if (!kpi) {
+      return 'Not available';
+    }
+    const difference = Number((kpi.actual - kpi.target).toFixed(2));
+    if (difference === 0) {
+      return `At target (${kpi.target} ${kpi.unit})`;
+    }
+    if (kpi.direction === 'AT_LEAST') {
+      return difference > 0
+        ? `${difference} ${kpi.unit} above target`
+        : `${Math.abs(difference)} ${kpi.unit} below target`;
+    }
+    return difference < 0
+      ? `${Math.abs(difference)} ${kpi.unit} better than limit`
+      : `${difference} ${kpi.unit} above allowed limit`;
+  }
+
+  protected readingInterpretation(value: number) {
+    const kpi = this.selectedKpi();
+    if (!kpi) {
+      return 'Reading logged';
+    }
+    if (kpi.direction === 'AT_LEAST') {
+      if (value >= kpi.target) {
+        return 'Reading met or exceeded target.';
+      }
+      if (kpi.warningThreshold != null && value >= kpi.warningThreshold) {
+        return 'Reading entered the watch range.';
+      }
+      return 'Reading fell into breach range.';
+    }
+
+    if (value <= kpi.target) {
+      return 'Reading stayed within the target limit.';
+    }
+    if (kpi.warningThreshold != null && value <= kpi.warningThreshold) {
+      return 'Reading entered the watch range.';
+    }
+    return 'Reading exceeded the accepted limit.';
   }
 
   private handleRoute(params: ParamMap) {

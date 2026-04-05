@@ -5,6 +5,7 @@ import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { Permissions } from '../../common/auth/permissions.decorator';
 import { PermissionsGuard } from '../../common/auth/permissions.guard';
+import { buildAttachmentContentDisposition } from '../../common/http/download-header.util';
 import { CurrentTenant } from '../../common/tenancy/current-tenant.decorator';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { ExportReportQueryDto } from './dto/export-report-query.dto';
@@ -48,7 +49,7 @@ export class ReportsController {
     });
 
     response.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    response.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    response.setHeader('Content-Disposition', buildAttachmentContentDisposition(filename));
     response.send(csv);
   }
 }

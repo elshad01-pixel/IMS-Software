@@ -234,12 +234,13 @@ type SourceContextNavigation = {
                 <input formControlName="title" placeholder="Supplier delivery interruption">
               </label>
               <label class="field">
-                <span>Category</span>
+                <span>Starter category</span>
                 <select [value]="selectedCategoryOption()" (change)="onCategoryOptionChange(readSelectValue($event))">
                   <option value="">Choose a category</option>
                   <option *ngFor="let category of activeCategories()" [value]="category">{{ category }}</option>
                   <option value="__custom__">Custom category</option>
                 </select>
+                <small class="field-hint">Starter categories switch with {{ assessmentEntityLabel(form.getRawValue().assessmentType).toLowerCase() }} type. You can still enter a custom category.</small>
               </label>
             </div>
             <label class="field top-space" *ngIf="customCategoryMode()">
@@ -340,6 +341,11 @@ type SourceContextNavigation = {
                 <option value="CLOSED">Closed</option>
               </select>
             </label>
+
+            <section class="compliance-note top-space">
+              <strong>{{ riskResponseHeading(form.getRawValue().assessmentType, lifecycleStatus()) }}</strong>
+              <span>{{ riskResponseGuidance(form.getRawValue().assessmentType, lifecycleStatus()) }}</span>
+            </section>
           </section>
 
           <section class="detail-section">
@@ -402,6 +408,10 @@ type SourceContextNavigation = {
             </section>
 
             <div class="summary-strip top-space">
+              <article class="summary-item">
+                <span>Response position</span>
+                <strong>{{ riskResponseShortLabel(selectedRisk()?.assessmentType || 'RISK', selectedRisk()?.status || 'OPEN') }}</strong>
+              </article>
               <article class="summary-item">
                 <span>{{ likelihoodLabel(selectedRisk()?.assessmentType || 'RISK') }}</span>
                 <strong>{{ selectedRisk()?.likelihood }}</strong>
@@ -481,9 +491,18 @@ type SourceContextNavigation = {
                   <strong class="level-indicator" [ngClass]="levelBadgeClass(selectedRisk()?.residualScore ?? null, selectedRisk()?.assessmentType || 'RISK')">{{ riskLevelLabel(selectedRisk()?.residualScore ?? null, selectedRisk()?.assessmentType || 'RISK') }}</strong>
                 </article>
               </div>
+              <section class="compliance-note top-space" *ngIf="residualMovementSummary(selectedRisk()) as residualMovement">
+                <strong>{{ residualMovement.heading }}</strong>
+                <span>{{ residualMovement.copy }}</span>
+              </section>
               <ng-template #residualEmpty>
                 <p>{{ residualEmptyCopy(selectedRisk()?.assessmentType || 'RISK') }}</p>
               </ng-template>
+            </section>
+
+            <section class="feedback next-steps-banner warning top-space" *ngIf="followUpSummary(selectedRisk()) as followUp">
+              <strong>{{ followUp.heading }}</strong>
+              <span>{{ followUp.copy }}</span>
             </section>
 
             <dl class="key-value top-space">
@@ -644,6 +663,16 @@ type SourceContextNavigation = {
       border-radius: 1rem;
       border: 1px solid rgba(47, 107, 69, 0.16);
       background: rgba(47, 107, 69, 0.08);
+    }
+
+    .next-steps-banner.warning,
+    .compliance-note {
+      display: grid;
+      gap: 0.35rem;
+      padding: 1rem 1.1rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(138, 99, 34, 0.16);
+      background: rgba(138, 99, 34, 0.08);
     }
 
     tr[routerLink] {
@@ -1024,6 +1053,45 @@ export class RisksPageComponent implements OnInit, OnChanges {
       ? 'Next: confirm the realization plan, create an action if ownership is needed, and then review the residual opportunity.'
       : 'Next: confirm the mitigation plan, create an action for ownership and due date, and then review the residual risk.';
   }
+  protected riskResponseHeading(type: RiskAssessmentType, lifecycle: RiskLifecycleStatus) {
+    const entity = type === 'OPPORTUNITY' ? 'Opportunity' : 'Risk';
+    if (lifecycle === 'DRAFT') return `${entity} is being identified`;
+    if (lifecycle === 'ASSESSED') return `${entity} has been assessed`;
+    if (lifecycle === 'MITIGATION_PLANNED') return type === 'OPPORTUNITY' ? 'Realization actions are planned' : 'Mitigation actions are planned';
+    if (lifecycle === 'MONITORING') return type === 'OPPORTUNITY' ? 'Realization is being monitored' : 'Residual performance is being monitored';
+    return `${entity} record is closed`;
+  }
+  protected riskResponseGuidance(type: RiskAssessmentType, lifecycle: RiskLifecycleStatus) {
+    if (lifecycle === 'DRAFT') {
+      return type === 'OPPORTUNITY'
+        ? 'Use draft while the opportunity is still being defined. Move it to assessed once the initial potential is clear.'
+        : 'Use draft while the risk is still being described. Move it to assessed once the initial score is agreed.';
+    }
+    if (lifecycle === 'ASSESSED') {
+      return type === 'OPPORTUNITY'
+        ? 'Use assessed once the initial opportunity is understood and no assigned realization work is needed yet.'
+        : 'Use assessed once the initial risk is understood and no assigned mitigation work is needed yet.';
+    }
+    if (lifecycle === 'MITIGATION_PLANNED') {
+      return type === 'OPPORTUNITY'
+        ? 'Use mitigation planned when realization actions, ownership, or due dates are active and still being driven.'
+        : 'Use mitigation planned when treatment actions, ownership, or due dates are active and still being driven.';
+    }
+    if (lifecycle === 'MONITORING') {
+      return type === 'OPPORTUNITY'
+        ? 'Use monitoring after actions are in place and you are checking whether the expected benefit is being realized.'
+        : 'Use monitoring after controls are in place and you are checking whether the residual risk stays acceptable.';
+    }
+    return 'Use closed when the record no longer needs active follow-up and the evidence trail is complete.';
+  }
+  protected riskResponseShortLabel(type: RiskAssessmentType, status: RiskStatus) {
+    const lifecycle = this.toLifecycleStatus(status);
+    if (lifecycle === 'DRAFT') return 'Identifying';
+    if (lifecycle === 'ASSESSED') return 'Assessed';
+    if (lifecycle === 'MITIGATION_PLANNED') return type === 'OPPORTUNITY' ? 'Realizing' : 'Treating';
+    if (lifecycle === 'MONITORING') return 'Monitoring';
+    return 'Closed';
+  }
   protected sourceContextSummary() {
     const prefill = this.sourceContextPrefill();
     if (!prefill) {
@@ -1059,6 +1127,69 @@ export class RisksPageComponent implements OnInit, OnChanges {
     return type === 'OPPORTUNITY'
       ? 'Use linked actions to assign realization work, ownership, and due dates.'
       : 'Use linked actions to assign mitigation work, ownership, and due dates.';
+  }
+  protected residualMovementSummary(item: RiskRow | null) {
+    if (!item?.residualScore) {
+      return null;
+    }
+
+    const delta = item.score - item.residualScore;
+    if (delta > 0) {
+      return {
+        heading: item.assessmentType === 'OPPORTUNITY' ? 'Residual potential is lower than the initial opportunity' : 'Residual risk is lower than the initial assessment',
+        copy: item.assessmentType === 'OPPORTUNITY'
+          ? `The score moved from ${item.score} to ${item.residualScore}. Confirm the reduced potential is acceptable or add further realization actions.`
+          : `The score moved from ${item.score} to ${item.residualScore}. This shows the planned controls are reducing exposure and can move into monitored follow-up.`
+      };
+    }
+
+    if (delta < 0) {
+      return {
+        heading: item.assessmentType === 'OPPORTUNITY' ? 'Residual potential increased' : 'Residual risk increased',
+        copy: item.assessmentType === 'OPPORTUNITY'
+          ? `The score moved from ${item.score} to ${item.residualScore}. Confirm the higher potential is supported by realistic actions and ownership.`
+          : `The score moved from ${item.score} to ${item.residualScore}. Review treatment effectiveness because the residual position is now worse than the initial assessment.`
+      };
+    }
+
+    return {
+      heading: item.assessmentType === 'OPPORTUNITY' ? 'Residual potential is unchanged' : 'Residual risk is unchanged',
+      copy: item.assessmentType === 'OPPORTUNITY'
+        ? `The residual score remains ${item.residualScore}. Confirm whether additional realization actions are needed to improve the expected benefit.`
+        : `The residual score remains ${item.residualScore}. Confirm whether additional treatment is needed before moving the record into monitoring.`
+    };
+  }
+  protected followUpSummary(item: RiskRow | null) {
+    if (!item || !item.targetDate || item.status === 'CLOSED') {
+      return null;
+    }
+
+    const dueDate = new Date(item.targetDate);
+    const today = new Date();
+    const diffDays = Math.floor((dueDate.getTime() - new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()) / 86400000);
+
+    if (diffDays < 0) {
+      return {
+        heading: 'Follow-up date is overdue',
+        copy: `The planned follow-up date passed on ${item.targetDate.slice(0, 10)}. Review the actions, confirm residual assessment, and either move the record forward or reset the follow-up date.`
+      };
+    }
+
+    if (diffDays <= 14) {
+      return {
+        heading: 'Follow-up date is approaching',
+        copy: `The next follow-up is due on ${item.targetDate.slice(0, 10)}. Confirm owner accountability, treatment evidence, and the residual position before the due date arrives.`
+      };
+    }
+
+    if (!item.ownerId && item.status === 'IN_TREATMENT') {
+      return {
+        heading: 'Treatment is active without an owner',
+        copy: 'This record is in treatment but no owner is assigned yet. Add an owner or raise a linked action so accountability is visible.'
+      };
+    }
+
+    return null;
   }
   protected scrollToActions() {
     const section = document.getElementById('risk-actions-section');

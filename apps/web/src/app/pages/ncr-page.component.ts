@@ -21,6 +21,7 @@ import {
   NcrVerificationStatus
 } from '../core/ncr.models';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
+import { IconActionButtonComponent } from '../shared/icon-action-button.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
 
@@ -49,7 +50,7 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
 @Component({
   selector: 'iso-ncr-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, AttachmentPanelComponent, RecordWorkItemsComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, AttachmentPanelComponent, RecordWorkItemsComponent, IconActionButtonComponent],
   template: `
     <section class="page-grid">
       <iso-page-header [label]="'NCR'" [title]="pageTitle()" [description]="pageDescription()" [breadcrumbs]="breadcrumbs()">
@@ -177,10 +178,23 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
                   <td>{{ item.updatedAt | date:'yyyy-MM-dd' }}</td>
                   <td>
                     <div class="inline-actions" (click)="$event.stopPropagation()">
-                      <a [routerLink]="['/ncr', item.id]" class="button-link secondary compact">View</a>
-                      <a *ngIf="canWrite()" [routerLink]="['/ncr', item.id, 'edit']" class="button-link secondary compact">Edit</a>
-                      <button *ngIf="canArchiveRow(item)" type="button" class="button-link secondary compact" (click)="archiveRow(item)">Archive</button>
-                      <button *ngIf="canDeleteRow(item)" type="button" class="button-link danger compact" (click)="deleteRow(item)">Delete</button>
+                      <iso-icon-action-button [icon]="'view'" [label]="'View NCR'" [routerLink]="['/ncr', item.id]" />
+                      <iso-icon-action-button *ngIf="canWrite()" [icon]="'edit'" [label]="'Edit NCR'" [routerLink]="['/ncr', item.id, 'edit']" />
+                      <iso-icon-action-button
+                        *ngIf="showAdminRowActions()"
+                        [icon]="'archive'"
+                        [label]="canArchiveRow(item) ? 'Archive NCR' : 'Archive unavailable'"
+                        [disabled]="!canArchiveRow(item)"
+                        (pressed)="archiveRow(item)"
+                      />
+                      <iso-icon-action-button
+                        *ngIf="showAdminRowActions()"
+                        [icon]="'delete'"
+                        [label]="canDeleteRow(item) ? 'Delete NCR' : 'Delete unavailable'"
+                        [variant]="'danger'"
+                        [disabled]="!canDeleteRow(item)"
+                        (pressed)="deleteRow(item)"
+                      />
                     </div>
                   </td>
                 </tr>
@@ -257,6 +271,10 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
 
           <section class="detail-section">
             <h4>Investigation</h4>
+            <section class="compliance-note top-space">
+              <strong>{{ ncrWorkflowHeading(form.getRawValue().status) }}</strong>
+              <span>{{ ncrWorkflowGuidance(form.getRawValue().status) }}</span>
+            </section>
             <label class="field top-space"><span>Containment action</span><textarea rows="3" formControlName="containmentAction"></textarea></label>
             <label class="field top-space"><span>Investigation summary</span><textarea rows="3" formControlName="investigationSummary"></textarea></label>
             <div class="form-grid-2 top-space">
@@ -296,6 +314,10 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
 
           <section class="detail-section">
             <h4>Verification</h4>
+            <section class="compliance-note top-space">
+              <strong>{{ verificationHeading(form.getRawValue().verificationStatus) }}</strong>
+              <span>{{ verificationGuidance(form.getRawValue().verificationStatus) }}</span>
+            </section>
             <div class="form-grid-3 top-space">
               <label class="field"><span>Verification status</span><select formControlName="verificationStatus"><option *ngFor="let item of verificationOptions" [value]="item">{{ labelize(item) }}</option></select></label>
               <label class="field"><span>Verified by</span><select formControlName="verifiedByUserId"><option value="">Unassigned</option><option *ngFor="let item of users()" [value]="item.id">{{ fullName(item) }}</option></select></label>
@@ -323,11 +345,20 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
               <span class="status-badge" [ngClass]="statusClass(selectedNcr()?.status || 'OPEN')">{{ labelize(selectedNcr()?.status || '') }}</span>
             </div>
             <div class="summary-strip top-space">
+              <article class="summary-item"><span>Workflow stage</span><strong>{{ ncrStageLabel(selectedNcr()?.status || 'OPEN') }}</strong></article>
               <article class="summary-item"><span>Severity</span><strong>{{ labelize(selectedNcr()?.severity || '') }}</strong></article>
               <article class="summary-item"><span>Priority</span><strong>{{ labelize(selectedNcr()?.priority || '') }}</strong></article>
               <article class="summary-item"><span>Due date</span><strong>{{ selectedNcr()?.dueDate ? (selectedNcr()?.dueDate | date:'yyyy-MM-dd') : 'Not set' }}</strong></article>
               <article class="summary-item"><span>Comments</span><strong>{{ comments().length }}</strong></article>
             </div>
+            <section class="compliance-note top-space">
+              <strong>{{ ncrWorkflowHeading(selectedNcr()?.status || 'OPEN') }}</strong>
+              <span>{{ ncrWorkflowGuidance(selectedNcr()?.status || 'OPEN') }}</span>
+            </section>
+            <section class="compliance-note top-space" *ngIf="ncrFollowUpSummary(selectedNcr()) as followUp">
+              <strong>{{ followUp.heading }}</strong>
+              <span>{{ followUp.copy }}</span>
+            </section>
             <section class="feedback next-steps-banner success top-space" *ngIf="message() && !error()">
               <strong>{{ message() }}</strong>
               <span>{{ ncrNextStepsCopy() }}</span>
@@ -397,6 +428,10 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
               <section class="detail-section"><h4>Corrective action summary</h4><p>{{ selectedNcr()?.correctiveActionSummary || 'No corrective action summary recorded.' }}</p></section>
               <section class="detail-section"><h4>Verified by</h4><p>{{ selectedNcr()?.verifiedBy ? fullName(selectedNcr()?.verifiedBy!) : 'Not assigned' }}<span *ngIf="selectedNcr()?.verificationDate"> | {{ selectedNcr()?.verificationDate | date:'yyyy-MM-dd' }}</span></p></section>
             </div>
+            <section class="compliance-note top-space">
+              <strong>{{ verificationHeading(selectedNcr()?.verificationStatus || 'PENDING') }}</strong>
+              <span>{{ verificationGuidance(selectedNcr()?.verificationStatus || 'PENDING') }}</span>
+            </section>
             <div class="button-row top-space" *ngIf="availableTransitions().length && canWrite()">
               <button *ngFor="let item of availableTransitions()" type="button" class="secondary" [disabled]="saving()" (click)="changeStatus(item)">Move to {{ labelize(item) }}</button>
             </div>
@@ -457,9 +492,17 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
       border: 1px solid rgba(47, 107, 69, 0.16);
       background: rgba(47, 107, 69, 0.08);
     }
+    .compliance-note {
+      display: grid;
+      gap: 0.35rem;
+      padding: 1rem 1.1rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(138, 99, 34, 0.16);
+      background: rgba(138, 99, 34, 0.08);
+    }
     .filter-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .toggle-line { display: inline-flex; gap: 0.55rem; align-items: center; font-weight: 600; color: var(--muted-strong); }
-    .inline-actions { display: flex; gap: 0.45rem; flex-wrap: wrap; justify-content: flex-end; }
+    .inline-actions { display: grid; grid-template-columns: repeat(4, 2.4rem); gap: 0.45rem; justify-content: end; align-items: center; }
     .compact { padding: 0.5rem 0.72rem; min-height: auto; font-size: 0.82rem; }
     .detail-tabs { display: flex; gap: 0.75rem; flex-wrap: wrap; }
     .detail-tab {
@@ -635,6 +678,7 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected canArchiveNcr() { const item = this.selectedNcr(); return this.authStore.hasPermission('admin.delete') && !!item && item.status !== 'ARCHIVED' && item.status !== 'OPEN'; }
   protected canDeleteRow(item: NcrRecord) { return this.authStore.hasPermission('admin.delete') && item.status !== 'CLOSED' && item.status !== 'ARCHIVED'; }
   protected canArchiveRow(item: NcrRecord) { return this.authStore.hasPermission('admin.delete') && item.status !== 'ARCHIVED' && item.status !== 'OPEN'; }
+  protected showAdminRowActions() { return this.authStore.hasPermission('admin.delete'); }
   protected fullName(user: NcrUserSummary) { return `${user.firstName} ${user.lastName}`.trim(); }
   protected processLabel(process: ProcessOption) { return `${process.referenceNo || 'Uncoded'} - ${process.name}`; }
   protected labelize(value: string) { return value.toLowerCase().split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' '); }
@@ -684,6 +728,86 @@ export class NcrPageComponent implements OnInit, OnChanges {
       return 'Next: complete verification and confirm whether the NCR can be closed or needs more action.';
     }
     return 'Next: review the investigation trail, linked actions, and evidence as part of the NCR record.';
+  }
+  protected ncrStageLabel(status: NcrStatus) {
+    if (status === 'OPEN' || status === 'UNDER_REVIEW') return 'Raised';
+    if (status === 'INVESTIGATION') return 'Investigating';
+    if (status === 'ACTION_IN_PROGRESS') return 'Correcting';
+    if (status === 'PENDING_VERIFICATION') return 'Verifying';
+    if (status === 'CLOSED') return 'Closed';
+    return 'Archived';
+  }
+  protected ncrWorkflowHeading(status: NcrStatus) {
+    if (status === 'OPEN' || status === 'UNDER_REVIEW') return 'NCR is in initial review';
+    if (status === 'INVESTIGATION') return 'Root cause investigation is active';
+    if (status === 'ACTION_IN_PROGRESS') return 'Corrective action is being implemented';
+    if (status === 'PENDING_VERIFICATION') return 'Effectiveness verification is due';
+    if (status === 'CLOSED') return 'NCR has been closed';
+    return 'NCR is archived';
+  }
+  protected ncrWorkflowGuidance(status: NcrStatus) {
+    if (status === 'OPEN' || status === 'UNDER_REVIEW') {
+      return 'Capture containment first, then record enough investigation detail to justify why the NCR is moving into root cause analysis.';
+    }
+    if (status === 'INVESTIGATION') {
+      return 'Complete the investigation summary and root cause before moving fully into corrective action ownership.';
+    }
+    if (status === 'ACTION_IN_PROGRESS') {
+      return 'Keep corrective action summary, ownership, comments, and evidence current so the NCR is ready for verification.';
+    }
+    if (status === 'PENDING_VERIFICATION') {
+      return 'Use verification to confirm the corrective action was effective, not just completed. Reject verification if the issue can still recur.';
+    }
+    if (status === 'CLOSED') {
+      return 'Keep the NCR record available as evidence of containment, root cause, corrective action, and verification outcome.';
+    }
+    return 'Archived NCRs remain available for traceability and should not be treated as active issues.';
+  }
+  protected verificationHeading(status: NcrVerificationStatus) {
+    if (status === 'VERIFIED') return 'Verification has passed';
+    if (status === 'REJECTED') return 'Verification failed';
+    return 'Verification is still pending';
+  }
+  protected verificationGuidance(status: NcrVerificationStatus) {
+    if (status === 'VERIFIED') {
+      return 'The corrective action has been confirmed as effective. Keep the verifier and verification date visible in the record.';
+    }
+    if (status === 'REJECTED') {
+      return 'Use rejected when the corrective action did not prevent recurrence. Return to investigation or action in progress with updated evidence.';
+    }
+    return 'Pending means the action may be implemented, but effectiveness has not yet been confirmed.';
+  }
+  protected ncrFollowUpSummary(record: NcrRecord | null) {
+    if (!record || !record.dueDate || record.status === 'CLOSED' || record.status === 'ARCHIVED') {
+      return null;
+    }
+
+    const dueDate = new Date(record.dueDate);
+    const today = new Date();
+    const diffDays = Math.floor((dueDate.getTime() - new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()) / 86400000);
+
+    if (diffDays < 0) {
+      return {
+        heading: 'NCR follow-up is overdue',
+        copy: `The due date passed on ${record.dueDate.slice(0, 10)}. Review corrective actions, verification status, and owner accountability before the NCR drifts further.`
+      };
+    }
+
+    if (diffDays <= 14) {
+      return {
+        heading: 'NCR follow-up is approaching',
+        copy: `The due date is ${record.dueDate.slice(0, 10)}. Confirm the investigation, root cause, and corrective action trail before the due date arrives.`
+      };
+    }
+
+    if (record.status === 'PENDING_VERIFICATION' && record.verificationStatus === 'PENDING') {
+      return {
+        heading: 'Verification still needs a formal result',
+        copy: 'This NCR is pending verification. Record who verified the action and whether the result was accepted or rejected.'
+      };
+    }
+
+    return null;
   }
   protected setOwnerProcessFilter(processId: string) {
     this.ownerProcessFilterId.set(processId);

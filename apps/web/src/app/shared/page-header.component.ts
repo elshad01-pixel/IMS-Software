@@ -42,6 +42,24 @@ type Breadcrumb = {
       max-width: 52rem;
     }
 
+    .page-hero__body {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .page-hero__actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-inline-start: auto;
+      max-width: 100%;
+    }
+
     .hero-copy h2 {
       letter-spacing: -0.05em;
       font-weight: 800;
@@ -58,6 +76,14 @@ type Breadcrumb = {
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
+    }
+
+    @media (max-width: 960px) {
+      .page-hero__actions {
+        width: 100%;
+        justify-content: flex-start;
+        margin-inline-start: 0;
+      }
     }
   `]
 })

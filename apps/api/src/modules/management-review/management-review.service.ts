@@ -309,7 +309,6 @@ export class ManagementReviewService {
       previousActions?: string | null;
       improvementActions?: string | null;
       resourceNeeds?: string | null;
-      inputs?: ManagementReviewInputDto[] | unknown[];
     }
   ) {
     if (!status || status === ManagementReviewStatus.PLANNED) {
@@ -318,10 +317,6 @@ export class ManagementReviewService {
 
     if (!data.minutes || !data.decisions) {
       throw new BadRequestException('Minutes and decisions are required once the meeting is held');
-    }
-
-    if (!data.inputs || data.inputs.length === 0) {
-      throw new BadRequestException('At least one input is required for a management review');
     }
 
     if (!data.auditResults || !data.capaStatus || !data.kpiPerformance || !data.risksOpportunities) {

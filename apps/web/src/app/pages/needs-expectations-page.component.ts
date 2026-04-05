@@ -8,6 +8,7 @@ import { ContentLibraryResponse } from '../core/content-library.models';
 import { ContentLibraryService } from '../core/content-library.service';
 import { ContextApiService } from '../core/context-api.service';
 import { InterestedPartyRecord, NeedExpectationRecord } from '../core/context.models';
+import { IconActionButtonComponent } from '../shared/icon-action-button.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
 type PageMode = 'list' | 'create' | 'edit';
@@ -16,7 +17,7 @@ type SourceNavigation = { route: string[]; label: string };
 @Component({
   selector: 'iso-needs-expectations-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, IconActionButtonComponent],
   template: `
     <section class="page-grid">
       <iso-page-header [label]="'Clause 4'" [title]="pageTitle()" [description]="pageDescription()" [breadcrumbs]="breadcrumbs()">
@@ -68,8 +69,8 @@ type SourceNavigation = { route: string[]; label: string };
                   <td>{{ item.updatedAt | date:'yyyy-MM-dd' }}</td>
                   <td>
                     <div class="inline-actions">
-                      <a [routerLink]="['/context/needs-expectations', item.id, 'edit']" class="button-link secondary compact">Open</a>
-                      <button *ngIf="canDelete()" type="button" class="button-link danger compact" (click)="deleteNeed(item.id)">Delete</button>
+                      <iso-icon-action-button [icon]="'view'" [label]="'Open need or expectation'" [routerLink]="['/context/needs-expectations', item.id, 'edit']" />
+                      <iso-icon-action-button *ngIf="canDelete()" [icon]="'delete'" [label]="'Delete need or expectation'" [variant]="'danger'" (pressed)="deleteNeed(item.id)" />
                     </div>
                   </td>
                 </tr>

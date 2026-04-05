@@ -78,12 +78,36 @@ import { PageHeaderComponent } from '../shared/page-header.component';
           </article>
         </div>
 
+        <section class="card focus-card">
+          <div class="section-head">
+            <div>
+              <span class="section-eyebrow">Clause 4 review focus</span>
+              <h3>{{ reviewHeadline() }}</h3>
+              <p class="subtle">{{ reviewNarrative() }}</p>
+            </div>
+          </div>
+          <div class="summary-strip top-space">
+            <article class="summary-item">
+              <span>Open</span>
+              <strong>{{ recentIssueCount('OPEN') }}</strong>
+            </article>
+            <article class="summary-item">
+              <span>Monitoring</span>
+              <strong>{{ recentIssueCount('MONITORING') }}</strong>
+            </article>
+            <article class="summary-item">
+              <span>Resolved</span>
+              <strong>{{ recentIssueCount('RESOLVED') }}</strong>
+            </article>
+          </div>
+        </section>
+
         <section class="card detail-card">
           <div class="section-head">
             <div>
               <span class="section-eyebrow">Recent issues</span>
               <h3>Latest context records</h3>
-              <p class="subtle">Review the latest internal and external issues and continue from the relevant register.</p>
+              <p class="subtle">Review the latest internal and external issues, then continue into risk review or process visibility where needed.</p>
             </div>
           </div>
 
@@ -105,6 +129,7 @@ import { PageHeaderComponent } from '../shared/page-header.component';
                 <div>
                   <strong>{{ item.title }}</strong>
                   <small>{{ item.type === 'INTERNAL' ? 'Internal issue' : 'External issue' }}<span *ngIf="item.category"> • {{ item.category }}</span></small>
+                  <small *ngIf="item.linkedRiskCount || item.linkedProcesses?.length">Linked follow-up: {{ issueLinkSummary(item) }}</small>
                 </div>
                 <div class="route-context">
                   <span class="status-badge" [ngClass]="item.status === 'RESOLVED' ? 'success' : item.status === 'ARCHIVED' ? 'neutral' : 'warn'">{{ labelize(item.status) }}</span>
@@ -118,11 +143,20 @@ import { PageHeaderComponent } from '../shared/page-header.component';
     </section>
   `,
   styles: [`
+    .top-space {
+      margin-top: 1rem;
+    }
+
     .summary-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 0.85rem;
     }
+
+    .focus-card {
+      padding: 1.05rem;
+    }
+
     .summary-card {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto auto;
@@ -131,21 +165,25 @@ import { PageHeaderComponent } from '../shared/page-header.component';
       padding: 0.95rem 1.05rem;
       min-height: 0;
     }
+
     .summary-copy {
       display: grid;
       gap: 0.2rem;
       min-width: 0;
     }
+
     .summary-card span {
       color: var(--muted);
       font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
+
     .summary-copy small {
       color: var(--muted);
       line-height: 1.35;
     }
+
     .summary-card strong {
       font-size: 1.85rem;
       line-height: 1;
@@ -154,18 +192,27 @@ import { PageHeaderComponent } from '../shared/page-header.component';
       min-width: 2.2rem;
       text-align: right;
     }
+
     .summary-actions {
       display: flex;
       gap: 0.45rem;
       flex-wrap: wrap;
       justify-content: flex-end;
     }
-    .link-row { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
+
+    .link-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: start;
+    }
+
     @media (max-width: 1100px) {
       .summary-grid { grid-template-columns: minmax(0, 1fr); }
       .summary-card { grid-template-columns: minmax(0, 1fr) auto; }
       .summary-actions { grid-column: 1 / -1; justify-content: flex-start; }
     }
+
     @media (max-width: 760px) {
       .summary-card { grid-template-columns: minmax(0, 1fr); }
       .summary-card strong { text-align: left; }
@@ -211,7 +258,44 @@ export class ContextDashboardPageComponent implements OnInit {
   }
 
   protected issueEditPath(item: { type: 'INTERNAL' | 'EXTERNAL'; id: string }) {
-    return item.type === 'INTERNAL' ? ['/context/internal-issues', item.id, 'edit'] : ['/context/external-issues', item.id, 'edit'];
+    return item.type === 'INTERNAL'
+      ? ['/context/internal-issues', item.id, 'edit']
+      : ['/context/external-issues', item.id, 'edit'];
+  }
+
+  protected recentIssueCount(status: 'OPEN' | 'MONITORING' | 'RESOLVED') {
+    return (this.dashboard()?.recentIssues || []).filter((item) => item.status === status).length;
+  }
+
+  protected reviewHeadline() {
+    if (this.recentIssueCount('OPEN') > 0) {
+      return 'Open context issues still need active review';
+    }
+    if (this.recentIssueCount('MONITORING') > 0) {
+      return 'Context is under monitoring';
+    }
+    return 'Clause 4 position is currently stable';
+  }
+
+  protected reviewNarrative() {
+    if (this.recentIssueCount('OPEN') > 0) {
+      return 'Use the open issues as management inputs. Where needed, continue into risk assessment or process review so the issue has visible follow-up.';
+    }
+    if (this.recentIssueCount('MONITORING') > 0) {
+      return 'Monitoring issues remain visible for review and can still be escalated into risks or process changes if the situation worsens.';
+    }
+    return 'Recent context records are either resolved or not currently driving immediate management attention.';
+  }
+
+  protected issueLinkSummary(item: ContextDashboardResponse['recentIssues'][number]) {
+    const parts: string[] = [];
+    if (item.linkedRiskCount) {
+      parts.push(`${item.linkedRiskCount} risk${item.linkedRiskCount === 1 ? '' : 's'}`);
+    }
+    if (item.linkedProcesses?.length) {
+      parts.push(`${item.linkedProcesses.length} process${item.linkedProcesses.length === 1 ? '' : 'es'}`);
+    }
+    return parts.join(' | ');
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

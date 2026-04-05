@@ -205,6 +205,10 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
 
           <section class="detail-section">
             <h4>Lifecycle and ownership</h4>
+            <section class="compliance-note top-space">
+              <strong>{{ documentLifecycleHeading(form.getRawValue().status) }}</strong>
+              <span>{{ documentLifecycleHint(form.getRawValue().status) }}</span>
+            </section>
             <div class="form-grid-2 top-space">
               <label class="field">
                 <span>Owner</span>
@@ -264,6 +268,10 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
 
             <div class="summary-strip top-space">
               <article class="summary-item">
+                <span>Control state</span>
+                <strong>{{ documentStatusLabel(selectedDocument()?.status || 'DRAFT') }}</strong>
+              </article>
+              <article class="summary-item">
                 <span>Current revision</span>
                 <strong>V{{ selectedDocument()?.version }}.{{ selectedDocument()?.revision }}</strong>
               </article>
@@ -276,6 +284,22 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
                 <strong>{{ selectedDocument()?.reviewDueDate ? (selectedDocument()?.reviewDueDate | date:'yyyy-MM-dd') : 'Not set' }}</strong>
               </article>
             </div>
+
+            <section class="detail-section top-space">
+              <h4>Lifecycle position</h4>
+              <div class="lifecycle-strip top-space">
+                <article *ngFor="let step of documentLifecycleSteps()" class="lifecycle-step" [ngClass]="documentLifecycleStepClass(step, selectedDocument()?.status || 'DRAFT')">
+                  <span>{{ step.label }}</span>
+                  <strong>{{ step.title }}</strong>
+                </article>
+              </div>
+              <p class="subtle top-space">{{ documentLifecycleHint(selectedDocument()?.status || 'DRAFT') }}</p>
+            </section>
+
+            <section class="feedback next-steps-banner warning top-space" *ngIf="reviewDueSummary(selectedDocument()) as reviewSummary">
+              <strong>{{ reviewSummary.heading }}</strong>
+              <span>{{ reviewSummary.copy }}</span>
+            </section>
 
             <section class="feedback next-steps-banner success top-space" *ngIf="message() && !error()">
               <strong>{{ message() }}</strong>
@@ -322,6 +346,10 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
                 {{ documentActionLabel(status) }}
               </button>
             </div>
+            <section class="compliance-note top-space" *ngIf="selectedDocument()">
+              <strong>{{ documentLifecycleHeading(selectedDocument()!.status) }}</strong>
+              <span>{{ detailLifecycleGuidance(selectedDocument()!.status) }}</span>
+            </section>
             <p class="feedback top-space" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
           </section>
 
@@ -360,6 +388,59 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
       border-radius: 1rem;
       border: 1px solid rgba(47, 107, 69, 0.16);
       background: rgba(47, 107, 69, 0.08);
+    }
+
+    .next-steps-banner.warning,
+    .compliance-note {
+      display: grid;
+      gap: 0.35rem;
+      padding: 0.95rem 1rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(138, 99, 34, 0.16);
+      background: rgba(138, 99, 34, 0.08);
+    }
+
+    .lifecycle-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .lifecycle-step {
+      display: grid;
+      gap: 0.2rem;
+      padding: 0.9rem 1rem;
+      border-radius: 1rem;
+      border: 1px solid var(--border-subtle);
+      background: color-mix(in srgb, var(--surface-strong) 90%, white);
+    }
+
+    .lifecycle-step span {
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .lifecycle-step strong {
+      color: var(--text-strong);
+    }
+
+    .lifecycle-step.is-current {
+      border-color: rgba(47, 107, 69, 0.18);
+      background: rgba(47, 107, 69, 0.08);
+    }
+
+    .lifecycle-step.is-complete {
+      border-color: rgba(47, 107, 69, 0.12);
+      background: rgba(47, 107, 69, 0.04);
+    }
+
+    @media (max-width: 900px) {
+      .lifecycle-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
     tr[routerLink] {
@@ -505,6 +586,71 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
     if (status === 'OBSOLETE') return 'Mark obsolete';
     return 'Return to draft';
   }
+
+  protected documentStatusLabel(status: DocumentStatus) {
+    if (status === 'DRAFT') return 'Working draft';
+    if (status === 'REVIEW') return 'Under review';
+    if (status === 'APPROVED') return 'Controlled live version';
+    return 'Retained as obsolete';
+  }
+
+  protected documentLifecycleSteps() {
+    return [
+      { status: 'DRAFT' as DocumentStatus, label: 'Step 1', title: 'Draft' },
+      { status: 'REVIEW' as DocumentStatus, label: 'Step 2', title: 'Review' },
+      { status: 'APPROVED' as DocumentStatus, label: 'Step 3', title: 'Approved' },
+      { status: 'OBSOLETE' as DocumentStatus, label: 'Step 4', title: 'Obsolete' }
+    ];
+  }
+
+  protected documentLifecycleStepClass(step: { status: DocumentStatus }, current: DocumentStatus) {
+    const order = this.documentLifecycleSteps().map((item) => item.status);
+    const currentIndex = order.indexOf(current);
+    const stepIndex = order.indexOf(step.status);
+    if (stepIndex < currentIndex) {
+      return 'is-complete';
+    }
+    if (stepIndex === currentIndex) {
+      return 'is-current';
+    }
+    return '';
+  }
+
+  protected documentLifecycleHeading(status: DocumentStatus) {
+    if (status === 'DRAFT') return 'Draft control';
+    if (status === 'REVIEW') return 'Review control';
+    if (status === 'APPROVED') return 'Approved document control';
+    return 'Obsolete document control';
+  }
+
+  protected documentLifecycleHint(status: DocumentStatus) {
+    if (status === 'DRAFT') {
+      return 'Use draft while content is being prepared. Only draft records can be deleted if a document should be withdrawn before release.';
+    }
+    if (status === 'REVIEW') {
+      return 'Use review when the content is ready for checking and approval. Keep the revision note and supporting evidence current before approval.';
+    }
+    if (status === 'APPROVED') {
+      return 'Approved records represent the controlled live version. Keep the effective date and review due date current so periodic review stays visible.';
+    }
+    return 'Obsolete keeps the historical record available for traceability. It should replace deletion once a live document has been superseded.';
+  }
+
+  protected detailLifecycleGuidance(status: DocumentStatus) {
+    if (status === 'DRAFT') {
+      return 'Next control point: complete the revision note, assign ownership, and move the document into review when the draft is ready.';
+    }
+    if (status === 'REVIEW') {
+      return this.authStore.hasPermission('documents.approve')
+        ? 'Next control point: review the evidence trail and approve the document when the content and metadata are complete.'
+        : 'Next control point: confirm evidence and revision details, then hand the document to an approver with documents.approve permission.';
+    }
+    if (status === 'APPROVED') {
+      return 'Next control point: maintain review due dates and linked actions, and mark the record obsolete rather than deleting it when superseded.';
+    }
+    return 'Next control point: keep the obsolete record for traceability and make sure the replacement live document is available in the register.';
+  }
+
   protected documentNextStepsCopy() {
     const status = this.selectedDocument()?.status;
     if (status === 'APPROVED') {
@@ -514,6 +660,32 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
       return 'Next: review the lifecycle step, confirm evidence is complete, and move the document toward approval.';
     }
     return 'Next: confirm lifecycle details, review evidence, and keep linked actions up to date.';
+  }
+
+  protected reviewDueSummary(document: DocumentRow | null) {
+    if (!document?.reviewDueDate || document.status === 'OBSOLETE') {
+      return null;
+    }
+
+    const today = new Date();
+    const dueDate = new Date(document.reviewDueDate);
+    const diffDays = Math.floor((dueDate.getTime() - new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()) / 86400000);
+
+    if (diffDays < 0) {
+      return {
+        heading: 'Review is overdue',
+        copy: `This controlled document passed its review due date on ${document.reviewDueDate.slice(0, 10)}. Review the content, confirm relevance, and either revise or reapprove it.`
+      };
+    }
+
+    if (diffDays <= 30) {
+      return {
+        heading: 'Review due soon',
+        copy: `This document is due for review on ${document.reviewDueDate.slice(0, 10)}. Confirm the owner, evidence, and revision note before the review date passes.`
+      };
+    }
+
+    return null;
   }
 
   protected save() {
