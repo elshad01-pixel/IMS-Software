@@ -22,6 +22,42 @@ import { ContextDashboardPageComponent } from './pages/context-dashboard-page.co
 import { ExternalIssueCreatePageComponent, ExternalIssueEditPageComponent, ExternalIssuesListPageComponent, InternalIssueCreatePageComponent, InternalIssueEditPageComponent, InternalIssuesListPageComponent } from './pages/context-issues-page.component';
 import { InterestedPartiesListPageComponent, InterestedPartyCreatePageComponent, InterestedPartyEditPageComponent } from './pages/interested-parties-page.component';
 import { NeedExpectationCreatePageComponent, NeedExpectationEditPageComponent, NeedsExpectationsListPageComponent } from './pages/needs-expectations-page.component';
+import {
+  ComplianceObligationsCreatePageComponent,
+  ComplianceObligationsDetailPageComponent,
+  ComplianceObligationsEditPageComponent,
+  ComplianceObligationsListPageComponent
+} from './pages/compliance-obligations-page.component';
+import {
+  IncidentsCreatePageComponent,
+  IncidentsDetailPageComponent,
+  IncidentsEditPageComponent,
+  IncidentsListPageComponent
+} from './pages/incidents-page.component';
+import {
+  EnvironmentalAspectsCreatePageComponent,
+  EnvironmentalAspectsDetailPageComponent,
+  EnvironmentalAspectsEditPageComponent,
+  EnvironmentalAspectsListPageComponent
+} from './pages/environmental-aspects-page.component';
+import {
+  HazardsCreatePageComponent,
+  HazardsDetailPageComponent,
+  HazardsEditPageComponent,
+  HazardsListPageComponent
+} from './pages/hazards-page.component';
+import {
+  ExternalProvidersCreatePageComponent,
+  ExternalProvidersDetailPageComponent,
+  ExternalProvidersEditPageComponent,
+  ExternalProvidersListPageComponent
+} from './pages/external-providers-page.component';
+import {
+  ChangeManagementCreatePageComponent,
+  ChangeManagementDetailPageComponent,
+  ChangeManagementEditPageComponent,
+  ChangeManagementListPageComponent
+} from './pages/change-management-page.component';
 
 export const appRoutes: Routes = [
   { path: 'login', component: LoginPageComponent },
@@ -80,6 +116,30 @@ export const appRoutes: Routes = [
       { path: 'context/needs-expectations', component: NeedsExpectationsListPageComponent, data: { permission: 'context.read' } },
       { path: 'context/needs-expectations/new', component: NeedExpectationCreatePageComponent, data: { permission: 'context.write' } },
       { path: 'context/needs-expectations/:id/edit', component: NeedExpectationEditPageComponent, data: { permission: 'context.write' } },
+      { path: 'compliance-obligations', component: ComplianceObligationsListPageComponent, data: { permission: 'obligations.read' } },
+      { path: 'compliance-obligations/new', component: ComplianceObligationsCreatePageComponent, data: { permission: 'obligations.write' } },
+      { path: 'compliance-obligations/:id', component: ComplianceObligationsDetailPageComponent, data: { permission: 'obligations.read' } },
+      { path: 'compliance-obligations/:id/edit', component: ComplianceObligationsEditPageComponent, data: { permission: 'obligations.write' } },
+      { path: 'incidents', component: IncidentsListPageComponent, data: { permission: 'incidents.read' } },
+      { path: 'incidents/new', component: IncidentsCreatePageComponent, data: { permission: 'incidents.write' } },
+      { path: 'incidents/:id', component: IncidentsDetailPageComponent, data: { permission: 'incidents.read' } },
+      { path: 'incidents/:id/edit', component: IncidentsEditPageComponent, data: { permission: 'incidents.write' } },
+      { path: 'environmental-aspects', component: EnvironmentalAspectsListPageComponent, data: { permission: 'aspects.read' } },
+      { path: 'environmental-aspects/new', component: EnvironmentalAspectsCreatePageComponent, data: { permission: 'aspects.write' } },
+      { path: 'environmental-aspects/:id', component: EnvironmentalAspectsDetailPageComponent, data: { permission: 'aspects.read' } },
+      { path: 'environmental-aspects/:id/edit', component: EnvironmentalAspectsEditPageComponent, data: { permission: 'aspects.write' } },
+      { path: 'hazards', component: HazardsListPageComponent, data: { permission: 'hazards.read' } },
+      { path: 'hazards/new', component: HazardsCreatePageComponent, data: { permission: 'hazards.write' } },
+      { path: 'hazards/:id', component: HazardsDetailPageComponent, data: { permission: 'hazards.read' } },
+      { path: 'hazards/:id/edit', component: HazardsEditPageComponent, data: { permission: 'hazards.write' } },
+      { path: 'external-providers', component: ExternalProvidersListPageComponent, data: { permission: 'providers.read' } },
+      { path: 'external-providers/new', component: ExternalProvidersCreatePageComponent, data: { permission: 'providers.write' } },
+      { path: 'external-providers/:id', component: ExternalProvidersDetailPageComponent, data: { permission: 'providers.read' } },
+      { path: 'external-providers/:id/edit', component: ExternalProvidersEditPageComponent, data: { permission: 'providers.write' } },
+      { path: 'change-management', component: ChangeManagementListPageComponent, data: { permission: 'change.read' } },
+      { path: 'change-management/new', component: ChangeManagementCreatePageComponent, data: { permission: 'change.write' } },
+      { path: 'change-management/:id', component: ChangeManagementDetailPageComponent, data: { permission: 'change.read' } },
+      { path: 'change-management/:id/edit', component: ChangeManagementEditPageComponent, data: { permission: 'change.write' } },
       { path: 'process-register', component: ProcessRegisterListPageComponent, data: { permission: 'processes.read' } },
       { path: 'process-register/new', component: ProcessRegisterCreatePageComponent, data: { permission: 'processes.write' } },
       { path: 'process-register/:id', component: ProcessRegisterDetailPageComponent, data: { permission: 'processes.read' } },

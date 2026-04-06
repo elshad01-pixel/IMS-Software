@@ -278,6 +278,7 @@ export class AttachmentPanelComponent implements OnChanges {
       'audit-checklist-item': 'audits.write',
       'management-review': 'management-review.write',
       ncr: 'ncr.write',
+      incident: 'incidents.write',
       settings: 'settings.write'
     };
 

@@ -1,5 +1,13 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ActionItemStatus } from '@prisma/client';
+import {
+  getChangeRequestDelegate,
+  getComplianceObligationDelegate,
+  getEnvironmentalAspectDelegate,
+  getExternalProviderControlDelegate,
+  getHazardIdentificationDelegate,
+  getIncidentDelegate
+} from '../../common/prisma/prisma-delegate-compat';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CreateActionItemDto } from './dto/create-action-item.dto';
@@ -217,6 +225,12 @@ export class ActionItemsService {
     if (normalized === 'capa') return 'CAPA';
     if (normalized === 'ncr') return 'NCR';
     if (normalized === 'management-review') return 'Management Review';
+    if (normalized === 'incident') return 'Incident';
+    if (normalized === 'provider') return 'External Provider';
+    if (normalized === 'change-management') return 'Change Management';
+    if (normalized === 'hazard') return 'Hazard';
+    if (normalized === 'aspect') return 'Environmental Aspect';
+    if (normalized === 'obligation') return 'Compliance Obligation';
     return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   }
 
@@ -253,6 +267,48 @@ export class ActionItemsService {
 
     if (normalized === 'ncr') {
       return (await this.prisma.ncr.findFirst({
+        where: { tenantId, id: sourceId, deletedAt: null },
+        select: { referenceNo: true, title: true }
+      }))?.title ?? sourceId;
+    }
+
+    if (normalized === 'incident') {
+      return (await getIncidentDelegate(this.prisma).findFirst({
+        where: { tenantId, id: sourceId, deletedAt: null },
+        select: { referenceNo: true, title: true }
+      }))?.title ?? sourceId;
+    }
+
+    if (normalized === 'provider') {
+      return (await getExternalProviderControlDelegate(this.prisma).findFirst({
+        where: { tenantId, id: sourceId, deletedAt: null },
+        select: { referenceNo: true, providerName: true }
+      }))?.providerName ?? sourceId;
+    }
+
+    if (normalized === 'change-management') {
+      return (await getChangeRequestDelegate(this.prisma).findFirst({
+        where: { tenantId, id: sourceId, deletedAt: null },
+        select: { referenceNo: true, title: true }
+      }))?.title ?? sourceId;
+    }
+
+    if (normalized === 'hazard') {
+      return (await getHazardIdentificationDelegate(this.prisma).findFirst({
+        where: { tenantId, id: sourceId, deletedAt: null },
+        select: { referenceNo: true, hazard: true }
+      }))?.hazard ?? sourceId;
+    }
+
+    if (normalized === 'aspect') {
+      return (await getEnvironmentalAspectDelegate(this.prisma).findFirst({
+        where: { tenantId, id: sourceId, deletedAt: null },
+        select: { referenceNo: true, aspect: true }
+      }))?.aspect ?? sourceId;
+    }
+
+    if (normalized === 'obligation') {
+      return (await getComplianceObligationDelegate(this.prisma).findFirst({
         where: { tenantId, id: sourceId, deletedAt: null },
         select: { referenceNo: true, title: true }
       }))?.title ?? sourceId;

@@ -44,7 +44,7 @@ type ReturnNavigation = {
       <iso-page-header
         [label]="'Actions'"
         [title]="'Global action tracker'"
-        [description]="'Track follow-up from risks, CAPA, audits, and management review in one operational register.'"
+        [description]="'Track follow-up from risks, incidents, hazards, environmental aspects, obligations, CAPA, change management, provider reviews, audits, and management review in one operational register.'"
         [breadcrumbs]="[{ label: 'Actions' }]"
       >
         <a *ngIf="returnNavigation()" [routerLink]="returnNavigation()!.route" class="button-link secondary">Back to {{ returnNavigation()!.label }}</a>
@@ -149,6 +149,12 @@ type ReturnNavigation = {
                   <option value="capa">CAPA</option>
                   <option value="audit">Audit</option>
                   <option value="management-review">Management Review</option>
+                  <option value="incident">Incident / Near miss</option>
+                  <option value="hazard">Hazard</option>
+                  <option value="aspect">Environmental aspect</option>
+                  <option value="obligation">Compliance obligation</option>
+                  <option value="provider">External provider</option>
+                  <option value="change-management">Change management</option>
                 </select>
               </label>
               <label class="field">
@@ -312,6 +318,12 @@ export class ActionsPageComponent {
     audit: 'Audit',
     'management-review': 'Management Review',
     ncr: 'NCR',
+    incident: 'Incident',
+    hazard: 'Hazard',
+    aspect: 'Environmental Aspect',
+    obligation: 'Compliance Obligation',
+    provider: 'External Provider',
+    'change-management': 'Change Management',
     document: 'Document',
     context: 'Context issue'
   }));
@@ -398,7 +410,7 @@ export class ActionsPageComponent {
       return 'Use the overdue actions as the first management attention point. They represent follow-up that has already missed the committed due date.';
     }
     if (this.countByStatus('OPEN') > 0 || this.countByStatus('IN_PROGRESS') > 0) {
-      return 'Open and in-progress actions are visible here across risks, audits, CAPA, and management review so ownership stays clear.';
+      return 'Open and in-progress actions are visible here across risks, incidents, hazards, environmental aspects, obligations, provider reviews, change management, audits, CAPA, and management review so ownership stays clear.';
     }
     return 'Current action records are either complete or not yet requiring additional intervention.';
   }
@@ -447,6 +459,18 @@ export class ActionsPageComponent {
         return ['/management-review', action.sourceId];
       case 'ncr':
         return ['/ncr', action.sourceId];
+      case 'incident':
+        return ['/incidents', action.sourceId];
+      case 'hazard':
+        return ['/hazards', action.sourceId];
+      case 'aspect':
+        return ['/environmental-aspects', action.sourceId];
+      case 'obligation':
+        return ['/compliance-obligations', action.sourceId];
+      case 'provider':
+        return ['/external-providers', action.sourceId];
+      case 'change-management':
+        return ['/change-management', action.sourceId];
       case 'document':
         return ['/documents', action.sourceId];
       default:

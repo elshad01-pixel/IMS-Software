@@ -1,0 +1,476 @@
+<section class="page-grid">
+  <iso-page-header
+    [label]="'External Providers'"
+    [title]="pageTitle()"
+    [description]="pageDescription()"
+    [breadcrumbs]="breadcrumbs()"
+  >
+    <a *ngIf="mode() === 'list' && canWrite()" routerLink="/external-providers/new" class="button-link">+ New provider</a>
+    <a *ngIf="mode() === 'detail' && selectedRecord() && canWrite()" [routerLink]="['/external-providers', selectedId(), 'edit']" class="button-link">Edit provider</a>
+    <button *ngIf="mode() === 'detail' && selectedRecord() && canDelete()" type="button" class="button-link danger" (click)="archiveRecord()">Archive</button>
+    <a *ngIf="mode() !== 'list'" routerLink="/external-providers" class="button-link secondary">Back</a>
+  </iso-page-header>
+
+  <section *ngIf="mode() === 'list'" class="page-stack">
+    <div class="card list-card">
+      <div class="toolbar">
+        <div class="toolbar-meta">
+          <div>
+            <p class="toolbar-title">Register filters</p>
+            <p class="toolbar-copy">Track approved suppliers, contractors, and outsourced services in one controlled register.</p>
+          </div>
+          <div class="toolbar-stats">
+            <article class="toolbar-stat"><span>Total</span><strong>{{ records().length }}</strong></article>
+            <article class="toolbar-stat"><span>Approved</span><strong>{{ approvedCount() }}</strong></article>
+            <article class="toolbar-stat"><span>Under review</span><strong>{{ reviewCount() }}</strong></article>
+            <article class="toolbar-stat"><span>High criticality</span><strong>{{ highCriticalityCount() }}</strong></article>
+            <article class="toolbar-stat"><span>Evaluated</span><strong>{{ evaluatedCount() }}</strong></article>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <label class="field">
+            <span>Search</span>
+            <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Reference, provider, scope, approval basis">
+          </label>
+          <label class="field">
+            <span>Status</span>
+            <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
+              <option value="">All</option>
+              <option value="APPROVED">Approved</option>
+              <option value="CONDITIONAL">Conditional</option>
+              <option value="UNDER_REVIEW">Under review</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Owner</span>
+            <select [value]="ownerFilter()" (change)="ownerFilter.set(readSelectValue($event))">
+              <option value="">All</option>
+              <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <p class="feedback top-space" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+
+      <div class="empty-state top-space" *ngIf="loading()">
+        <strong>Loading external providers</strong>
+        <span>Refreshing approved providers, outsourced services, and review timing.</span>
+      </div>
+
+      <div class="empty-state top-space" *ngIf="!loading() && !filteredRecords().length">
+        <strong>No external providers found</strong>
+        <span>Create the first provider to keep supplier and outsourced-service control visible in the IMS.</span>
+      </div>
+
+      <div class="data-table-wrap top-space" *ngIf="!loading() && filteredRecords().length">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Provider</th>
+              <th>Type</th>
+              <th>Criticality</th>
+              <th>Status</th>
+              <th>Evaluation</th>
+              <th>Next review</th>
+              <th>Supplier audit</th>
+              <th>Links</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of filteredRecords()" [routerLink]="['/external-providers', item.id]">
+              <td>
+                <div class="table-title">
+                  <strong>{{ item.referenceNo || 'Uncoded' }} - {{ item.providerName }}</strong>
+                  <small>{{ item.suppliedScope }}</small>
+                </div>
+              </td>
+              <td>{{ prettyStatus(item.providerType) }}</td>
+              <td><span class="status-badge" [ngClass]="criticalityClass(item.criticality)">{{ prettyStatus(item.criticality) }}</span></td>
+              <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ prettyStatus(item.status) }}</span></td>
+              <td>
+                <div class="table-title compact">
+                  <strong>{{ item.evaluationScore ?? 'Not scored' }}<span *ngIf="item.evaluationScore !== null && item.evaluationScore !== undefined">%</span></strong>
+                  <small>{{ evaluationOutcomeLabel(item.evaluationOutcome) }}</small>
+                </div>
+              </td>
+              <td>{{ item.nextReviewDate ? (item.nextReviewDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
+              <td><span class="status-badge" [ngClass]="auditCoverageClass(item)">{{ auditCoverageLabel(item) }}</span></td>
+              <td>{{ item.linkCount || 0 }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-stack">
+    <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
+      <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+
+      <section class="content-guidance">
+        <div class="section-head compact-head">
+          <div>
+            <h4>Control position</h4>
+            <p class="subtle">{{ guidance() }}</p>
+          </div>
+        </div>
+        <div class="summary-strip top-space">
+          <article class="summary-item"><span>Provider</span><strong>{{ form.getRawValue().providerName ? 'Defined' : 'Needed' }}</strong></article>
+          <article class="summary-item"><span>Approval basis</span><strong>{{ form.getRawValue().approvalBasis ? 'Recorded' : 'Needed' }}</strong></article>
+          <article class="summary-item"><span>Owner</span><strong>{{ form.getRawValue().ownerUserId ? 'Assigned' : 'Needed' }}</strong></article>
+          <article class="summary-item"><span>Annual evaluation</span><strong>{{ questionnairePercent() !== null ? questionnairePercent() + '%' : 'Not scored' }}</strong></article>
+        </div>
+      </section>
+
+      <section class="detail-section">
+        <h4>Provider definition</h4>
+        <div class="form-grid-2 top-space">
+          <label class="field"><span>Reference</span><input formControlName="referenceNo" placeholder="SUP-001"></label>
+          <label class="field">
+            <span>Status</span>
+            <select formControlName="status">
+              <option value="APPROVED">Approved</option>
+              <option value="CONDITIONAL">Conditional</option>
+              <option value="UNDER_REVIEW">Under review</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </label>
+        </div>
+        <label class="field top-space"><span>Provider name</span><input formControlName="providerName" placeholder="Approved plating subcontractor | Calibration lab"></label>
+        <div class="form-grid-2 top-space">
+          <label class="field">
+            <span>Provider type</span>
+            <select formControlName="providerType">
+              <option value="SUPPLIER">Supplier</option>
+              <option value="OUTSOURCED_SERVICE">Outsourced service</option>
+              <option value="CONTRACTOR">Contractor</option>
+              <option value="CALIBRATION">Calibration</option>
+              <option value="LOGISTICS">Logistics</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Criticality</span>
+            <select formControlName="criticality">
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+            </select>
+          </label>
+        </div>
+        <label class="field top-space"><span>Supplied scope</span><textarea formControlName="suppliedScope" rows="4" placeholder="What product, service, or outsourced activity this provider supports."></textarea></label>
+      </section>
+
+      <section class="detail-section">
+        <h4>Approval and review</h4>
+        <label class="field top-space"><span>Approval basis</span><textarea formControlName="approvalBasis" rows="4" placeholder="Summarize why the provider is approved, conditionally accepted, or under review."></textarea></label>
+        <div class="form-grid-2 top-space">
+          <label class="field"><span>Next review date</span><input formControlName="nextReviewDate" type="date"></label>
+          <label class="field">
+            <span>Owner</span>
+            <select formControlName="ownerUserId">
+              <option value="">Unassigned</option>
+              <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="detail-section">
+        <h4>Annual evaluation</h4>
+        <p class="subtle top-space">Use one simple annual questionnaire so supplier review stays comparable across providers. Score each item from 1 to 5.</p>
+        <div class="summary-strip top-space">
+          <article class="summary-item"><span>Scale</span><strong>1 weak to 5 strong</strong></article>
+          <article class="summary-item"><span>Average</span><strong>{{ questionnaireAverage() ?? 'Not scored' }}</strong></article>
+          <article class="summary-item"><span>Total score</span><strong>{{ questionnairePercent() !== null ? questionnairePercent() + '%' : 'Not scored' }}</strong></article>
+        </div>
+
+        <div class="criteria-grid top-space">
+          <article class="criterion-card" *ngFor="let criterion of evaluationCriteria()">
+            <strong>{{ criterion.score }} - {{ criterion.title }}</strong>
+            <span>{{ criterion.definition }}</span>
+          </article>
+        </div>
+
+        <div class="form-grid-2 top-space">
+          <label class="field">
+            <span>Evaluation date</span>
+            <input formControlName="evaluationDate" type="date">
+          </label>
+          <label class="field">
+            <span>Quality performance</span>
+            <select formControlName="qualityScore">
+              <option [ngValue]="null">Not scored</option>
+              <option *ngFor="let score of scoreChoices()" [ngValue]="score">{{ score }}</option>
+            </select>
+            <small class="field-hint">Conformance, defect history, and complaint performance.</small>
+          </label>
+          <label class="field">
+            <span>Delivery performance</span>
+            <select formControlName="deliveryScore">
+              <option [ngValue]="null">Not scored</option>
+              <option *ngFor="let score of scoreChoices()" [ngValue]="score">{{ score }}</option>
+            </select>
+            <small class="field-hint">On-time delivery, service reliability, and schedule stability.</small>
+          </label>
+          <label class="field">
+            <span>Responsiveness</span>
+            <select formControlName="responsivenessScore">
+              <option [ngValue]="null">Not scored</option>
+              <option *ngFor="let score of scoreChoices()" [ngValue]="score">{{ score }}</option>
+            </select>
+            <small class="field-hint">Speed and clarity when issues, requests, or escalations arise.</small>
+          </label>
+          <label class="field">
+            <span>Compliance and documentation</span>
+            <select formControlName="complianceScore">
+              <option [ngValue]="null">Not scored</option>
+              <option *ngFor="let score of scoreChoices()" [ngValue]="score">{{ score }}</option>
+            </select>
+            <small class="field-hint">Certificates, approvals, and required supporting records.</small>
+          </label>
+          <label class="field">
+            <span>Traceability and control</span>
+            <select formControlName="traceabilityScore">
+              <option [ngValue]="null">Not scored</option>
+              <option *ngFor="let score of scoreChoices()" [ngValue]="score">{{ score }}</option>
+            </select>
+            <small class="field-hint">Record retrieval, identification, and control of supplied product or service.</small>
+          </label>
+          <label class="field">
+            <span>Change notification</span>
+            <select formControlName="changeControlScore">
+              <option [ngValue]="null">Not scored</option>
+              <option *ngFor="let score of scoreChoices()" [ngValue]="score">{{ score }}</option>
+            </select>
+            <small class="field-hint">How reliably the provider communicates changes before impact occurs.</small>
+          </label>
+        </div>
+
+        <section class="detail-section top-space live-performance">
+          <div class="section-head compact-head">
+            <div>
+              <h4>Live performance view</h4>
+              <p class="subtle">{{ livePerformanceHeadline() }}</p>
+            </div>
+            <span class="status-badge" [ngClass]="liveOutcomeClass()">{{ liveOutcomeLabel() }}</span>
+          </div>
+          <p class="top-space">{{ livePerformanceNarrative() }}</p>
+          <div class="live-panels top-space" *ngIf="questionnaireScores().length">
+            <article class="live-panel">
+              <span>Strong areas</span>
+              <strong *ngIf="strongestAreas().length">{{ areaLabels(strongestAreas()) }}</strong>
+              <strong *ngIf="!strongestAreas().length">None yet</strong>
+            </article>
+            <article class="live-panel">
+              <span>Watch areas</span>
+              <strong *ngIf="watchAreas().length">{{ areaLabels(watchAreas()) }}</strong>
+              <strong *ngIf="!watchAreas().length">None</strong>
+            </article>
+            <article class="live-panel">
+              <span>Weak areas</span>
+              <strong *ngIf="weakAreas().length">{{ areaLabels(weakAreas()) }}</strong>
+              <strong *ngIf="!weakAreas().length">None</strong>
+            </article>
+          </div>
+          <div class="score-grid top-space" *ngIf="questionnaireScores().length">
+            <article class="score-item" *ngFor="let metric of evaluationMetrics()">
+              <span>{{ metric.label }}</span>
+              <strong>{{ form.get(metric.key)?.value ?? 'Not scored' }}</strong>
+              <small>{{ metric.hint }}</small>
+              <small class="score-definition" *ngIf="scoreDefinition(form.get(metric.key)?.value)">{{ scoreDefinition(form.get(metric.key)?.value)?.definition }}</small>
+            </article>
+          </div>
+        </section>
+
+        <label class="field top-space"><span>Evaluation summary</span><textarea formControlName="evaluationSummary" rows="4" placeholder="Summarize the main strengths, weaknesses, and any conditions from the annual provider review."></textarea></label>
+      </section>
+
+      <div class="button-row">
+        <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save provider' }}</button>
+        <a [routerLink]="selectedId() ? ['/external-providers', selectedId()] : ['/external-providers']" class="button-link secondary">Cancel</a>
+      </div>
+    </form>
+  </section>
+
+  <section *ngIf="mode() === 'detail' && selectedRecord()" class="page-stack">
+    <section class="card detail-card">
+      <div class="section-head">
+        <div>
+          <span class="section-eyebrow">External provider</span>
+          <h3>{{ selectedRecord()?.referenceNo || 'Uncoded' }} - {{ selectedRecord()?.providerName }}</h3>
+          <p class="subtle">{{ selectedRecord()?.suppliedScope || 'No supplied scope recorded yet.' }}</p>
+        </div>
+        <div class="route-context">
+          <span class="status-badge" [ngClass]="criticalityClass(selectedRecord()?.criticality || 'LOW')">{{ prettyStatus(selectedRecord()?.criticality) }}</span>
+          <span class="status-badge" [ngClass]="statusClass(selectedRecord()?.status || 'APPROVED')">{{ prettyStatus(selectedRecord()?.status) }}</span>
+        </div>
+      </div>
+
+      <div class="summary-strip top-space">
+        <article class="summary-item"><span>Provider type</span><strong>{{ prettyStatus(selectedRecord()?.providerType) }}</strong></article>
+        <article class="summary-item"><span>Owner</span><strong>{{ selectedRecord()?.owner ? personName(selectedRecord()?.owner) : 'Unassigned' }}</strong></article>
+        <article class="summary-item"><span>Next review</span><strong>{{ selectedRecord()?.nextReviewDate ? (selectedRecord()?.nextReviewDate | date:'yyyy-MM-dd') : 'Not set' }}</strong></article>
+        <article class="summary-item"><span>Annual evaluation</span><strong>{{ selectedRecord()?.evaluationScore !== null && selectedRecord()?.evaluationScore !== undefined ? selectedRecord()?.evaluationScore + '%' : 'Not scored' }}</strong></article>
+        <article class="summary-item"><span>Linked records</span><strong>{{ selectedRecord()?.links?.length || 0 }}</strong></article>
+      </div>
+
+      <section class="content-guidance top-space">
+        <div class="section-head compact-head">
+          <div>
+            <h4>Review position</h4>
+            <p class="subtle">{{ reviewNarrative() }}</p>
+          </div>
+        </div>
+        <div class="summary-strip top-space">
+          <article class="summary-item"><span>Processes</span><strong>{{ linkCountByType('PROCESS') }}</strong></article>
+          <article class="summary-item"><span>Audits</span><strong>{{ linkCountByType('AUDIT') }}</strong></article>
+          <article class="summary-item"><span>Risks</span><strong>{{ linkCountByType('RISK') }}</strong></article>
+          <article class="summary-item"><span>Actions</span><strong>{{ linkCountByType('ACTION') }}</strong></article>
+          <article class="summary-item"><span>Supplier audit</span><strong>{{ auditCoverageLabel(selectedRecord()) }}</strong></article>
+        </div>
+      </section>
+
+      <div class="section-grid-2 top-space">
+        <section class="detail-section">
+          <h4>Approval basis</h4>
+          <p>{{ selectedRecord()?.approvalBasis || 'No approval basis recorded.' }}</p>
+        </section>
+        <section class="detail-section">
+          <h4>Criticality focus</h4>
+          <p>{{ selectedRecord()?.criticality === 'HIGH' ? 'This provider supports a high-impact product, service, or outsourced activity and should stay visible in formal review.' : selectedRecord()?.criticality === 'MEDIUM' ? 'This provider has moderate impact and should stay within routine review and audit coverage.' : 'This provider is recorded for visibility, with lighter follow-up expectations unless the relationship changes.' }}</p>
+        </section>
+      </div>
+
+      <div class="section-grid-2 top-space">
+        <section class="detail-section">
+          <h4>Annual evaluation result</h4>
+          <div class="evaluation-head">
+            <strong>{{ selectedRecord()?.evaluationScore !== null && selectedRecord()?.evaluationScore !== undefined ? selectedRecord()?.evaluationScore + '%' : 'Not scored yet' }}</strong>
+            <span class="status-badge" [ngClass]="evaluationOutcomeClass(selectedRecord()?.evaluationOutcome)">{{ evaluationOutcomeLabel(selectedRecord()?.evaluationOutcome) }}</span>
+          </div>
+          <p class="top-space">{{ evaluationNarrative(selectedRecord()) }}</p>
+          <p class="top-space" *ngIf="selectedRecord()?.evaluationSummary">{{ selectedRecord()?.evaluationSummary }}</p>
+        </section>
+        <section class="detail-section">
+          <h4>Questionnaire breakdown</h4>
+          <div class="score-grid">
+            <article class="score-item"><span>Quality</span><strong>{{ selectedRecord()?.qualityScore ?? '-' }}</strong></article>
+            <article class="score-item"><span>Delivery</span><strong>{{ selectedRecord()?.deliveryScore ?? '-' }}</strong></article>
+            <article class="score-item"><span>Responsiveness</span><strong>{{ selectedRecord()?.responsivenessScore ?? '-' }}</strong></article>
+            <article class="score-item"><span>Compliance</span><strong>{{ selectedRecord()?.complianceScore ?? '-' }}</strong></article>
+            <article class="score-item"><span>Traceability</span><strong>{{ selectedRecord()?.traceabilityScore ?? '-' }}</strong></article>
+            <article class="score-item"><span>Change control</span><strong>{{ selectedRecord()?.changeControlScore ?? '-' }}</strong></article>
+          </div>
+          <p class="subtle top-space" *ngIf="selectedRecord()?.evaluationDate">Latest annual evaluation recorded on {{ selectedRecord()?.evaluationDate | date:'yyyy-MM-dd' }}.</p>
+        </section>
+      </div>
+
+      <section class="detail-section top-space">
+        <div class="section-head compact-head">
+          <div>
+            <h4>Supplier audit expectation</h4>
+            <p class="subtle">Critical suppliers should show at least one linked supplier audit as part of formal annual oversight.</p>
+          </div>
+          <span class="status-badge" [ngClass]="auditCoverageClass(selectedRecord())">{{ auditCoverageLabel(selectedRecord()) }}</span>
+        </div>
+        <p class="top-space">
+          {{
+            !selectedRecord()?.supplierAuditRequired
+              ? 'A dedicated supplier audit is not required for this provider based on its current type and criticality.'
+              : selectedRecord()?.supplierAuditLinked
+                ? 'A supplier audit is already linked, so annual provider review shows formal audit support.'
+                : 'This provider is marked as a critical supplier, so link a supplier audit to complete formal annual oversight.'
+          }}
+        </p>
+      </section>
+
+      <section class="content-guidance top-space">
+        <div class="section-head compact-head">
+          <div>
+            <h4>Next steps</h4>
+            <p class="subtle">{{ nextStepHeadline() }}</p>
+          </div>
+        </div>
+        <div class="summary-strip top-space">
+          <article class="summary-item"><span>Supplier audit</span><strong>{{ auditCoverageLabel(selectedRecord()) }}</strong></article>
+          <article class="summary-item"><span>Follow-up action</span><strong>{{ linkCountByType('ACTION') ? 'Linked' : 'Prepare below' }}</strong></article>
+          <article class="summary-item"><span>Traceability</span><strong>{{ linkCountByType('PROCESS') && linkCountByType('AUDIT') ? 'Connected' : 'Complete links' }}</strong></article>
+        </div>
+        <p class="top-space">{{ nextStepNarrative() }}</p>
+      </section>
+    </section>
+
+    <iso-record-work-items
+      [sourceType]="'provider'"
+      [sourceId]="selectedId()"
+      [draftTitle]="providerDraftTitle()"
+      [draftDescription]="providerDraftDescription()"
+      [returnNavigation]="providerReturnNavigation()"
+    />
+
+    <section class="card detail-card">
+      <div class="section-head">
+        <div>
+          <span class="section-eyebrow">Linked records</span>
+          <h3>Traceability hub</h3>
+          <p class="subtle">Link the existing process, audit, risk, action, and obligation records that already carry the operational follow-up.</p>
+        </div>
+      </div>
+
+      <div class="page-stack top-space">
+        <section class="detail-section link-group" *ngFor="let type of visibleLinkTypes">
+          <div class="section-head compact-head">
+            <div>
+              <h4>{{ sectionTitle(type) }}</h4>
+              <p class="subtle">{{ sectionDescription(type) }}</p>
+            </div>
+            <button *ngIf="canWrite()" type="button" class="button-link secondary" (click)="openLinkComposer(type)">
+              {{ activeLinkComposerType() === type ? 'Close' : '+ Link' }}
+            </button>
+          </div>
+
+          <div class="empty-state compact-empty top-space" *ngIf="!linksByType(type).length">
+            <strong>No linked records</strong>
+            <span>{{ sectionEmptyCopy(type) }}</span>
+          </div>
+
+          <div class="entity-list top-space" *ngIf="linksByType(type).length">
+            <div class="entity-item" *ngFor="let link of linksByType(type)">
+              <div class="link-row">
+                <div>
+                  <strong>{{ link.title }}</strong>
+                  <small *ngIf="link.subtitle">{{ link.subtitle }}</small>
+                  <small *ngIf="link.note">{{ link.note }}</small>
+                </div>
+                <div class="route-context">
+                  <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
+                  <a *ngIf="link.path && !link.missing" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">Open</a>
+                  <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">Remove</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <form *ngIf="activeLinkComposerType() === type && canWrite()" class="page-stack top-space link-form" [formGroup]="linkForm" (ngSubmit)="addLink()">
+            <input formControlName="linkType" type="hidden">
+            <label class="field">
+              <span>{{ sectionPickerLabel(type) }}</span>
+              <select formControlName="linkedId">
+                <option value="">Choose existing {{ sectionPickerLabel(type).toLowerCase() }}</option>
+                <option *ngFor="let candidate of linkCandidates()" [value]="candidate.id">{{ candidate.label }}</option>
+              </select>
+            </label>
+            <label class="field"><span>Note</span><input formControlName="note" placeholder="Optional context for this link"></label>
+            <div class="button-row">
+              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? 'Linking...' : 'Save link' }}</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </section>
+  </section>
+</section>

@@ -152,6 +152,198 @@ enum ProcessRegisterLinkType {
   CONTEXT_ISSUE
 }
 
+enum ComplianceObligationStatus {
+  ACTIVE
+  UNDER_REVIEW
+  OBSOLETE
+}
+
+enum ComplianceObligationLinkType {
+  PROCESS
+  RISK
+  AUDIT
+  ACTION
+}
+
+enum IncidentType {
+  INCIDENT
+  NEAR_MISS
+}
+
+enum IncidentCategory {
+  SAFETY
+  ENVIRONMENT
+  QUALITY
+  SECURITY
+  OTHER
+}
+
+enum IncidentStatus {
+  REPORTED
+  INVESTIGATION
+  ACTION_IN_PROGRESS
+  CLOSED
+  ARCHIVED
+}
+
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IncidentLinkType {
+  PROCESS
+  RISK
+  ACTION
+}
+
+enum IncidentRcaMethod {
+  FIVE_WHY
+  FISHBONE
+  IS_IS_NOT
+  OTHER
+}
+
+enum EnvironmentalAspectStage {
+  NORMAL_OPERATION
+  ABNORMAL_OPERATION
+  EMERGENCY
+}
+
+enum EnvironmentalAspectSignificance {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum EnvironmentalAspectStatus {
+  ACTIVE
+  MONITORING
+  OBSOLETE
+}
+
+enum EnvironmentalAspectLinkType {
+  PROCESS
+  RISK
+  ACTION
+}
+
+enum HazardExposureStage {
+  ROUTINE
+  NON_ROUTINE
+  EMERGENCY
+}
+
+enum HazardSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum HazardStatus {
+  ACTIVE
+  MONITORING
+  OBSOLETE
+}
+
+enum HazardLinkType {
+  PROCESS
+  RISK
+  ACTION
+  INCIDENT
+}
+
+enum EmergencyPreparednessType {
+  FIRE
+  CHEMICAL_SPILL
+  MEDICAL
+  EVACUATION
+  POWER_LOSS
+  OTHER
+}
+
+enum EmergencyPreparednessStatus {
+  ACTIVE
+  MONITORING
+  OBSOLETE
+}
+
+enum EmergencyPreparednessLinkType {
+  PROCESS
+  RISK
+  ACTION
+  INCIDENT
+}
+
+enum ExternalProviderType {
+  SUPPLIER
+  OUTSOURCED_SERVICE
+  CONTRACTOR
+  CALIBRATION
+  LOGISTICS
+  OTHER
+}
+
+enum ExternalProviderCriticality {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ExternalProviderStatus {
+  APPROVED
+  CONDITIONAL
+  UNDER_REVIEW
+  INACTIVE
+}
+
+enum ExternalProviderEvaluationOutcome {
+  APPROVED
+  APPROVED_WITH_CONDITIONS
+  ESCALATED
+  DISQUALIFIED
+}
+
+enum ExternalProviderLinkType {
+  PROCESS
+  RISK
+  AUDIT
+  ACTION
+  OBLIGATION
+}
+
+enum ChangeRequestType {
+  PROCESS
+  PRODUCT
+  EQUIPMENT
+  MATERIAL
+  ORGANIZATIONAL
+  DOCUMENTATION
+  FACILITY
+  OTHER
+}
+
+enum ChangeRequestStatus {
+  PROPOSED
+  REVIEWING
+  APPROVED
+  IMPLEMENTING
+  VERIFIED
+  CLOSED
+  REJECTED
+}
+
+enum ChangeRequestLinkType {
+  PROCESS
+  RISK
+  ACTION
+  DOCUMENT
+  OBLIGATION
+  PROVIDER
+}
+
 enum RiskAssessmentType {
   RISK
   OPPORTUNITY
@@ -207,6 +399,20 @@ model Tenant {
   ncrComments       NcrComment[]
   processRegisters  ProcessRegister[]
   processRegisterLinks ProcessRegisterLink[]
+  complianceObligations ComplianceObligation[]
+  complianceObligationLinks ComplianceObligationLink[]
+  incidents         Incident[]
+  incidentLinks     IncidentLink[]
+  environmentalAspects EnvironmentalAspect[]
+  environmentalAspectLinks EnvironmentalAspectLink[]
+  hazards          HazardIdentification[]
+  hazardLinks      HazardIdentificationLink[]
+  emergencyPlans   EmergencyPreparedness[]
+  emergencyPlanLinks EmergencyPreparednessLink[]
+  externalProviders ExternalProviderControl[]
+  externalProviderLinks ExternalProviderLink[]
+  changeRequests    ChangeRequest[]
+  changeRequestLinks ChangeRequestLink[]
   contextIssues     ContextIssue[]
   interestedParties InterestedParty[]
   needExpectations  NeedExpectation[]
@@ -508,6 +714,331 @@ model ProcessRegisterLink {
 
   @@unique([processId, linkType, linkedId])
   @@index([tenantId, processId])
+  @@index([tenantId, linkType, linkedId])
+}
+
+model ComplianceObligation {
+  id                    String                     @id @default(cuid())
+  tenantId              String
+  referenceNo           String?
+  title                 String
+  sourceName            String
+  obligationType        String?
+  jurisdiction          String?
+  description           String?
+  ownerUserId           String?
+  reviewFrequencyMonths Int?
+  nextReviewDate        DateTime?
+  status                ComplianceObligationStatus @default(ACTIVE)
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  deletedAt             DateTime?
+  deletedById           String?
+  tenant                Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  links                 ComplianceObligationLink[]
+
+  @@unique([tenantId, referenceNo])
+  @@index([tenantId, status])
+  @@index([tenantId, ownerUserId])
+  @@index([tenantId, nextReviewDate])
+  @@index([tenantId, deletedAt])
+}
+
+model ComplianceObligationLink {
+  id           String                       @id @default(cuid())
+  tenantId     String
+  obligationId String
+  linkType     ComplianceObligationLinkType
+  linkedId     String
+  note         String?
+  createdAt    DateTime                     @default(now())
+  createdById  String?
+  tenant       Tenant                       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  obligation   ComplianceObligation         @relation(fields: [obligationId], references: [id], onDelete: Cascade)
+
+  @@unique([obligationId, linkType, linkedId])
+  @@index([tenantId, obligationId])
+  @@index([tenantId, linkType, linkedId])
+}
+
+model Incident {
+  id                      String           @id @default(cuid())
+  tenantId                String
+  referenceNo             String?
+  title                   String
+  type                    IncidentType
+  category                IncidentCategory
+  description             String
+  eventDate               DateTime
+  location                String?
+  ownerUserId             String?
+  severity                IncidentSeverity
+  immediateAction         String?
+  investigationSummary    String?
+  rootCause               String?
+  rcaMethod               IncidentRcaMethod?
+  correctiveActionSummary String?
+  status                  IncidentStatus   @default(REPORTED)
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  deletedAt               DateTime?
+  deletedById             String?
+  tenant                  Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  links                   IncidentLink[]
+
+  @@unique([tenantId, referenceNo])
+  @@index([tenantId, status])
+  @@index([tenantId, type])
+  @@index([tenantId, ownerUserId])
+  @@index([tenantId, eventDate])
+  @@index([tenantId, deletedAt])
+}
+
+model IncidentLink {
+  id         String           @id @default(cuid())
+  tenantId   String
+  incidentId String
+  linkType   IncidentLinkType
+  linkedId   String
+  note       String?
+  createdAt  DateTime         @default(now())
+  createdById String?
+  tenant     Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  incident   Incident         @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@unique([incidentId, linkType, linkedId])
+  @@index([tenantId, incidentId])
+  @@index([tenantId, linkType, linkedId])
+}
+
+model EnvironmentalAspect {
+  id             String                           @id @default(cuid())
+  tenantId       String
+  referenceNo    String?
+  activity       String
+  aspect         String
+  impact         String
+  lifecycleStage EnvironmentalAspectStage
+  controlSummary String?
+  significance   EnvironmentalAspectSignificance
+  ownerUserId    String?
+  reviewDate     DateTime?
+  status         EnvironmentalAspectStatus       @default(ACTIVE)
+  createdAt      DateTime                         @default(now())
+  updatedAt      DateTime                         @updatedAt
+  deletedAt      DateTime?
+  deletedById    String?
+  tenant         Tenant                           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  links          EnvironmentalAspectLink[]
+
+  @@unique([tenantId, referenceNo])
+  @@index([tenantId, status])
+  @@index([tenantId, ownerUserId])
+  @@index([tenantId, reviewDate])
+  @@index([tenantId, deletedAt])
+}
+
+model EnvironmentalAspectLink {
+  id          String                       @id @default(cuid())
+  tenantId    String
+  aspectId    String
+  linkType    EnvironmentalAspectLinkType
+  linkedId    String
+  note        String?
+  createdAt   DateTime                     @default(now())
+  createdById String?
+  tenant      Tenant                       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  aspect      EnvironmentalAspect          @relation(fields: [aspectId], references: [id], onDelete: Cascade)
+
+  @@unique([aspectId, linkType, linkedId])
+  @@index([tenantId, aspectId])
+  @@index([tenantId, linkType, linkedId])
+}
+
+model HazardIdentification {
+  id             String              @id @default(cuid())
+  tenantId       String
+  referenceNo    String?
+  activity       String
+  hazard         String
+  potentialHarm  String
+  exposureStage  HazardExposureStage
+  existingControls String?
+  severity       HazardSeverity
+  ownerUserId    String?
+  reviewDate     DateTime?
+  status         HazardStatus        @default(ACTIVE)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  deletedAt      DateTime?
+  deletedById    String?
+  tenant         Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  links          HazardIdentificationLink[]
+
+  @@unique([tenantId, referenceNo])
+  @@index([tenantId, status])
+  @@index([tenantId, ownerUserId])
+  @@index([tenantId, reviewDate])
+  @@index([tenantId, deletedAt])
+}
+
+model HazardIdentificationLink {
+  id          String          @id @default(cuid())
+  tenantId    String
+  hazardId    String
+  linkType    HazardLinkType
+  linkedId    String
+  note        String?
+  createdAt   DateTime        @default(now())
+  createdById String?
+  tenant      Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  hazard      HazardIdentification @relation(fields: [hazardId], references: [id], onDelete: Cascade)
+
+  @@unique([hazardId, linkType, linkedId])
+  @@index([tenantId, hazardId])
+  @@index([tenantId, linkType, linkedId])
+}
+
+model EmergencyPreparedness {
+  id                String                     @id @default(cuid())
+  tenantId          String
+  referenceNo       String?
+  scenario          String
+  emergencyType     EmergencyPreparednessType
+  potentialImpact   String
+  responseSummary   String?
+  resourceSummary   String?
+  ownerUserId       String?
+  drillFrequencyMonths Int?
+  nextDrillDate     DateTime?
+  status            EmergencyPreparednessStatus @default(ACTIVE)
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+  deletedAt         DateTime?
+  deletedById       String?
+  tenant            Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  links             EmergencyPreparednessLink[]
+
+  @@unique([tenantId, referenceNo])
+  @@index([tenantId, status])
+  @@index([tenantId, ownerUserId])
+  @@index([tenantId, nextDrillDate])
+  @@index([tenantId, deletedAt])
+}
+
+model EmergencyPreparednessLink {
+  id          String                        @id @default(cuid())
+  tenantId    String
+  emergencyId String
+  linkType    EmergencyPreparednessLinkType
+  linkedId    String
+  note        String?
+  createdAt   DateTime                      @default(now())
+  createdById String?
+  tenant      Tenant                        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  emergency   EmergencyPreparedness         @relation(fields: [emergencyId], references: [id], onDelete: Cascade)
+
+  @@unique([emergencyId, linkType, linkedId])
+  @@index([tenantId, emergencyId])
+  @@index([tenantId, linkType, linkedId])
+}
+
+model ExternalProviderControl {
+  id               String                    @id @default(cuid())
+  tenantId         String
+  referenceNo      String?
+  providerName     String
+  providerType     ExternalProviderType
+  suppliedScope    String
+  approvalBasis    String?
+  criticality      ExternalProviderCriticality
+  ownerUserId      String?
+  evaluationDate   DateTime?
+  qualityScore     Int?
+  deliveryScore    Int?
+  responsivenessScore Int?
+  complianceScore  Int?
+  traceabilityScore Int?
+  changeControlScore Int?
+  evaluationScore  Int?
+  evaluationOutcome ExternalProviderEvaluationOutcome?
+  evaluationSummary String?
+  nextReviewDate   DateTime?
+  status           ExternalProviderStatus    @default(APPROVED)
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  deletedAt        DateTime?
+  deletedById      String?
+  tenant           Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  links            ExternalProviderLink[]
+
+  @@unique([tenantId, referenceNo])
+  @@index([tenantId, status])
+  @@index([tenantId, ownerUserId])
+  @@index([tenantId, nextReviewDate])
+  @@index([tenantId, deletedAt])
+}
+
+model ExternalProviderLink {
+  id               String                 @id @default(cuid())
+  tenantId         String
+  providerId       String
+  linkType         ExternalProviderLinkType
+  linkedId         String
+  note             String?
+  createdAt        DateTime               @default(now())
+  createdById      String?
+  tenant           Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  provider         ExternalProviderControl @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, linkType, linkedId])
+  @@index([tenantId, providerId])
+  @@index([tenantId, linkType, linkedId])
+}
+
+model ChangeRequest {
+  id                       String              @id @default(cuid())
+  tenantId                 String
+  referenceNo              String?
+  title                    String
+  changeType               ChangeRequestType
+  reason                   String
+  affectedArea             String
+  proposedChange           String
+  impactSummary            String?
+  controlSummary           String?
+  ownerUserId              String?
+  targetImplementationDate DateTime?
+  reviewDate               DateTime?
+  status                   ChangeRequestStatus @default(PROPOSED)
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
+  deletedAt                DateTime?
+  deletedById              String?
+  tenant                   Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  links                    ChangeRequestLink[]
+
+  @@unique([tenantId, referenceNo])
+  @@index([tenantId, status])
+  @@index([tenantId, ownerUserId])
+  @@index([tenantId, targetImplementationDate])
+  @@index([tenantId, deletedAt])
+}
+
+model ChangeRequestLink {
+  id          String                @id @default(cuid())
+  tenantId    String
+  changeId    String
+  linkType    ChangeRequestLinkType
+  linkedId    String
+  note        String?
+  createdAt   DateTime              @default(now())
+  createdById String?
+  tenant      Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  change      ChangeRequest         @relation(fields: [changeId], references: [id], onDelete: Cascade)
+
+  @@unique([changeId, linkType, linkedId])
+  @@index([tenantId, changeId])
   @@index([tenantId, linkType, linkedId])
 }
 

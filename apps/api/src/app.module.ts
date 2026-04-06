@@ -20,7 +20,13 @@ import { SettingsModule } from './modules/settings/settings.module';
 import { NcrModule } from './modules/ncr/ncr.module';
 import { ProcessRegisterModule } from './modules/process-register/process-register.module';
 import { ContextModule } from './modules/context/context.module';
+import { ComplianceObligationsModule } from './modules/compliance-obligations/compliance-obligations.module';
 import { ContentLibraryModule } from './modules/content-library/content-library.module';
+import { IncidentsModule } from './modules/incidents/incidents.module';
+import { EnvironmentalAspectsModule } from './modules/environmental-aspects/environmental-aspects.module';
+import { HazardsModule } from './modules/hazards/hazards.module';
+import { ExternalProvidersModule } from './modules/external-providers/external-providers.module';
+import { ChangeManagementModule } from './modules/change-management/change-management.module';
 
 @Module({
   imports: [
@@ -44,6 +50,12 @@ import { ContentLibraryModule } from './modules/content-library/content-library.
     NcrModule,
     ProcessRegisterModule,
     ContextModule,
+    ComplianceObligationsModule,
+    IncidentsModule,
+    EnvironmentalAspectsModule,
+    HazardsModule,
+    ExternalProvidersModule,
+    ChangeManagementModule,
     ContentLibraryModule
   ]
 })

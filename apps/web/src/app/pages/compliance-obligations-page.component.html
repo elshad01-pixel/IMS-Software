@@ -1,0 +1,281 @@
+<section class="page-grid">
+  <iso-page-header
+    [label]="'Compliance Obligations'"
+    [title]="pageTitle()"
+    [description]="pageDescription()"
+    [breadcrumbs]="breadcrumbs()"
+  >
+    <a *ngIf="mode() === 'list' && canWrite()" routerLink="/compliance-obligations/new" class="button-link">+ New obligation</a>
+    <a *ngIf="mode() === 'detail' && selectedObligation() && canWrite()" [routerLink]="['/compliance-obligations', selectedId(), 'edit']" class="button-link">Edit obligation</a>
+    <button *ngIf="mode() === 'detail' && selectedObligation() && canDelete()" type="button" class="button-link danger" (click)="archiveObligation()">Archive</button>
+    <a *ngIf="mode() !== 'list'" routerLink="/compliance-obligations" class="button-link secondary">Back</a>
+  </iso-page-header>
+
+  <section *ngIf="mode() === 'list'" class="page-stack">
+    <div class="card list-card">
+      <div class="toolbar">
+        <div class="toolbar-meta">
+          <div>
+            <p class="toolbar-title">Register filters</p>
+            <p class="toolbar-copy">Track legal, regulatory, and external obligations in one controlled register.</p>
+          </div>
+          <div class="toolbar-stats">
+            <article class="toolbar-stat"><span>Total</span><strong>{{ obligations().length }}</strong></article>
+            <article class="toolbar-stat"><span>Active</span><strong>{{ activeCount() }}</strong></article>
+            <article class="toolbar-stat"><span>Under review</span><strong>{{ reviewCount() }}</strong></article>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <label class="field">
+            <span>Search</span>
+            <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Reference, title, source, type">
+          </label>
+          <label class="field">
+            <span>Status</span>
+            <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
+              <option value="">All</option>
+              <option value="ACTIVE">Active</option>
+              <option value="UNDER_REVIEW">Under review</option>
+              <option value="OBSOLETE">Obsolete</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Owner</span>
+            <select [value]="ownerFilter()" (change)="ownerFilter.set(readSelectValue($event))">
+              <option value="">All</option>
+              <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <p class="feedback top-space" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+
+      <div class="empty-state top-space" *ngIf="loading()">
+        <strong>Loading obligations register</strong>
+        <span>Refreshing compliance obligations and linked records.</span>
+      </div>
+
+      <div class="empty-state top-space" *ngIf="!loading() && !filteredObligations().length">
+        <strong>No obligations found</strong>
+        <span>Create the first obligation to start tracking requirements visibly in the IMS.</span>
+      </div>
+
+      <div class="data-table-wrap top-space" *ngIf="!loading() && filteredObligations().length">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Obligation</th>
+              <th>Source</th>
+              <th>Owner</th>
+              <th>Next review</th>
+              <th>Status</th>
+              <th>Links</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of filteredObligations()" [routerLink]="['/compliance-obligations', item.id]">
+              <td>
+                <div class="table-title">
+                  <strong>{{ item.referenceNo || 'Uncoded' }} - {{ item.title }}</strong>
+                  <small>{{ item.obligationType || 'General obligation' }}</small>
+                </div>
+              </td>
+              <td>{{ item.sourceName }}</td>
+              <td>{{ item.owner ? personName(item.owner) : 'Unassigned' }}</td>
+              <td>{{ item.nextReviewDate ? (item.nextReviewDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
+              <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ prettyStatus(item.status) }}</span></td>
+              <td>{{ item.linkCount || 0 }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-stack">
+    <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
+      <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+
+      <section class="content-guidance">
+        <div class="section-head compact-head">
+          <div>
+            <h4>Register position</h4>
+            <p class="subtle">{{ obligationGuidance() }}</p>
+          </div>
+        </div>
+        <div class="summary-strip top-space">
+          <article class="summary-item"><span>Source</span><strong>{{ form.getRawValue().sourceName ? 'Defined' : 'Needed' }}</strong></article>
+          <article class="summary-item"><span>Owner</span><strong>{{ form.getRawValue().ownerUserId ? 'Assigned' : 'Needed' }}</strong></article>
+          <article class="summary-item"><span>Review date</span><strong>{{ form.getRawValue().nextReviewDate ? 'Planned' : 'Set next review' }}</strong></article>
+        </div>
+      </section>
+
+      <section class="detail-section">
+        <h4>Core definition</h4>
+        <div class="form-grid-2 top-space">
+          <label class="field"><span>Reference</span><input formControlName="referenceNo" placeholder="CO-001"></label>
+          <label class="field">
+            <span>Status</span>
+            <select formControlName="status">
+              <option value="ACTIVE">Active</option>
+              <option value="UNDER_REVIEW">Under review</option>
+              <option value="OBSOLETE">Obsolete</option>
+            </select>
+          </label>
+        </div>
+        <label class="field top-space"><span>Obligation title</span><input formControlName="title" placeholder="Waste handling permit conditions are reviewed annually"></label>
+        <label class="field top-space"><span>Source</span><input formControlName="sourceName" placeholder="Environmental permit | Customer contract | Labour code"></label>
+      </section>
+
+      <section class="detail-section">
+        <h4>Applicability</h4>
+        <div class="form-grid-2 top-space">
+          <label class="field"><span>Type</span><input formControlName="obligationType" placeholder="Legal | Regulatory | Customer | Other"></label>
+          <label class="field"><span>Jurisdiction / area</span><input formControlName="jurisdiction" placeholder="Azerbaijan | EU export | Customer specific"></label>
+        </div>
+        <label class="field top-space"><span>Description</span><textarea formControlName="description" rows="5" placeholder="Summarize what the organization must do or maintain."></textarea></label>
+      </section>
+
+      <section class="detail-section">
+        <h4>Review ownership</h4>
+        <div class="form-grid-3 top-space">
+          <label class="field">
+            <span>Owner</span>
+            <select formControlName="ownerUserId">
+              <option value="">Unassigned</option>
+              <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
+            </select>
+          </label>
+          <label class="field"><span>Review frequency (months)</span><input formControlName="reviewFrequencyMonths" type="number" min="1" max="36" placeholder="12"></label>
+          <label class="field"><span>Next review date</span><input formControlName="nextReviewDate" type="date"></label>
+        </div>
+      </section>
+
+      <div class="button-row">
+        <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save obligation' }}</button>
+        <a [routerLink]="selectedId() ? ['/compliance-obligations', selectedId()] : ['/compliance-obligations']" class="button-link secondary">Cancel</a>
+      </div>
+    </form>
+  </section>
+
+  <section *ngIf="mode() === 'detail' && selectedObligation()" class="page-stack">
+    <section class="card detail-card">
+      <div class="section-head">
+        <div>
+          <span class="section-eyebrow">Compliance obligation</span>
+          <h3>{{ selectedObligation()?.referenceNo || 'Uncoded' }} - {{ selectedObligation()?.title }}</h3>
+          <p class="subtle">{{ selectedObligation()?.description || 'No detailed description recorded yet.' }}</p>
+        </div>
+        <span class="status-badge" [ngClass]="statusClass(selectedObligation()?.status || 'ACTIVE')">{{ prettyStatus(selectedObligation()?.status) }}</span>
+      </div>
+
+      <div class="summary-strip top-space">
+        <article class="summary-item"><span>Source</span><strong>{{ selectedObligation()?.sourceName }}</strong></article>
+        <article class="summary-item"><span>Owner</span><strong>{{ selectedObligation()?.owner ? personName(selectedObligation()!.owner!) : 'Unassigned' }}</strong></article>
+        <article class="summary-item"><span>Next review</span><strong>{{ selectedObligation()?.nextReviewDate ? (selectedObligation()?.nextReviewDate | date:'yyyy-MM-dd') : 'Not set' }}</strong></article>
+        <article class="summary-item"><span>Linked records</span><strong>{{ selectedObligation()?.links?.length || 0 }}</strong></article>
+      </div>
+
+      <section class="content-guidance top-space">
+        <div class="section-head compact-head">
+          <div>
+            <h4>Review position</h4>
+            <p class="subtle">{{ reviewNarrative() }}</p>
+          </div>
+        </div>
+        <div class="summary-strip top-space">
+          <article class="summary-item"><span>Processes</span><strong>{{ linkCountByType('PROCESS') }}</strong></article>
+          <article class="summary-item"><span>Risks</span><strong>{{ linkCountByType('RISK') }}</strong></article>
+          <article class="summary-item"><span>Audits</span><strong>{{ linkCountByType('AUDIT') }}</strong></article>
+          <article class="summary-item"><span>Actions</span><strong>{{ linkCountByType('ACTION') }}</strong></article>
+        </div>
+      </section>
+
+      <section class="content-guidance top-space">
+        <div class="section-head compact-head">
+          <div>
+            <h4>Next steps</h4>
+            <p class="subtle">{{ nextStepHeadline() }}</p>
+          </div>
+        </div>
+        <div class="summary-strip top-space">
+          <article class="summary-item"><span>Process link</span><strong>{{ linkCountByType('PROCESS') ? 'Linked' : 'Needed' }}</strong></article>
+          <article class="summary-item"><span>Audit coverage</span><strong>{{ linkCountByType('AUDIT') ? 'Linked' : 'Review' }}</strong></article>
+          <article class="summary-item"><span>Follow-up action</span><strong>{{ linkCountByType('ACTION') ? 'Linked' : 'Prepare below' }}</strong></article>
+        </div>
+        <p class="top-space">{{ nextStepNarrative() }}</p>
+      </section>
+    </section>
+
+    <iso-record-work-items
+      [sourceType]="'obligation'"
+      [sourceId]="selectedId()"
+      [draftTitle]="obligationDraftTitle()"
+      [draftDescription]="obligationDraftDescription()"
+      [returnNavigation]="obligationReturnNavigation()"
+    />
+
+    <section class="card detail-card">
+      <div class="section-head">
+        <div>
+          <span class="section-eyebrow">Linked records</span>
+          <h3>Traceability hub</h3>
+          <p class="subtle">Link the records that show how this obligation is managed in the IMS.</p>
+        </div>
+      </div>
+
+      <div class="page-stack top-space">
+        <section class="detail-section link-group" *ngFor="let type of visibleLinkTypes">
+          <div class="section-head compact-head">
+            <div>
+              <h4>{{ sectionTitle(type) }}</h4>
+              <p class="subtle">{{ sectionDescription(type) }}</p>
+            </div>
+            <button *ngIf="canWrite()" type="button" class="button-link secondary" (click)="openLinkComposer(type)">
+              {{ activeLinkComposerType() === type ? 'Close' : '+ Link' }}
+            </button>
+          </div>
+
+          <div class="empty-state compact-empty top-space" *ngIf="!linksByType(type).length">
+            <strong>No linked records</strong>
+            <span>{{ sectionEmptyCopy(type) }}</span>
+          </div>
+
+          <div class="entity-list top-space" *ngIf="linksByType(type).length">
+            <div class="entity-item" *ngFor="let link of linksByType(type)">
+              <div class="link-row">
+                <div>
+                  <strong>{{ link.title }}</strong>
+                  <small *ngIf="link.subtitle">{{ link.subtitle }}</small>
+                  <small *ngIf="link.note">{{ link.note }}</small>
+                </div>
+                <div class="route-context">
+                  <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
+                  <a *ngIf="link.path && !link.missing" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">Open</a>
+                  <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">Remove</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <form *ngIf="activeLinkComposerType() === type && canWrite()" class="page-stack top-space link-form" [formGroup]="linkForm" (ngSubmit)="addLink()">
+            <input formControlName="linkType" type="hidden">
+            <label class="field">
+              <span>{{ sectionPickerLabel(type) }}</span>
+              <select formControlName="linkedId">
+                <option value="">Choose existing {{ sectionPickerLabel(type).toLowerCase() }}</option>
+                <option *ngFor="let candidate of linkCandidates()" [value]="candidate.id">{{ candidate.label }}</option>
+              </select>
+            </label>
+            <label class="field"><span>Note</span><input formControlName="note" placeholder="Optional context for this link"></label>
+            <div class="button-row">
+              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? 'Linking...' : 'Save link' }}</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </section>
+  </section>
+</section>

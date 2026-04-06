@@ -4,9 +4,16 @@ import {
   AuditFindingSeverity,
   AuditFindingStatus,
   AuditStatus,
+  ComplianceObligationLinkType,
+  ComplianceObligationStatus,
   ContextIssueStatus,
   ContextIssueType,
   DocumentStatus,
+  EnvironmentalAspectSignificance,
+  EnvironmentalAspectStage,
+  EnvironmentalAspectStatus,
+  EmergencyPreparednessStatus,
+  EmergencyPreparednessType,
   NcrCategory,
   NcrPriority,
   NcrSeverity,
@@ -19,7 +26,21 @@ import {
   RiskIssueContextType,
   RiskStatus
 } from '@prisma/client';
-import { getAuditChecklistQuestionDelegate } from '../src/common/prisma/prisma-delegate-compat';
+import {
+  getAuditChecklistQuestionDelegate,
+  getChangeRequestDelegate,
+  getChangeRequestLinkDelegate,
+  getEnvironmentalAspectDelegate,
+  getEnvironmentalAspectLinkDelegate,
+  getEmergencyPreparednessDelegate,
+  getEmergencyPreparednessLinkDelegate,
+  getExternalProviderControlDelegate,
+  getExternalProviderLinkDelegate,
+  getHazardIdentificationDelegate,
+  getHazardIdentificationLinkDelegate,
+  getIncidentDelegate,
+  getIncidentLinkDelegate
+} from '../src/common/prisma/prisma-delegate-compat';
 
 function toDate(value: string) {
   return new Date(value);
@@ -609,6 +630,649 @@ async function ensureProcessLink(
   });
 }
 
+async function ensureComplianceObligation(
+  prisma: PrismaClient,
+  params: {
+    tenantId: string;
+    referenceNo: string;
+    title: string;
+    sourceName: string;
+    obligationType?: string;
+    jurisdiction?: string;
+    description?: string;
+    ownerUserId?: string;
+    reviewFrequencyMonths?: number;
+    nextReviewDate?: Date;
+    status?: ComplianceObligationStatus;
+  }
+) {
+  return prisma.complianceObligation.upsert({
+    where: {
+      tenantId_referenceNo: {
+        tenantId: params.tenantId,
+        referenceNo: params.referenceNo
+      }
+    },
+    update: {
+      title: params.title,
+      sourceName: params.sourceName,
+      obligationType: params.obligationType,
+      jurisdiction: params.jurisdiction,
+      description: params.description,
+      ownerUserId: params.ownerUserId,
+      reviewFrequencyMonths: params.reviewFrequencyMonths,
+      nextReviewDate: params.nextReviewDate,
+      status: params.status ?? ComplianceObligationStatus.ACTIVE,
+      deletedAt: null
+    },
+    create: {
+      tenantId: params.tenantId,
+      referenceNo: params.referenceNo,
+      title: params.title,
+      sourceName: params.sourceName,
+      obligationType: params.obligationType,
+      jurisdiction: params.jurisdiction,
+      description: params.description,
+      ownerUserId: params.ownerUserId,
+      reviewFrequencyMonths: params.reviewFrequencyMonths,
+      nextReviewDate: params.nextReviewDate,
+      status: params.status ?? ComplianceObligationStatus.ACTIVE
+    }
+  });
+}
+
+async function ensureComplianceObligationLink(
+  prisma: PrismaClient,
+  params: {
+    tenantId: string;
+    obligationId: string;
+    linkType: ComplianceObligationLinkType;
+    linkedId: string;
+    createdById?: string;
+    note?: string;
+  }
+) {
+  return prisma.complianceObligationLink.upsert({
+    where: {
+      obligationId_linkType_linkedId: {
+        obligationId: params.obligationId,
+        linkType: params.linkType,
+        linkedId: params.linkedId
+      }
+    },
+    update: {
+      note: params.note,
+      createdById: params.createdById
+    },
+    create: {
+      tenantId: params.tenantId,
+      obligationId: params.obligationId,
+      linkType: params.linkType,
+      linkedId: params.linkedId,
+      createdById: params.createdById,
+      note: params.note
+    }
+  });
+}
+
+async function ensureIncident(
+  prisma: PrismaClient,
+  params: {
+    tenantId: string;
+    referenceNo: string;
+    title: string;
+    type: 'INCIDENT' | 'NEAR_MISS';
+    category: 'SAFETY' | 'ENVIRONMENT' | 'QUALITY' | 'SECURITY' | 'OTHER';
+    description: string;
+    eventDate: Date;
+    location?: string;
+    ownerUserId?: string;
+    severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    immediateAction?: string;
+    investigationSummary?: string;
+    rootCause?: string;
+    rcaMethod?: 'FIVE_WHY' | 'FISHBONE' | 'IS_IS_NOT' | 'OTHER';
+    correctiveActionSummary?: string;
+    status?: 'REPORTED' | 'INVESTIGATION' | 'ACTION_IN_PROGRESS' | 'CLOSED' | 'ARCHIVED';
+  }
+) {
+  return (getIncidentDelegate(prisma) as any).upsert({
+    where: {
+      tenantId_referenceNo: {
+        tenantId: params.tenantId,
+        referenceNo: params.referenceNo
+      }
+    },
+    update: {
+      title: params.title,
+      type: params.type,
+      category: params.category,
+      description: params.description,
+      eventDate: params.eventDate,
+      location: params.location,
+      ownerUserId: params.ownerUserId,
+      severity: params.severity,
+      immediateAction: params.immediateAction,
+      investigationSummary: params.investigationSummary,
+      rootCause: params.rootCause,
+      rcaMethod: params.rcaMethod,
+      correctiveActionSummary: params.correctiveActionSummary,
+      status: params.status ?? 'INVESTIGATION',
+      deletedAt: null
+    },
+    create: {
+      tenantId: params.tenantId,
+      referenceNo: params.referenceNo,
+      title: params.title,
+      type: params.type,
+      category: params.category,
+      description: params.description,
+      eventDate: params.eventDate,
+      location: params.location,
+      ownerUserId: params.ownerUserId,
+      severity: params.severity,
+      immediateAction: params.immediateAction,
+      investigationSummary: params.investigationSummary,
+      rootCause: params.rootCause,
+      rcaMethod: params.rcaMethod,
+      correctiveActionSummary: params.correctiveActionSummary,
+      status: params.status ?? 'INVESTIGATION'
+    }
+  });
+}
+
+async function ensureIncidentLink(
+  prisma: PrismaClient,
+  params: {
+    tenantId: string;
+    incidentId: string;
+    linkType: 'PROCESS' | 'RISK' | 'ACTION';
+    linkedId: string;
+    createdById?: string;
+    note?: string;
+  }
+) {
+  return (getIncidentLinkDelegate(prisma) as any).upsert({
+    where: {
+      incidentId_linkType_linkedId: {
+        incidentId: params.incidentId,
+        linkType: params.linkType,
+        linkedId: params.linkedId
+      }
+    },
+    update: {
+      note: params.note,
+      createdById: params.createdById
+    },
+    create: {
+      tenantId: params.tenantId,
+      incidentId: params.incidentId,
+      linkType: params.linkType,
+      linkedId: params.linkedId,
+      createdById: params.createdById,
+      note: params.note
+    }
+  });
+}
+
+async function ensureEnvironmentalAspect(
+  prisma: PrismaClient,
+  params: {
+    tenantId: string;
+    referenceNo: string;
+    activity: string;
+    aspect: string;
+    impact: string;
+    lifecycleStage: EnvironmentalAspectStage;
+    controlSummary?: string;
+    significance: EnvironmentalAspectSignificance;
+    ownerUserId?: string;
+    reviewDate?: Date;
+    status?: EnvironmentalAspectStatus;
+  }
+) {
+  return (getEnvironmentalAspectDelegate(prisma) as any).upsert({
+    where: {
+      tenantId_referenceNo: {
+        tenantId: params.tenantId,
+        referenceNo: params.referenceNo
+      }
+    },
+    update: {
+      activity: params.activity,
+      aspect: params.aspect,
+      impact: params.impact,
+      lifecycleStage: params.lifecycleStage,
+      controlSummary: params.controlSummary,
+      significance: params.significance,
+      ownerUserId: params.ownerUserId,
+      reviewDate: params.reviewDate,
+      status: params.status ?? EnvironmentalAspectStatus.ACTIVE,
+      deletedAt: null
+    },
+    create: {
+      tenantId: params.tenantId,
+      referenceNo: params.referenceNo,
+      activity: params.activity,
+      aspect: params.aspect,
+      impact: params.impact,
+      lifecycleStage: params.lifecycleStage,
+      controlSummary: params.controlSummary,
+      significance: params.significance,
+      ownerUserId: params.ownerUserId,
+      reviewDate: params.reviewDate,
+      status: params.status ?? EnvironmentalAspectStatus.ACTIVE
+    }
+  });
+}
+
+async function ensureEnvironmentalAspectLink(
+  prisma: PrismaClient,
+  params: {
+    tenantId: string;
+    aspectId: string;
+    linkType: 'PROCESS' | 'RISK' | 'ACTION';
+    linkedId: string;
+    createdById?: string;
+    note?: string;
+  }
+) {
+  return (getEnvironmentalAspectLinkDelegate(prisma) as any).upsert({
+    where: {
+      aspectId_linkType_linkedId: {
+        aspectId: params.aspectId,
+        linkType: params.linkType,
+        linkedId: params.linkedId
+      }
+    },
+    update: {
+      note: params.note,
+      createdById: params.createdById
+    },
+    create: {
+      tenantId: params.tenantId,
+      aspectId: params.aspectId,
+      linkType: params.linkType,
+      linkedId: params.linkedId,
+      createdById: params.createdById,
+      note: params.note
+    }
+  });
+}
+
+async function ensureHazardIdentification(
+  prisma: PrismaClient,
+  params: {
+    tenantId: string;
+    referenceNo: string;
+    activity: string;
+    hazard: string;
+    potentialHarm: string;
+    exposureStage: 'ROUTINE' | 'NON_ROUTINE' | 'EMERGENCY';
+    existingControls?: string;
+    severity: 'LOW' | 'MEDIUM' | 'HIGH';
+    ownerUserId?: string;
+    reviewDate?: Date;
+    status?: 'ACTIVE' | 'MONITORING' | 'OBSOLETE';
+  }
+) {
+  return (getHazardIdentificationDelegate(prisma) as any).upsert({
+    where: {
+      tenantId_referenceNo: {
+        tenantId: params.tenantId,
+        referenceNo: params.referenceNo
+      }
+    },
+    update: {
+      activity: params.activity,
+      hazard: params.hazard,
+      potentialHarm: params.potentialHarm,
+      exposureStage: params.exposureStage,
+      existingControls: params.existingControls,
+      severity: params.severity,
+      ownerUserId: params.ownerUserId,
+      reviewDate: params.reviewDate,
+      status: params.status ?? 'ACTIVE',
+      deletedAt: null
+    },
+    create: {
+      tenantId: params.tenantId,
+      referenceNo: params.referenceNo,
+      activity: params.activity,
+      hazard: params.hazard,
+      potentialHarm: params.potentialHarm,
+      exposureStage: params.exposureStage,
+      existingControls: params.existingControls,
+      severity: params.severity,
+      ownerUserId: params.ownerUserId,
+      reviewDate: params.reviewDate,
+      status: params.status ?? 'ACTIVE'
+    }
+  });
+}
+
+async function ensureHazardIdentificationLink(
+  prisma: PrismaClient,
+  params: {
+    tenantId: string;
+    hazardId: string;
+    linkType: 'PROCESS' | 'RISK' | 'ACTION' | 'INCIDENT';
+    linkedId: string;
+    createdById?: string;
+    note?: string;
+  }
+) {
+  return (getHazardIdentificationLinkDelegate(prisma) as any).upsert({
+    where: {
+      hazardId_linkType_linkedId: {
+        hazardId: params.hazardId,
+        linkType: params.linkType,
+        linkedId: params.linkedId
+      }
+    },
+    update: {
+      note: params.note,
+      createdById: params.createdById
+    },
+    create: {
+      tenantId: params.tenantId,
+      hazardId: params.hazardId,
+      linkType: params.linkType,
+      linkedId: params.linkedId,
+      createdById: params.createdById,
+      note: params.note
+    }
+  });
+}
+
+async function ensureEmergencyPreparedness(
+  prisma: PrismaClient,
+  params: {
+    tenantId: string;
+    referenceNo: string;
+    scenario: string;
+    emergencyType: EmergencyPreparednessType;
+    potentialImpact: string;
+    responseSummary?: string;
+    resourceSummary?: string;
+    ownerUserId?: string;
+    drillFrequencyMonths?: number;
+    nextDrillDate?: Date;
+    status?: EmergencyPreparednessStatus;
+  }
+) {
+  return (getEmergencyPreparednessDelegate(prisma) as any).upsert({
+    where: {
+      tenantId_referenceNo: {
+        tenantId: params.tenantId,
+        referenceNo: params.referenceNo
+      }
+    },
+    update: {
+      scenario: params.scenario,
+      emergencyType: params.emergencyType,
+      potentialImpact: params.potentialImpact,
+      responseSummary: params.responseSummary,
+      resourceSummary: params.resourceSummary,
+      ownerUserId: params.ownerUserId,
+      drillFrequencyMonths: params.drillFrequencyMonths,
+      nextDrillDate: params.nextDrillDate,
+      status: params.status ?? EmergencyPreparednessStatus.ACTIVE,
+      deletedAt: null
+    },
+    create: {
+      tenantId: params.tenantId,
+      referenceNo: params.referenceNo,
+      scenario: params.scenario,
+      emergencyType: params.emergencyType,
+      potentialImpact: params.potentialImpact,
+      responseSummary: params.responseSummary,
+      resourceSummary: params.resourceSummary,
+      ownerUserId: params.ownerUserId,
+      drillFrequencyMonths: params.drillFrequencyMonths,
+      nextDrillDate: params.nextDrillDate,
+      status: params.status ?? EmergencyPreparednessStatus.ACTIVE
+    }
+  });
+}
+
+async function ensureEmergencyPreparednessLink(
+  prisma: PrismaClient,
+  params: {
+    tenantId: string;
+    emergencyId: string;
+    linkType: 'PROCESS' | 'RISK' | 'ACTION' | 'INCIDENT';
+    linkedId: string;
+    createdById?: string;
+    note?: string;
+  }
+) {
+  return (getEmergencyPreparednessLinkDelegate(prisma) as any).upsert({
+    where: {
+      emergencyId_linkType_linkedId: {
+        emergencyId: params.emergencyId,
+        linkType: params.linkType,
+        linkedId: params.linkedId
+      }
+    },
+    update: {
+      note: params.note,
+      createdById: params.createdById
+    },
+    create: {
+      tenantId: params.tenantId,
+      emergencyId: params.emergencyId,
+      linkType: params.linkType,
+      linkedId: params.linkedId,
+      createdById: params.createdById,
+      note: params.note
+    }
+  });
+}
+
+async function ensureExternalProvider(
+  prisma: PrismaClient,
+  params: {
+    tenantId: string;
+    referenceNo: string;
+    providerName: string;
+    providerType: 'SUPPLIER' | 'OUTSOURCED_SERVICE' | 'CONTRACTOR' | 'CALIBRATION' | 'LOGISTICS' | 'OTHER';
+    suppliedScope: string;
+    approvalBasis?: string;
+    criticality: 'LOW' | 'MEDIUM' | 'HIGH';
+    ownerUserId?: string;
+    evaluationDate?: Date;
+    qualityScore?: number;
+    deliveryScore?: number;
+    responsivenessScore?: number;
+    complianceScore?: number;
+    traceabilityScore?: number;
+    changeControlScore?: number;
+    evaluationScore?: number;
+    evaluationOutcome?: 'APPROVED' | 'APPROVED_WITH_CONDITIONS' | 'ESCALATED' | 'DISQUALIFIED';
+    evaluationSummary?: string;
+    nextReviewDate?: Date;
+    status?: 'APPROVED' | 'CONDITIONAL' | 'UNDER_REVIEW' | 'INACTIVE';
+  }
+) {
+  return (getExternalProviderControlDelegate(prisma) as any).upsert({
+    where: {
+      tenantId_referenceNo: {
+        tenantId: params.tenantId,
+        referenceNo: params.referenceNo
+      }
+    },
+    update: {
+      providerName: params.providerName,
+      providerType: params.providerType,
+      suppliedScope: params.suppliedScope,
+      approvalBasis: params.approvalBasis,
+      criticality: params.criticality,
+      ownerUserId: params.ownerUserId,
+      evaluationDate: params.evaluationDate,
+      qualityScore: params.qualityScore,
+      deliveryScore: params.deliveryScore,
+      responsivenessScore: params.responsivenessScore,
+      complianceScore: params.complianceScore,
+      traceabilityScore: params.traceabilityScore,
+      changeControlScore: params.changeControlScore,
+      evaluationScore: params.evaluationScore,
+      evaluationOutcome: params.evaluationOutcome,
+      evaluationSummary: params.evaluationSummary,
+      nextReviewDate: params.nextReviewDate,
+      status: params.status ?? 'APPROVED',
+      deletedAt: null
+    },
+    create: {
+      tenantId: params.tenantId,
+      referenceNo: params.referenceNo,
+      providerName: params.providerName,
+      providerType: params.providerType,
+      suppliedScope: params.suppliedScope,
+      approvalBasis: params.approvalBasis,
+      criticality: params.criticality,
+      ownerUserId: params.ownerUserId,
+      evaluationDate: params.evaluationDate,
+      qualityScore: params.qualityScore,
+      deliveryScore: params.deliveryScore,
+      responsivenessScore: params.responsivenessScore,
+      complianceScore: params.complianceScore,
+      traceabilityScore: params.traceabilityScore,
+      changeControlScore: params.changeControlScore,
+      evaluationScore: params.evaluationScore,
+      evaluationOutcome: params.evaluationOutcome,
+      evaluationSummary: params.evaluationSummary,
+      nextReviewDate: params.nextReviewDate,
+      status: params.status ?? 'APPROVED'
+    }
+  });
+}
+
+async function ensureExternalProviderLink(
+  prisma: PrismaClient,
+  params: {
+    tenantId: string;
+    providerId: string;
+    linkType: 'PROCESS' | 'RISK' | 'AUDIT' | 'ACTION' | 'OBLIGATION';
+    linkedId: string;
+    createdById?: string;
+    note?: string;
+  }
+) {
+  return (getExternalProviderLinkDelegate(prisma) as any).upsert({
+    where: {
+      providerId_linkType_linkedId: {
+        providerId: params.providerId,
+        linkType: params.linkType,
+        linkedId: params.linkedId
+      }
+    },
+    update: {
+      note: params.note,
+      createdById: params.createdById
+    },
+    create: {
+      tenantId: params.tenantId,
+      providerId: params.providerId,
+      linkType: params.linkType,
+      linkedId: params.linkedId,
+      createdById: params.createdById,
+      note: params.note
+    }
+  });
+}
+
+async function ensureChangeRequest(
+  prisma: PrismaClient,
+  params: {
+    tenantId: string;
+    referenceNo: string;
+    title: string;
+    changeType: 'PROCESS' | 'PRODUCT' | 'EQUIPMENT' | 'MATERIAL' | 'ORGANIZATIONAL' | 'DOCUMENTATION' | 'FACILITY' | 'OTHER';
+    reason: string;
+    affectedArea: string;
+    proposedChange: string;
+    impactSummary?: string;
+    controlSummary?: string;
+    ownerUserId?: string;
+    targetImplementationDate?: Date;
+    reviewDate?: Date;
+    status?: 'PROPOSED' | 'REVIEWING' | 'APPROVED' | 'IMPLEMENTING' | 'VERIFIED' | 'CLOSED' | 'REJECTED';
+  }
+) {
+  return (getChangeRequestDelegate(prisma) as any).upsert({
+    where: {
+      tenantId_referenceNo: {
+        tenantId: params.tenantId,
+        referenceNo: params.referenceNo
+      }
+    },
+    update: {
+      title: params.title,
+      changeType: params.changeType,
+      reason: params.reason,
+      affectedArea: params.affectedArea,
+      proposedChange: params.proposedChange,
+      impactSummary: params.impactSummary,
+      controlSummary: params.controlSummary,
+      ownerUserId: params.ownerUserId,
+      targetImplementationDate: params.targetImplementationDate,
+      reviewDate: params.reviewDate,
+      status: params.status ?? 'REVIEWING',
+      deletedAt: null
+    },
+    create: {
+      tenantId: params.tenantId,
+      referenceNo: params.referenceNo,
+      title: params.title,
+      changeType: params.changeType,
+      reason: params.reason,
+      affectedArea: params.affectedArea,
+      proposedChange: params.proposedChange,
+      impactSummary: params.impactSummary,
+      controlSummary: params.controlSummary,
+      ownerUserId: params.ownerUserId,
+      targetImplementationDate: params.targetImplementationDate,
+      reviewDate: params.reviewDate,
+      status: params.status ?? 'REVIEWING'
+    }
+  });
+}
+
+async function ensureChangeRequestLink(
+  prisma: PrismaClient,
+  params: {
+    tenantId: string;
+    changeId: string;
+    linkType: 'PROCESS' | 'RISK' | 'ACTION' | 'DOCUMENT' | 'OBLIGATION' | 'PROVIDER';
+    linkedId: string;
+    createdById?: string;
+    note?: string;
+  }
+) {
+  return (getChangeRequestLinkDelegate(prisma) as any).upsert({
+    where: {
+      changeId_linkType_linkedId: {
+        changeId: params.changeId,
+        linkType: params.linkType,
+        linkedId: params.linkedId
+      }
+    },
+    update: {
+      note: params.note,
+      createdById: params.createdById
+    },
+    create: {
+      tenantId: params.tenantId,
+      changeId: params.changeId,
+      linkType: params.linkType,
+      linkedId: params.linkedId,
+      createdById: params.createdById,
+      note: params.note
+    }
+  });
+}
+
 async function ensureContextIssueRiskLink(
   prisma: PrismaClient,
   params: {
@@ -935,6 +1599,22 @@ export async function createDigitXDemoDataset(
     conclusion: 'The processes are functional but require targeted corrective action to improve consistency of evidence and supplier oversight.',
     recommendations: 'Standardize evaluation cadence, digitize traceability retrieval, and reinforce onboarding evidence controls.'
   });
+  const supplierAudit = await ensureAudit(prisma, {
+    tenantId: params.tenantId,
+    code: 'DTX-SA-2026-01',
+    title: 'Supplier Audit - TraceBoard Electronics',
+    type: 'SUPPLIER_AUDIT',
+    standard: 'ISO 9001',
+    scope: 'Critical control-board supplier capability, traceability, and change-notification controls.',
+    leadAuditorId: internalAuditor.id,
+    auditeeArea: 'Critical Supplier Control',
+    scheduledAt: toDate('2026-02-18'),
+    startedAt: toDate('2026-02-18'),
+    completedAt: toDate('2026-02-18'),
+    summary: 'The supplier audit confirmed capable delivery performance, with improvement needs around formal change notification and retention of traceability evidence packs.',
+    conclusion: 'The supplier remains approved, with follow-up needed to strengthen documented change-notification and traceability review controls.',
+    recommendations: 'Formalize supplier change notification and verify quarterly traceability pack review.'
+  });
 
   const auditQuestions = await getAuditChecklistQuestionDelegate(prisma).findMany({
     where: {
@@ -1085,6 +1765,230 @@ export async function createDigitXDemoDataset(
     status: ActionItemStatus.IN_PROGRESS
   });
 
+  const environmentalObligation = await ensureComplianceObligation(prisma, {
+    tenantId: params.tenantId,
+    referenceNo: 'DTX-CO-001',
+    title: 'Waste handling and disposal conditions are reviewed and retained',
+    sourceName: 'Environmental permit conditions',
+    obligationType: 'Regulatory',
+    jurisdiction: 'Azerbaijan',
+    description: 'DigitX must maintain controlled review and retention of waste handling, storage, and disposal evidence for regulated material streams.',
+    ownerUserId: qualityManager.id,
+    reviewFrequencyMonths: 12,
+    nextReviewDate: toDate('2026-12-15'),
+    status: ComplianceObligationStatus.ACTIVE
+  });
+  const customerObligation = await ensureComplianceObligation(prisma, {
+    tenantId: params.tenantId,
+    referenceNo: 'DTX-CO-002',
+    title: 'Customer traceability and supplier control requirements are maintained',
+    sourceName: 'Customer quality agreement',
+    obligationType: 'Customer',
+    jurisdiction: 'Key account requirements',
+    description: 'Traceability retrieval and supplier control requirements from strategic customers must be reflected in procurement and production controls.',
+    ownerUserId: procurementLead.id,
+    reviewFrequencyMonths: 6,
+    nextReviewDate: toDate('2026-09-15'),
+    status: ComplianceObligationStatus.UNDER_REVIEW
+  });
+  const competenceObligation = await ensureComplianceObligation(prisma, {
+    tenantId: params.tenantId,
+    referenceNo: 'DTX-CO-003',
+    title: 'Competence evidence is retained for critical operational roles',
+    sourceName: 'Labour and competence requirements',
+    obligationType: 'Legal',
+    jurisdiction: 'Employment and safety requirements',
+    description: 'DigitX must retain evidence that critical operators were trained, assessed, and authorized before independent work.',
+    ownerUserId: hrManager.id,
+    reviewFrequencyMonths: 12,
+    nextReviewDate: toDate('2026-11-30'),
+    status: ComplianceObligationStatus.ACTIVE
+  });
+
+  const incident1 = await ensureIncident(prisma, {
+    tenantId: params.tenantId,
+    referenceNo: 'DTX-INC-001',
+    title: 'Coolant spill at SMT preparation area',
+    type: 'INCIDENT',
+    category: 'ENVIRONMENT',
+    description: 'A coolant drum connection loosened during transfer, causing a localized spill near the SMT preparation area before production start.',
+    eventDate: toDate('2026-03-28'),
+    location: 'SMT Preparation Area',
+    ownerUserId: operationsSupervisor.id,
+    severity: 'MEDIUM',
+    immediateAction: 'Area isolated, absorbent kit used, and affected material quarantined for safe disposal.',
+    investigationSummary: 'Connection torque checks were not part of the pre-start transfer checklist for this station.',
+    rootCause: 'Pre-start transfer checks were incomplete, so hose connection integrity relied on operator habit instead of a controlled verification step.',
+    rcaMethod: 'FIVE_WHY',
+    correctiveActionSummary: 'Add transfer-point checks to the startup checklist and verify spill-kit readiness during line opening.',
+    status: 'ACTION_IN_PROGRESS'
+  });
+  const nearMiss1 = await ensureIncident(prisma, {
+    tenantId: params.tenantId,
+    referenceNo: 'DTX-NM-001',
+    title: 'Forklift and pedestrian near miss at finished goods dispatch',
+    type: 'NEAR_MISS',
+    category: 'SAFETY',
+    description: 'A pedestrian entered the dispatch route while a forklift was reversing toward the finished goods staging lane. No contact occurred.',
+    eventDate: toDate('2026-03-31'),
+    location: 'Finished Goods Dispatch',
+    ownerUserId: qualityManager.id,
+    severity: 'HIGH',
+    immediateAction: 'Supervisor paused dispatch movement, briefed operators, and re-marked the temporary pedestrian route.',
+    investigationSummary: 'Temporary route markings were unclear during peak dispatch activity and spotter responsibility was assumed rather than assigned.',
+    rootCause: 'Temporary traffic-control changes were not standardized, so dispatch teams relied on informal coordination during peak movement periods.',
+    rcaMethod: 'FISHBONE',
+    correctiveActionSummary: 'Clarify pedestrian segregation, assign spotter responsibility during peak dispatch windows, and confirm awareness at shift handover.',
+    status: 'INVESTIGATION'
+  });
+  const incidentAction = await ensureActionItem(prisma, {
+    tenantId: params.tenantId,
+    sourceType: 'incident',
+    sourceId: incident1.id,
+    title: 'Reinforce coolant spill response at SMT workstation',
+    description: 'Verify containment materials, reinforce operator briefing, and confirm supervisor checks for spill-ready equipment.',
+    ownerId: operationsSupervisor.id,
+    dueDate: toDate('2026-04-28'),
+    status: ActionItemStatus.OPEN
+  });
+  const aspect1 = await ensureEnvironmentalAspect(prisma, {
+    tenantId: params.tenantId,
+    referenceNo: 'DTX-EA-001',
+    activity: 'SMT coolant handling and transfer',
+    aspect: 'Coolant and chemical handling',
+    impact: 'Potential localized spill, hazardous waste generation, and contamination of surrounding work areas.',
+    lifecycleStage: EnvironmentalAspectStage.NORMAL_OPERATION,
+    controlSummary: 'Closed transfer points, spill response kits, startup checklist, and supervisor verification during line opening.',
+    significance: EnvironmentalAspectSignificance.HIGH,
+    ownerUserId: operationsSupervisor.id,
+    reviewDate: toDate('2026-09-30'),
+    status: EnvironmentalAspectStatus.ACTIVE
+  });
+  const aspect2 = await ensureEnvironmentalAspect(prisma, {
+    tenantId: params.tenantId,
+    referenceNo: 'DTX-EA-002',
+    activity: 'Finished goods dispatch and forklift movement',
+    aspect: 'Vehicle movement and temporary route changes',
+    impact: 'Potential collision, near misses, and uncontrolled movement during peak dispatch periods.',
+    lifecycleStage: EnvironmentalAspectStage.ABNORMAL_OPERATION,
+    controlSummary: 'Marked pedestrian segregation, dispatch route briefing, temporary route control, and spotter assignment at peak periods.',
+    significance: EnvironmentalAspectSignificance.MEDIUM,
+    ownerUserId: qualityManager.id,
+    reviewDate: toDate('2026-08-31'),
+    status: EnvironmentalAspectStatus.MONITORING
+  });
+  const hazard1 = await ensureHazardIdentification(prisma, {
+    tenantId: params.tenantId,
+    referenceNo: 'DTX-HZ-001',
+    activity: 'Finished goods dispatch and forklift movement',
+    hazard: 'Pedestrian and forklift route interaction',
+    potentialHarm: 'Potential collision, struck-by injury, and loss of control where temporary routes are unclear.',
+    exposureStage: 'ROUTINE',
+    existingControls: 'Marked pedestrian segregation, shift briefing, reversing alarm checks, and supervisor review during peak dispatch periods.',
+    severity: 'HIGH',
+    ownerUserId: qualityManager.id,
+    reviewDate: toDate('2026-08-20'),
+    status: 'MONITORING'
+  });
+  const hazard2 = await ensureHazardIdentification(prisma, {
+    tenantId: params.tenantId,
+    referenceNo: 'DTX-HZ-002',
+    activity: 'SMT coolant handling and transfer',
+    hazard: 'Transfer hose failure during coolant handling',
+    potentialHarm: 'Slip hazard, contact exposure, and uncontrolled spill conditions during startup transfer.',
+    exposureStage: 'NON_ROUTINE',
+    existingControls: 'Closed transfer points, startup checklist, spill kits, and supervisor verification before line opening.',
+    severity: 'HIGH',
+    ownerUserId: operationsSupervisor.id,
+    reviewDate: toDate('2026-09-15'),
+    status: 'ACTIVE'
+  });
+  const emergency1 = await ensureEmergencyPreparedness(prisma, {
+    tenantId: params.tenantId,
+    referenceNo: 'DTX-EP-001',
+    scenario: 'Coolant spill during SMT line startup transfer',
+    emergencyType: EmergencyPreparednessType.CHEMICAL_SPILL,
+    potentialImpact: 'Localized spill, operator exposure, line interruption, and waste handling escalation if the spill is not contained quickly.',
+    responseSummary: 'Isolate the area, stop transfer, deploy spill kit, notify the supervisor, and dispose of contaminated material under controlled handling.',
+    resourceSummary: 'Spill kit at transfer point, isolation cones, emergency contact list, and startup supervisor checklist.',
+    ownerUserId: operationsSupervisor.id,
+    drillFrequencyMonths: 6,
+    nextDrillDate: toDate('2026-08-15'),
+    status: EmergencyPreparednessStatus.ACTIVE
+  });
+  const emergency2 = await ensureEmergencyPreparedness(prisma, {
+    tenantId: params.tenantId,
+    referenceNo: 'DTX-EP-002',
+    scenario: 'Pedestrian evacuation and dispatch route control during peak movement',
+    emergencyType: EmergencyPreparednessType.EVACUATION,
+    potentialImpact: 'Unsafe evacuation path, collision risk, and uncontrolled dispatch movement if pedestrian segregation fails during a site alarm or emergency response.',
+    responseSummary: 'Pause dispatch traffic, assign route marshal, direct pedestrians to segregated assembly path, and confirm lane clearance before resuming movement.',
+    resourceSummary: 'Alarm call tree, dispatch lane signage, temporary route barriers, and supervisor-led muster checklist.',
+    ownerUserId: qualityManager.id,
+    drillFrequencyMonths: 12,
+    nextDrillDate: toDate('2026-10-10'),
+    status: EmergencyPreparednessStatus.MONITORING
+  });
+  const provider1 = await ensureExternalProvider(prisma, {
+    tenantId: params.tenantId,
+    referenceNo: 'DTX-SP-001',
+    providerName: 'TraceBoard Electronics',
+    providerType: 'SUPPLIER',
+    suppliedScope: 'Control boards and critical traceability-labelled electronic components for production.',
+    approvalBasis: 'Approved supplier based on incoming-quality history, traceability capability review, and customer-specific control requirements.',
+    criticality: 'HIGH',
+    ownerUserId: qualityManager.id,
+    evaluationDate: toDate('2026-03-18'),
+    qualityScore: 4,
+    deliveryScore: 4,
+    responsivenessScore: 3,
+    complianceScore: 4,
+    traceabilityScore: 4,
+    changeControlScore: 3,
+    evaluationScore: 73,
+    evaluationOutcome: 'APPROVED_WITH_CONDITIONS',
+    evaluationSummary: 'Annual supplier evaluation confirmed acceptable quality and delivery performance, with tighter control still needed for formal change notification and review of traceability evidence packs.',
+    nextReviewDate: toDate('2026-07-31'),
+    status: 'UNDER_REVIEW'
+  });
+  const provider2 = await ensureExternalProvider(prisma, {
+    tenantId: params.tenantId,
+    referenceNo: 'DTX-SP-002',
+    providerName: 'MetroCal Services',
+    providerType: 'CALIBRATION',
+    suppliedScope: 'Annual calibration and certification support for production and inspection equipment.',
+    approvalBasis: 'Approved based on accredited scope, on-time certification performance, and controlled certificate review.',
+    criticality: 'MEDIUM',
+    ownerUserId: operationsSupervisor.id,
+    evaluationDate: toDate('2026-03-25'),
+    qualityScore: 5,
+    deliveryScore: 5,
+    responsivenessScore: 4,
+    complianceScore: 5,
+    traceabilityScore: 4,
+    changeControlScore: 4,
+    evaluationScore: 90,
+    evaluationOutcome: 'APPROVED',
+    evaluationSummary: 'Annual evaluation confirmed strong accredited calibration support, timely certification turnaround, and consistent document control.',
+    nextReviewDate: toDate('2026-09-15'),
+    status: 'APPROVED'
+  });
+  const changeRequest1 = await ensureChangeRequest(prisma, {
+    tenantId: params.tenantId,
+    referenceNo: 'DTX-MOC-001',
+    title: 'Introduce secondary supplier for critical control boards',
+    changeType: 'MATERIAL',
+    reason: 'Single-source exposure remains high for traceability-labelled control boards, and the annual supplier review still shows dependency risk on the primary provider.',
+    affectedArea: 'Procurement, incoming inspection, production release',
+    proposedChange: 'Qualify a secondary supplier, update incoming verification criteria, and revise release controls before approved use in live production.',
+    impactSummary: 'The change affects supplier approval, incoming verification, customer traceability expectations, and production-release confidence during the transition period.',
+    controlSummary: 'Keep the existing approved supplier in place until qualification is complete, update the supplier-control procedure, review the linked risk, and verify traceability evidence before implementation.',
+    ownerUserId: qualityManager.id,
+    targetImplementationDate: toDate('2026-07-15'),
+    reviewDate: toDate('2026-05-20'),
+    status: 'REVIEWING'
+  });
+
   await ensureProcessLink(prisma, { tenantId: params.tenantId, processId: salesProcess.id, linkType: ProcessRegisterLinkType.DOCUMENT, linkedId: salesDocument.id, createdById: admin.id, note: 'Primary procedure for customer requirement review.' });
   await ensureProcessLink(prisma, { tenantId: params.tenantId, processId: salesProcess.id, linkType: ProcessRegisterLinkType.RISK, linkedId: traceabilityRisk.id, createdById: admin.id, note: 'Customer traceability expectations affect order confidence.' });
 
@@ -1104,6 +2008,361 @@ export async function createDigitXDemoDataset(
   await ensureProcessLink(prisma, { tenantId: params.tenantId, processId: hrProcess.id, linkType: ProcessRegisterLinkType.RISK, linkedId: competenceRisk.id, createdById: admin.id, note: 'Competence evidence risk linked to onboarding control.' });
   await ensureProcessLink(prisma, { tenantId: params.tenantId, processId: hrProcess.id, linkType: ProcessRegisterLinkType.NCR, linkedId: ncr1.id, createdById: admin.id, note: 'NCR raised from onboarding evidence gap.' });
   await ensureProcessLink(prisma, { tenantId: params.tenantId, processId: hrProcess.id, linkType: ProcessRegisterLinkType.ACTION, linkedId: ncrAction1.id, createdById: admin.id, note: 'Corrective action to standardize onboarding evidence.' });
+
+  await ensureComplianceObligationLink(prisma, {
+    tenantId: params.tenantId,
+    obligationId: environmentalObligation.id,
+    linkType: ComplianceObligationLinkType.PROCESS,
+    linkedId: productionProcess.id,
+    createdById: admin.id,
+    note: 'Production controls carry the operating requirement.'
+  });
+  await ensureComplianceObligationLink(prisma, {
+    tenantId: params.tenantId,
+    obligationId: customerObligation.id,
+    linkType: ComplianceObligationLinkType.PROCESS,
+    linkedId: procurementProcess.id,
+    createdById: admin.id,
+    note: 'Procurement owns supplier-control expectations from the customer agreement.'
+  });
+  await ensureComplianceObligationLink(prisma, {
+    tenantId: params.tenantId,
+    obligationId: customerObligation.id,
+    linkType: ComplianceObligationLinkType.RISK,
+    linkedId: supplierRisk.id,
+    createdById: admin.id,
+    note: 'Supplier continuity and control are the main exposure points.'
+  });
+  await ensureComplianceObligationLink(prisma, {
+    tenantId: params.tenantId,
+    obligationId: customerObligation.id,
+    linkType: ComplianceObligationLinkType.AUDIT,
+    linkedId: audit.id,
+    createdById: admin.id,
+    note: 'The internal audit reviewed supplier and traceability control.'
+  });
+  await ensureComplianceObligationLink(prisma, {
+    tenantId: params.tenantId,
+    obligationId: customerObligation.id,
+    linkType: ComplianceObligationLinkType.ACTION,
+    linkedId: riskAction.id,
+    createdById: admin.id,
+    note: 'Supplier qualification is a direct follow-up action.'
+  });
+  await ensureComplianceObligationLink(prisma, {
+    tenantId: params.tenantId,
+    obligationId: competenceObligation.id,
+    linkType: ComplianceObligationLinkType.PROCESS,
+    linkedId: hrProcess.id,
+    createdById: admin.id,
+    note: 'HR owns the competence evidence process.'
+  });
+  await ensureComplianceObligationLink(prisma, {
+    tenantId: params.tenantId,
+    obligationId: competenceObligation.id,
+    linkType: ComplianceObligationLinkType.RISK,
+    linkedId: competenceRisk.id,
+    createdById: admin.id,
+    note: 'Competence evidence gaps are already tracked as an operational risk.'
+  });
+  await ensureComplianceObligationLink(prisma, {
+    tenantId: params.tenantId,
+    obligationId: competenceObligation.id,
+    linkType: ComplianceObligationLinkType.ACTION,
+    linkedId: ncrAction1.id,
+    createdById: admin.id,
+    note: 'This action standardizes onboarding evidence retention.'
+  });
+
+  await ensureIncidentLink(prisma, {
+    tenantId: params.tenantId,
+    incidentId: incident1.id,
+    linkType: 'PROCESS',
+    linkedId: productionProcess.id,
+    createdById: admin.id,
+    note: 'Production owns the station controls affected by the spill.'
+  });
+  await ensureIncidentLink(prisma, {
+    tenantId: params.tenantId,
+    incidentId: incident1.id,
+    linkType: 'RISK',
+    linkedId: digitalOpportunity.id,
+    createdById: admin.id,
+    note: 'The incident supports the case for more structured digital line checks.'
+  });
+  await ensureIncidentLink(prisma, {
+    tenantId: params.tenantId,
+    incidentId: incident1.id,
+    linkType: 'ACTION',
+    linkedId: incidentAction.id,
+    createdById: admin.id,
+    note: 'Follow-up action to prevent repeat spill conditions.'
+  });
+  await ensureIncidentLink(prisma, {
+    tenantId: params.tenantId,
+    incidentId: nearMiss1.id,
+    linkType: 'PROCESS',
+    linkedId: productionProcess.id,
+    createdById: admin.id,
+    note: 'Production and dispatch controls are the operational area affected by the near miss.'
+  });
+  await ensureIncidentLink(prisma, {
+    tenantId: params.tenantId,
+    incidentId: nearMiss1.id,
+    linkType: 'RISK',
+    linkedId: competenceRisk.id,
+    createdById: admin.id,
+    note: 'Near misses highlight the need for clearer operational awareness and role clarity.'
+  });
+  await ensureEnvironmentalAspectLink(prisma, {
+    tenantId: params.tenantId,
+    aspectId: aspect1.id,
+    linkType: 'PROCESS',
+    linkedId: productionProcess.id,
+    createdById: admin.id,
+    note: 'Production owns the station controls managing coolant transfer.'
+  });
+  await ensureEnvironmentalAspectLink(prisma, {
+    tenantId: params.tenantId,
+    aspectId: aspect1.id,
+    linkType: 'RISK',
+    linkedId: digitalOpportunity.id,
+    createdById: admin.id,
+    note: 'Structured digital checks reduce the exposure highlighted by the spill event.'
+  });
+  await ensureEnvironmentalAspectLink(prisma, {
+    tenantId: params.tenantId,
+    aspectId: aspect1.id,
+    linkType: 'ACTION',
+    linkedId: incidentAction.id,
+    createdById: admin.id,
+    note: 'Incident follow-up action also strengthens the aspect control.'
+  });
+  await ensureEnvironmentalAspectLink(prisma, {
+    tenantId: params.tenantId,
+    aspectId: aspect2.id,
+    linkType: 'PROCESS',
+    linkedId: productionProcess.id,
+    createdById: admin.id,
+    note: 'Dispatch routing and movement control sit within the production and dispatch interface.'
+  });
+  await ensureEnvironmentalAspectLink(prisma, {
+    tenantId: params.tenantId,
+    aspectId: aspect2.id,
+    linkType: 'ACTION',
+    linkedId: ncrAction1.id,
+    createdById: admin.id,
+    note: 'Operator discipline and route-control awareness are reinforced through follow-up action.'
+  });
+  await ensureHazardIdentificationLink(prisma, {
+    tenantId: params.tenantId,
+    hazardId: hazard1.id,
+    linkType: 'PROCESS',
+    linkedId: productionProcess.id,
+    createdById: admin.id,
+    note: 'Dispatch route control sits in the production and dispatch interface.'
+  });
+  await ensureHazardIdentificationLink(prisma, {
+    tenantId: params.tenantId,
+    hazardId: hazard1.id,
+    linkType: 'INCIDENT',
+    linkedId: nearMiss1.id,
+    createdById: admin.id,
+    note: 'The near miss demonstrates the live exposure if route control weakens.'
+  });
+  await ensureHazardIdentificationLink(prisma, {
+    tenantId: params.tenantId,
+    hazardId: hazard1.id,
+    linkType: 'RISK',
+    linkedId: competenceRisk.id,
+    createdById: admin.id,
+    note: 'Operational awareness and role clarity are already tracked as a linked risk.'
+  });
+  await ensureHazardIdentificationLink(prisma, {
+    tenantId: params.tenantId,
+    hazardId: hazard2.id,
+    linkType: 'PROCESS',
+    linkedId: productionProcess.id,
+    createdById: admin.id,
+    note: 'Production owns the startup transfer control at the SMT area.'
+  });
+  await ensureHazardIdentificationLink(prisma, {
+    tenantId: params.tenantId,
+    hazardId: hazard2.id,
+    linkType: 'INCIDENT',
+    linkedId: incident1.id,
+    createdById: admin.id,
+    note: 'The coolant spill incident is the closest real event tied to this hazard.'
+  });
+  await ensureHazardIdentificationLink(prisma, {
+    tenantId: params.tenantId,
+    hazardId: hazard2.id,
+    linkType: 'ACTION',
+    linkedId: incidentAction.id,
+    createdById: admin.id,
+    note: 'Incident follow-up action is also the immediate control improvement for this hazard.'
+  });
+  await ensureEmergencyPreparednessLink(prisma, {
+    tenantId: params.tenantId,
+    emergencyId: emergency1.id,
+    linkType: 'PROCESS',
+    linkedId: productionProcess.id,
+    createdById: admin.id,
+    note: 'Production owns the startup transfer area and first response controls.'
+  });
+  await ensureEmergencyPreparednessLink(prisma, {
+    tenantId: params.tenantId,
+    emergencyId: emergency1.id,
+    linkType: 'INCIDENT',
+    linkedId: incident1.id,
+    createdById: admin.id,
+    note: 'This spill incident is the live event that the response scenario is built around.'
+  });
+  await ensureEmergencyPreparednessLink(prisma, {
+    tenantId: params.tenantId,
+    emergencyId: emergency1.id,
+    linkType: 'ACTION',
+    linkedId: incidentAction.id,
+    createdById: admin.id,
+    note: 'The action strengthens preparedness at the same transfer point.'
+  });
+  await ensureEmergencyPreparednessLink(prisma, {
+    tenantId: params.tenantId,
+    emergencyId: emergency2.id,
+    linkType: 'PROCESS',
+    linkedId: productionProcess.id,
+    createdById: admin.id,
+    note: 'The dispatch interface and route control sit inside the production process.'
+  });
+  await ensureEmergencyPreparednessLink(prisma, {
+    tenantId: params.tenantId,
+    emergencyId: emergency2.id,
+    linkType: 'INCIDENT',
+    linkedId: nearMiss1.id,
+    createdById: admin.id,
+    note: 'The near miss shows why evacuation and dispatch route separation needs rehearsal.'
+  });
+  await ensureEmergencyPreparednessLink(prisma, {
+    tenantId: params.tenantId,
+    emergencyId: emergency2.id,
+    linkType: 'RISK',
+    linkedId: competenceRisk.id,
+    createdById: admin.id,
+    note: 'Awareness and role clarity remain part of the wider operational risk picture.'
+  });
+
+  await ensureExternalProviderLink(prisma, {
+    tenantId: params.tenantId,
+    providerId: provider1.id,
+    linkType: 'PROCESS',
+    linkedId: procurementProcess.id,
+    createdById: admin.id,
+    note: 'Procurement owns approval and ongoing supplier-control review.'
+  });
+  await ensureExternalProviderLink(prisma, {
+    tenantId: params.tenantId,
+    providerId: provider1.id,
+    linkType: 'RISK',
+    linkedId: supplierRisk.id,
+    createdById: admin.id,
+    note: 'Single-source dependency and supplier-control exposure are tracked in the Risk register.'
+  });
+  await ensureExternalProviderLink(prisma, {
+    tenantId: params.tenantId,
+    providerId: provider1.id,
+    linkType: 'AUDIT',
+    linkedId: audit.id,
+    createdById: admin.id,
+    note: 'Internal audit reviewed supplier evaluation and traceability control.'
+  });
+  await ensureExternalProviderLink(prisma, {
+    tenantId: params.tenantId,
+    providerId: provider1.id,
+    linkType: 'AUDIT',
+    linkedId: supplierAudit.id,
+    createdById: admin.id,
+    note: 'Annual supplier audit supports the formal review requirement for this critical supplier.'
+  });
+  await ensureExternalProviderLink(prisma, {
+    tenantId: params.tenantId,
+    providerId: provider1.id,
+    linkType: 'ACTION',
+    linkedId: riskAction.id,
+    createdById: admin.id,
+    note: 'Second-source qualification action reduces dependence on this supplier.'
+  });
+  await ensureExternalProviderLink(prisma, {
+    tenantId: params.tenantId,
+    providerId: provider1.id,
+    linkType: 'OBLIGATION',
+    linkedId: customerObligation.id,
+    createdById: admin.id,
+    note: 'Customer-specific traceability and supplier-control expectations apply to this provider.'
+  });
+  await ensureExternalProviderLink(prisma, {
+    tenantId: params.tenantId,
+    providerId: provider2.id,
+    linkType: 'PROCESS',
+    linkedId: productionProcess.id,
+    createdById: admin.id,
+    note: 'Production equipment reliability depends on controlled calibration support.'
+  });
+  await ensureExternalProviderLink(prisma, {
+    tenantId: params.tenantId,
+    providerId: provider2.id,
+    linkType: 'ACTION',
+    linkedId: incidentAction.id,
+    createdById: admin.id,
+    note: 'Equipment readiness and spill-prevention follow-up share the same operational control owner.'
+  });
+  await ensureChangeRequestLink(prisma, {
+    tenantId: params.tenantId,
+    changeId: changeRequest1.id,
+    linkType: 'PROCESS',
+    linkedId: procurementProcess.id,
+    createdById: admin.id,
+    note: 'Procurement owns supplier qualification and approval of the second source.'
+  });
+  await ensureChangeRequestLink(prisma, {
+    tenantId: params.tenantId,
+    changeId: changeRequest1.id,
+    linkType: 'RISK',
+    linkedId: supplierRisk.id,
+    createdById: admin.id,
+    note: 'The linked risk explains the continuity and control exposure behind the change.'
+  });
+  await ensureChangeRequestLink(prisma, {
+    tenantId: params.tenantId,
+    changeId: changeRequest1.id,
+    linkType: 'ACTION',
+    linkedId: riskAction.id,
+    createdById: admin.id,
+    note: 'Existing mitigation action already covers secondary-source qualification work.'
+  });
+  await ensureChangeRequestLink(prisma, {
+    tenantId: params.tenantId,
+    changeId: changeRequest1.id,
+    linkType: 'DOCUMENT',
+    linkedId: procurementDocument.id,
+    createdById: admin.id,
+    note: 'The supplier-control procedure needs review before the change is implemented.'
+  });
+  await ensureChangeRequestLink(prisma, {
+    tenantId: params.tenantId,
+    changeId: changeRequest1.id,
+    linkType: 'OBLIGATION',
+    linkedId: customerObligation.id,
+    createdById: admin.id,
+    note: 'Customer-specific traceability and supplier-control expectations remain part of the review.'
+  });
+  await ensureChangeRequestLink(prisma, {
+    tenantId: params.tenantId,
+    changeId: changeRequest1.id,
+    linkType: 'PROVIDER',
+    linkedId: provider1.id,
+    createdById: admin.id,
+    note: 'The current critical supplier remains part of the review until the second source is qualified.'
+  });
 
   await prisma.auditFinding.updateMany({
     where: {

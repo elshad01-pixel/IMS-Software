@@ -44,6 +44,19 @@ type DashboardPoint = {
   width: number;
 };
 
+type IncidentSummaryRow = { id: string; status: string; severity: string };
+type ProviderSummaryRow = {
+  id: string;
+  status: string;
+  criticality: string;
+  evaluationOutcome?: string | null;
+  supplierAuditRequired?: boolean;
+  supplierAuditLinked?: boolean;
+};
+type ObligationSummaryRow = { id: string; status: string; nextReviewDate?: string | null };
+type HazardSummaryRow = { id: string; status: string; severity: string };
+type AspectSummaryRow = { id: string; status: string; significance: string };
+
 @Component({
   standalone: true,
   imports: [CommonModule, RouterLink, PageHeaderComponent],
@@ -120,13 +133,11 @@ type DashboardPoint = {
 
       <section class="dashboard-section dashboard-main-chart">
         <div class="section-head dashboard-chart-head">
-          <div>
+          <div class="dashboard-chart-copy">
             <span class="section-eyebrow">{{ currentRangeLabel() }}</span>
             <h3>{{ mainChartTitle() }}</h3>
             <p class="subtle">{{ mainChartDescription() }}</p>
-          </div>
-          <div class="dashboard-chart-action">
-            <a [routerLink]="mainChartLink()" class="mini-link">Open {{ currentModuleLabel() }}</a>
+            <a [routerLink]="mainChartLink()" class="mini-link dashboard-chart-inline-link">Open {{ currentModuleLabel() }}</a>
           </div>
         </div>
 
@@ -158,24 +169,97 @@ type DashboardPoint = {
             </div>
 
             <div *ngSwitchDefault class="donut-layout donut-layout--main">
-              <div class="donut-chart" [class.is-pie]="selectedChartType() === 'pie'" [style.background]="donutBackground(mainChartPoints())">
-                <div class="donut-center" *ngIf="selectedChartType() !== 'pie'">
-                  <strong>{{ mainChartTotal() }}</strong>
-                  <span>{{ currentModuleLabel() }}</span>
+              <div class="secondary-chart-panel secondary-chart-panel--primary">
+                <div class="secondary-chart-head secondary-chart-head--centered">
+                  <strong>{{ currentModuleLabel() }} overview</strong>
+                  <small>{{ mainChartMetricLabel() }}</small>
+                </div>
+
+                <div class="donut-chart-shell">
+                  <div class="donut-chart" [class.is-pie]="selectedChartType() === 'pie'" [style.background]="donutBackground(mainChartPoints())">
+                    <div class="donut-center" *ngIf="selectedChartType() !== 'pie'">
+                      <strong>{{ mainChartTotal() }}</strong>
+                      <span>{{ currentModuleLabel() }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div class="chart-legend">
-                <a class="legend-item legend-button" *ngFor="let item of mainChartPoints()" [routerLink]="item.link">
-                  <span class="legend-swatch" [style.background]="item.color"></span>
-                  <div>
-                    <strong>{{ item.label }}</strong>
-                    <small>{{ item.value }}</small>
+              <div class="secondary-chart-panel secondary-chart-panel--compact">
+                <div class="secondary-chart-head">
+                  <strong>{{ breakdownTitle() }}</strong>
+                  <small>{{ breakdownNarrative() }}</small>
+                </div>
+                <div class="mini-bar-chart">
+                  <a class="mini-bar-row" *ngFor="let item of mainChartPoints()" [routerLink]="item.link">
+                    <div class="mini-bar-row__head">
+                      <span>{{ item.label }}</span>
+                      <strong>{{ item.value }}</strong>
+                    </div>
+                    <div class="mini-bar-track">
+                      <div class="mini-bar-fill" [style.width.%]="item.width" [style.background]="item.color"></div>
+                    </div>
+                  </a>
+                </div>
+              </div>
+
+              <div class="secondary-chart-panel">
+                <div class="secondary-chart-head">
+                  <strong>{{ watchlistTitle() }}</strong>
+                  <small>{{ watchlistNarrative() }}</small>
+                </div>
+                <div class="mini-bar-chart">
+                  <a class="mini-bar-row" *ngFor="let item of watchlistPoints()" [routerLink]="item.link">
+                    <div class="mini-bar-row__head">
+                      <span>{{ item.label }}</span>
+                      <strong>{{ item.value }}</strong>
+                    </div>
+                    <div class="mini-bar-track">
+                      <div class="mini-bar-fill" [style.width.%]="item.width" [style.background]="item.color"></div>
+                    </div>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+          <div class="secondary-chart-grid top-space" *ngIf="selectedChartType() === 'bar' || selectedChartType() === 'line'">
+            <div class="secondary-chart-panel secondary-chart-panel--stacked">
+              <div class="secondary-chart-head">
+                <strong>{{ breakdownTitle() }}</strong>
+                <small>{{ breakdownNarrative() }}</small>
+              </div>
+              <div class="mini-bar-chart">
+                <a class="mini-bar-row" *ngFor="let item of mainChartPoints()" [routerLink]="item.link">
+                  <div class="mini-bar-row__head">
+                    <span>{{ item.label }}</span>
+                    <strong>{{ item.value }}</strong>
+                  </div>
+                  <div class="mini-bar-track">
+                    <div class="mini-bar-fill" [style.width.%]="item.width" [style.background]="item.color"></div>
                   </div>
                 </a>
               </div>
             </div>
-          </ng-container>
+
+            <div class="secondary-chart-panel secondary-chart-panel--stacked">
+              <div class="secondary-chart-head">
+                <strong>{{ watchlistTitle() }}</strong>
+                <small>{{ watchlistNarrative() }}</small>
+              </div>
+              <div class="mini-bar-chart">
+                <a class="mini-bar-row" *ngFor="let item of watchlistPoints()" [routerLink]="item.link">
+                  <div class="mini-bar-row__head">
+                    <span>{{ item.label }}</span>
+                    <strong>{{ item.value }}</strong>
+                  </div>
+                  <div class="mini-bar-track">
+                    <div class="mini-bar-fill" [style.width.%]="item.width" [style.background]="item.color"></div>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
 
       </section>
@@ -302,13 +386,17 @@ type DashboardPoint = {
     }
 
     .dashboard-chart-head {
-      padding-inline-end: 1.6rem;
+      padding-inline-end: 0.3rem;
     }
 
-    .dashboard-chart-action {
-      margin-inline-end: 1.6rem;
-      padding-inline-start: 0.4rem;
-      flex-shrink: 0;
+    .dashboard-chart-copy {
+      display: grid;
+      gap: 0.12rem;
+    }
+
+    .dashboard-chart-inline-link {
+      justify-self: start;
+      margin-top: 0.15rem;
     }
 
     .bar-chart {
@@ -400,9 +488,9 @@ type DashboardPoint = {
 
     .donut-layout {
       display: grid;
-      grid-template-columns: 190px minmax(0, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 0.8rem;
-      align-items: center;
+      align-items: stretch;
     }
 
     .donut-layout--main {
@@ -416,6 +504,13 @@ type DashboardPoint = {
       border-radius: 50%;
       display: grid;
       place-items: center;
+    }
+
+    .donut-chart-shell {
+      display: grid;
+      min-height: 100%;
+      place-items: center;
+      padding: 0.2rem 0;
     }
 
     .donut-chart::after {
@@ -451,42 +546,93 @@ type DashboardPoint = {
       font-size: 0.9rem;
     }
 
-    .chart-legend {
+    .secondary-chart-panel {
       display: grid;
-      gap: 0.55rem;
+      gap: 0.8rem;
+      align-self: stretch;
+      padding: 0.8rem 0.85rem;
+      border-radius: 18px;
+      background: rgba(248, 250, 246, 0.88);
+      border: 1px solid rgba(23, 50, 37, 0.05);
     }
 
-    .legend-item {
+    .secondary-chart-panel--compact {
+      padding-top: 0.72rem;
+    }
+
+    .secondary-chart-panel--primary {
+      justify-items: center;
+      text-align: center;
+    }
+
+    .secondary-chart-panel--stacked {
+      max-width: none;
+    }
+
+    .secondary-chart-grid {
       display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 0.7rem;
-      align-items: center;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .secondary-chart-head {
+      display: grid;
+      gap: 0.2rem;
+    }
+
+    .secondary-chart-head strong {
+      font-size: 0.96rem;
+    }
+
+    .secondary-chart-head small {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .secondary-chart-head--centered {
+      justify-items: center;
+      text-align: center;
+    }
+
+    .mini-bar-chart {
+      display: grid;
+      gap: 0.65rem;
+    }
+
+    .mini-bar-row {
+      display: grid;
+      gap: 0.32rem;
       text-decoration: none;
       color: inherit;
     }
 
-    .legend-button {
-      width: 100%;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.48);
-      padding: 0.55rem 0.7rem;
-      border: 1px solid rgba(23, 50, 37, 0.04);
+    .mini-bar-row__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
     }
 
-    .legend-item strong {
-      display: block;
-      font-size: 0.96rem;
+    .mini-bar-row__head span {
+      color: var(--muted-strong);
+      font-size: 0.88rem;
     }
 
-    .legend-item small {
-      color: var(--muted);
+    .mini-bar-row__head strong {
+      font-size: 0.94rem;
     }
 
-    .legend-swatch {
-      width: 0.78rem;
-      height: 0.78rem;
-      border-radius: 50%;
-      box-shadow: 0 0 0 4px rgba(23, 50, 37, 0.035);
+    .mini-bar-track {
+      height: 0.55rem;
+      border-radius: 999px;
+      background: rgba(23, 50, 37, 0.08);
+      overflow: hidden;
+    }
+
+    .mini-bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      min-width: 0.55rem;
     }
 
     @media (max-width: 1200px) {
@@ -507,11 +653,6 @@ type DashboardPoint = {
         padding-left: 0;
       }
 
-      .dashboard-chart-action {
-        margin-inline-end: 0;
-        padding-inline-start: 0;
-      }
-
       .dashboard-chart-head {
         padding-inline-end: 0;
       }
@@ -519,6 +660,14 @@ type DashboardPoint = {
       .donut-layout {
         grid-template-columns: 1fr;
         justify-items: center;
+      }
+
+      .secondary-chart-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .secondary-chart-panel--stacked {
+        max-width: none;
       }
 
       .donut-chart {
@@ -552,6 +701,11 @@ export class DashboardPageComponent {
   });
 
   protected readonly contextSummary = signal<ContextDashboardResponse | null>(null);
+  protected readonly incidents = signal<IncidentSummaryRow[]>([]);
+  protected readonly providers = signal<ProviderSummaryRow[]>([]);
+  protected readonly obligations = signal<ObligationSummaryRow[]>([]);
+  protected readonly hazards = signal<HazardSummaryRow[]>([]);
+  protected readonly aspects = signal<AspectSummaryRow[]>([]);
   protected readonly selectedModule = signal<DashboardModule>('risks');
   protected readonly selectedTimeRange = signal<DashboardRange>('quarter');
   protected readonly selectedChartType = signal<DashboardChartType>('donut');
@@ -564,6 +718,26 @@ export class DashboardPageComponent {
     this.api.get<ContextDashboardResponse>('context/dashboard').subscribe({
       next: (result) => this.contextSummary.set(result),
       error: () => this.contextSummary.set(null)
+    });
+    this.api.get<IncidentSummaryRow[]>('incidents').subscribe({
+      next: (result) => this.incidents.set(result),
+      error: () => this.incidents.set([])
+    });
+    this.api.get<ProviderSummaryRow[]>('external-providers').subscribe({
+      next: (result) => this.providers.set(result),
+      error: () => this.providers.set([])
+    });
+    this.api.get<ObligationSummaryRow[]>('compliance-obligations').subscribe({
+      next: (result) => this.obligations.set(result),
+      error: () => this.obligations.set([])
+    });
+    this.api.get<HazardSummaryRow[]>('hazards').subscribe({
+      next: (result) => this.hazards.set(result),
+      error: () => this.hazards.set([])
+    });
+    this.api.get<AspectSummaryRow[]>('environmental-aspects').subscribe({
+      next: (result) => this.aspects.set(result),
+      error: () => this.aspects.set([])
     });
   }
 
@@ -706,7 +880,60 @@ export class DashboardPageComponent {
       .join(' ');
   }
 
-  private mainChartMetricLabel() {
+  protected watchlistTitle() {
+    return 'Cross-module watchlist';
+  }
+
+  protected watchlistNarrative() {
+    return 'A quick view of the new ISO/QHSE modules that currently need attention.';
+  }
+
+  protected watchlistPoints(): DashboardPoint[] {
+    const raw = [
+      {
+        label: 'Incidents',
+        value: this.incidents().filter((item) => item.status !== 'CLOSED' && item.status !== 'ARCHIVED').length,
+        color: '#b45a47',
+        link: '/incidents'
+      },
+      {
+        label: 'Provider review',
+        value: this.providers().filter((item) => item.status === 'UNDER_REVIEW' || item.evaluationOutcome === 'ESCALATED' || item.evaluationOutcome === 'DISQUALIFIED' || (!!item.supplierAuditRequired && !item.supplierAuditLinked)).length,
+        color: '#9a6e2d',
+        link: '/external-providers'
+      },
+      {
+        label: 'Obligations',
+        value: this.obligations().filter((item) => item.status === 'UNDER_REVIEW' || this.isOverdue(item.nextReviewDate ?? undefined)).length,
+        color: '#446d8e',
+        link: '/compliance-obligations'
+      },
+      {
+        label: 'High hazards',
+        value: this.hazards().filter((item) => item.status !== 'OBSOLETE' && item.severity === 'HIGH').length,
+        color: '#8c3f36',
+        link: '/hazards'
+      },
+      {
+        label: 'High aspects',
+        value: this.aspects().filter((item) => item.status !== 'OBSOLETE' && item.significance === 'HIGH').length,
+        color: '#3f6f59',
+        link: '/environmental-aspects'
+      }
+    ];
+    const total = Math.max(raw.reduce((sum, item) => sum + item.value, 0), 1);
+    return raw.map((item) => ({ ...item, width: (item.value / total) * 100 }));
+  }
+
+  protected breakdownTitle() {
+    return `${this.currentModuleLabel()} breakdown`;
+  }
+
+  protected breakdownNarrative() {
+    return `A compact view of the ${this.mainChartMetricLabel().toLowerCase()} behind the main ${this.selectedChartType()} chart.`;
+  }
+
+  protected mainChartMetricLabel() {
     return {
       risks: 'Risk distribution',
       capa: 'Status distribution',

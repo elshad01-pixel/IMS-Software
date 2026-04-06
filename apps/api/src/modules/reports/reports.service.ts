@@ -7,6 +7,14 @@ import {
   TrainingAssignmentStatus
 } from '@prisma/client';
 import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  getChangeRequestDelegate,
+  getComplianceObligationDelegate,
+  getEnvironmentalAspectDelegate,
+  getExternalProviderControlDelegate,
+  getHazardIdentificationDelegate,
+  getIncidentDelegate
+} from '../../common/prisma/prisma-delegate-compat';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ExportReportQueryDto } from './dto/export-report-query.dto';
 
@@ -86,6 +94,66 @@ const reportDefinitions: ReportDefinition[] = [
     supportsDateRange: true,
     supportsStatus: true,
     statusOptions: ['ASSIGNED', 'IN_PROGRESS', 'COMPLETED']
+  },
+  {
+    type: 'incidents-register',
+    module: 'Incidents',
+    title: 'Incidents register export',
+    description: 'Incidents and near misses with category, severity, ownership, and investigation status.',
+    supportsDateRange: true,
+    supportsStatus: true,
+    supportsOwner: true,
+    statusOptions: ['REPORTED', 'INVESTIGATION', 'ACTION_IN_PROGRESS', 'CLOSED', 'ARCHIVED']
+  },
+  {
+    type: 'hazards-register',
+    module: 'Hazards',
+    title: 'Hazards register export',
+    description: 'Hazards, potential harm, severity, review dates, and current control status.',
+    supportsDateRange: true,
+    supportsStatus: true,
+    supportsOwner: true,
+    statusOptions: ['ACTIVE', 'MONITORING', 'OBSOLETE']
+  },
+  {
+    type: 'environmental-aspects-register',
+    module: 'Environmental Aspects',
+    title: 'Environmental aspects export',
+    description: 'Environmental aspects, impacts, significance, review dates, and control status.',
+    supportsDateRange: true,
+    supportsStatus: true,
+    supportsOwner: true,
+    statusOptions: ['ACTIVE', 'MONITORING', 'OBSOLETE']
+  },
+  {
+    type: 'obligations-register',
+    module: 'Obligations',
+    title: 'Compliance obligations export',
+    description: 'Owned obligations with source, review timing, status, and linked control visibility.',
+    supportsDateRange: true,
+    supportsStatus: true,
+    supportsOwner: true,
+    statusOptions: ['ACTIVE', 'UNDER_REVIEW', 'OBSOLETE']
+  },
+  {
+    type: 'providers-register',
+    module: 'External Providers',
+    title: 'External providers export',
+    description: 'Provider control status, annual evaluation outcome, criticality, and review dates.',
+    supportsDateRange: true,
+    supportsStatus: true,
+    supportsOwner: true,
+    statusOptions: ['APPROVED', 'CONDITIONAL', 'UNDER_REVIEW', 'INACTIVE']
+  },
+  {
+    type: 'change-register',
+    module: 'Change Management',
+    title: 'Change management export',
+    description: 'Planned changes with owner, implementation target, review date, and current stage.',
+    supportsDateRange: true,
+    supportsStatus: true,
+    supportsOwner: true,
+    statusOptions: ['PROPOSED', 'REVIEWING', 'APPROVED', 'IMPLEMENTING', 'VERIFIED', 'CLOSED', 'REJECTED']
   }
 ];
 
@@ -118,6 +186,18 @@ export class ReportsService {
         return this.exportKpis(tenantId, query);
       case 'training-assignments':
         return this.exportTrainingAssignments(tenantId, query);
+      case 'incidents-register':
+        return this.exportIncidents(tenantId, query);
+      case 'hazards-register':
+        return this.exportHazards(tenantId, query);
+      case 'environmental-aspects-register':
+        return this.exportEnvironmentalAspects(tenantId, query);
+      case 'obligations-register':
+        return this.exportObligations(tenantId, query);
+      case 'providers-register':
+        return this.exportProviders(tenantId, query);
+      case 'change-register':
+        return this.exportChanges(tenantId, query);
     }
   }
 
@@ -358,6 +438,197 @@ export class ReportsService {
         this.formatDateTime(item.updatedAt)
       ])
     );
+  }
+
+  private async exportIncidents(tenantId: string, query: ExportReportQueryDto) {
+    const rows = await getIncidentDelegate(this.prisma).findMany({
+      where: {
+        tenantId,
+        deletedAt: null,
+        status: query.status || undefined,
+        ownerUserId: query.ownerId || undefined,
+        createdAt: this.buildDateRange(query)
+      },
+      orderBy: { updatedAt: 'desc' }
+    });
+    const userMap = await this.loadUserMap(tenantId, rows.map((item) => item.ownerUserId));
+
+    return this.toCsv(
+      ['Reference', 'Title', 'Type', 'Category', 'Severity', 'Status', 'Owner', 'Root Cause', 'Updated At'],
+      rows.map((item) => [
+        item.referenceNo ?? '',
+        item.title,
+        item.type,
+        item.category,
+        item.severity,
+        item.status,
+        userMap.get(item.ownerUserId ?? '') ?? '',
+        item.rootCause ?? '',
+        this.formatDateTime(item.updatedAt)
+      ])
+    );
+  }
+
+  private async exportHazards(tenantId: string, query: ExportReportQueryDto) {
+    const rows = await getHazardIdentificationDelegate(this.prisma).findMany({
+      where: {
+        tenantId,
+        deletedAt: null,
+        status: query.status || undefined,
+        ownerUserId: query.ownerId || undefined,
+        reviewDate: this.buildDateRange(query)
+      },
+      orderBy: [{ severity: 'desc' }, { reviewDate: 'asc' }, { updatedAt: 'desc' }]
+    });
+    const userMap = await this.loadUserMap(tenantId, rows.map((item) => item.ownerUserId));
+
+    return this.toCsv(
+      ['Reference', 'Activity', 'Hazard', 'Potential Harm', 'Exposure Stage', 'Severity', 'Status', 'Review Date', 'Owner', 'Updated At'],
+      rows.map((item) => [
+        item.referenceNo ?? '',
+        item.activity,
+        item.hazard,
+        item.potentialHarm,
+        item.exposureStage,
+        item.severity,
+        item.status,
+        this.formatDate(item.reviewDate),
+        userMap.get(item.ownerUserId ?? '') ?? '',
+        this.formatDateTime(item.updatedAt)
+      ])
+    );
+  }
+
+  private async exportEnvironmentalAspects(tenantId: string, query: ExportReportQueryDto) {
+    const rows = await getEnvironmentalAspectDelegate(this.prisma).findMany({
+      where: {
+        tenantId,
+        deletedAt: null,
+        status: query.status || undefined,
+        ownerUserId: query.ownerId || undefined,
+        reviewDate: this.buildDateRange(query)
+      },
+      orderBy: [{ significance: 'desc' }, { reviewDate: 'asc' }, { updatedAt: 'desc' }]
+    });
+    const userMap = await this.loadUserMap(tenantId, rows.map((item) => item.ownerUserId));
+
+    return this.toCsv(
+      ['Reference', 'Activity', 'Aspect', 'Impact', 'Lifecycle Stage', 'Significance', 'Status', 'Review Date', 'Owner', 'Updated At'],
+      rows.map((item) => [
+        item.referenceNo ?? '',
+        item.activity,
+        item.aspect,
+        item.impact,
+        item.lifecycleStage,
+        item.significance,
+        item.status,
+        this.formatDate(item.reviewDate),
+        userMap.get(item.ownerUserId ?? '') ?? '',
+        this.formatDateTime(item.updatedAt)
+      ])
+    );
+  }
+
+  private async exportObligations(tenantId: string, query: ExportReportQueryDto) {
+    const rows = await getComplianceObligationDelegate(this.prisma).findMany({
+      where: {
+        tenantId,
+        deletedAt: null,
+        status: query.status || undefined,
+        ownerUserId: query.ownerId || undefined,
+        nextReviewDate: this.buildDateRange(query)
+      },
+      orderBy: [{ nextReviewDate: 'asc' }, { updatedAt: 'desc' }]
+    });
+    const userMap = await this.loadUserMap(tenantId, rows.map((item) => item.ownerUserId));
+
+    return this.toCsv(
+      ['Reference', 'Title', 'Source', 'Type', 'Jurisdiction', 'Status', 'Review Frequency Months', 'Next Review Date', 'Owner', 'Updated At'],
+      rows.map((item) => [
+        item.referenceNo ?? '',
+        item.title,
+        item.sourceName,
+        item.obligationType ?? '',
+        item.jurisdiction ?? '',
+        item.status,
+        item.reviewFrequencyMonths ?? '',
+        this.formatDate(item.nextReviewDate),
+        userMap.get(item.ownerUserId ?? '') ?? '',
+        this.formatDateTime(item.updatedAt)
+      ])
+    );
+  }
+
+  private async exportProviders(tenantId: string, query: ExportReportQueryDto) {
+    const rows = await getExternalProviderControlDelegate(this.prisma).findMany({
+      where: {
+        tenantId,
+        deletedAt: null,
+        status: query.status || undefined,
+        ownerUserId: query.ownerId || undefined,
+        nextReviewDate: this.buildDateRange(query)
+      },
+      orderBy: [{ criticality: 'desc' }, { nextReviewDate: 'asc' }, { updatedAt: 'desc' }]
+    });
+    const userMap = await this.loadUserMap(tenantId, rows.map((item) => item.ownerUserId));
+
+    return this.toCsv(
+      ['Reference', 'Provider Name', 'Type', 'Criticality', 'Status', 'Evaluation Score', 'Evaluation Outcome', 'Supplier Audit Required', 'Next Review Date', 'Owner', 'Updated At'],
+      rows.map((item) => [
+        item.referenceNo ?? '',
+        item.providerName,
+        item.providerType,
+        item.criticality,
+        item.status,
+        item.evaluationScore ?? '',
+        item.evaluationOutcome ?? '',
+        item.providerType === 'SUPPLIER' && item.criticality === 'HIGH' ? 'Yes' : 'No',
+        this.formatDate(item.nextReviewDate),
+        userMap.get(item.ownerUserId ?? '') ?? '',
+        this.formatDateTime(item.updatedAt)
+      ])
+    );
+  }
+
+  private async exportChanges(tenantId: string, query: ExportReportQueryDto) {
+    const rows = await getChangeRequestDelegate(this.prisma).findMany({
+      where: {
+        tenantId,
+        deletedAt: null,
+        status: query.status || undefined,
+        ownerUserId: query.ownerId || undefined,
+        targetImplementationDate: this.buildDateRange(query)
+      },
+      orderBy: [{ targetImplementationDate: 'asc' }, { updatedAt: 'desc' }]
+    });
+    const userMap = await this.loadUserMap(tenantId, rows.map((item) => item.ownerUserId));
+
+    return this.toCsv(
+      ['Reference', 'Title', 'Type', 'Affected Area', 'Status', 'Target Implementation Date', 'Review Date', 'Owner', 'Updated At'],
+      rows.map((item) => [
+        item.referenceNo ?? '',
+        item.title,
+        item.changeType,
+        item.affectedArea,
+        item.status,
+        this.formatDate(item.targetImplementationDate),
+        this.formatDate(item.reviewDate),
+        userMap.get(item.ownerUserId ?? '') ?? '',
+        this.formatDateTime(item.updatedAt)
+      ])
+    );
+  }
+
+  private async loadUserMap(tenantId: string, ownerIds: Array<string | null | undefined>) {
+    const ids = [...new Set(ownerIds.filter(Boolean))] as string[];
+    if (!ids.length) {
+      return new Map<string, string>();
+    }
+    const users = await this.prisma.user.findMany({
+      where: { tenantId, id: { in: ids } },
+      select: { id: true, firstName: true, lastName: true }
+    });
+    return new Map(users.map((user) => [user.id, `${user.firstName} ${user.lastName}`.trim()]));
   }
 
   private buildDateRange(query: ExportReportQueryDto) {

@@ -454,12 +454,31 @@ export class RecordWorkItemsComponent implements OnChanges {
   }
 
   protected sectionEyebrow() {
-    return this.sourceType === 'ncr' ? 'Resolution workflow' : 'Linked actions';
+    if (this.sourceType === 'ncr') return 'Resolution workflow';
+    if (this.sourceType === 'incident') return 'Incident follow-up';
+    if (this.sourceType === 'provider') return 'Provider follow-up';
+    if (this.sourceType === 'change-management') return 'Change follow-up';
+    if (this.sourceType === 'hazard') return 'Hazard follow-up';
+    if (this.sourceType === 'aspect') return 'Aspect follow-up';
+    if (this.sourceType === 'obligation') return 'Obligation follow-up';
+    return 'Linked actions';
   }
 
   protected panelDescription() {
     return this.sourceType === 'ncr'
       ? 'Actions assigned to resolve this nonconformance'
+      : this.sourceType === 'incident'
+        ? 'Track corrective and preventive follow-up linked to this incident or near miss.'
+        : this.sourceType === 'provider'
+          ? 'Track supplier-review follow-up, audit actions, and external-provider improvements from one place.'
+          : this.sourceType === 'change-management'
+            ? 'Track implementation, verification, and document-review follow-up linked to this change.'
+            : this.sourceType === 'hazard'
+              ? 'Track risk-treatment, control-improvement, and event-follow-up linked to this hazard.'
+              : this.sourceType === 'aspect'
+                ? 'Track environmental control improvements and review follow-up linked to this aspect.'
+                : this.sourceType === 'obligation'
+                  ? 'Track review, audit, and compliance follow-up linked to this obligation.'
       : 'Track linked actions, ownership, due dates, and completion status for this record.';
   }
 
@@ -486,6 +505,12 @@ export class RecordWorkItemsComponent implements OnChanges {
   protected createActionTitle() {
     if (this.sourceType === 'ncr') return 'Add corrective action';
     if (this.sourceType === 'risk') return 'Create action';
+    if (this.sourceType === 'incident') return 'Prepare incident follow-up';
+    if (this.sourceType === 'provider') return 'Prepare provider follow-up';
+    if (this.sourceType === 'change-management') return 'Prepare change follow-up';
+    if (this.sourceType === 'hazard') return 'Prepare hazard follow-up';
+    if (this.sourceType === 'aspect') return 'Prepare aspect follow-up';
+    if (this.sourceType === 'obligation') return 'Prepare obligation follow-up';
     return 'Add action';
   }
 
@@ -496,27 +521,70 @@ export class RecordWorkItemsComponent implements OnChanges {
     if (this.sourceType === 'risk') {
       return 'Create a mitigation action directly from this record when ownership and due dates are ready.';
     }
+    if (this.sourceType === 'incident') {
+      return 'Use this when the incident or near miss needs a formal corrective or preventive follow-up action.';
+    }
+    if (this.sourceType === 'provider') {
+      return 'Use this when the provider review shows a follow-up task, supplier development action, or audit action is needed.';
+    }
+    if (this.sourceType === 'change-management') {
+      return 'Use this when implementation, verification, or controlled-document follow-up needs a separately owned action.';
+    }
+    if (this.sourceType === 'hazard') {
+      return 'Use this when the hazard needs an owned control improvement, treatment step, or event-related follow-up.';
+    }
+    if (this.sourceType === 'aspect') {
+      return 'Use this when the aspect needs an owned environmental control improvement or review follow-up.';
+    }
+    if (this.sourceType === 'obligation') {
+      return 'Use this when the obligation needs an owned review, audit, or compliance follow-up action.';
+    }
     return 'Create another linked action for this record only when additional follow-up is needed.';
   }
 
   protected titlePlaceholder() {
     if (this.sourceType === 'ncr') return 'Update procedure and retrain team';
     if (this.sourceType === 'risk') return 'Implement secondary supplier control';
+    if (this.sourceType === 'incident') return 'Complete corrective follow-up for the event';
+    if (this.sourceType === 'provider') return 'Close supplier review gap';
+    if (this.sourceType === 'change-management') return 'Verify implementation and update controlled records';
+    if (this.sourceType === 'hazard') return 'Implement hazard control improvement';
+    if (this.sourceType === 'aspect') return 'Complete environmental control follow-up';
+    if (this.sourceType === 'obligation') return 'Close compliance review gap';
     return 'Close evidence gap';
   }
 
   protected descriptionPlaceholder() {
-    return this.sourceType === 'ncr' ? 'Describe the corrective step required to resolve the NCR' : 'Action details';
+    if (this.sourceType === 'ncr') return 'Describe the corrective step required to resolve the NCR';
+    if (this.sourceType === 'incident') return 'Describe the investigation follow-up, corrective action, or preventive step needed after this event';
+    if (this.sourceType === 'provider') return 'Describe the supplier-review or provider-control follow-up needed';
+    if (this.sourceType === 'change-management') return 'Describe the implementation or verification follow-up needed for this change';
+    if (this.sourceType === 'hazard') return 'Describe the control improvement, risk-treatment, or event follow-up needed for this hazard';
+    if (this.sourceType === 'aspect') return 'Describe the environmental control or review follow-up needed for this aspect';
+    if (this.sourceType === 'obligation') return 'Describe the compliance, audit, or review follow-up needed for this obligation';
+    return 'Action details';
   }
 
   protected submitLabel() {
     if (this.sourceType === 'ncr') return 'Add Corrective Action';
     if (this.sourceType === 'risk') return 'Create Action';
+    if (this.sourceType === 'incident') return 'Create Incident Action';
+    if (this.sourceType === 'provider') return 'Create Provider Action';
+    if (this.sourceType === 'change-management') return 'Create Change Action';
+    if (this.sourceType === 'hazard') return 'Create Hazard Action';
+    if (this.sourceType === 'aspect') return 'Create Aspect Action';
+    if (this.sourceType === 'obligation') return 'Create Obligation Action';
     return 'Add Action';
   }
 
   protected savingLabel() {
     if (this.sourceType === 'ncr') return 'Saving corrective action...';
+    if (this.sourceType === 'incident') return 'Saving incident action...';
+    if (this.sourceType === 'provider') return 'Saving provider action...';
+    if (this.sourceType === 'change-management') return 'Saving change action...';
+    if (this.sourceType === 'hazard') return 'Saving hazard action...';
+    if (this.sourceType === 'aspect') return 'Saving aspect action...';
+    if (this.sourceType === 'obligation') return 'Saving obligation action...';
     if (this.sourceType === 'risk') return 'Saving action...';
     return 'Saving action...';
   }
@@ -524,6 +592,12 @@ export class RecordWorkItemsComponent implements OnChanges {
   protected addButtonLabel() {
     if (this.sourceType === 'ncr') return 'Add Corrective Action';
     if (this.sourceType === 'risk') return 'Create Action';
+    if (this.sourceType === 'incident') return 'Prepare Incident Action';
+    if (this.sourceType === 'provider') return 'Prepare Provider Action';
+    if (this.sourceType === 'change-management') return 'Prepare Change Action';
+    if (this.sourceType === 'hazard') return 'Prepare Hazard Action';
+    if (this.sourceType === 'aspect') return 'Prepare Aspect Action';
+    if (this.sourceType === 'obligation') return 'Prepare Obligation Action';
     return 'Add Action';
   }
 

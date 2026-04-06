@@ -12,7 +12,14 @@ type NavItem = {
   permission?: string;
 };
 
+type NavGroup = {
+  key: string;
+  label: string;
+  items: NavItem[];
+};
+
 const SIDEBAR_PIN_KEY = 'ims.sidebar.pinned';
+const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
 
 @Component({
   selector: 'iso-shell',
@@ -54,19 +61,32 @@ const SIDEBAR_PIN_KEY = 'ims.sidebar.pinned';
         </div>
 
         <nav>
-          <a
-            *ngFor="let item of visibleNavItems()"
-            [routerLink]="item.path"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
-            [attr.aria-label]="item.label"
-          >
-            <span class="nav-icon">{{ item.icon }}</span>
-            <span class="nav-copy" *ngIf="sidebarExpanded()">
-              <span class="nav-label">{{ item.label }}</span>
-              <small>{{ item.hint }}</small>
-            </span>
-          </a>
+          <section class="nav-group" *ngFor="let group of visibleNavGroups()">
+            <button
+              type="button"
+              class="nav-group__header"
+              *ngIf="sidebarExpanded()"
+              (click)="toggleGroup(group.key)"
+              [attr.aria-expanded]="groupExpanded(group.key)"
+            >
+              <span>{{ group.label }}</span>
+              <span class="nav-group__caret">{{ groupExpanded(group.key) ? '-' : '+' }}</span>
+            </button>
+            <a
+              *ngFor="let item of group.items"
+              [class.nav-item-hidden]="sidebarExpanded() && !groupExpanded(group.key)"
+              [routerLink]="item.path"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+              [attr.aria-label]="item.label"
+            >
+              <span class="nav-icon">{{ item.icon }}</span>
+              <span class="nav-copy" *ngIf="sidebarExpanded()">
+                <span class="nav-label">{{ item.label }}</span>
+                <small>{{ item.hint }}</small>
+              </span>
+            </a>
+          </section>
         </nav>
       </aside>
 
@@ -253,13 +273,48 @@ const SIDEBAR_PIN_KEY = 'ims.sidebar.pinned';
 
     nav {
       display: grid;
-      gap: 0.35rem;
+      gap: 0.85rem;
       align-content: start;
       min-height: 0;
       overflow-y: auto;
       padding-right: 0.1rem;
       scrollbar-width: thin;
       scrollbar-color: rgba(244, 232, 208, 0.18) transparent;
+    }
+
+    .nav-group {
+      display: grid;
+      gap: 0.35rem;
+    }
+
+    .nav-group__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 0.15rem 0.8rem;
+      background: transparent;
+      border: 0;
+      color: rgba(249, 244, 234, 0.58);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      box-shadow: none;
+      min-height: auto;
+    }
+
+    .nav-group__header:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(249, 244, 234, 0.8);
+      transform: none;
+      box-shadow: none;
+    }
+
+    .nav-group__caret {
+      font-size: 0.9rem;
+      line-height: 1;
+      letter-spacing: 0;
     }
 
     nav::-webkit-scrollbar {
@@ -305,6 +360,10 @@ const SIDEBAR_PIN_KEY = 'ims.sidebar.pinned';
       border: 1px solid transparent;
       transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
       min-height: 3.35rem;
+    }
+
+    nav a.nav-item-hidden {
+      display: none;
     }
 
     .sidebar:not(.expanded) nav a {
@@ -637,25 +696,67 @@ export class ShellComponent {
   protected readonly sidebarPinned = signal(this.readPinnedPreference());
   protected readonly sidebarHovered = signal(false);
   protected readonly compactViewport = signal(this.readCompactViewport());
-  protected readonly navItems: NavItem[] = [
-    { path: '/dashboard', label: 'Dashboard', hint: 'Executive overview', icon: 'DB', exact: true, permission: 'dashboard.read' },
-    { path: '/documents', label: 'Documents', hint: 'Controlled library', icon: 'DC', permission: 'documents.read' },
-    { path: '/risks', label: 'Risks', hint: 'Assessment and treatment', icon: 'RK', permission: 'risks.read' },
-    { path: '/capa', label: 'CAPA', hint: 'Corrective workflows', icon: 'CP', permission: 'capa.read' },
-    { path: '/audits', label: 'Audits', hint: 'Plans and findings', icon: 'AU', permission: 'audits.read' },
-    { path: '/management-review', label: 'Management Review', hint: 'Meetings and decisions', icon: 'MR', permission: 'management-review.read' },
-    { path: '/kpis', label: 'KPIs', hint: 'Targets and trends', icon: 'KP', permission: 'kpis.read' },
-    { path: '/training', label: 'Training', hint: 'Assignments and evidence', icon: 'TR', permission: 'training.read' },
-    { path: '/actions', label: 'Actions', hint: 'Global follow-up tracker', icon: 'AC', permission: 'dashboard.read' },
-    { path: '/ncr', label: 'NCR', hint: 'Nonconformance control', icon: 'NC', permission: 'ncr.read' },
-    { path: '/context', label: 'Context', hint: 'Clause 4 issues and parties', icon: 'CX', permission: 'context.read' },
-    { path: '/process-register', label: 'Process Register', hint: 'Business process links', icon: 'PR', permission: 'processes.read' },
-    { path: '/reports', label: 'Reports', hint: 'Exports and summaries', icon: 'RP', permission: 'reports.read' },
-    { path: '/users', label: 'Users', hint: 'Access and ownership', icon: 'US', permission: 'users.read' },
-    { path: '/settings', label: 'Settings', hint: 'System configuration', icon: 'ST', permission: 'settings.read' }
+  protected readonly collapsedGroups = signal<Record<string, boolean>>(this.readCollapsedGroups());
+  protected readonly navGroups: NavGroup[] = [
+    {
+      key: 'overview',
+      label: 'Overview',
+      items: [
+        { path: '/dashboard', label: 'Dashboard', hint: 'Executive overview', icon: 'DB', exact: true, permission: 'dashboard.read' },
+        { path: '/reports', label: 'Reports', hint: 'Exports and summaries', icon: 'RP', permission: 'reports.read' }
+      ]
+    },
+    {
+      key: 'planning',
+      label: 'Planning',
+      items: [
+        { path: '/context', label: 'Context', hint: 'Clause 4 issues and parties', icon: 'CX', permission: 'context.read' },
+        { path: '/compliance-obligations', label: 'Obligations', hint: 'Legal and external requirements', icon: 'OB', permission: 'obligations.read' },
+        { path: '/change-management', label: 'Change Management', hint: 'Planned and reviewed changes', icon: 'CH', permission: 'change.read' },
+        { path: '/environmental-aspects', label: 'Environmental Aspects', hint: 'Aspects and impacts', icon: 'EA', permission: 'aspects.read' },
+        { path: '/hazards', label: 'Hazards', hint: 'Hazards and harm review', icon: 'HZ', permission: 'hazards.read' },
+        { path: '/process-register', label: 'Process Register', hint: 'Business process links', icon: 'PR', permission: 'processes.read' },
+        { path: '/risks', label: 'Risks', hint: 'Assessment and treatment', icon: 'RK', permission: 'risks.read' },
+        { path: '/kpis', label: 'KPIs', hint: 'Targets and trends', icon: 'KP', permission: 'kpis.read' }
+      ]
+    },
+    {
+      key: 'operations',
+      label: 'Operations',
+      items: [
+        { path: '/documents', label: 'Documents', hint: 'Controlled library', icon: 'DC', permission: 'documents.read' },
+        { path: '/external-providers', label: 'External Providers', hint: 'Supplier and service control', icon: 'EV', permission: 'providers.read' },
+        { path: '/training', label: 'Training', hint: 'Assignments and evidence', icon: 'TR', permission: 'training.read' }
+      ]
+    },
+    {
+      key: 'assurance',
+      label: 'Assurance',
+      items: [
+        { path: '/audits', label: 'Audits', hint: 'Plans and findings', icon: 'AU', permission: 'audits.read' },
+        { path: '/incidents', label: 'Incidents', hint: 'Incidents and near misses', icon: 'IN', permission: 'incidents.read' },
+        { path: '/ncr', label: 'NCR', hint: 'Nonconformance control', icon: 'NC', permission: 'ncr.read' },
+        { path: '/capa', label: 'CAPA', hint: 'Corrective workflows', icon: 'CP', permission: 'capa.read' },
+        { path: '/actions', label: 'Actions', hint: 'Global follow-up tracker', icon: 'AC', permission: 'dashboard.read' },
+        { path: '/management-review', label: 'Management Review', hint: 'Meetings and decisions', icon: 'MR', permission: 'management-review.read' }
+      ]
+    },
+    {
+      key: 'administration',
+      label: 'Administration',
+      items: [
+        { path: '/users', label: 'Users', hint: 'Access and ownership', icon: 'US', permission: 'users.read' },
+        { path: '/settings', label: 'Settings', hint: 'System configuration', icon: 'ST', permission: 'settings.read' }
+      ]
+    }
   ];
-  protected readonly visibleNavItems = computed(() =>
-    this.navItems.filter((item) => !item.permission || this.authStore.hasPermission(item.permission))
+  protected readonly visibleNavGroups = computed(() =>
+    this.navGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => !item.permission || this.authStore.hasPermission(item.permission))
+      }))
+      .filter((group) => group.items.length)
   );
 
   protected sidebarExpanded() {
@@ -668,6 +769,18 @@ export class ShellComponent {
 
   protected isCompactViewport() {
     return this.compactViewport();
+  }
+
+  protected groupExpanded(groupKey: string) {
+    return !this.collapsedGroups()[groupKey];
+  }
+
+  protected toggleGroup(groupKey: string) {
+    this.collapsedGroups.update((state) => {
+      const next = { ...state, [groupKey]: !state[groupKey] };
+      this.writeCollapsedGroups(next);
+      return next;
+    });
   }
 
   protected handleSidebarEnter() {
@@ -735,6 +848,27 @@ export class ShellComponent {
     }
 
     window.localStorage.setItem(SIDEBAR_PIN_KEY, String(value));
+  }
+
+  private readCollapsedGroups() {
+    if (typeof window === 'undefined') {
+      return {};
+    }
+
+    try {
+      const stored = window.localStorage.getItem(SIDEBAR_GROUPS_KEY);
+      return stored ? (JSON.parse(stored) as Record<string, boolean>) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  private writeCollapsedGroups(value: Record<string, boolean>) {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem(SIDEBAR_GROUPS_KEY, JSON.stringify(value));
   }
 
   private readCompactViewport() {

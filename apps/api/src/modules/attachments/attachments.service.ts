@@ -40,6 +40,7 @@ export class AttachmentsService {
     'audit-checklist-item': { read: 'audits.read', write: 'audits.write' },
     'management-review': { read: 'management-review.read', write: 'management-review.write' },
     ncr: { read: 'ncr.read', write: 'ncr.write' },
+    incident: { read: 'incidents.read', write: 'incidents.write' },
     settings: { read: 'settings.read', write: 'settings.write' }
   };
 
@@ -273,6 +274,9 @@ export class AttachmentsService {
         break;
       case 'ncr':
         exists = !!(await this.prisma.ncr.findFirst({ where: { tenantId, id: sourceId, deletedAt: null }, select: { id: true } }));
+        break;
+      case 'incident':
+        exists = !!(await this.prisma.incident.findFirst({ where: { tenantId, id: sourceId, deletedAt: null }, select: { id: true } }));
         break;
       case 'settings':
         exists = sourceId === 'organization-logo';

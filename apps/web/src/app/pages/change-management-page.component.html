@@ -1,0 +1,319 @@
+<section class="page-grid">
+  <iso-page-header [label]="'Change Management'" [title]="pageTitle()" [description]="pageDescription()" [breadcrumbs]="breadcrumbs()">
+    <a *ngIf="mode() === 'list' && canWrite()" routerLink="/change-management/new" class="button-link">+ New change request</a>
+    <a *ngIf="mode() === 'detail' && selectedRecord() && canWrite()" [routerLink]="['/change-management', selectedId(), 'edit']" class="button-link">Edit change request</a>
+    <button *ngIf="mode() === 'detail' && selectedRecord() && canDelete()" type="button" class="button-link danger" (click)="archiveRecord()">Archive</button>
+    <a *ngIf="mode() !== 'list'" routerLink="/change-management" class="button-link secondary">Back</a>
+  </iso-page-header>
+
+  <section *ngIf="mode() === 'list'" class="page-stack">
+    <div class="card list-card">
+      <div class="toolbar">
+        <div class="toolbar-meta">
+          <div>
+            <p class="toolbar-title">Register filters</p>
+            <p class="toolbar-copy">Track planned changes, implementation ownership, and the supporting process, risk, document, and supplier context.</p>
+          </div>
+          <div class="toolbar-stats">
+            <article class="toolbar-stat"><span>Total</span><strong>{{ records().length }}</strong></article>
+            <article class="toolbar-stat"><span>Proposed / reviewing</span><strong>{{ proposedCount() }}</strong></article>
+            <article class="toolbar-stat"><span>Approved / implementing</span><strong>{{ liveCount() }}</strong></article>
+            <article class="toolbar-stat"><span>Verified / closed</span><strong>{{ verifiedCount() }}</strong></article>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <label class="field">
+            <span>Search</span>
+            <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Reference, title, area, proposed change">
+          </label>
+          <label class="field">
+            <span>Status</span>
+            <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
+              <option value="">All</option>
+              <option value="PROPOSED">Proposed</option>
+              <option value="REVIEWING">Reviewing</option>
+              <option value="APPROVED">Approved</option>
+              <option value="IMPLEMENTING">Implementing</option>
+              <option value="VERIFIED">Verified</option>
+              <option value="CLOSED">Closed</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Owner</span>
+            <select [value]="ownerFilter()" (change)="ownerFilter.set(readSelectValue($event))">
+              <option value="">All</option>
+              <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <p class="feedback top-space" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+
+      <div class="empty-state top-space" *ngIf="loading()">
+        <strong>Loading change requests</strong>
+        <span>Refreshing planned changes, owners, and linked control context.</span>
+      </div>
+
+      <div class="empty-state top-space" *ngIf="!loading() && !filteredRecords().length">
+        <strong>No change requests found</strong>
+        <span>Create the first change request to keep planned changes visible before implementation happens informally.</span>
+      </div>
+
+      <div class="data-table-wrap top-space" *ngIf="!loading() && filteredRecords().length">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Change</th>
+              <th>Type</th>
+              <th>Affected area</th>
+              <th>Status</th>
+              <th>Owner</th>
+              <th>Target date</th>
+              <th>Links</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of filteredRecords()" [routerLink]="['/change-management', item.id]">
+              <td>
+                <div class="table-title">
+                  <strong>{{ item.referenceNo || 'Uncoded' }} - {{ item.title }}</strong>
+                  <small>{{ item.proposedChange }}</small>
+                </div>
+              </td>
+              <td>{{ prettyStatus(item.changeType) }}</td>
+              <td>{{ item.affectedArea }}</td>
+              <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ prettyStatus(item.status) }}</span></td>
+              <td>{{ item.owner ? personName(item.owner) : 'Unassigned' }}</td>
+              <td>{{ item.targetImplementationDate ? (item.targetImplementationDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
+              <td>{{ item.linkCount || 0 }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section *ngIf="mode() === 'create' || mode() === 'edit'" class="page-stack">
+    <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
+      <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
+
+      <section class="content-guidance">
+        <div class="section-head compact-head">
+          <div>
+            <h4>Change position</h4>
+            <p class="subtle">{{ changeGuidance() }}</p>
+          </div>
+        </div>
+        <div class="summary-strip top-space">
+          <article class="summary-item"><span>Reason</span><strong>{{ form.getRawValue().reason ? 'Defined' : 'Needed' }}</strong></article>
+          <article class="summary-item"><span>Proposed change</span><strong>{{ form.getRawValue().proposedChange ? 'Recorded' : 'Needed' }}</strong></article>
+          <article class="summary-item"><span>Owner</span><strong>{{ form.getRawValue().ownerUserId ? 'Assigned' : 'Needed' }}</strong></article>
+        </div>
+      </section>
+
+      <section class="detail-section">
+        <h4>Change definition</h4>
+        <div class="form-grid-3 top-space">
+          <label class="field"><span>Reference</span><input formControlName="referenceNo" placeholder="MOC-001"></label>
+          <label class="field">
+            <span>Type</span>
+            <select formControlName="changeType">
+              <option value="PROCESS">Process</option>
+              <option value="PRODUCT">Product</option>
+              <option value="EQUIPMENT">Equipment</option>
+              <option value="MATERIAL">Material</option>
+              <option value="ORGANIZATIONAL">Organizational</option>
+              <option value="DOCUMENTATION">Documentation</option>
+              <option value="FACILITY">Facility</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Status</span>
+            <select formControlName="status">
+              <option value="PROPOSED">Proposed</option>
+              <option value="REVIEWING">Reviewing</option>
+              <option value="APPROVED">Approved</option>
+              <option value="IMPLEMENTING">Implementing</option>
+              <option value="VERIFIED">Verified</option>
+              <option value="CLOSED">Closed</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+          </label>
+        </div>
+        <label class="field top-space"><span>Title</span><input formControlName="title" placeholder="Introduce secondary supplier for critical control boards"></label>
+        <label class="field top-space"><span>Reason for change</span><textarea formControlName="reason" rows="4" placeholder="Why is the change needed now?"></textarea></label>
+        <label class="field top-space"><span>Affected area</span><input formControlName="affectedArea" placeholder="Procurement, production release, warehouse controls"></label>
+        <label class="field top-space"><span>Proposed change</span><textarea formControlName="proposedChange" rows="4" placeholder="Summarize what will change in practice."></textarea></label>
+      </section>
+
+      <section class="detail-section">
+        <h4>Review and control</h4>
+        <div class="form-grid-2 top-space">
+          <label class="field"><span>Impact summary</span><textarea formControlName="impactSummary" rows="4" placeholder="Summarize quality, operational, customer, safety, or compliance impact."></textarea></label>
+          <label class="field"><span>Control summary</span><textarea formControlName="controlSummary" rows="4" placeholder="Summarize controls, approvals, checks, or prerequisites before implementation."></textarea></label>
+        </div>
+        <div class="form-grid-3 top-space">
+          <label class="field">
+            <span>Owner</span>
+            <select formControlName="ownerUserId">
+              <option value="">Unassigned</option>
+              <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
+            </select>
+          </label>
+          <label class="field"><span>Target implementation date</span><input formControlName="targetImplementationDate" type="date"></label>
+          <label class="field"><span>Review date</span><input formControlName="reviewDate" type="date"></label>
+        </div>
+      </section>
+
+      <div class="button-row">
+        <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save change request' }}</button>
+        <a [routerLink]="selectedId() ? ['/change-management', selectedId()] : ['/change-management']" class="button-link secondary">Cancel</a>
+      </div>
+    </form>
+  </section>
+
+  <section *ngIf="mode() === 'detail' && selectedRecord()" class="page-stack">
+    <section class="card detail-card">
+      <div class="section-head">
+        <div>
+          <span class="section-eyebrow">Change request</span>
+          <h3>{{ selectedRecord()?.referenceNo || 'Uncoded' }} - {{ selectedRecord()?.title }}</h3>
+          <p class="subtle">{{ selectedRecord()?.proposedChange || 'No proposed change summary recorded yet.' }}</p>
+        </div>
+        <div class="route-context">
+          <span class="status-badge neutral">{{ prettyStatus(selectedRecord()?.changeType) }}</span>
+          <span class="status-badge" [ngClass]="statusClass(selectedRecord()?.status || 'PROPOSED')">{{ prettyStatus(selectedRecord()?.status) }}</span>
+        </div>
+      </div>
+
+      <div class="summary-strip top-space">
+        <article class="summary-item"><span>Affected area</span><strong>{{ selectedRecord()?.affectedArea }}</strong></article>
+        <article class="summary-item"><span>Owner</span><strong>{{ selectedRecord()?.owner ? personName(selectedRecord()!.owner!) : 'Unassigned' }}</strong></article>
+        <article class="summary-item"><span>Target date</span><strong>{{ selectedRecord()?.targetImplementationDate ? (selectedRecord()?.targetImplementationDate | date:'yyyy-MM-dd') : 'Not set' }}</strong></article>
+        <article class="summary-item"><span>Linked records</span><strong>{{ selectedRecord()?.links?.length || 0 }}</strong></article>
+      </div>
+
+      <section class="content-guidance top-space">
+        <div class="section-head compact-head">
+          <div>
+            <h4>Stage narrative</h4>
+            <p class="subtle">{{ stageNarrative() }}</p>
+          </div>
+        </div>
+        <div class="summary-strip top-space">
+          <article class="summary-item"><span>Processes</span><strong>{{ linkCountByType('PROCESS') }}</strong></article>
+          <article class="summary-item"><span>Risks</span><strong>{{ linkCountByType('RISK') }}</strong></article>
+          <article class="summary-item"><span>Documents</span><strong>{{ linkCountByType('DOCUMENT') }}</strong></article>
+          <article class="summary-item"><span>Providers</span><strong>{{ linkCountByType('PROVIDER') }}</strong></article>
+        </div>
+      </section>
+
+      <section class="content-guidance top-space">
+        <div class="section-head compact-head">
+          <div>
+            <h4>Next steps</h4>
+            <p class="subtle">{{ nextStepHeadline() }}</p>
+          </div>
+        </div>
+        <div class="summary-strip top-space">
+          <article class="summary-item"><span>Process review</span><strong>{{ linkCountByType('PROCESS') ? 'Linked' : 'Needed' }}</strong></article>
+          <article class="summary-item"><span>Risk review</span><strong>{{ linkCountByType('RISK') ? 'Linked' : 'Needed' }}</strong></article>
+          <article class="summary-item"><span>Follow-up action</span><strong>{{ linkCountByType('ACTION') ? 'Linked' : 'Prepare below' }}</strong></article>
+        </div>
+        <p class="top-space">{{ nextStepNarrative() }}</p>
+      </section>
+
+      <div class="section-grid-2 top-space">
+        <section class="detail-section">
+          <h4>Reason for change</h4>
+          <p>{{ selectedRecord()?.reason || 'No reason recorded.' }}</p>
+        </section>
+        <section class="detail-section">
+          <h4>Impact summary</h4>
+          <p>{{ selectedRecord()?.impactSummary || 'No impact summary recorded.' }}</p>
+        </section>
+        <section class="detail-section">
+          <h4>Control summary</h4>
+          <p>{{ selectedRecord()?.controlSummary || 'No control summary recorded.' }}</p>
+        </section>
+        <section class="detail-section">
+          <h4>Review date</h4>
+          <p>{{ selectedRecord()?.reviewDate ? (selectedRecord()?.reviewDate | date:'yyyy-MM-dd') : 'No review date recorded.' }}</p>
+        </section>
+      </div>
+    </section>
+
+    <iso-record-work-items
+      [sourceType]="'change-management'"
+      [sourceId]="selectedId()"
+      [draftTitle]="changeDraftTitle()"
+      [draftDescription]="changeDraftDescription()"
+      [returnNavigation]="changeReturnNavigation()"
+    />
+
+    <section class="card detail-card">
+      <div class="section-head">
+        <div>
+          <span class="section-eyebrow">Linked records</span>
+          <h3>Traceability hub</h3>
+          <p class="subtle">{{ reviewNarrative() }}</p>
+        </div>
+      </div>
+
+      <div class="page-stack top-space">
+        <section class="detail-section link-group" *ngFor="let type of visibleLinkTypes">
+          <div class="section-head compact-head">
+            <div>
+              <h4>{{ sectionTitle(type) }}</h4>
+              <p class="subtle">{{ sectionDescription(type) }}</p>
+            </div>
+            <button *ngIf="canWrite()" type="button" class="button-link secondary" (click)="openLinkComposer(type)">
+              {{ activeLinkComposerType() === type ? 'Close' : '+ Link' }}
+            </button>
+          </div>
+
+          <div class="empty-state compact-empty top-space" *ngIf="!linksByType(type).length">
+            <strong>No linked records</strong>
+            <span>{{ sectionEmptyCopy(type) }}</span>
+          </div>
+
+          <div class="entity-list top-space" *ngIf="linksByType(type).length">
+            <div class="entity-item" *ngFor="let link of linksByType(type)">
+              <div class="link-row">
+                <div>
+                  <strong>{{ link.title }}</strong>
+                  <small *ngIf="link.subtitle">{{ link.subtitle }}</small>
+                  <small *ngIf="link.note">{{ link.note }}</small>
+                </div>
+                <div class="route-context">
+                  <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
+                  <a *ngIf="link.path && !link.missing" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">Open</a>
+                  <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">Remove</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <form *ngIf="activeLinkComposerType() === type && canWrite()" class="page-stack top-space link-form" [formGroup]="linkForm" (ngSubmit)="addLink()">
+            <input formControlName="linkType" type="hidden">
+            <label class="field">
+              <span>{{ sectionPickerLabel(type) }}</span>
+              <select formControlName="linkedId">
+                <option value="">Choose existing {{ sectionPickerLabel(type).toLowerCase() }}</option>
+                <option *ngFor="let candidate of linkCandidates()" [value]="candidate.id">{{ candidate.label }}</option>
+              </select>
+            </label>
+            <label class="field"><span>Note</span><input formControlName="note" placeholder="Optional context for this link"></label>
+            <div class="button-row">
+              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? 'Linking...' : 'Save link' }}</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </section>
+  </section>
+</section>
