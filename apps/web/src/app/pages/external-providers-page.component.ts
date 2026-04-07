@@ -185,6 +185,7 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
   protected reviewCount() { return this.records().filter((item) => item.status === 'UNDER_REVIEW').length; }
   protected highCriticalityCount() { return this.records().filter((item) => item.criticality === 'HIGH').length; }
   protected evaluatedCount() { return this.records().filter((item) => item.evaluationScore !== null && item.evaluationScore !== undefined).length; }
+  protected attentionCount() { return this.records().filter((item) => this.providerAttentionReasons(item).length > 0).length; }
   protected evaluationCriteria() { return EVALUATION_CRITERIA; }
   protected evaluationMetrics() { return EVALUATION_METRICS; }
   protected evaluationOutcomeClass(value?: ProviderEvaluationOutcome | null) {
@@ -332,6 +333,49 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
   protected providerReturnNavigation(): ReturnNavigation | null {
     const id = this.selectedId();
     return id ? { route: ['/external-providers', id], label: 'external provider' } : null;
+  }
+
+  protected attentionHeadline() {
+    const record = this.selectedRecord();
+    return record && this.providerAttentionReasons(record).length
+      ? 'This provider currently needs management attention.'
+      : 'This provider is currently under control.';
+  }
+
+  protected attentionNarrative() {
+    const record = this.selectedRecord();
+    if (!record) {
+      return 'Attention guidance appears after the provider is saved.';
+    }
+    const reasons = this.providerAttentionReasons(record);
+    if (!reasons.length) {
+      return 'Approval status, review timing, evaluation, and supplier-audit coverage are controlled enough for routine oversight.';
+    }
+    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+  }
+
+  protected attentionSummary(item: ProviderRow) {
+    const reasons = this.providerAttentionReasons(item);
+    return reasons.length ? reasons.join(' | ') : '';
+  }
+
+  protected attentionLabel(item: ProviderRow) {
+    const reasons = this.providerAttentionReasons(item);
+    if (!reasons.length) {
+      return 'Under control';
+    }
+    return reasons.length > 1 ? `${reasons[0]} +${reasons.length - 1}` : reasons[0];
+  }
+
+  protected attentionClass(item: ProviderRow) {
+    const reasons = this.providerAttentionReasons(item);
+    if (!reasons.length) {
+      return 'success';
+    }
+    if (reasons.includes('High priority') || reasons.includes('Supplier audit required') || reasons.includes('Review overdue')) {
+      return 'danger';
+    }
+    return 'warn';
   }
 
   protected filteredRecords() {
@@ -625,6 +669,53 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
     return EVALUATION_METRICS
       .map((metric) => ({ label: metric.label, score: raw[metric.key] }))
       .filter((item): item is { label: string; score: number } => typeof item.score === 'number');
+  }
+
+  private providerAttentionReasons(item: ProviderRow) {
+    if (item.status === 'INACTIVE') {
+      return [];
+    }
+    const reasons: string[] = [];
+    if (!item.ownerUserId) {
+      reasons.push('Owner needed');
+    }
+    if (!item.nextReviewDate) {
+      reasons.push('Review date needed');
+    } else if (this.isPastDate(item.nextReviewDate)) {
+      reasons.push('Review overdue');
+    } else if (this.isDateWithinDays(item.nextReviewDate, 30)) {
+      reasons.push('Review due soon');
+    }
+    if (item.supplierAuditRequired && !item.supplierAuditLinked) {
+      reasons.push('Supplier audit required');
+    }
+    if (item.evaluationOutcome === 'ESCALATED' || item.evaluationOutcome === 'DISQUALIFIED') {
+      reasons.push('High priority');
+    }
+    if (this.isStale(item.updatedAt, 90)) {
+      reasons.push('Stale');
+    }
+    return reasons;
+  }
+
+  private isPastDate(value?: string | null) {
+    return !!value && new Date(value) < new Date();
+  }
+
+  private isDateWithinDays(value: string | null | undefined, days: number) {
+    if (!value) return false;
+    const date = new Date(value);
+    const today = new Date();
+    const delta = (date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+    return delta >= 0 && delta <= days;
+  }
+
+  private isStale(value: string | null | undefined, days: number) {
+    if (!value) return false;
+    const updated = new Date(value);
+    const today = new Date();
+    const delta = (today.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24);
+    return delta > days;
   }
 }
 

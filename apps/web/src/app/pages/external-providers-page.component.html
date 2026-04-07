@@ -76,6 +76,7 @@
               <th>Evaluation</th>
               <th>Next review</th>
               <th>Supplier audit</th>
+              <th>Attention</th>
               <th>Links</th>
             </tr>
           </thead>
@@ -85,6 +86,7 @@
                 <div class="table-title">
                   <strong>{{ item.referenceNo || 'Uncoded' }} - {{ item.providerName }}</strong>
                   <small>{{ item.suppliedScope }}</small>
+                  <small class="attention-copy" *ngIf="attentionSummary(item) as attention">{{ attention }}</small>
                 </div>
               </td>
               <td>{{ prettyStatus(item.providerType) }}</td>
@@ -98,6 +100,7 @@
               </td>
               <td>{{ item.nextReviewDate ? (item.nextReviewDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
               <td><span class="status-badge" [ngClass]="auditCoverageClass(item)">{{ auditCoverageLabel(item) }}</span></td>
+              <td><span class="status-badge" [ngClass]="attentionClass(item)">{{ attentionLabel(item) }}</span></td>
               <td>{{ item.linkCount || 0 }}</td>
             </tr>
           </tbody>
@@ -317,6 +320,16 @@
         <article class="summary-item"><span>Annual evaluation</span><strong>{{ selectedRecord()?.evaluationScore !== null && selectedRecord()?.evaluationScore !== undefined ? selectedRecord()?.evaluationScore + '%' : 'Not scored' }}</strong></article>
         <article class="summary-item"><span>Linked records</span><strong>{{ selectedRecord()?.links?.length || 0 }}</strong></article>
       </div>
+
+      <section class="content-guidance top-space">
+        <div class="section-head compact-head">
+          <div>
+            <h4>Management attention</h4>
+            <p class="subtle">{{ attentionHeadline() }}</p>
+          </div>
+        </div>
+        <p class="top-space">{{ attentionNarrative() }}</p>
+      </section>
 
       <section class="content-guidance top-space">
         <div class="section-head compact-head">

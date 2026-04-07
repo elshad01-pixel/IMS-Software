@@ -83,6 +83,7 @@
               <th>Event date</th>
               <th>Severity</th>
               <th>Status</th>
+              <th>Attention</th>
               <th>Links</th>
             </tr>
           </thead>
@@ -92,12 +93,14 @@
                 <div class="table-title">
                   <strong>{{ item.referenceNo || 'Uncoded' }} - {{ item.title }}</strong>
                   <small>{{ item.location || 'No location recorded' }}</small>
+                  <small class="attention-copy" *ngIf="attentionSummary(item) as attention">{{ attention }}</small>
                 </div>
               </td>
               <td>{{ item.type === 'NEAR_MISS' ? 'Near miss' : 'Incident' }} | {{ prettyStatus(item.category) }}</td>
               <td>{{ item.eventDate | date:'yyyy-MM-dd' }}</td>
               <td><span class="status-badge" [ngClass]="severityClass(item.severity)">{{ prettyStatus(item.severity) }}</span></td>
               <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ prettyStatus(item.status) }}</span></td>
+              <td><span class="status-badge" [ngClass]="attentionClass(item)">{{ attentionLabel(item) }}</span></td>
               <td>{{ item.linkCount || 0 }}</td>
             </tr>
           </tbody>
@@ -289,6 +292,16 @@
           <article class="summary-item"><span>Root cause</span><strong>{{ selectedIncident()?.rootCause ? 'Recorded' : 'Not recorded' }}</strong></article>
           <article class="summary-item"><span>Immediate action</span><strong>{{ selectedIncident()?.immediateAction ? 'Recorded' : 'Not recorded' }}</strong></article>
         </div>
+      </section>
+
+      <section class="content-guidance top-space">
+        <div class="section-head compact-head">
+          <div>
+            <h4>Management attention</h4>
+            <p class="subtle">{{ attentionHeadline() }}</p>
+          </div>
+        </div>
+        <p class="top-space">{{ attentionNarrative() }}</p>
       </section>
 
       <section class="content-guidance top-space">

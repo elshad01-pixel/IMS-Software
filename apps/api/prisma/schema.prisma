@@ -1150,13 +1150,21 @@ model ManagementReview {
   auditResults  String?
   capaStatus    String?
   kpiPerformance String?
+  customerInterestedPartiesFeedback String?
+  providerPerformance String?
+  complianceObligations String?
+  incidentEmergencyPerformance String?
+  consultationCommunication String?
   risksOpportunities String?
   changesAffectingSystem String?
   previousActions String?
   minutes       String?
   decisions     String?
   improvementActions String?
+  systemChangesNeeded String?
+  objectiveTargetChanges String?
   resourceNeeds String?
+  effectivenessConclusion String?
   summary       String?
   status        ManagementReviewStatus @default(PLANNED)
   createdAt     DateTime               @default(now())

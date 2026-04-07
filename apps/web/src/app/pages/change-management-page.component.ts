@@ -135,6 +135,7 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
   protected proposedCount() { return this.records().filter((item) => item.status === 'PROPOSED' || item.status === 'REVIEWING').length; }
   protected liveCount() { return this.records().filter((item) => item.status === 'APPROVED' || item.status === 'IMPLEMENTING').length; }
   protected verifiedCount() { return this.records().filter((item) => item.status === 'VERIFIED' || item.status === 'CLOSED').length; }
+  protected attentionCount() { return this.records().filter((item) => this.changeAttentionReasons(item).length > 0).length; }
 
   protected filteredRecords() {
     const term = this.search().trim().toLowerCase();
@@ -229,6 +230,49 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
   protected changeReturnNavigation(): ReturnNavigation | null {
     const id = this.selectedId();
     return id ? { route: ['/change-management', id], label: 'change request' } : null;
+  }
+
+  protected attentionHeadline() {
+    const record = this.selectedRecord();
+    return record && this.changeAttentionReasons(record).length
+      ? 'This change request currently needs management attention.'
+      : 'This change request is currently under control.';
+  }
+
+  protected attentionNarrative() {
+    const record = this.selectedRecord();
+    if (!record) {
+      return 'Attention guidance appears after the change request is saved.';
+    }
+    const reasons = this.changeAttentionReasons(record);
+    if (!reasons.length) {
+      return 'Ownership, timing, and current stage are controlled enough for routine change oversight.';
+    }
+    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+  }
+
+  protected attentionSummary(item: ChangeRow) {
+    const reasons = this.changeAttentionReasons(item);
+    return reasons.length ? reasons.join(' | ') : '';
+  }
+
+  protected attentionLabel(item: ChangeRow) {
+    const reasons = this.changeAttentionReasons(item);
+    if (!reasons.length) {
+      return 'Under control';
+    }
+    return reasons.length > 1 ? `${reasons[0]} +${reasons.length - 1}` : reasons[0];
+  }
+
+  protected attentionClass(item: ChangeRow) {
+    const reasons = this.changeAttentionReasons(item);
+    if (!reasons.length) {
+      return 'success';
+    }
+    if (reasons.includes('Review overdue') || reasons.includes('Implementation overdue')) {
+      return 'danger';
+    }
+    return 'warn';
   }
 
   protected sectionTitle(type: LinkType) { return { PROCESS: 'Linked Processes', RISK: 'Linked Risks', ACTION: 'Linked Actions', DOCUMENT: 'Linked Documents', OBLIGATION: 'Linked Obligations', PROVIDER: 'Linked Providers' }[type]; }
@@ -400,6 +444,56 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
   private readError(error: HttpErrorResponse, fallback: string) {
     const message = error.error?.message;
     return Array.isArray(message) ? message.join(', ') : (message as string) || fallback;
+  }
+
+  private changeAttentionReasons(item: ChangeRow) {
+    if (item.status === 'CLOSED' || item.status === 'REJECTED') {
+      return [];
+    }
+    const reasons: string[] = [];
+    if (!item.ownerUserId) {
+      reasons.push('Owner needed');
+    }
+    if (item.status === 'REVIEWING') {
+      if (!item.reviewDate) {
+        reasons.push('Review date needed');
+      } else if (this.isPastDate(item.reviewDate)) {
+        reasons.push('Review overdue');
+      } else if (this.isDateWithinDays(item.reviewDate, 14)) {
+        reasons.push('Review due soon');
+      }
+    }
+    if ((item.status === 'APPROVED' || item.status === 'IMPLEMENTING') && item.targetImplementationDate) {
+      if (this.isPastDate(item.targetImplementationDate)) {
+        reasons.push('Implementation overdue');
+      } else if (this.isDateWithinDays(item.targetImplementationDate, 14)) {
+        reasons.push('Implementation due soon');
+      }
+    }
+    if (this.isStale(item.updatedAt, 45)) {
+      reasons.push('Stale');
+    }
+    return reasons;
+  }
+
+  private isPastDate(value?: string | null) {
+    return !!value && new Date(value) < new Date();
+  }
+
+  private isDateWithinDays(value: string | null | undefined, days: number) {
+    if (!value) return false;
+    const date = new Date(value);
+    const today = new Date();
+    const delta = (date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+    return delta >= 0 && delta <= days;
+  }
+
+  private isStale(value: string | null | undefined, days: number) {
+    if (!value) return false;
+    const updated = new Date(value);
+    const today = new Date();
+    const delta = (today.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24);
+    return delta > days;
   }
 }
 

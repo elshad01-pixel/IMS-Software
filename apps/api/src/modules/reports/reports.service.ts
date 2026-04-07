@@ -72,8 +72,8 @@ const reportDefinitions: ReportDefinition[] = [
   {
     type: 'management-review-summary',
     module: 'Management Review',
-    title: 'Management review summary export',
-    description: 'Review meetings, chairperson, date, and decisions summary.',
+    title: 'Management review export',
+    description: 'Review meetings with recorded inputs, outputs, conclusions, and follow-up content.',
     supportsDateRange: true,
     supportsStatus: true,
     statusOptions: ['PLANNED', 'HELD', 'CLOSED']
@@ -344,25 +344,80 @@ export class ReportsService {
       orderBy: [{ reviewDate: 'desc' }, { updatedAt: 'desc' }]
     });
 
-    const reviewIds = rows.map((item) => item.id);
-    const inputs = await this.prisma.managementReviewInput.findMany({
-      where: { tenantId, reviewId: { in: reviewIds } },
-      select: { reviewId: true }
-    });
-    const inputCounts = inputs.reduce<Record<string, number>>((accumulator, item) => {
-      accumulator[item.reviewId] = (accumulator[item.reviewId] ?? 0) + 1;
-      return accumulator;
-    }, {});
-
     return this.toCsv(
-      ['Title', 'Status', 'Review Date', 'Inputs', 'Summary', 'Decisions', 'Updated At'],
+      [
+        'Title',
+        'Status',
+        'Review Date',
+        'Inputs Recorded',
+        'Outputs Recorded',
+        'Audit Results',
+        'CAPA Status',
+        'KPI Performance',
+        'Customer and Interested-Party Feedback',
+        'Provider Performance',
+        'Compliance Obligations',
+        'Incidents and Emergency Performance',
+        'Consultation and Communication',
+        'Risks and Opportunities',
+        'Changes Affecting the System',
+        'Previous Actions',
+        'Minutes',
+        'Decisions',
+        'Improvement Actions',
+        'System Changes Needed',
+        'Objective and Target Changes',
+        'Resource Needs',
+        'Effectiveness Conclusion',
+        'Summary',
+        'Updated At'
+      ],
       rows.map((item) => [
         item.title,
         item.status,
         this.formatDate(item.reviewDate),
-        inputCounts[item.id] ?? 0,
-        item.summary ?? '',
+        this.countFilledValues([
+          item.auditResults,
+          item.capaStatus,
+          item.kpiPerformance,
+          item.customerInterestedPartiesFeedback,
+          item.providerPerformance,
+          item.complianceObligations,
+          item.incidentEmergencyPerformance,
+          item.consultationCommunication,
+          item.risksOpportunities,
+          item.changesAffectingSystem,
+          item.previousActions
+        ]),
+        this.countFilledValues([
+          item.minutes,
+          item.decisions,
+          item.improvementActions,
+          item.systemChangesNeeded,
+          item.objectiveTargetChanges,
+          item.resourceNeeds,
+          item.effectivenessConclusion,
+          item.summary
+        ]),
+        item.auditResults ?? '',
+        item.capaStatus ?? '',
+        item.kpiPerformance ?? '',
+        item.customerInterestedPartiesFeedback ?? '',
+        item.providerPerformance ?? '',
+        item.complianceObligations ?? '',
+        item.incidentEmergencyPerformance ?? '',
+        item.consultationCommunication ?? '',
+        item.risksOpportunities ?? '',
+        item.changesAffectingSystem ?? '',
+        item.previousActions ?? '',
+        item.minutes ?? '',
         item.decisions ?? '',
+        item.improvementActions ?? '',
+        item.systemChangesNeeded ?? '',
+        item.objectiveTargetChanges ?? '',
+        item.resourceNeeds ?? '',
+        item.effectivenessConclusion ?? '',
+        item.summary ?? '',
         this.formatDateTime(item.updatedAt)
       ])
     );
@@ -658,5 +713,9 @@ export class ReportsService {
   private formatDateTime(value: Date | string | null | undefined) {
     if (!value) return '';
     return new Date(value).toISOString();
+  }
+
+  private countFilledValues(values: Array<string | null | undefined>) {
+    return values.filter((value) => !!String(value ?? '').trim()).length;
   }
 }

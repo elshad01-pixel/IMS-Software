@@ -59,6 +59,11 @@
   padding-top: 1rem;
 }
 
+.attention-copy {
+  color: var(--brand-strong);
+  font-weight: 700;
+}
+
 .evaluation-head {
   display: flex;
   align-items: center;

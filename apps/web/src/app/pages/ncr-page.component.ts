@@ -131,12 +131,14 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
                   <option *ngFor="let item of users()" [value]="item.id">{{ fullName(item) }}</option>
                 </select>
               </label>
+              <label class="field checkbox-field">
+                <span>Due date focus</span>
+                <span class="toggle-line">
+                  <input type="checkbox" [checked]="overdueOnly()" (change)="overdueOnly.set(readChecked($event))">
+                  <span>Show overdue only</span>
+                </span>
+              </label>
             </div>
-
-            <label class="toggle-line">
-              <input type="checkbox" [checked]="overdueOnly()" (change)="overdueOnly.set(readChecked($event))">
-              <span>Show overdue only</span>
-            </label>
           </div>
 
           <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
@@ -163,6 +165,7 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
                   <th>Owner</th>
                   <th>Due date</th>
                   <th>Updated</th>
+                  <th>Attention</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -176,6 +179,7 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
                   <td>{{ item.owner ? fullName(item.owner) : 'Unassigned' }}</td>
                   <td>{{ item.dueDate ? (item.dueDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
                   <td>{{ item.updatedAt | date:'yyyy-MM-dd' }}</td>
+                  <td><span class="status-badge" [ngClass]="attentionClass(item)">{{ attentionLabel(item) }}</span></td>
                   <td>
                     <div class="inline-actions" (click)="$event.stopPropagation()">
                       <iso-icon-action-button [icon]="'view'" [label]="'View NCR'" [routerLink]="['/ncr', item.id]" />
@@ -355,6 +359,10 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
               <strong>{{ ncrWorkflowHeading(selectedNcr()?.status || 'OPEN') }}</strong>
               <span>{{ ncrWorkflowGuidance(selectedNcr()?.status || 'OPEN') }}</span>
             </section>
+            <section class="compliance-note top-space">
+              <strong>{{ attentionHeadline(selectedNcr()) }}</strong>
+              <span>{{ attentionNarrative(selectedNcr()) }}</span>
+            </section>
             <section class="compliance-note top-space" *ngIf="ncrFollowUpSummary(selectedNcr()) as followUp">
               <strong>{{ followUp.heading }}</strong>
               <span>{{ followUp.copy }}</span>
@@ -501,7 +509,20 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
       background: rgba(138, 99, 34, 0.08);
     }
     .filter-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .toggle-line { display: inline-flex; gap: 0.55rem; align-items: center; font-weight: 600; color: var(--muted-strong); }
+    .checkbox-field { align-self: end; }
+    .toggle-line {
+      display: inline-flex;
+      gap: 0.55rem;
+      align-items: center;
+      font-weight: 600;
+      color: var(--muted-strong);
+      min-height: 4.25rem;
+      padding: 0 1rem;
+      border: 1px solid var(--panel-border);
+      border-radius: 1.1rem;
+      background: rgba(255, 255, 255, 0.82);
+    }
+    .toggle-line input { margin: 0; }
     .inline-actions { display: grid; grid-template-columns: repeat(4, 2.4rem); gap: 0.45rem; justify-content: end; align-items: center; }
     .compact { padding: 0.5rem 0.72rem; min-height: auto; font-size: 0.82rem; }
     .detail-tabs { display: flex; gap: 0.75rem; flex-wrap: wrap; }
@@ -533,7 +554,10 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
     .comment-item p { margin: 0.45rem 0 0; color: var(--text-soft); line-height: 1.5; }
     tr[routerLink] { cursor: pointer; }
     @media (max-width: 1100px) { .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 760px) { .filter-grid { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 760px) {
+      .filter-grid { grid-template-columns: minmax(0, 1fr); }
+      .toggle-line { min-height: 3.5rem; }
+    }
   `]
 })
 export class NcrPageComponent implements OnInit, OnChanges {
@@ -673,6 +697,30 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected editableStatusOptions() { return this.mode() === 'create' ? ['OPEN', 'UNDER_REVIEW', 'INVESTIGATION'] as NcrStatus[] : this.statusOptions; }
   protected countByStatus(status: NcrStatus) { return this.ncrs().filter((item) => item.status === status).length; }
   protected overdueCount() { const now = new Date(); return this.ncrs().filter((item) => item.dueDate && new Date(item.dueDate) < now && item.status !== 'CLOSED' && item.status !== 'ARCHIVED').length; }
+  protected attentionLabel(item: NcrRecord) {
+    const reasons = this.ncrAttentionReasons(item);
+    if (!reasons.length) return 'Under control';
+    return reasons.length > 1 ? `${reasons[0]} +${reasons.length - 1}` : reasons[0];
+  }
+  protected attentionClass(item: NcrRecord) {
+    const reasons = this.ncrAttentionReasons(item);
+    if (!reasons.length) return 'success';
+    if (reasons.includes('Follow-up overdue') || reasons.includes('Verification overdue')) return 'danger';
+    return 'warn';
+  }
+  protected attentionHeadline(record: NcrRecord | null) {
+    return record && this.ncrAttentionReasons(record).length
+      ? 'This NCR currently needs management attention.'
+      : 'This NCR is currently under control.';
+  }
+  protected attentionNarrative(record: NcrRecord | null) {
+    if (!record) return 'Attention guidance appears after the NCR is saved.';
+    const reasons = this.ncrAttentionReasons(record);
+    if (!reasons.length) {
+      return 'Ownership, due date, verification state, and current NCR stage are controlled enough for routine follow-up.';
+    }
+    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+  }
   protected availableTransitions() { const current = this.selectedNcr()?.status; return current ? NEXT_STATUS_OPTIONS[current] : []; }
   protected canDeleteNcr() { const item = this.selectedNcr(); return this.authStore.hasPermission('admin.delete') && !!item && item.status !== 'CLOSED' && item.status !== 'ARCHIVED'; }
   protected canArchiveNcr() { const item = this.selectedNcr(); return this.authStore.hasPermission('admin.delete') && !!item && item.status !== 'ARCHIVED' && item.status !== 'OPEN'; }
@@ -808,6 +856,27 @@ export class NcrPageComponent implements OnInit, OnChanges {
     }
 
     return null;
+  }
+  private ncrAttentionReasons(record: NcrRecord) {
+    if (record.status === 'CLOSED' || record.status === 'ARCHIVED') {
+      return [];
+    }
+    const reasons: string[] = [];
+    if (!record.ownerUserId) {
+      reasons.push('Owner needed');
+    }
+    if (record.dueDate && new Date(record.dueDate) < new Date()) {
+      reasons.push('Follow-up overdue');
+    }
+    if (record.status === 'PENDING_VERIFICATION' && record.verificationStatus === 'PENDING') {
+      reasons.push('Verification overdue');
+    }
+    const updated = new Date(record.updatedAt);
+    const days = (Date.now() - updated.getTime()) / (1000 * 60 * 60 * 24);
+    if (days > 45) {
+      reasons.push('Stale');
+    }
+    return reasons;
   }
   protected setOwnerProcessFilter(processId: string) {
     this.ownerProcessFilterId.set(processId);

@@ -66,13 +66,21 @@ export class ManagementReviewService {
         auditResults: this.normalizeText(dto.auditResults),
         capaStatus: this.normalizeText(dto.capaStatus),
         kpiPerformance: this.normalizeText(dto.kpiPerformance),
+        customerInterestedPartiesFeedback: this.normalizeText(dto.customerInterestedPartiesFeedback),
+        providerPerformance: this.normalizeText(dto.providerPerformance),
+        complianceObligations: this.normalizeText(dto.complianceObligations),
+        incidentEmergencyPerformance: this.normalizeText(dto.incidentEmergencyPerformance),
+        consultationCommunication: this.normalizeText(dto.consultationCommunication),
         risksOpportunities: this.normalizeText(dto.risksOpportunities),
         changesAffectingSystem: this.normalizeText(dto.changesAffectingSystem),
         previousActions: this.normalizeText(dto.previousActions),
         minutes: this.normalizeText(dto.minutes),
         decisions: this.normalizeText(dto.decisions),
         improvementActions: this.normalizeText(dto.improvementActions),
+        systemChangesNeeded: this.normalizeText(dto.systemChangesNeeded),
+        objectiveTargetChanges: this.normalizeText(dto.objectiveTargetChanges),
         resourceNeeds: this.normalizeText(dto.resourceNeeds),
+        effectivenessConclusion: this.normalizeText(dto.effectivenessConclusion),
         summary: this.normalizeText(dto.summary),
         status: dto.status ?? ManagementReviewStatus.PLANNED,
         inputs: {
@@ -131,6 +139,22 @@ export class ManagementReviewService {
         auditResults: dto.auditResults !== undefined ? this.normalizeText(dto.auditResults) : undefined,
         capaStatus: dto.capaStatus !== undefined ? this.normalizeText(dto.capaStatus) : undefined,
         kpiPerformance: dto.kpiPerformance !== undefined ? this.normalizeText(dto.kpiPerformance) : undefined,
+        customerInterestedPartiesFeedback:
+          dto.customerInterestedPartiesFeedback !== undefined
+            ? this.normalizeText(dto.customerInterestedPartiesFeedback)
+            : undefined,
+        providerPerformance:
+          dto.providerPerformance !== undefined ? this.normalizeText(dto.providerPerformance) : undefined,
+        complianceObligations:
+          dto.complianceObligations !== undefined ? this.normalizeText(dto.complianceObligations) : undefined,
+        incidentEmergencyPerformance:
+          dto.incidentEmergencyPerformance !== undefined
+            ? this.normalizeText(dto.incidentEmergencyPerformance)
+            : undefined,
+        consultationCommunication:
+          dto.consultationCommunication !== undefined
+            ? this.normalizeText(dto.consultationCommunication)
+            : undefined,
         risksOpportunities:
           dto.risksOpportunities !== undefined ? this.normalizeText(dto.risksOpportunities) : undefined,
         changesAffectingSystem:
@@ -141,8 +165,16 @@ export class ManagementReviewService {
         decisions: dto.decisions !== undefined ? this.normalizeText(dto.decisions) : undefined,
         improvementActions:
           dto.improvementActions !== undefined ? this.normalizeText(dto.improvementActions) : undefined,
+        systemChangesNeeded:
+          dto.systemChangesNeeded !== undefined ? this.normalizeText(dto.systemChangesNeeded) : undefined,
+        objectiveTargetChanges:
+          dto.objectiveTargetChanges !== undefined ? this.normalizeText(dto.objectiveTargetChanges) : undefined,
         resourceNeeds:
           dto.resourceNeeds !== undefined ? this.normalizeText(dto.resourceNeeds) : undefined,
+        effectivenessConclusion:
+          dto.effectivenessConclusion !== undefined
+            ? this.normalizeText(dto.effectivenessConclusion)
+            : undefined,
         summary: dto.summary !== undefined ? this.normalizeText(dto.summary) : undefined,
         status: dto.status,
         inputs:
@@ -304,11 +336,19 @@ export class ManagementReviewService {
       auditResults?: string | null;
       capaStatus?: string | null;
       kpiPerformance?: string | null;
+      customerInterestedPartiesFeedback?: string | null;
+      providerPerformance?: string | null;
+      complianceObligations?: string | null;
+      incidentEmergencyPerformance?: string | null;
+      consultationCommunication?: string | null;
       risksOpportunities?: string | null;
       changesAffectingSystem?: string | null;
       previousActions?: string | null;
       improvementActions?: string | null;
+      systemChangesNeeded?: string | null;
+      objectiveTargetChanges?: string | null;
       resourceNeeds?: string | null;
+      effectivenessConclusion?: string | null;
     }
   ) {
     if (!status || status === ManagementReviewStatus.PLANNED) {
@@ -321,6 +361,12 @@ export class ManagementReviewService {
 
     if (!data.auditResults || !data.capaStatus || !data.kpiPerformance || !data.risksOpportunities) {
       throw new BadRequestException('Core management review input sections must be completed before holding the meeting');
+    }
+
+    if (status === ManagementReviewStatus.CLOSED && (!data.effectivenessConclusion || !data.resourceNeeds)) {
+      throw new BadRequestException(
+        'Effectiveness conclusion and resource needs must be completed before closing the meeting'
+      );
     }
   }
 

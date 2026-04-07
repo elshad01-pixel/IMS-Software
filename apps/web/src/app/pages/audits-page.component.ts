@@ -25,6 +25,20 @@ type UserOption = {
   email: string;
 };
 
+type IncidentSummaryRow = { id: string; status: string; severity: string };
+type ProviderSummaryRow = {
+  id: string;
+  status: string;
+  criticality: string;
+  evaluationOutcome?: string | null;
+  supplierAuditRequired?: boolean;
+  supplierAuditLinked?: boolean;
+};
+type ObligationSummaryRow = { id: string; status: string; nextReviewDate?: string | null };
+type HazardSummaryRow = { id: string; status: string; severity: string };
+type AspectSummaryRow = { id: string; status: string; significance: string };
+type ChangeSummaryRow = { id: string; status: string; reviewDate?: string | null; targetImplementationDate?: string | null };
+
 type AuditChecklistItem = {
   id: string;
   clause?: string | null;
@@ -147,6 +161,7 @@ type AuditRecord = {
                   <th>Status</th>
                   <th>Checklist</th>
                   <th>Findings follow-up</th>
+                  <th>Attention</th>
                 </tr>
               </thead>
               <tbody>
@@ -172,6 +187,7 @@ type AuditRecord = {
                       <small [ngClass]="findingsFollowUpClass(item)">{{ findingsFollowUpCopy(item) }}</small>
                     </div>
                   </td>
+                  <td><span class="status-badge" [ngClass]="attentionClass(item)">{{ attentionLabel(item) }}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -301,6 +317,11 @@ type AuditRecord = {
             </article>
           </div>
 
+          <section class="guidance-card top-space">
+            <strong>{{ attentionHeadline(selectedAudit()) }}</strong>
+            <p>{{ attentionNarrative(selectedAudit()) }}</p>
+          </section>
+
           <section class="feedback next-steps-banner success top-space" *ngIf="message() && !error()">
             <strong>{{ message() }}</strong>
             <span>{{ auditNextStepsCopy() }}</span>
@@ -392,6 +413,18 @@ type AuditRecord = {
                 <small>When the checklist is complete, move into the review step for findings, close-out notes, and final completion.</small>
               </div>
             </div>
+
+            <section class="detail-section top-space" *ngIf="auditTouchpoints().length">
+              <h4>Assurance touchpoints</h4>
+              <p>{{ auditTouchpointIntro() }}</p>
+              <div class="touchpoint-grid top-space">
+                <a class="touchpoint-card" *ngFor="let item of auditTouchpoints()" [routerLink]="item.link">
+                  <span>{{ item.label }}</span>
+                  <strong>{{ item.value }}</strong>
+                  <small>{{ item.copy }}</small>
+                </a>
+              </div>
+            </section>
           </section>
         </section>
 
@@ -708,6 +741,18 @@ type AuditRecord = {
                 </div>
               </article>
             </div>
+
+            <section class="detail-section top-space" *ngIf="auditTouchpoints().length">
+              <h4>Wider assurance inputs</h4>
+              <p>{{ auditReviewTouchpointCopy() }}</p>
+              <div class="touchpoint-grid top-space">
+                <a class="touchpoint-card" *ngFor="let item of auditTouchpoints()" [routerLink]="item.link">
+                  <span>{{ item.label }}</span>
+                  <strong>{{ item.value }}</strong>
+                  <small>{{ item.reviewCopy || item.copy }}</small>
+                </a>
+              </div>
+            </section>
           </section>
 
           <div id="audit-actions-section">
@@ -923,6 +968,46 @@ type AuditRecord = {
       height: 100%;
       border-radius: inherit;
       background: linear-gradient(90deg, rgba(36, 79, 61, 0.72), rgba(184, 132, 51, 0.72));
+    }
+
+    .touchpoint-grid {
+      display: grid;
+      gap: 0.8rem;
+      grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    }
+
+    .touchpoint-card {
+      display: grid;
+      gap: 0.35rem;
+      padding: 0.95rem 1rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(46, 67, 56, 0.1);
+      background: rgba(252, 253, 250, 0.82);
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .touchpoint-card span,
+    .touchpoint-card small {
+      display: block;
+    }
+
+    .touchpoint-card span {
+      color: #5e6e63;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .touchpoint-card strong {
+      font-size: 1.5rem;
+      color: #203427;
+      line-height: 1;
+    }
+
+    .touchpoint-card small {
+      color: #617165;
+      line-height: 1.45;
     }
 
     .finding-modal-backdrop {
@@ -1172,6 +1257,12 @@ export class AuditsPageComponent {
   protected readonly users = signal<UserOption[]>([]);
   protected readonly selectedId = signal<string | null>(null);
   protected readonly selectedAudit = signal<AuditRecord | null>(null);
+  protected readonly incidents = signal<IncidentSummaryRow[]>([]);
+  protected readonly providers = signal<ProviderSummaryRow[]>([]);
+  protected readonly obligations = signal<ObligationSummaryRow[]>([]);
+  protected readonly hazards = signal<HazardSummaryRow[]>([]);
+  protected readonly aspects = signal<AspectSummaryRow[]>([]);
+  protected readonly changes = signal<ChangeSummaryRow[]>([]);
   protected readonly activeStep = signal<AuditStep>('plan');
   protected readonly currentClauseIndex = signal(0);
   protected readonly expandedChecklistId = signal<string | null>(null);
@@ -1225,11 +1316,39 @@ export class AuditsPageComponent {
 
   constructor() {
     this.loadUsers();
+    this.loadAssuranceInputs();
     this.route.data.subscribe((data) => {
       this.mode.set((data['mode'] as PageMode) || 'list');
       this.handleRoute(this.route.snapshot.paramMap);
     });
     this.route.paramMap.subscribe((params) => this.handleRoute(params));
+  }
+
+  private loadAssuranceInputs() {
+    this.api.get<IncidentSummaryRow[]>('incidents').subscribe({
+      next: (items) => this.incidents.set(items),
+      error: () => this.incidents.set([])
+    });
+    this.api.get<ProviderSummaryRow[]>('external-providers').subscribe({
+      next: (items) => this.providers.set(items),
+      error: () => this.providers.set([])
+    });
+    this.api.get<ObligationSummaryRow[]>('compliance-obligations').subscribe({
+      next: (items) => this.obligations.set(items),
+      error: () => this.obligations.set([])
+    });
+    this.api.get<HazardSummaryRow[]>('hazards').subscribe({
+      next: (items) => this.hazards.set(items),
+      error: () => this.hazards.set([])
+    });
+    this.api.get<AspectSummaryRow[]>('environmental-aspects').subscribe({
+      next: (items) => this.aspects.set(items),
+      error: () => this.aspects.set([])
+    });
+    this.api.get<ChangeSummaryRow[]>('change-management').subscribe({
+      next: (items) => this.changes.set(items),
+      error: () => this.changes.set([])
+    });
   }
 
   protected pageTitle() {
@@ -1745,6 +1864,78 @@ export class AuditsPageComponent {
     return `Follow the chain from checklist evidence to finding, then into ${capaLinkedCount ? `${capaLinkedCount} linked CAPA record${capaLinkedCount === 1 ? '' : 's'}` : 'CAPA only where needed'} and ${actionCount} linked audit action${actionCount === 1 ? '' : 's'}.`;
   }
 
+  protected auditTouchpointIntro() {
+    const audit = this.selectedAudit();
+    if (!audit) {
+      return 'Use the surrounding registers as evidence sources before the audit starts.';
+    }
+    if (audit.type === 'Supplier Audit') {
+      return 'Use these live records as supplier-audit evidence before you start fieldwork. They highlight provider control gaps, obligations needing review, and active changes that may affect the supplier relationship.';
+    }
+    if (audit.standard === 'ISO 14001') {
+      return 'These live records are the strongest environmental inputs for this audit: significant aspects, active incidents, review-due obligations, and active changes.';
+    }
+    if (audit.standard === 'ISO 45001') {
+      return 'These live records are the strongest OH&S inputs for this audit: open incidents, high hazards, review-due obligations, and active changes.';
+    }
+    return 'Use these live records as current assurance inputs before and during the audit. They give the auditor current evidence on provider control, obligations, and change activity.';
+  }
+
+  protected auditReviewTouchpointCopy() {
+    return 'Use these registers alongside audit findings so the audit conclusion reflects current supplier control, compliance review, incidents, hazards, aspects, and system changes.';
+  }
+
+  protected auditTouchpoints() {
+    const audit = this.selectedAudit();
+    if (!audit) {
+      return [];
+    }
+
+    const supplierReviews = this.providers().filter((item) =>
+      item.status === 'UNDER_REVIEW' ||
+      item.evaluationOutcome === 'ESCALATED' ||
+      item.evaluationOutcome === 'DISQUALIFIED' ||
+      (!!item.supplierAuditRequired && !item.supplierAuditLinked)
+    ).length;
+    const overdueObligations = this.obligations().filter((item) =>
+      item.status === 'UNDER_REVIEW' || this.isDatePast(item.nextReviewDate)
+    ).length;
+    const openIncidents = this.incidents().filter((item) => item.status !== 'CLOSED' && item.status !== 'ARCHIVED').length;
+    const highHazards = this.hazards().filter((item) => item.status !== 'OBSOLETE' && item.severity === 'HIGH').length;
+    const highAspects = this.aspects().filter((item) => item.status !== 'OBSOLETE' && item.significance === 'HIGH').length;
+    const activeChanges = this.changes().filter((item) => !['CLOSED', 'REJECTED'].includes(item.status)).length;
+
+    if (audit.type === 'Supplier Audit') {
+      return [
+        { label: 'Provider controls', value: supplierReviews, copy: 'Providers that still need annual review, escalation follow-up, or a linked supplier audit.', reviewCopy: 'Use this register when testing approval, evaluation, and supplier audit coverage.', link: '/external-providers' },
+        { label: 'Obligations under review', value: overdueObligations, copy: 'Customer or legal obligations that should be checked during supplier control.', reviewCopy: 'Compare findings against obligations that are overdue or under review.', link: '/compliance-obligations' },
+        { label: 'Open changes', value: activeChanges, copy: 'Supplier-related or operational changes that may affect approved controls.', reviewCopy: 'Use active changes as context when deciding whether findings point to a wider control weakness.', link: '/change-management' }
+      ];
+    }
+
+    if (audit.standard === 'ISO 14001') {
+      return [
+        { label: 'Significant aspects', value: highAspects, copy: 'High-significance environmental aspects that should appear in audit evidence.', reviewCopy: 'Check whether findings line up with the significant aspects register and controls.', link: '/environmental-aspects' },
+        { label: 'Open incidents', value: openIncidents, copy: 'Environmental or mixed incidents still needing investigation or action.', reviewCopy: 'Use current incident follow-up as evidence when assessing environmental control effectiveness.', link: '/incidents' },
+        { label: 'Obligations under review', value: overdueObligations, copy: 'Environmental obligations that still need review or closure evidence.', reviewCopy: 'Use overdue obligations to test whether compliance review is truly current.', link: '/compliance-obligations' }
+      ];
+    }
+
+    if (audit.standard === 'ISO 45001') {
+      return [
+        { label: 'Open incidents', value: openIncidents, copy: 'Incidents and near misses still under investigation or action follow-up.', reviewCopy: 'Use live incident follow-up to challenge the effectiveness of OH&S controls.', link: '/incidents' },
+        { label: 'High hazards', value: highHazards, copy: 'High-severity hazards that should be visible in audit sampling and worker-protection evidence.', reviewCopy: 'Compare audit findings with the current hazard register before finalising the conclusion.', link: '/hazards' },
+        { label: 'Obligations under review', value: overdueObligations, copy: 'OH&S obligations that need current review or closure evidence.', reviewCopy: 'Use obligation review gaps as potential assurance themes, not just isolated findings.', link: '/compliance-obligations' }
+      ];
+    }
+
+    return [
+      { label: 'Provider controls', value: supplierReviews, copy: 'Provider approvals, evaluations, and supplier audit coverage that may influence quality control.', reviewCopy: 'Use provider review gaps as wider quality-system signals when finalising the audit outcome.', link: '/external-providers' },
+      { label: 'Obligations under review', value: overdueObligations, copy: 'Customer, legal, or contractual obligations that should already be under control.', reviewCopy: 'Compare findings with obligation review gaps before treating them as isolated issues.', link: '/compliance-obligations' },
+      { label: 'Open changes', value: activeChanges, copy: 'Operational or supplier-driven changes that may be affecting the system right now.', reviewCopy: 'Use active changes as context when deciding whether the audit points to a broader system change risk.', link: '/change-management' }
+    ];
+  }
+
   protected auditNextStepsCopy() {
     const audit = this.selectedAudit();
     if (!audit) {
@@ -1878,6 +2069,34 @@ export class AuditsPageComponent {
     return 'followup-closed';
   }
 
+  protected attentionLabel(audit: AuditRecord) {
+    const reasons = this.auditAttentionReasons(audit);
+    if (!reasons.length) return 'Under control';
+    return reasons.length > 1 ? `${reasons[0]} +${reasons.length - 1}` : reasons[0];
+  }
+
+  protected attentionClass(audit: AuditRecord) {
+    const reasons = this.auditAttentionReasons(audit);
+    if (!reasons.length) return 'success';
+    if (reasons.includes('Audit overdue') || reasons.includes('Findings still open')) return 'danger';
+    return 'warn';
+  }
+
+  protected attentionHeadline(audit: AuditRecord | null) {
+    return audit && this.auditAttentionReasons(audit).length
+      ? 'This audit currently needs management attention.'
+      : 'This audit is currently under control.';
+  }
+
+  protected attentionNarrative(audit: AuditRecord | null) {
+    if (!audit) return 'Attention guidance appears after the audit is loaded.';
+    const reasons = this.auditAttentionReasons(audit);
+    if (!reasons.length) {
+      return 'Audit timing, checklist execution, and findings follow-up are controlled enough for routine oversight.';
+    }
+    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+  }
+
   protected isChecklistReadOnly() {
     return !this.canWriteAudit() || this.selectedAudit()?.status === 'COMPLETED' || this.selectedAudit()?.status === 'CLOSED';
   }
@@ -1992,6 +2211,13 @@ export class AuditsPageComponent {
 
   protected canWriteAudit() {
     return this.authStore.hasPermission('audits.write');
+  }
+
+  private isDatePast(value?: string | null) {
+    if (!value) {
+      return false;
+    }
+    return new Date(value).getTime() < Date.now();
   }
 
   protected canCreateCapa() {
@@ -2255,6 +2481,26 @@ export class AuditsPageComponent {
     }
 
     return 'plan';
+  }
+
+  private auditAttentionReasons(audit: AuditRecord) {
+    if (audit.status === 'CLOSED') {
+      return [];
+    }
+    const reasons: string[] = [];
+    if (audit.status === 'PLANNED' && audit.scheduledAt && this.isDatePast(audit.scheduledAt)) {
+      reasons.push('Audit overdue');
+    }
+    if ((audit.status === 'COMPLETED' || audit.status === 'CHECKLIST_COMPLETED') && (audit.openFindingCount || 0) > 0) {
+      reasons.push('Findings still open');
+    }
+    if (audit.status === 'IN_PROGRESS' && !(audit.leadAuditorId || '').trim()) {
+      reasons.push('Owner needed');
+    }
+    if ((audit.status === 'IN_PROGRESS' || audit.status === 'CHECKLIST_COMPLETED') && (audit.completedChecklistCount || 0) === 0 && audit.scheduledAt && this.isDatePast(audit.scheduledAt)) {
+      reasons.push('Execution stalled');
+    }
+    return reasons;
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

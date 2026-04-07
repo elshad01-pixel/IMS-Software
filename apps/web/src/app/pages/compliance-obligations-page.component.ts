@@ -157,6 +157,10 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
     return this.obligations().filter((item) => item.status === 'UNDER_REVIEW').length;
   }
 
+  protected attentionCount() {
+    return this.obligations().filter((item) => this.obligationAttentionReasons(item).length > 0).length;
+  }
+
   protected filteredObligations() {
     const term = this.search().trim().toLowerCase();
     const status = this.statusFilter();
@@ -303,6 +307,49 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
     return link.linkType === 'ACTION'
       ? { returnNavigation: { route: ['/compliance-obligations', this.selectedId()], label: 'compliance obligation' } }
       : undefined;
+  }
+
+  protected attentionHeadline() {
+    const obligation = this.selectedObligation();
+    return obligation && this.obligationAttentionReasons(obligation).length
+      ? 'This obligation currently needs management attention.'
+      : 'This obligation is currently under control.';
+  }
+
+  protected attentionNarrative() {
+    const obligation = this.selectedObligation();
+    if (!obligation) {
+      return 'Attention guidance appears after the obligation is saved.';
+    }
+    const reasons = this.obligationAttentionReasons(obligation);
+    if (!reasons.length) {
+      return 'Ownership, review timing, and current status are clear enough for routine oversight.';
+    }
+    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+  }
+
+  protected attentionSummary(item: ObligationRow) {
+    const reasons = this.obligationAttentionReasons(item);
+    return reasons.length ? reasons.join(' | ') : '';
+  }
+
+  protected attentionLabel(item: ObligationRow) {
+    const reasons = this.obligationAttentionReasons(item);
+    if (!reasons.length) {
+      return 'Under control';
+    }
+    return reasons.length > 1 ? `${reasons[0]} +${reasons.length - 1}` : reasons[0];
+  }
+
+  protected attentionClass(item: ObligationRow) {
+    const reasons = this.obligationAttentionReasons(item);
+    if (!reasons.length) {
+      return 'success';
+    }
+    if (reasons.includes('Review overdue')) {
+      return 'danger';
+    }
+    return 'warn';
   }
 
   protected save() {
@@ -473,6 +520,47 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
   private readError(error: HttpErrorResponse, fallback: string) {
     const message = error.error?.message;
     return Array.isArray(message) ? message.join(', ') : (message as string) || fallback;
+  }
+
+  private obligationAttentionReasons(item: ObligationRow) {
+    if (item.status === 'OBSOLETE') {
+      return [];
+    }
+    const reasons: string[] = [];
+    if (!item.ownerUserId) {
+      reasons.push('Owner needed');
+    }
+    if (!item.nextReviewDate) {
+      reasons.push('Review date needed');
+    } else if (this.isPastDate(item.nextReviewDate)) {
+      reasons.push('Review overdue');
+    } else if (this.isDateWithinDays(item.nextReviewDate, 30)) {
+      reasons.push('Review due soon');
+    }
+    if (this.isStale(item.updatedAt, 90)) {
+      reasons.push('Stale');
+    }
+    return reasons;
+  }
+
+  private isPastDate(value?: string | null) {
+    return !!value && new Date(value) < new Date();
+  }
+
+  private isDateWithinDays(value: string | null | undefined, days: number) {
+    if (!value) return false;
+    const date = new Date(value);
+    const today = new Date();
+    const delta = (date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+    return delta >= 0 && delta <= days;
+  }
+
+  private isStale(value: string | null | undefined, days: number) {
+    if (!value) return false;
+    const updated = new Date(value);
+    const today = new Date();
+    const delta = (today.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24);
+    return delta > days;
   }
 }
 

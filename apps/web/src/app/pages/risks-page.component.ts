@@ -166,6 +166,7 @@ type SourceContextNavigation = {
                   <th>Type</th>
                   <th>Assessment</th>
                   <th>Status</th>
+                  <th>Attention</th>
                   <th>Target</th>
                 </tr>
               </thead>
@@ -183,9 +184,11 @@ type SourceContextNavigation = {
                       <strong>{{ assessmentSummary(item) }}</strong>
                       <small>{{ scoreBreakdown(item) }}</small>
                       <small class="level-caption" [ngClass]="levelBadgeClass(item.score, item.assessmentType || 'RISK')">{{ riskLevelLabel(item.score, item.assessmentType || 'RISK') }}</small>
+                      <small class="attention-copy" *ngIf="attentionSummary(item) as attention">{{ attention }}</small>
                     </div>
                   </td>
                   <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ lifecycleStatusLabel(item.status) }}</span></td>
+                  <td><span class="status-badge" [ngClass]="attentionClass(item)">{{ attentionLabel(item) }}</span></td>
                   <td>{{ item.targetDate ? (item.targetDate | date:'yyyy-MM-dd') : 'N/A' }}</td>
                 </tr>
               </tbody>
@@ -429,6 +432,16 @@ type SourceContextNavigation = {
                 <strong class="level-indicator" [ngClass]="levelBadgeClass(selectedRisk()?.score ?? null, selectedRisk()?.assessmentType || 'RISK')">{{ riskLevelLabel(selectedRisk()?.score ?? null, selectedRisk()?.assessmentType || 'RISK') }}</strong>
               </article>
             </div>
+
+            <section class="content-guidance top-space">
+              <div class="section-head compact-head">
+                <div>
+                  <h4>Management attention</h4>
+                  <p class="subtle">{{ attentionHeadline(selectedRisk()) }}</p>
+                </div>
+              </div>
+              <p class="top-space">{{ attentionNarrative(selectedRisk()) }}</p>
+            </section>
 
             <div class="section-grid-2 top-space">
               <section class="detail-section">
@@ -696,6 +709,10 @@ type SourceContextNavigation = {
     }
     .compact-head { align-items: center; }
     .guidance-group strong { display: block; color: var(--text-strong); }
+    .attention-copy {
+      color: var(--brand-strong);
+      font-weight: 700;
+    }
   `]
 })
 export class RisksPageComponent implements OnInit, OnChanges {
@@ -832,6 +849,10 @@ export class RisksPageComponent implements OnInit, OnChanges {
 
   protected highRiskCount() {
     return this.risks().filter((item) => item.score >= 15).length;
+  }
+
+  protected attentionCount() {
+    return this.risks().filter((item) => this.riskAttentionReasons(item).length > 0).length;
   }
 
   protected assessmentEntityLabel(type: RiskAssessmentType) {
@@ -1191,6 +1212,47 @@ export class RisksPageComponent implements OnInit, OnChanges {
 
     return null;
   }
+
+  protected attentionHeadline(item: RiskRow | null) {
+    return item && this.riskAttentionReasons(item).length
+      ? 'This record currently needs management attention.'
+      : 'This record is currently under control.';
+  }
+
+  protected attentionNarrative(item: RiskRow | null) {
+    if (!item) {
+      return 'Attention guidance appears after the record is saved.';
+    }
+    const reasons = this.riskAttentionReasons(item);
+    if (!reasons.length) {
+      return 'Ownership, follow-up timing, and current risk position are controlled enough for routine monitoring.';
+    }
+    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+  }
+
+  protected attentionSummary(item: RiskRow) {
+    const reasons = this.riskAttentionReasons(item);
+    return reasons.length ? reasons.join(' | ') : '';
+  }
+
+  protected attentionLabel(item: RiskRow) {
+    const reasons = this.riskAttentionReasons(item);
+    if (!reasons.length) {
+      return 'Under control';
+    }
+    return reasons.length > 1 ? `${reasons[0]} +${reasons.length - 1}` : reasons[0];
+  }
+
+  protected attentionClass(item: RiskRow) {
+    const reasons = this.riskAttentionReasons(item);
+    if (!reasons.length) {
+      return 'success';
+    }
+    if (reasons.includes('Follow-up overdue') || reasons.includes('High priority')) {
+      return 'danger';
+    }
+    return 'warn';
+  }
   protected scrollToActions() {
     const section = document.getElementById('risk-actions-section');
     section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1210,6 +1272,49 @@ export class RisksPageComponent implements OnInit, OnChanges {
       return { sourceContextNavigation: this.sourceContextNavigation() };
     }
     return undefined;
+  }
+
+  private riskAttentionReasons(item: RiskRow) {
+    if (item.status === 'CLOSED') {
+      return [];
+    }
+    const reasons: string[] = [];
+    if (this.isRiskOverdue(item)) {
+      reasons.push('Follow-up overdue');
+    } else if (this.isRiskDueSoon(item, 14)) {
+      reasons.push('Follow-up due soon');
+    }
+    if (!item.ownerId && item.status === 'IN_TREATMENT') {
+      reasons.push('Owner needed');
+    }
+    if (item.score >= 15) {
+      reasons.push('High priority');
+    }
+    if (this.isRiskStale(item, 45)) {
+      reasons.push('Stale');
+    }
+    return reasons;
+  }
+
+  private isRiskOverdue(item: RiskRow) {
+    return !!item.targetDate && new Date(item.targetDate) < new Date();
+  }
+
+  private isRiskDueSoon(item: RiskRow, days: number) {
+    if (!item.targetDate || this.isRiskOverdue(item)) {
+      return false;
+    }
+    const due = new Date(item.targetDate);
+    const today = new Date();
+    const delta = (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+    return delta >= 0 && delta <= days;
+  }
+
+  private isRiskStale(item: RiskRow, days: number) {
+    const updated = new Date(item.updatedAt);
+    const today = new Date();
+    const delta = (today.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24);
+    return delta > days;
   }
   protected routeStateWithSource() {
     return this.sourceContextNavigation() ? { sourceContextNavigation: this.sourceContextNavigation() } : undefined;

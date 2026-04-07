@@ -79,6 +79,11 @@ type ReturnNavigation = {
             </article>
           </div>
 
+          <section class="guidance-card top-space">
+            <strong>{{ attentionHeadline(focused) }}</strong>
+            <p>{{ attentionNarrative(focused) }}</p>
+          </section>
+
           <div class="section-grid-2 top-space">
             <section class="detail-section">
               <h4>Description</h4>
@@ -115,7 +120,7 @@ type ReturnNavigation = {
             </div>
           </div>
 
-          <section class="summary-strip top-space">
+          <section class="summary-strip top-space actions-summary-strip">
             <article class="summary-item">
               <span>Open</span>
               <strong>{{ countByStatus('OPEN') }}</strong>
@@ -209,6 +214,7 @@ type ReturnNavigation = {
                   <th>Source</th>
                   <th>Owner</th>
                   <th>Due date</th>
+                  <th>Attention</th>
                   <th>Status</th>
                   <th *ngIf="canDeleteActions()">Admin</th>
                 </tr>
@@ -219,6 +225,7 @@ type ReturnNavigation = {
                     <div class="table-title">
                       <strong>{{ action.title }}</strong>
                       <small>{{ action.description || 'No description' }}</small>
+                      <small class="attention-copy" *ngIf="actionAttentionSummary(action) as attention">{{ attention }}</small>
                     </div>
                   </td>
                   <td>
@@ -232,6 +239,9 @@ type ReturnNavigation = {
                   </td>
                   <td>{{ action.owner ? action.owner.firstName + ' ' + action.owner.lastName : 'Unassigned' }}</td>
                   <td>{{ action.dueDate ? (action.dueDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
+                  <td>
+                    <span class="status-badge" [ngClass]="attentionClass(action)">{{ attentionLabel(action) }}</span>
+                  </td>
                   <td>
                     <select [value]="action.status" [disabled]="!canWriteActions()" (change)="updateStatus(action, readStatus($event))">
                       <option>OPEN</option>
@@ -258,6 +268,25 @@ type ReturnNavigation = {
     </section>
   `,
   styles: [`
+    .actions-summary-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .actions-summary-strip .summary-item {
+      min-width: 0;
+      min-height: auto;
+      padding: 1rem 1.1rem;
+    }
+
+    .actions-summary-strip .summary-item strong {
+      display: block;
+      margin-top: 0.35rem;
+      line-height: 1;
+    }
+
     .guidance-card {
       padding: 1rem 1.1rem;
       border: 1px solid rgba(46, 67, 56, 0.1);
@@ -294,6 +323,23 @@ type ReturnNavigation = {
 
     .top-space {
       margin-top: 1rem;
+    }
+
+    .attention-copy {
+      color: var(--brand-strong);
+      font-weight: 700;
+    }
+
+    @media (max-width: 1100px) {
+      .actions-summary-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .actions-summary-strip {
+        grid-template-columns: 1fr;
+      }
     }
   `]
 })
@@ -395,9 +441,20 @@ export class ActionsPageComponent {
     return this.actions().filter((action) => this.isOverdueRecord(action)).length;
   }
 
+  protected ownerNeededCount() {
+    return this.actions().filter((action) => this.isActiveAction(action) && !action.ownerId).length;
+  }
+
+  protected attentionCount() {
+    return this.actions().filter((action) => this.actionAttentionReasons(action).length > 0).length;
+  }
+
   protected followUpHeadline() {
     if (this.overdueCount() > 0) {
       return 'Some follow-up is overdue';
+    }
+    if (this.ownerNeededCount() > 0) {
+      return 'Some follow-up needs ownership';
     }
     if (this.countByStatus('OPEN') > 0 || this.countByStatus('IN_PROGRESS') > 0) {
       return 'Follow-up is active across the system';
@@ -409,10 +466,52 @@ export class ActionsPageComponent {
     if (this.overdueCount() > 0) {
       return 'Use the overdue actions as the first management attention point. They represent follow-up that has already missed the committed due date.';
     }
+    if (this.ownerNeededCount() > 0) {
+      return 'Some actions are still open or in progress without a named owner. Assign responsibility before the next review cycle so follow-up does not stall.';
+    }
     if (this.countByStatus('OPEN') > 0 || this.countByStatus('IN_PROGRESS') > 0) {
       return 'Open and in-progress actions are visible here across risks, incidents, hazards, environmental aspects, obligations, provider reviews, change management, audits, CAPA, and management review so ownership stays clear.';
     }
     return 'Current action records are either complete or not yet requiring additional intervention.';
+  }
+
+  protected attentionHeadline(action: ActionRecord) {
+    return this.actionAttentionReasons(action).length
+      ? 'This action currently needs management attention.'
+      : 'This action is currently under control.';
+  }
+
+  protected attentionNarrative(action: ActionRecord) {
+    const reasons = this.actionAttentionReasons(action);
+    if (!reasons.length) {
+      return 'The action has either been completed, cancelled, or still has enough control around due date and ownership.';
+    }
+    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+  }
+
+  protected actionAttentionSummary(action: ActionRecord) {
+    const reasons = this.actionAttentionReasons(action);
+    return reasons.length ? reasons.join(' | ') : '';
+  }
+
+  protected attentionLabel(action: ActionRecord) {
+    const reasons = this.actionAttentionReasons(action);
+    if (!reasons.length) {
+      return 'OK';
+    }
+    const short = reasons.map((reason) => this.shortAttentionReason(reason));
+    return short.length > 1 ? `${short[0]} +${short.length - 1}` : short[0];
+  }
+
+  protected attentionClass(action: ActionRecord) {
+    const reasons = this.actionAttentionReasons(action);
+    if (!reasons.length) {
+      return 'success';
+    }
+    if (reasons.includes('Overdue')) {
+      return 'danger';
+    }
+    return 'warn';
   }
 
   protected canDeleteActions() {
@@ -487,6 +586,46 @@ export class ActionsPageComponent {
       return false;
     }
     return new Date(action.dueDate) < new Date();
+  }
+
+  private isActiveAction(action: ActionRecord) {
+    return action.status !== 'DONE' && action.status !== 'CANCELLED';
+  }
+
+  private isDueSoon(action: ActionRecord) {
+    if (!action.dueDate || !this.isActiveAction(action) || this.isOverdueRecord(action)) {
+      return false;
+    }
+    const due = new Date(action.dueDate);
+    const today = new Date();
+    const days = (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+    return days >= 0 && days <= 7;
+  }
+
+  private actionAttentionReasons(action: ActionRecord) {
+    if (!this.isActiveAction(action)) {
+      return [];
+    }
+    const reasons: string[] = [];
+    if (this.isOverdueRecord(action)) {
+      reasons.push('Overdue');
+    } else if (this.isDueSoon(action)) {
+      reasons.push('Due soon');
+    }
+    if (!action.ownerId) {
+      reasons.push('Owner needed');
+    }
+    return reasons;
+  }
+
+  private shortAttentionReason(reason: string) {
+    if (reason === 'Owner needed') {
+      return 'Owner';
+    }
+    if (reason === 'Due soon') {
+      return 'Soon';
+    }
+    return reason;
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

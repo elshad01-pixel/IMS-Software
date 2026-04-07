@@ -205,6 +205,10 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
     return this.incidents().filter((item) => item.severity === 'HIGH' || item.severity === 'CRITICAL').length;
   }
 
+  protected attentionCount() {
+    return this.incidents().filter((item) => this.incidentAttentionReasons(item).length > 0).length;
+  }
+
   protected filteredIncidents() {
     const term = this.search().trim().toLowerCase();
     const status = this.statusFilter();
@@ -321,6 +325,49 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
     const incident = this.selectedIncident();
     if (!incident) return null;
     return incident.correctiveActionSummary || incident.rootCause || incident.investigationSummary || incident.immediateAction || null;
+  }
+
+  protected attentionHeadline() {
+    const incident = this.selectedIncident();
+    return incident && this.incidentAttentionReasons(incident).length
+      ? 'This event currently needs management attention.'
+      : 'This event is currently under control.';
+  }
+
+  protected attentionNarrative() {
+    const incident = this.selectedIncident();
+    if (!incident) {
+      return 'Attention guidance appears after the event is saved.';
+    }
+    const reasons = this.incidentAttentionReasons(incident);
+    if (!reasons.length) {
+      return 'Ownership, severity, and current investigation state are clear enough for routine follow-up.';
+    }
+    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+  }
+
+  protected attentionSummary(item: IncidentRow) {
+    const reasons = this.incidentAttentionReasons(item);
+    return reasons.length ? reasons.join(' | ') : '';
+  }
+
+  protected attentionLabel(item: IncidentRow) {
+    const reasons = this.incidentAttentionReasons(item);
+    if (!reasons.length) {
+      return 'Under control';
+    }
+    return reasons.length > 1 ? `${reasons[0]} +${reasons.length - 1}` : reasons[0];
+  }
+
+  protected attentionClass(item: IncidentRow) {
+    const reasons = this.incidentAttentionReasons(item);
+    if (!reasons.length) {
+      return 'success';
+    }
+    if (reasons.includes('High priority')) {
+      return 'danger';
+    }
+    return 'warn';
   }
 
   protected incidentReturnNavigation() {
@@ -572,6 +619,34 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
   private readError(error: HttpErrorResponse, fallback: string) {
     const message = error.error?.message;
     return Array.isArray(message) ? message.join(', ') : (message as string) || fallback;
+  }
+
+  private incidentAttentionReasons(item: IncidentRow) {
+    if (item.status === 'CLOSED' || item.status === 'ARCHIVED') {
+      return [];
+    }
+    const reasons: string[] = [];
+    if (!item.ownerUserId) {
+      reasons.push('Owner needed');
+    }
+    if (item.severity === 'HIGH' || item.severity === 'CRITICAL') {
+      reasons.push('High priority');
+    }
+    if ((item.status === 'INVESTIGATION' || item.status === 'ACTION_IN_PROGRESS') && !item.rootCause) {
+      reasons.push('Investigation incomplete');
+    }
+    if (this.isStale(item.updatedAt, 30)) {
+      reasons.push('Stale');
+    }
+    return reasons;
+  }
+
+  private isStale(value: string | null | undefined, days: number) {
+    if (!value) return false;
+    const updated = new Date(value);
+    const today = new Date();
+    const delta = (today.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24);
+    return delta > days;
   }
 
   private structuredRootCauseSummary() {

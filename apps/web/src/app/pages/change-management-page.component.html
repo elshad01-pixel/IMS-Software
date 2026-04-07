@@ -72,6 +72,7 @@
               <th>Status</th>
               <th>Owner</th>
               <th>Target date</th>
+              <th>Attention</th>
               <th>Links</th>
             </tr>
           </thead>
@@ -81,6 +82,7 @@
                 <div class="table-title">
                   <strong>{{ item.referenceNo || 'Uncoded' }} - {{ item.title }}</strong>
                   <small>{{ item.proposedChange }}</small>
+                  <small class="attention-copy" *ngIf="attentionSummary(item) as attention">{{ attention }}</small>
                 </div>
               </td>
               <td>{{ prettyStatus(item.changeType) }}</td>
@@ -88,6 +90,7 @@
               <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ prettyStatus(item.status) }}</span></td>
               <td>{{ item.owner ? personName(item.owner) : 'Unassigned' }}</td>
               <td>{{ item.targetImplementationDate ? (item.targetImplementationDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
+              <td><span class="status-badge" [ngClass]="attentionClass(item)">{{ attentionLabel(item) }}</span></td>
               <td>{{ item.linkCount || 0 }}</td>
             </tr>
           </tbody>
@@ -196,6 +199,16 @@
         <article class="summary-item"><span>Target date</span><strong>{{ selectedRecord()?.targetImplementationDate ? (selectedRecord()?.targetImplementationDate | date:'yyyy-MM-dd') : 'Not set' }}</strong></article>
         <article class="summary-item"><span>Linked records</span><strong>{{ selectedRecord()?.links?.length || 0 }}</strong></article>
       </div>
+
+      <section class="content-guidance top-space">
+        <div class="section-head compact-head">
+          <div>
+            <h4>Management attention</h4>
+            <p class="subtle">{{ attentionHeadline() }}</p>
+          </div>
+        </div>
+        <p class="top-space">{{ attentionNarrative() }}</p>
+      </section>
 
       <section class="content-guidance top-space">
         <div class="section-head compact-head">

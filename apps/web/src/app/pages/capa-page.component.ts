@@ -86,6 +86,10 @@ type CapaRow = {
                   <span>Closed</span>
                   <strong>{{ countByStatus('CLOSED') }}</strong>
                 </article>
+                <article class="toolbar-stat">
+                  <span>Overdue</span>
+                  <strong>{{ overdueCount() }}</strong>
+                </article>
               </div>
             </div>
 
@@ -127,6 +131,7 @@ type CapaRow = {
                   <th>Source</th>
                   <th>Status</th>
                   <th>Due date</th>
+                  <th>Attention</th>
                 </tr>
               </thead>
               <tbody>
@@ -140,6 +145,7 @@ type CapaRow = {
                   <td>{{ item.source }}</td>
                   <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ item.status }}</span></td>
                   <td>{{ item.dueDate ? (item.dueDate | date:'yyyy-MM-dd') : 'N/A' }}</td>
+                  <td><span class="status-badge" [ngClass]="attentionClass(item)">{{ attentionLabel(item) }}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -303,6 +309,11 @@ type CapaRow = {
               <strong>{{ capaReadinessHeadline() }}</strong>
               <p>{{ capaReadinessNarrative() }}</p>
               <small>{{ capaReadinessHint() }}</small>
+            </section>
+
+            <section class="guidance-card top-space">
+              <strong>{{ attentionHeadline() }}</strong>
+              <p>{{ attentionNarrative() }}</p>
             </section>
 
             <section class="detail-section top-space">
@@ -622,6 +633,40 @@ export class CapaPageComponent implements OnInit, OnChanges {
     return 'Next step: keep the action, verification, and closure sections aligned with the CAPA status.';
   }
 
+  protected overdueCount() {
+    return this.capas().filter((item) => this.isOverdue(item)).length;
+  }
+
+  protected attentionLabel(item: CapaRow) {
+    const reasons = this.capaAttentionReasons(item);
+    if (!reasons.length) return 'Under control';
+    return reasons.length > 1 ? `${reasons[0]} +${reasons.length - 1}` : reasons[0];
+  }
+
+  protected attentionClass(item: CapaRow) {
+    const reasons = this.capaAttentionReasons(item);
+    if (!reasons.length) return 'success';
+    if (reasons.includes('Overdue')) return 'danger';
+    return 'warn';
+  }
+
+  protected attentionHeadline() {
+    const capa = this.selectedCapa();
+    return capa && this.capaAttentionReasons(capa).length
+      ? 'This CAPA currently needs management attention.'
+      : 'This CAPA is currently under control.';
+  }
+
+  protected attentionNarrative() {
+    const capa = this.selectedCapa();
+    if (!capa) return 'Attention guidance appears after the CAPA is saved.';
+    const reasons = this.capaAttentionReasons(capa);
+    if (!reasons.length) {
+      return 'Ownership, due date, verification, and current CAPA stage are controlled enough for routine follow-up.';
+    }
+    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+  }
+
   protected canWrite() {
     return this.authStore.hasPermission('capa.write');
   }
@@ -764,6 +809,32 @@ export class CapaPageComponent implements OnInit, OnChanges {
   private readError(error: HttpErrorResponse, fallback: string) {
     const message = error.error?.message;
     return Array.isArray(message) ? message.join(', ') : (message as string) || fallback;
+  }
+
+  private isOverdue(item: CapaRow) {
+    return !!item.dueDate && item.status !== 'CLOSED' && new Date(item.dueDate) < new Date();
+  }
+
+  private capaAttentionReasons(item: CapaRow) {
+    if (item.status === 'CLOSED') {
+      return [];
+    }
+    const reasons: string[] = [];
+    if (!item.ownerId) {
+      reasons.push('Owner needed');
+    }
+    if (this.isOverdue(item)) {
+      reasons.push('Overdue');
+    }
+    if (item.status === 'VERIFIED' && !item.closureSummary) {
+      reasons.push('Closure evidence needed');
+    }
+    const updated = new Date(item.updatedAt);
+    const days = (Date.now() - updated.getTime()) / (1000 * 60 * 60 * 24);
+    if (days > 45) {
+      reasons.push('Stale');
+    }
+    return reasons;
   }
 }
 

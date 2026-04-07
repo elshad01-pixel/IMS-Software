@@ -55,6 +55,31 @@ export class CreateManagementReviewDto {
   @IsOptional()
   @IsString()
   @MaxLength(4000)
+  customerInterestedPartiesFeedback?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  providerPerformance?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  complianceObligations?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  incidentEmergencyPerformance?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  consultationCommunication?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
   risksOpportunities?: string;
 
   @IsOptional()
@@ -85,7 +110,22 @@ export class CreateManagementReviewDto {
   @IsOptional()
   @IsString()
   @MaxLength(4000)
+  systemChangesNeeded?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  objectiveTargetChanges?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
   resourceNeeds?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  effectivenessConclusion?: string;
 
   @IsOptional()
   @IsString()

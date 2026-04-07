@@ -18,6 +18,20 @@ type UserOption = {
   email: string;
 };
 
+type IncidentSummaryRow = { id: string; status: string; severity: string };
+type ProviderSummaryRow = {
+  id: string;
+  status: string;
+  criticality: string;
+  evaluationOutcome?: string | null;
+  supplierAuditRequired?: boolean;
+  supplierAuditLinked?: boolean;
+};
+type ObligationSummaryRow = { id: string; status: string; nextReviewDate?: string | null };
+type HazardSummaryRow = { id: string; status: string; severity: string };
+type AspectSummaryRow = { id: string; status: string; significance: string };
+type ChangeSummaryRow = { id: string; status: string; reviewDate?: string | null; targetImplementationDate?: string | null };
+
 type ReviewRecord = {
   id: string;
   title: string;
@@ -27,13 +41,21 @@ type ReviewRecord = {
   auditResults?: string | null;
   capaStatus?: string | null;
   kpiPerformance?: string | null;
+  customerInterestedPartiesFeedback?: string | null;
+  providerPerformance?: string | null;
+  complianceObligations?: string | null;
+  incidentEmergencyPerformance?: string | null;
+  consultationCommunication?: string | null;
   risksOpportunities?: string | null;
   changesAffectingSystem?: string | null;
   previousActions?: string | null;
   minutes?: string | null;
   decisions?: string | null;
   improvementActions?: string | null;
+  systemChangesNeeded?: string | null;
+  objectiveTargetChanges?: string | null;
   resourceNeeds?: string | null;
+  effectivenessConclusion?: string | null;
   summary?: string | null;
   status: ReviewStatus;
 };
@@ -67,7 +89,7 @@ type ReviewRecord = {
 
           <div class="empty-state" *ngIf="loading()">
             <strong>Loading management reviews</strong>
-            <span>Refreshing meetings, status, and linked inputs.</span>
+            <span>Refreshing meetings, status, and recorded management-review content.</span>
           </div>
 
           <div class="data-table-wrap" *ngIf="!loading() && reviews().length">
@@ -91,7 +113,7 @@ type ReviewRecord = {
                   </td>
                   <td>{{ item.reviewDate ? (item.reviewDate | date:'yyyy-MM-dd') : 'TBD' }}</td>
                   <td><span class="status-badge" [class.success]="item.status === 'CLOSED'" [class.warn]="item.status === 'HELD'">{{ item.status }}</span></td>
-                  <td>{{ reviewInputCoverage(item) }}/6</td>
+                  <td>{{ reviewInputCoverage(item) }}/{{ inputSectionCount() }}</td>
                   <td>
                     <span class="status-badge" [class.success]="reviewOutputsReady(item)" [class.warn]="item.status !== 'PLANNED' && !reviewOutputsReady(item)">
                       {{ reviewOutputsReady(item) ? 'Recorded' : 'Pending' }}
@@ -119,19 +141,31 @@ type ReviewRecord = {
           <section class="readiness-strip">
             <article class="readiness-card">
               <span>Inputs captured</span>
-              <strong>{{ completedInputCount() }}/6</strong>
-              <small>{{ completedInputCount() >= 4 ? 'Sufficient input coverage for review discussion.' : 'Record the main audit, CAPA, KPI, and risk inputs before the meeting.' }}</small>
+              <strong>{{ completedInputCount() }}/{{ inputSectionCount() }}</strong>
+              <small>{{ completedInputCount() >= plannedInputTarget() ? 'Input coverage is strong enough for an evidence-based review.' : 'Record the main audit, CAPA, KPI, provider, obligation, and risk inputs before the meeting.' }}</small>
             </article>
             <article class="readiness-card">
               <span>Outputs captured</span>
-              <strong>{{ completedOutputCount() }}/5</strong>
-              <small>{{ completedOutputCount() >= 3 ? 'Outputs are taking shape for controlled follow-up.' : 'Decisions, actions, and resource needs should be explicit.' }}</small>
+              <strong>{{ completedOutputCount() }}/{{ outputSectionCount() }}</strong>
+              <small>{{ completedOutputCount() >= heldOutputTarget() ? 'Outputs are taking shape for controlled follow-up.' : 'Decisions, system changes, objective changes, and resources should be explicit.' }}</small>
             </article>
             <article class="readiness-card">
               <span>Meeting readiness</span>
               <strong>{{ reviewReadinessLabel() }}</strong>
               <small>{{ reviewReadinessHint() }}</small>
             </article>
+          </section>
+
+          <section class="guidance-card">
+            <strong>Live system inputs</strong>
+            <p>These registers do not auto-fill the meeting. Use them as live evidence when writing the input sections below.</p>
+            <div class="touchpoint-grid top-space">
+              <a class="touchpoint-card" *ngFor="let item of managementSignals()" [routerLink]="item.link">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+                <small>{{ item.copy }}</small>
+              </a>
+            </div>
           </section>
 
           <label class="field"><span>Title</span><input formControlName="title" placeholder="Q1 2026 management review"></label>
@@ -157,9 +191,15 @@ type ReviewRecord = {
           <section class="detail-section">
             <h4>Inputs</h4>
             <div class="page-stack top-space">
+              <p class="section-note">Use these sections to cover the main ISO management-review inputs across quality, environmental, and OH&amp;S performance.</p>
               <label class="field"><span>Audit results</span><textarea rows="3" formControlName="auditResults" placeholder="Summarize audit outcomes and themes"></textarea></label>
               <label class="field"><span>CAPA status</span><textarea rows="3" formControlName="capaStatus" placeholder="Summarize open, overdue, and effective CAPA"></textarea></label>
               <label class="field"><span>KPI performance</span><textarea rows="3" formControlName="kpiPerformance" placeholder="Summarize KPI performance, breaches, and trends"></textarea></label>
+              <label class="field"><span>Customer and interested-party feedback</span><textarea rows="3" formControlName="customerInterestedPartiesFeedback" placeholder="Customer satisfaction, complaints, stakeholder concerns, and other feedback"></textarea></label>
+              <label class="field"><span>Provider performance</span><textarea rows="3" formControlName="providerPerformance" placeholder="Supplier/provider performance, approvals, audits, and escalations"></textarea></label>
+              <label class="field"><span>Compliance obligations</span><textarea rows="3" formControlName="complianceObligations" placeholder="Regulatory, legal, contractual, and compliance-obligation review status"></textarea></label>
+              <label class="field"><span>Incidents and emergency performance</span><textarea rows="3" formControlName="incidentEmergencyPerformance" placeholder="Incidents, near misses, emergency response, drills, and lessons learned"></textarea></label>
+              <label class="field"><span>Consultation and communication</span><textarea rows="3" formControlName="consultationCommunication" placeholder="Worker consultation, participation, communications, complaints, or relevant interested-party dialogue"></textarea></label>
               <label class="field"><span>Risks and opportunities</span><textarea rows="3" formControlName="risksOpportunities" placeholder="Summarize current risk exposure and opportunities"></textarea></label>
               <label class="field"><span>Changes affecting the system</span><textarea rows="3" formControlName="changesAffectingSystem" placeholder="Regulatory, organizational, supplier, or process changes"></textarea></label>
               <label class="field"><span>Previous actions</span><textarea rows="3" formControlName="previousActions" placeholder="Status of previous management review outputs"></textarea></label>
@@ -169,10 +209,14 @@ type ReviewRecord = {
           <section class="detail-section">
             <h4>Outputs</h4>
             <div class="page-stack top-space">
+              <p class="section-note">Use these sections to record the formal outputs expected from management review, not just meeting notes.</p>
               <label class="field"><span>Minutes</span><textarea rows="4" formControlName="minutes" placeholder="Formal meeting minutes"></textarea></label>
               <label class="field"><span>Decisions</span><textarea rows="3" formControlName="decisions" placeholder="Decisions made by management"></textarea></label>
               <label class="field"><span>Improvement actions</span><textarea rows="3" formControlName="improvementActions" placeholder="Improvement commitments and actions"></textarea></label>
+              <label class="field"><span>System changes needed</span><textarea rows="3" formControlName="systemChangesNeeded" placeholder="Needed changes to the management system, controls, or processes"></textarea></label>
+              <label class="field"><span>Objective and target changes</span><textarea rows="3" formControlName="objectiveTargetChanges" placeholder="Changes to objectives, targets, measures, or review priorities"></textarea></label>
               <label class="field"><span>Resource needs</span><textarea rows="3" formControlName="resourceNeeds" placeholder="People, budget, competence, or infrastructure needs"></textarea></label>
+              <label class="field"><span>Effectiveness conclusion</span><textarea rows="3" formControlName="effectivenessConclusion" placeholder="Conclusion on suitability, adequacy, and effectiveness of the management system"></textarea></label>
               <label class="field"><span>Summary</span><textarea rows="2" formControlName="summary" placeholder="Executive summary of the review"></textarea></label>
             </div>
           </section>
@@ -199,13 +243,13 @@ type ReviewRecord = {
             <section class="readiness-strip top-space">
               <article class="readiness-card">
                 <span>Inputs recorded</span>
-                <strong>{{ detailInputCount() }}/6</strong>
+                <strong>{{ detailInputCount() }}/{{ inputSectionCount() }}</strong>
                 <small>Core management review inputs are recorded directly in the meeting itself.</small>
               </article>
               <article class="readiness-card">
                 <span>Outputs recorded</span>
-                <strong>{{ detailOutputCount() }}/5</strong>
-                <small>{{ detailOutputCount() >= 3 ? 'Decisions and actions are recorded for follow-up.' : 'Capture decisions, improvement actions, and resource needs before closure.' }}</small>
+                <strong>{{ detailOutputCount() }}/{{ outputSectionCount() }}</strong>
+                <small>{{ detailOutputCount() >= heldOutputTarget() ? 'Decisions and outputs are recorded for follow-up.' : 'Capture decisions, system changes, objective changes, and resources before closure.' }}</small>
               </article>
               <article class="readiness-card">
                 <span>Management position</span>
@@ -218,6 +262,18 @@ type ReviewRecord = {
               <strong>Complete the meeting record before raising actions</strong>
               <p>This review still needs written meeting content. Use Edit meeting first, then create actions from the sections that contain actual decisions or follow-up needs.</p>
               <small>Action buttons stay available only where section content already exists.</small>
+            </section>
+
+            <section class="guidance-card top-space">
+              <strong>Live review signals</strong>
+              <p>These records should inform the meeting narrative, but they do not write into the review automatically. Use them when updating audit results, risks and opportunities, and changes affecting the system.</p>
+              <div class="touchpoint-grid top-space">
+                <a class="touchpoint-card" *ngFor="let item of managementSignals()" [routerLink]="item.link">
+                  <span>{{ item.label }}</span>
+                  <strong>{{ item.value }}</strong>
+                  <small>{{ item.reviewCopy || item.copy }}</small>
+                </a>
+              </div>
             </section>
 
             <div class="page-stack top-space">
@@ -309,6 +365,52 @@ type ReviewRecord = {
       color: #617165;
       line-height: 1.45;
     }
+
+    .section-note {
+      margin: 0;
+      color: #617165;
+      line-height: 1.5;
+    }
+
+    .touchpoint-grid {
+      display: grid;
+      gap: 0.8rem;
+      grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    }
+
+    .touchpoint-card {
+      display: grid;
+      gap: 0.35rem;
+      padding: 0.95rem 1rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(46, 67, 56, 0.1);
+      background: rgba(252, 253, 250, 0.82);
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .touchpoint-card span,
+    .touchpoint-card small {
+      display: block;
+    }
+
+    .touchpoint-card span {
+      color: #5e6e63;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .touchpoint-card strong {
+      font-size: 1.5rem;
+      color: #203427;
+      line-height: 1;
+    }
+
+    .touchpoint-card small {
+      color: #617165;
+      line-height: 1.45;
+    }
   `]
 })
 export class ManagementReviewPageComponent {
@@ -323,6 +425,12 @@ export class ManagementReviewPageComponent {
   protected readonly users = signal<UserOption[]>([]);
   protected readonly selectedId = signal<string | null>(null);
   protected readonly selectedReview = signal<ReviewRecord | null>(null);
+  protected readonly incidents = signal<IncidentSummaryRow[]>([]);
+  protected readonly providers = signal<ProviderSummaryRow[]>([]);
+  protected readonly obligations = signal<ObligationSummaryRow[]>([]);
+  protected readonly hazards = signal<HazardSummaryRow[]>([]);
+  protected readonly aspects = signal<AspectSummaryRow[]>([]);
+  protected readonly changes = signal<ChangeSummaryRow[]>([]);
   protected readonly draftActionTitle = signal<string | null>(null);
   protected readonly draftActionDescription = signal<string | null>(null);
   protected readonly loading = signal(false);
@@ -338,24 +446,60 @@ export class ManagementReviewPageComponent {
     auditResults: [''],
     capaStatus: [''],
     kpiPerformance: [''],
+    customerInterestedPartiesFeedback: [''],
+    providerPerformance: [''],
+    complianceObligations: [''],
+    incidentEmergencyPerformance: [''],
+    consultationCommunication: [''],
     risksOpportunities: [''],
     changesAffectingSystem: [''],
     previousActions: [''],
     minutes: [''],
     decisions: [''],
     improvementActions: [''],
+    systemChangesNeeded: [''],
+    objectiveTargetChanges: [''],
     resourceNeeds: [''],
+    effectivenessConclusion: [''],
     summary: [''],
     status: ['PLANNED' as ReviewStatus, Validators.required]
   });
 
   constructor() {
     this.loadUsers();
+    this.loadSystemSignals();
     this.route.data.subscribe((data) => {
       this.mode.set((data['mode'] as PageMode) || 'list');
       this.handleRoute(this.route.snapshot.paramMap);
     });
     this.route.paramMap.subscribe((params) => this.handleRoute(params));
+  }
+
+  private loadSystemSignals() {
+    this.api.get<IncidentSummaryRow[]>('incidents').subscribe({
+      next: (items) => this.incidents.set(items),
+      error: () => this.incidents.set([])
+    });
+    this.api.get<ProviderSummaryRow[]>('external-providers').subscribe({
+      next: (items) => this.providers.set(items),
+      error: () => this.providers.set([])
+    });
+    this.api.get<ObligationSummaryRow[]>('compliance-obligations').subscribe({
+      next: (items) => this.obligations.set(items),
+      error: () => this.obligations.set([])
+    });
+    this.api.get<HazardSummaryRow[]>('hazards').subscribe({
+      next: (items) => this.hazards.set(items),
+      error: () => this.hazards.set([])
+    });
+    this.api.get<AspectSummaryRow[]>('environmental-aspects').subscribe({
+      next: (items) => this.aspects.set(items),
+      error: () => this.aspects.set([])
+    });
+    this.api.get<ChangeSummaryRow[]>('change-management').subscribe({
+      next: (items) => this.changes.set(items),
+      error: () => this.changes.set([])
+    });
   }
 
   protected pageTitle() {
@@ -370,9 +514,9 @@ export class ManagementReviewPageComponent {
   protected pageDescription() {
     return {
       list: 'Run structured ISO management reviews with clear inputs, decisions, and action outputs.',
-      create: 'Capture the meeting against a structured ISO template and reference live system records.',
+      create: 'Capture the meeting against a structured ISO template and use live system records as evidence.',
       detail: 'Review management inputs, outputs, and linked actions in one calm operational workspace.',
-      edit: 'Update the meeting record while preserving the linked evidence and action context.'
+      edit: 'Update the meeting record while preserving the action context and using live records as evidence.'
     }[this.mode()];
   }
 
@@ -391,69 +535,116 @@ export class ManagementReviewPageComponent {
       { label: 'Audit results', value: review.auditResults },
       { label: 'CAPA status', value: review.capaStatus },
       { label: 'KPI performance', value: review.kpiPerformance },
+      { label: 'Customer and interested-party feedback', value: review.customerInterestedPartiesFeedback },
+      { label: 'Provider performance', value: review.providerPerformance },
+      { label: 'Compliance obligations', value: review.complianceObligations },
+      { label: 'Incidents and emergency performance', value: review.incidentEmergencyPerformance },
+      { label: 'Consultation and communication', value: review.consultationCommunication },
       { label: 'Risks and opportunities', value: review.risksOpportunities },
       { label: 'Changes affecting the system', value: review.changesAffectingSystem },
       { label: 'Previous actions', value: review.previousActions },
       { label: 'Minutes', value: review.minutes },
       { label: 'Decisions', value: review.decisions },
       { label: 'Improvement actions', value: review.improvementActions },
-      { label: 'Resource needs', value: review.resourceNeeds }
+      { label: 'System changes needed', value: review.systemChangesNeeded },
+      { label: 'Objective and target changes', value: review.objectiveTargetChanges },
+      { label: 'Resource needs', value: review.resourceNeeds },
+      { label: 'Effectiveness conclusion', value: review.effectivenessConclusion }
+    ];
+  }
+
+  protected managementSignals() {
+    const openIncidents = this.incidents().filter((item) => item.status !== 'CLOSED' && item.status !== 'ARCHIVED').length;
+    const providerReviews = this.providers().filter((item) =>
+      item.status === 'UNDER_REVIEW' ||
+      item.evaluationOutcome === 'ESCALATED' ||
+      item.evaluationOutcome === 'DISQUALIFIED' ||
+      (!!item.supplierAuditRequired && !item.supplierAuditLinked)
+    ).length;
+    const overdueObligations = this.obligations().filter((item) =>
+      item.status === 'UNDER_REVIEW' || this.isDatePast(item.nextReviewDate)
+    ).length;
+    const highHazards = this.hazards().filter((item) => item.status !== 'OBSOLETE' && item.severity === 'HIGH').length;
+    const highAspects = this.aspects().filter((item) => item.status !== 'OBSOLETE' && item.significance === 'HIGH').length;
+    const activeChanges = this.changes().filter((item) => !['CLOSED', 'REJECTED'].includes(item.status)).length;
+
+    return [
+      {
+        label: 'Audit and supplier assurance',
+        value: openIncidents + providerReviews,
+        copy: `${openIncidents} open incident${openIncidents === 1 ? '' : 's'} and ${providerReviews} provider review item${providerReviews === 1 ? '' : 's'} should inform audit results and supplier-control discussion.`,
+        reviewCopy: 'Use these live records when summarising audit results and supplier assurance themes.',
+        link: '/external-providers'
+      },
+      {
+        label: 'Risk and compliance exposure',
+        value: overdueObligations + highHazards + highAspects,
+        copy: `${overdueObligations} obligation review item${overdueObligations === 1 ? '' : 's'}, ${highHazards} high hazard${highHazards === 1 ? '' : 's'}, and ${highAspects} significant aspect${highAspects === 1 ? '' : 's'} should inform risk and opportunity review.`,
+        reviewCopy: 'Use these live records when writing risks and opportunities and wider compliance exposure.',
+        link: '/compliance-obligations'
+      },
+      {
+        label: 'Changes affecting the system',
+        value: activeChanges,
+        copy: `${activeChanges} active change request${activeChanges === 1 ? '' : 's'} may need to be discussed as current system change.`,
+        reviewCopy: 'Use active change requests to support the changes affecting the system section.',
+        link: '/change-management'
+      }
     ];
   }
 
   protected completedInputCount() {
-    const raw = this.reviewForm.getRawValue();
-    return [
-      raw.auditResults,
-      raw.capaStatus,
-      raw.kpiPerformance,
-      raw.risksOpportunities,
-      raw.changesAffectingSystem,
-      raw.previousActions
-    ].filter((value) => value.trim()).length;
+    return this.countFilledValues(this.inputValues(this.reviewForm.getRawValue()));
   }
 
   protected completedOutputCount() {
-    const raw = this.reviewForm.getRawValue();
-    return [
-      raw.minutes,
-      raw.decisions,
-      raw.improvementActions,
-      raw.resourceNeeds,
-      raw.summary
-    ].filter((value) => value.trim()).length;
+    return this.countFilledValues(this.outputValues(this.reviewForm.getRawValue()));
+  }
+
+  protected inputSectionCount() {
+    return this.inputValues(this.reviewForm.getRawValue()).length;
+  }
+
+  protected outputSectionCount() {
+    return this.outputValues(this.reviewForm.getRawValue()).length;
+  }
+
+  protected plannedInputTarget() {
+    return 7;
+  }
+
+  protected heldOutputTarget() {
+    return 4;
   }
 
   protected reviewReadinessLabel() {
     const status = this.reviewForm.getRawValue().status;
     if (status === 'CLOSED') {
-      return this.completedOutputCount() >= 3 ? 'Ready to close' : 'Closure gaps';
+      return this.completedOutputCount() >= 6 ? 'Ready to close' : 'Closure gaps';
     }
     if (status === 'HELD') {
-      return this.completedOutputCount() >= 2 ? 'Follow-up forming' : 'Outputs still thin';
+      return this.completedOutputCount() >= this.heldOutputTarget() ? 'Follow-up forming' : 'Outputs still thin';
     }
-    return this.completedInputCount() >= 4 ? 'Agenda ready' : 'Build inputs';
+    return this.completedInputCount() >= this.plannedInputTarget() ? 'Agenda ready' : 'Build inputs';
   }
 
   protected reviewReadinessHint() {
     const status = this.reviewForm.getRawValue().status;
     if (status === 'CLOSED') {
-      return 'A closed review should show clear decisions, actions, and resource needs.';
+      return 'A closed review should show decisions, system changes, objective changes, resources, and an effectiveness conclusion.';
     }
     if (status === 'HELD') {
-      return 'Held meetings should already show minutes, decisions, and at least initial actions.';
+      return 'Held meetings should already show minutes, decisions, initial actions, and management direction for follow-up.';
     }
-    return 'Planned meetings should bring together the main system-performance inputs before discussion starts.';
+    return 'Planned meetings should bring together audit, KPI, provider, compliance, incident, and risk inputs before discussion starts.';
   }
 
   protected reviewOutputsReady(review: ReviewRecord) {
-    return [review.minutes, review.decisions, review.improvementActions, review.resourceNeeds, review.summary]
-      .filter((value) => (value || '').trim()).length >= 3;
+    return this.countFilledValues(this.outputValues(review)) >= this.heldOutputTarget();
   }
 
   protected reviewInputCoverage(review: ReviewRecord) {
-    return [review.auditResults, review.capaStatus, review.kpiPerformance, review.risksOpportunities, review.changesAffectingSystem, review.previousActions]
-      .filter((value) => (value || '').trim()).length;
+    return this.countFilledValues(this.inputValues(review));
   }
 
   protected detailOutputCount() {
@@ -461,8 +652,7 @@ export class ManagementReviewPageComponent {
     if (!review) {
       return 0;
     }
-    return [review.minutes, review.decisions, review.improvementActions, review.resourceNeeds, review.summary]
-      .filter((value) => (value || '').trim()).length;
+    return this.countFilledValues(this.outputValues(review));
   }
 
   protected detailInputCount() {
@@ -479,10 +669,10 @@ export class ManagementReviewPageComponent {
       return 'Pending';
     }
     if (review.status === 'CLOSED') {
-      return this.detailOutputCount() >= 3 ? 'Decision recorded' : 'Closure incomplete';
+      return this.detailOutputCount() >= 6 ? 'Decision recorded' : 'Closure incomplete';
     }
     if (review.status === 'HELD') {
-      return 'Awaiting follow-up';
+      return this.detailOutputCount() >= this.heldOutputTarget() ? 'Follow-up defined' : 'Awaiting follow-up';
     }
     return 'Planned discussion';
   }
@@ -493,12 +683,12 @@ export class ManagementReviewPageComponent {
       return 'Management review outputs will appear once the meeting record is saved.';
     }
     if (review.status === 'CLOSED') {
-      return 'The meeting can be complete even while resulting actions continue afterward.';
+      return 'The meeting can be closed even while resulting actions continue afterward, but the conclusion and resource position should be explicit.';
     }
     if (review.status === 'HELD') {
-      return 'Review the decisions and actions before treating this meeting as closed.';
+      return 'Review the decisions, output actions, and effectiveness direction before treating this meeting as closed.';
     }
-    return 'Use linked inputs to prepare evidence before the meeting is held.';
+    return 'Use the live system records below to prepare evidence before the meeting is held.';
   }
 
   protected needsMeetingContentAttention() {
@@ -506,11 +696,8 @@ export class ManagementReviewPageComponent {
     if (!review || review.status === 'CLOSED') {
       return false;
     }
-    const hasCoreInputs = [review.auditResults, review.capaStatus, review.kpiPerformance, review.risksOpportunities]
-      .some((value) => (value || '').trim());
-    const hasCoreOutputs = [review.minutes, review.decisions, review.improvementActions, review.summary]
-      .some((value) => (value || '').trim());
-    return !hasCoreInputs || !hasCoreOutputs;
+    return this.countFilledValues(this.inputValues(review)) < this.plannedInputTarget()
+      || this.countFilledValues(this.outputValues(review)) < this.heldOutputTarget();
   }
 
   protected saveReview() {
@@ -537,13 +724,21 @@ export class ManagementReviewPageComponent {
       auditResults: raw.auditResults.trim() || undefined,
       capaStatus: raw.capaStatus.trim() || undefined,
       kpiPerformance: raw.kpiPerformance.trim() || undefined,
+      customerInterestedPartiesFeedback: raw.customerInterestedPartiesFeedback.trim() || undefined,
+      providerPerformance: raw.providerPerformance.trim() || undefined,
+      complianceObligations: raw.complianceObligations.trim() || undefined,
+      incidentEmergencyPerformance: raw.incidentEmergencyPerformance.trim() || undefined,
+      consultationCommunication: raw.consultationCommunication.trim() || undefined,
       risksOpportunities: raw.risksOpportunities.trim() || undefined,
       changesAffectingSystem: raw.changesAffectingSystem.trim() || undefined,
       previousActions: raw.previousActions.trim() || undefined,
       minutes: raw.minutes.trim() || undefined,
       decisions: raw.decisions.trim() || undefined,
       improvementActions: raw.improvementActions.trim() || undefined,
+      systemChangesNeeded: raw.systemChangesNeeded.trim() || undefined,
+      objectiveTargetChanges: raw.objectiveTargetChanges.trim() || undefined,
       resourceNeeds: raw.resourceNeeds.trim() || undefined,
+      effectivenessConclusion: raw.effectivenessConclusion.trim() || undefined,
       summary: raw.summary.trim() || undefined,
       inputs: []
     };
@@ -599,6 +794,13 @@ export class ManagementReviewPageComponent {
 
   protected canArchiveReview() {
     return this.authStore.hasPermission('admin.delete') && !!this.selectedId();
+  }
+
+  private isDatePast(value?: string | null) {
+    if (!value) {
+      return false;
+    }
+    return new Date(value).getTime() < Date.now();
   }
 
   protected archiveReview() {
@@ -660,13 +862,21 @@ export class ManagementReviewPageComponent {
       auditResults: '',
       capaStatus: '',
       kpiPerformance: '',
+      customerInterestedPartiesFeedback: '',
+      providerPerformance: '',
+      complianceObligations: '',
+      incidentEmergencyPerformance: '',
+      consultationCommunication: '',
       risksOpportunities: '',
       changesAffectingSystem: '',
       previousActions: '',
       minutes: '',
       decisions: '',
       improvementActions: '',
+      systemChangesNeeded: '',
+      objectiveTargetChanges: '',
       resourceNeeds: '',
+      effectivenessConclusion: '',
       summary: '',
       status: 'PLANNED'
     });
@@ -686,13 +896,21 @@ export class ManagementReviewPageComponent {
           auditResults: review.auditResults ?? '',
           capaStatus: review.capaStatus ?? '',
           kpiPerformance: review.kpiPerformance ?? '',
+          customerInterestedPartiesFeedback: review.customerInterestedPartiesFeedback ?? '',
+          providerPerformance: review.providerPerformance ?? '',
+          complianceObligations: review.complianceObligations ?? '',
+          incidentEmergencyPerformance: review.incidentEmergencyPerformance ?? '',
+          consultationCommunication: review.consultationCommunication ?? '',
           risksOpportunities: review.risksOpportunities ?? '',
           changesAffectingSystem: review.changesAffectingSystem ?? '',
           previousActions: review.previousActions ?? '',
           minutes: review.minutes ?? '',
           decisions: review.decisions ?? '',
           improvementActions: review.improvementActions ?? '',
+          systemChangesNeeded: review.systemChangesNeeded ?? '',
+          objectiveTargetChanges: review.objectiveTargetChanges ?? '',
           resourceNeeds: review.resourceNeeds ?? '',
+          effectivenessConclusion: review.effectivenessConclusion ?? '',
           summary: review.summary ?? '',
           status: review.status
         });
@@ -725,6 +943,39 @@ export class ManagementReviewPageComponent {
   private readError(error: HttpErrorResponse, fallback: string) {
     const message = error.error?.message;
     return Array.isArray(message) ? message.join(', ') : (message as string) || fallback;
+  }
+
+  private inputValues(review: Partial<ReviewRecord>) {
+    return [
+      review.auditResults,
+      review.capaStatus,
+      review.kpiPerformance,
+      review.customerInterestedPartiesFeedback,
+      review.providerPerformance,
+      review.complianceObligations,
+      review.incidentEmergencyPerformance,
+      review.consultationCommunication,
+      review.risksOpportunities,
+      review.changesAffectingSystem,
+      review.previousActions
+    ];
+  }
+
+  private outputValues(review: Partial<ReviewRecord>) {
+    return [
+      review.minutes,
+      review.decisions,
+      review.improvementActions,
+      review.systemChangesNeeded,
+      review.objectiveTargetChanges,
+      review.resourceNeeds,
+      review.effectivenessConclusion,
+      review.summary
+    ];
+  }
+
+  private countFilledValues(values: Array<string | null | undefined>) {
+    return values.filter((value) => !!String(value ?? '').trim()).length;
   }
 
 }
