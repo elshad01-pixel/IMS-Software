@@ -11,12 +11,20 @@ import { RecordWorkItemsComponent } from '../shared/record-work-items.component'
 
 type PageMode = 'list' | 'create' | 'detail' | 'edit';
 type AuditStep = 'plan' | 'conduct' | 'review';
+type AuditReviewStage = 'findings' | 'actions' | 'closeout';
 type AuditStatus = 'PLANNED' | 'IN_PROGRESS' | 'CHECKLIST_COMPLETED' | 'COMPLETED' | 'CLOSED';
 type AuditType = 'Internal Audit' | 'Supplier Audit';
 type AuditStandard = 'ISO 9001' | 'ISO 45001' | 'ISO 14001';
+type AuditScopeType = 'Company-wide' | 'Department' | 'Process' | 'Site' | 'Supplier';
+type AuditSortOption = 'attention' | 'auditDate' | 'updated' | 'programme';
 type ChecklistResponse = 'YES' | 'NO' | 'PARTIAL';
 type FindingSeverity = 'OBSERVATION' | 'MINOR' | 'MAJOR';
 type FindingStatus = 'OPEN' | 'CAPA_CREATED' | 'CLOSED';
+type ReturnNavigation = {
+  route: string[];
+  label: string;
+  state?: Record<string, unknown>;
+};
 
 type UserOption = {
   id: string;
@@ -56,6 +64,7 @@ type AuditChecklistItem = {
     status: FindingStatus;
     severity: FindingSeverity;
     dueDate?: string | null;
+    linkedCapaId?: string | null;
     ownerId?: string | null;
     checklistItemId?: string | null;
     clause?: string | null;
@@ -87,7 +96,14 @@ type AuditRecord = {
   title: string;
   type: AuditType;
   standard?: AuditStandard | null;
+  programme?: string | null;
+  scopeType?: AuditScopeType | null;
   scope?: string | null;
+  objectives?: string | null;
+  criteria?: string | null;
+  agenda?: string | null;
+  openingMeetingNotes?: string | null;
+  closingMeetingNotes?: string | null;
   leadAuditorId?: string | null;
   auditeeArea?: string | null;
   scheduledAt?: string | null;
@@ -99,6 +115,7 @@ type AuditRecord = {
   conclusion?: string | null;
   recommendations?: string | null;
   status: AuditStatus;
+  updatedAt?: string;
   checklistCount?: number;
   completedChecklistCount?: number;
   checklistAnsweredCount?: number;
@@ -146,6 +163,29 @@ type AuditRecord = {
             </div>
           </div>
 
+          <div class="detail-grid top-space" *ngIf="!loading() && audits().length">
+            <section class="detail-section">
+              <h4>Programme view</h4>
+              <p>{{ auditProgrammeSummary() }}</p>
+            </section>
+            <section class="detail-section">
+              <h4>Scope mix</h4>
+              <p>{{ auditScopeMixSummary() }}</p>
+            </section>
+          </div>
+
+          <div class="filter-row standard-filter-grid top-space" *ngIf="!loading() && audits().length">
+            <label class="field compact-field">
+              <span>Sort by</span>
+              <select [value]="sortBy()" (change)="setSortBy(readSelectValue($event))">
+                <option value="attention">Attention</option>
+                <option value="auditDate">Audit date</option>
+                <option value="updated">Updated</option>
+                <option value="programme">Programme</option>
+              </select>
+            </label>
+          </div>
+
           <div class="empty-state" *ngIf="loading()">
             <strong>Loading audits</strong>
             <span>Refreshing current audit plans, checklist progress, and findings.</span>
@@ -156,6 +196,7 @@ type AuditRecord = {
               <thead>
                 <tr>
                   <th>Audit</th>
+                  <th>Programme</th>
                   <th>Type</th>
                   <th>Audit date</th>
                   <th>Status</th>
@@ -165,11 +206,17 @@ type AuditRecord = {
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let item of audits()" [routerLink]="['/audits', item.id]">
+                <tr *ngFor="let item of sortedAudits()" [routerLink]="['/audits', item.id]">
                   <td>
                     <div class="table-title">
                       <strong>{{ item.code }}</strong>
                       <small>{{ item.title }}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="table-title">
+                      <strong>{{ item.programme || 'Not assigned' }}</strong>
+                      <small>{{ item.scopeType || 'Scope type not set' }}</small>
                     </div>
                   </td>
                   <td>{{ item.type }}<span *ngIf="item.standard"> | {{ item.standard }}</span></td>
@@ -231,7 +278,29 @@ type AuditRecord = {
             </label>
           </div>
 
+          <div class="form-grid-2">
+            <label class="field">
+              <span>Audit programme</span>
+              <input formControlName="programme" placeholder="2026 internal audit programme">
+            </label>
+            <label class="field">
+              <span>Scope type</span>
+              <select formControlName="scopeType">
+                <option>Company-wide</option>
+                <option>Department</option>
+                <option>Process</option>
+                <option>Site</option>
+                <option>Supplier</option>
+              </select>
+            </label>
+          </div>
+
           <label class="field"><span>Scope</span><textarea rows="3" formControlName="scope" placeholder="Process, site, supplier, or function under audit"></textarea></label>
+
+          <div class="form-grid-2">
+            <label class="field"><span>Audit objectives</span><textarea rows="3" formControlName="objectives" placeholder="Confirm process conformity, evaluate control effectiveness, and verify previous action closure."></textarea></label>
+            <label class="field"><span>Audit criteria</span><textarea rows="3" formControlName="criteria" placeholder="Applicable ISO clauses, internal procedures, customer or supplier requirements, and legal obligations."></textarea></label>
+          </div>
 
           <div class="form-grid-2">
             <label class="field">
@@ -258,6 +327,18 @@ type AuditRecord = {
             </label>
           </div>
 
+          <div class="button-row">
+            <button type="button" class="secondary" (click)="applyAuditPlanTemplate()">Fill agenda template</button>
+            <button type="button" class="secondary" (click)="applyMeetingTemplate()">Fill opening / closing notes</button>
+          </div>
+
+          <label class="field"><span>Audit agenda</span><textarea rows="5" formControlName="agenda" placeholder="Opening meeting, scope confirmation, process walk-through, evidence review, interviews, close-out."></textarea></label>
+
+          <div class="form-grid-2">
+            <label class="field"><span>Opening meeting notes</span><textarea rows="4" formControlName="openingMeetingNotes" placeholder="Attendance, scope confirmation, timing, health and safety rules, and communication expectations."></textarea></label>
+            <label class="field"><span>Closing meeting notes</span><textarea rows="4" formControlName="closingMeetingNotes" placeholder="Summary of findings, agreed follow-up, next steps, and expected report timing."></textarea></label>
+          </div>
+
           <label class="field"><span>Summary</span><textarea rows="3" formControlName="summary" placeholder="Audit objective, site, and expected outputs"></textarea></label>
 
           <div class="button-row">
@@ -276,16 +357,16 @@ type AuditRecord = {
           </div>
           <div class="entity-list top-space">
             <div class="entity-item">
-              <strong>Internal audit</strong>
-              <small>Select an ISO standard to load predefined audit questions across clauses 4-10.</small>
+              <strong>Programme planning</strong>
+              <small>Set the programme, scope type, objectives, criteria, and agenda before the audit is issued to the auditee.</small>
             </div>
             <div class="entity-item">
-              <strong>Supplier audit</strong>
-              <small>Use a lightweight question list with an optional section or category.</small>
+              <strong>Department, process, or supplier audits</strong>
+              <small>Use the scope type to show whether this is a process audit, department audit, company-wide review, site audit, or supplier audit.</small>
             </div>
             <div class="entity-item">
-              <strong>Findings and actions</strong>
-              <small>Raise findings, create CAPA, and prepare global actions from the audit record.</small>
+              <strong>Meeting templates</strong>
+              <small>Use the starter buttons to issue an agenda, prepare the opening meeting, and capture close-out notes before the final report.</small>
             </div>
           </div>
         </section>
@@ -366,21 +447,54 @@ type AuditRecord = {
             <div class="section-head">
               <div>
                 <span class="section-eyebrow">Audit plan</span>
-                <h3>Scope and readiness</h3>
-                <p class="subtle">Confirm what will be audited, who owns the audit, and what outcome should be produced before starting fieldwork.</p>
+                <h3>Programme, scope, and readiness</h3>
+                <p class="subtle">Confirm the audit programme, scope type, criteria, agenda, and meeting structure before starting fieldwork.</p>
               </div>
+            </div>
+
+            <div class="summary-strip top-space">
+              <article class="summary-item">
+                <span>Programme</span>
+                <strong>{{ selectedAudit()?.programme || 'Not set' }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Scope type</span>
+                <strong>{{ selectedAudit()?.scopeType || 'Not set' }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Scheduled date</span>
+                <strong>{{ selectedAudit()?.scheduledAt ? selectedAudit()?.scheduledAt?.slice(0, 10) : 'Not scheduled' }}</strong>
+              </article>
             </div>
 
             <dl class="key-value top-space">
               <dt>Scope</dt>
               <dd>{{ selectedAudit()?.scope || 'No scope recorded.' }}</dd>
+              <dt>Audit objectives</dt>
+              <dd>{{ selectedAudit()?.objectives || 'No objectives recorded.' }}</dd>
+              <dt>Audit criteria</dt>
+              <dd>{{ selectedAudit()?.criteria || 'No criteria recorded.' }}</dd>
               <dt>Auditee area</dt>
               <dd>{{ selectedAudit()?.auditeeArea || 'Not set' }}</dd>
-              <dt>Scheduled date</dt>
-              <dd>{{ selectedAudit()?.scheduledAt ? selectedAudit()?.scheduledAt?.slice(0, 10) : 'Not scheduled' }}</dd>
               <dt>Summary</dt>
               <dd>{{ selectedAudit()?.summary || 'No summary yet.' }}</dd>
             </dl>
+
+            <section class="detail-section top-space">
+              <h4>Audit agenda</h4>
+              <p>{{ selectedAudit()?.agenda || 'No agenda prepared yet.' }}</p>
+            </section>
+
+            <div class="detail-grid top-space">
+              <section class="detail-section">
+                <h4>Opening meeting</h4>
+                <p>{{ selectedAudit()?.openingMeetingNotes || 'No opening meeting notes prepared yet.' }}</p>
+              </section>
+              <section class="detail-section">
+                <h4>Closing meeting</h4>
+                <p>{{ selectedAudit()?.closingMeetingNotes || 'No closing meeting notes prepared yet.' }}</p>
+              </section>
+            </div>
 
             <div class="button-row top-space">
               <button type="button" (click)="setActiveStep('conduct')">Start audit</button>
@@ -391,26 +505,26 @@ type AuditRecord = {
           <section class="card panel-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Checklist behavior</span>
-                <h3>{{ selectedAudit()?.type === 'Internal Audit' ? 'Preloaded ISO questions' : 'Simple supplier checklist' }}</h3>
+                <span class="section-eyebrow">Planning pack</span>
+                <h3>{{ selectedAudit()?.type === 'Internal Audit' ? 'Internal audit planning guidance' : 'Supplier audit planning guidance' }}</h3>
                 <p class="subtle">{{ selectedAudit()?.type === 'Internal Audit'
-                  ? 'Internal audits already include structured ISO questions under clauses 4 to 10. Auditors do not need to author the checklist.'
-                  : 'Supplier audits keep authoring light: add a question, optionally assign a group, and start assessing.' }}</p>
+                  ? 'Use the programme, agenda, and opening or closing notes to issue the audit properly before the checklist starts.'
+                  : 'Supplier audits should still start with a simple agenda, opening discussion, and planned close-out summary before questions are assessed.' }}</p>
               </div>
             </div>
 
             <div class="entity-list top-space">
               <div class="entity-item">
-                <strong>Evidence ready</strong>
-                <small>Each checklist item can hold its own attachments so supporting evidence stays tied to the exact question reviewed.</small>
+                <strong>Annual audit programme</strong>
+                <small>Use the programme field to show which annual plan or audit cycle this audit belongs to before it moves into execution.</small>
               </div>
               <div class="entity-item">
-                <strong>Finding trigger</strong>
-                <small>When a response is No or Partial, the UI prompts the auditor to raise a finding immediately.</small>
+                <strong>Department, process, or whole-company planning</strong>
+                <small>The scope type makes it explicit whether the audit is company-wide, department-based, process-based, site-based, or supplier-focused.</small>
               </div>
               <div class="entity-item">
-                <strong>Closure path</strong>
-                <small>When the checklist is complete, move into the review step for findings, close-out notes, and final completion.</small>
+                <strong>Meeting structure</strong>
+                <small>Opening and closing meeting notes let the audit record show how the agenda was issued, how the audit was opened, and how the results were closed out.</small>
               </div>
             </div>
 
@@ -434,7 +548,7 @@ type AuditRecord = {
               <div>
                 <span class="section-eyebrow">Conduct audit</span>
                 <h3>{{ selectedAudit()?.type === 'Internal Audit' ? 'Clause-by-clause checklist' : 'Supplier audit checklist' }}</h3>
-                <p class="subtle">Answer each question. If a requirement is not met, record a finding and continue the audit.</p>
+                <p class="subtle">Answer each question in order. If a requirement is not met, choose No, record the finding, then continue the audit from the same question.</p>
               </div>
             </div>
 
@@ -533,13 +647,13 @@ type AuditRecord = {
               </div>
 
               <div class="question-stack top-space" *ngIf="currentChecklistGroup() as group">
-                <article class="question-card" *ngFor="let item of group.items; let questionIndex = index" [class.is-open]="isChecklistExpanded(item.id)">
+                <article class="question-card" *ngFor="let item of group.items; let questionIndex = index" [class.is-open]="isChecklistExpanded(item.id)" [attr.id]="'audit-checklist-item-' + item.id">
                   <div class="question-card__head">
                     <div class="question-card__title">
                       <div class="question-meta">
                         <span class="question-number">{{ item.subclause || questionNumber(group.clause, questionIndex) }}</span>
                         <small>Clause {{ item.clause || group.clause }}</small>
-                        <span *ngIf="findingForChecklist(item)" class="finding-indicator">Finding recorded</span>
+                        <span *ngIf="findingForChecklist(item)" class="finding-indicator">{{ findingForChecklist(item)?.linkedCapaId ? 'CAPA linked' : 'Finding recorded' }}</span>
                       </div>
                       <strong>{{ item.title }}</strong>
                     </div>
@@ -550,12 +664,18 @@ type AuditRecord = {
                         <button type="button" class="response-button" [class.active]="item.response === 'NO'" [disabled]="isChecklistReadOnly()" (click)="setChecklistResponse(item, 'NO')">No</button>
                         <button type="button" class="response-button" [class.active]="item.response === 'PARTIAL'" [disabled]="isChecklistReadOnly()" (click)="setChecklistResponse(item, 'PARTIAL')">N/A</button>
                       </div>
+                      <small class="question-next-step" *ngIf="item.response === 'NO' && !findingForChecklist(item)">
+                        Step 2 of 2: record the finding for this gap before moving on.
+                      </small>
+                      <small class="question-next-step success" *ngIf="item.response === 'NO' && findingForChecklist(item)">
+                        {{ findingForChecklist(item)?.linkedCapaId ? 'Finding and CAPA already linked. Review the linked CAPA or continue with the next question.' : 'Finding recorded. Finish the note or evidence here, then continue with the next question.' }}
+                      </small>
 
                       <div class="question-quick-actions">
                         <button type="button" class="button-link secondary compact" (click)="toggleChecklist(item.id)">
                           {{ isChecklistExpanded(item.id) ? 'Hide details' : (item.notes ? 'Edit Comment' : 'Add Comment') }}
                         </button>
-                        <button type="button" class="button-link secondary compact" *ngIf="!findingForChecklist(item) && item.response === 'NO' && !isChecklistReadOnly()" (click)="openFindingComposer(item)">Add Finding</button>
+                        <button type="button" class="button-link secondary compact" *ngIf="!findingForChecklist(item) && item.response === 'NO' && !isChecklistReadOnly()" (click)="openFindingComposer(item)">Record Finding</button>
                         <button type="button" class="button-link secondary compact" *ngIf="findingForChecklist(item)" (click)="viewFindingForChecklist(item)">View Finding</button>
                       </div>
                     </div>
@@ -576,11 +696,11 @@ type AuditRecord = {
 
                     <div class="finding-prompt top-space" *ngIf="item.response === 'NO'">
                       <div>
-                        <strong>{{ findingForChecklist(item) ? 'Finding recorded' : 'Requirement not met' }}</strong>
-                        <p>{{ findingForChecklist(item) ? 'A finding is already linked to this question. You can continue the audit.' : 'Record a finding for this audit gap, then continue from the same question.' }}</p>
+                        <strong>{{ findingForChecklist(item) ? (findingForChecklist(item)?.linkedCapaId ? 'Finding and CAPA already linked for this question' : 'Finding recorded for this question') : 'Requirement not met: finding required' }}</strong>
+                        <p>{{ findingForChecklist(item) ? (findingForChecklist(item)?.linkedCapaId ? 'This failed answer already has a linked finding and CAPA. Use View Finding if you need to return to that trail before continuing.' : 'This failed answer already has a linked finding. Use View Finding if you need to review CAPA or action follow-up before continuing.') : 'The No answer has been recorded. Now capture the finding title, gap description, and severity so the review step has a complete audit trail.' }}</p>
                       </div>
                       <div class="button-row compact-row">
-                        <button type="button" class="secondary" *ngIf="!findingForChecklist(item) && !isChecklistReadOnly()" (click)="openFindingComposer(item)">Add Finding</button>
+                        <button type="button" class="secondary" *ngIf="!findingForChecklist(item) && !isChecklistReadOnly()" (click)="openFindingComposer(item)">Record finding now</button>
                         <button type="button" class="secondary" *ngIf="findingForChecklist(item)" (click)="viewFindingForChecklist(item)">View Finding</button>
                       </div>
                     </div>
@@ -599,11 +719,11 @@ type AuditRecord = {
               <section class="completion-callout top-space" *ngIf="isChecklistComplete()">
                 <div>
                   <span class="section-eyebrow">Checklist complete</span>
-                  <h4>Move into the review and close-out step</h4>
-                  <p class="subtle">All checklist questions are answered. Review findings, capture the audit conclusion, and complete the audit record.</p>
+                  <h4>Next step: review findings</h4>
+                  <p class="subtle">All checklist questions are answered. Open Review findings now, decide the follow-up route for each gap, then complete the audit close-out last.</p>
                 </div>
                 <div class="button-row compact-row">
-                  <button type="button" (click)="setActiveStep('review')">Review Findings</button>
+                  <button type="button" (click)="openReviewFindings()">Next: Review findings</button>
                 </div>
               </section>
             </ng-container>
@@ -621,13 +741,21 @@ type AuditRecord = {
             </div>
 
             <form [formGroup]="findingForm" class="page-stack top-space" (ngSubmit)="addFindingFromChecklist(pendingItem)">
+              <section class="detail-section">
+                <h4>What to do now</h4>
+                <p>{{ findingModalChecklistCopy() }}</p>
+              </section>
+              <section class="compliance-note">
+                <strong>{{ findingDraftHeading() }}</strong>
+                <span>{{ findingDraftGuidance() }}</span>
+              </section>
               <label class="field">
                 <span>Finding title</span>
-                <input formControlName="title" placeholder="Requirement not met">
+                <input formControlName="title" placeholder="Clause 4.1 gap">
               </label>
               <label class="field">
                 <span>Description</span>
-                <textarea rows="4" formControlName="description" placeholder="Describe the gap, evidence, and impact"></textarea>
+                <textarea rows="4" formControlName="description" placeholder="State what requirement was not met, what evidence was seen, and why the gap matters."></textarea>
               </label>
               <label class="field">
                 <span>Severity</span>
@@ -637,6 +765,7 @@ type AuditRecord = {
                   <option>MAJOR</option>
                 </select>
               </label>
+              <small class="field-helper">{{ findingSeverityHelperCopy() }}</small>
               <div class="button-row">
                 <button type="submit" [disabled]="findingForm.invalid || saving()">Save finding</button>
                 <button type="button" class="secondary" [disabled]="saving()" (click)="cancelFindingComposer()">Cancel</button>
@@ -649,42 +778,34 @@ type AuditRecord = {
           <section class="card panel-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Checklist completion</span>
-                <h3>Review findings and close out the audit</h3>
-                <p class="subtle">Once the checklist is complete, review findings, capture the audit conclusion, and finish the audit record. Findings and actions can continue after audit completion.</p>
+                <span class="section-eyebrow">Review flow</span>
+                <h3>Review findings, then finish the audit</h3>
+                <p class="subtle">Stay in Findings until each gap has a clear route. Move to Audit actions or Close-out only when you are ready.</p>
               </div>
             </div>
 
-            <div class="summary-grid top-space">
-              <article class="summary-item">
-                <span>Total questions</span>
+            <div class="summary-grid review-summary-grid top-space">
+              <article class="summary-item review-summary-item">
+                <span>Questions</span>
                 <strong>{{ selectedAudit()?.checklistCount || 0 }}</strong>
               </article>
-              <article class="summary-item">
-                <span>Yes</span>
-                <strong>{{ selectedAudit()?.checklistYesCount || 0 }}</strong>
-              </article>
-              <article class="summary-item">
-                <span>No</span>
-                <strong>{{ selectedAudit()?.checklistNoCount || 0 }}</strong>
-              </article>
-              <article class="summary-item">
-                <span>N/A</span>
-                <strong>{{ selectedAudit()?.checklistNaCount || 0 }}</strong>
-              </article>
-              <article class="summary-item">
+              <article class="summary-item review-summary-item">
                 <span>Findings</span>
                 <strong>{{ selectedAudit()?.findingCount || 0 }}</strong>
               </article>
-              <article class="summary-item">
-                <span>Linked actions</span>
-                <strong>{{ selectedAudit()?.actionItemCount || 0 }}</strong>
+              <article class="summary-item review-summary-item">
+                <span>Major</span>
+                <strong>{{ majorFindingCount() }}</strong>
+              </article>
+              <article class="summary-item review-summary-item">
+                <span>Open follow-up</span>
+                <strong>{{ openFindingFollowUpCount() }}</strong>
               </article>
             </div>
 
-            <section class="compliance-note top-space" *ngIf="findingSeveritySummary() as severitySummary">
-              <strong>{{ severitySummary.heading }}</strong>
-              <span>{{ severitySummary.copy }}</span>
+            <section class="review-focus-banner top-space">
+              <strong>{{ reviewFocusHeading() }}</strong>
+              <span>{{ reviewFocusCopy() }}</span>
             </section>
 
             <div class="empty-state top-space" *ngIf="!isChecklistComplete()">
@@ -693,53 +814,108 @@ type AuditRecord = {
             </div>
           </section>
 
-          <section class="card panel-card">
+          <nav class="audit-review-stages" *ngIf="isChecklistComplete()" aria-label="Audit review stages">
+            <button type="button" class="audit-review-stage" [class.active]="reviewStage() === 'findings'" (click)="setReviewStage('findings')">
+              <strong>1. Findings</strong>
+              <small>Decide CAPA or closure</small>
+            </button>
+            <button type="button" class="audit-review-stage" [class.active]="reviewStage() === 'actions'" (click)="setReviewStage('actions')">
+              <strong>2. Audit actions</strong>
+              <small>Assign lighter follow-up</small>
+            </button>
+            <button type="button" class="audit-review-stage" [class.active]="reviewStage() === 'closeout'" (click)="setReviewStage('closeout')">
+              <strong>3. Close-out</strong>
+              <small>Complete the audit record</small>
+            </button>
+          </nav>
+
+          <section class="card panel-card" *ngIf="reviewStage() === 'findings'">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Review findings</span>
-                <h3>Findings and corrective actions</h3>
-                <p class="subtle">Review each finding, open CAPA where required, and create corrective actions only where they add value.</p>
+                <span class="section-eyebrow">Stage 1</span>
+                <h3>Review findings and decide the follow-up route</h3>
+                <p class="subtle">Pick one finding, review the gap, then choose the lightest suitable route: close it, prepare an audit action, or raise CAPA.</p>
               </div>
             </div>
-
-            <section class="detail-section top-space" *ngIf="(selectedAudit()?.findings || []).length">
-              <h4>Traceability path</h4>
-              <p>{{ findingsTraceabilityCopy() }}</p>
-              <div class="button-row top-space">
-                <button type="button" class="secondary" (click)="scrollToAuditActions()">Open linked actions</button>
-                <button *ngIf="selectedAudit()?.findingCount" type="button" class="tertiary" (click)="setActiveStep('conduct')">Review checklist evidence</button>
-              </div>
-            </section>
 
             <div class="empty-state top-space" *ngIf="!(selectedAudit()?.findings || []).length">
               <strong>No findings yet</strong>
               <span>The audit can still be completed. Add findings only where a requirement was not met during checklist execution.</span>
             </div>
 
-            <div class="entity-list top-space" *ngIf="(selectedAudit()?.findings || []).length">
-              <article class="entity-item" *ngFor="let finding of selectedAudit()?.findings || []" [class.is-highlighted]="selectedFindingId() === finding.id">
-                <div class="section-head">
-                  <div>
+            <div class="review-findings-layout top-space" *ngIf="(selectedAudit()?.findings || []).length">
+              <aside class="review-findings-list">
+                <header class="review-findings-list__header">
+                  <strong>Findings in this audit</strong>
+                  <small>Select one finding to review its gap, evidence route, and follow-up decision.</small>
+                </header>
+
+                <button
+                  type="button"
+                  class="review-finding-list-item"
+                  *ngFor="let finding of selectedAudit()?.findings || []"
+                  [class.active]="activeReviewFinding()?.id === finding.id"
+                  (click)="selectFinding(finding)"
+                >
+                  <span class="review-finding-list-item__meta">
                     <strong>{{ finding.title }}</strong>
-                    <small>{{ findingSeverityLabel(finding.severity) }} | {{ findingStatusLabel(finding.status) }}{{ finding.clause ? ' | clause ' + finding.clause : '' }}{{ finding.dueDate ? ' | due ' + finding.dueDate.slice(0, 10) : '' }}</small>
+                    <small>{{ findingSeverityLabel(finding.severity) }} | {{ findingStatusLabel(finding.status) }}{{ finding.clause ? ' | clause ' + finding.clause : '' }}</small>
+                  </span>
+                  <span class="review-finding-list-item__status">{{ findingDecisionBadge(finding) }}</span>
+                </button>
+              </aside>
+
+              <section class="review-finding-workspace" *ngIf="activeReviewFinding() as finding">
+                <div class="review-finding-workspace__header">
+                  <div>
+                    <span class="section-eyebrow">Current finding</span>
+                    <h4>{{ finding.title }}</h4>
+                    <p class="subtle">{{ findingSeverityLabel(finding.severity) }} | {{ findingStatusLabel(finding.status) }}{{ finding.clause ? ' | clause ' + finding.clause : '' }}{{ finding.dueDate ? ' | due ' + finding.dueDate.slice(0, 10) : '' }}</p>
                   </div>
                 </div>
-                <p class="subtle">{{ cleanFindingDescription(finding.description) }}</p>
-                <section class="compliance-note compact-note top-space">
+
+                <section class="review-callout">
                   <strong>{{ findingControlHeading(finding) }}</strong>
                   <span>{{ findingControlCopy(finding) }}</span>
                 </section>
-                <div class="button-row compact-row">
-                  <button type="button" class="secondary" (click)="focusChecklistQuestion(finding)" [disabled]="!finding.checklistItemId">Open question & evidence</button>
-                  <button type="button" class="secondary" [disabled]="!!finding.linkedCapaId || saving() || !canCreateCapa()" (click)="createCapaFromFinding(finding)">
-                    {{ finding.linkedCapaId ? 'CAPA linked' : 'Create CAPA' }}
-                  </button>
-                  <a *ngIf="finding.linkedCapaId" [routerLink]="['/capa', finding.linkedCapaId]" class="button-link secondary compact">Open CAPA</a>
-                  <button type="button" class="secondary" [disabled]="saving() || !canCreateActions()" (click)="prepareActionFromFinding(finding)">Create corrective action</button>
-                  <button type="button" class="tertiary" (click)="scrollToAuditActions()">Open linked actions</button>
-                  <button type="button" class="secondary" [disabled]="saving() || finding.status === 'CLOSED' || !canWriteAudit()" (click)="updateFindingStatus(finding, 'CLOSED')">Close finding</button>
-                </div>
-              </article>
+
+                <section class="detail-section review-detail-card">
+                  <h4>Finding description</h4>
+                  <p>{{ cleanFindingDescription(finding.description) }}</p>
+                </section>
+
+                <section class="detail-section review-detail-card">
+                  <h4>Next required step</h4>
+                  <p>{{ findingNextStepCopy(finding) }}</p>
+                </section>
+
+                <section class="detail-section review-detail-card review-evidence-row">
+                  <div>
+                    <h4>Evidence and traceability</h4>
+                    <p>{{ findingsTraceabilityCopy() }}</p>
+                  </div>
+                  <div class="button-row compact-row">
+                    <button type="button" class="secondary" (click)="focusChecklistQuestion(finding)" [disabled]="!finding.checklistItemId">Open question & evidence</button>
+                    <button type="button" class="tertiary" (click)="setReviewStage('actions')">Review audit actions</button>
+                    <a *ngIf="finding.linkedCapaId" [routerLink]="['/capa', finding.linkedCapaId]" [state]="auditLinkState(finding)" class="button-link secondary compact">Open linked CAPA</a>
+                  </div>
+                </section>
+
+                <section class="review-decision-panel">
+                  <div class="review-decision-panel__copy">
+                    <strong>Choose the follow-up route</strong>
+                    <small>Observation can often be closed. Minor findings usually need an audit action. Major findings normally move into CAPA.</small>
+                  </div>
+                  <div class="button-row review-decision-panel__actions">
+                    <button type="button" class="secondary" [disabled]="saving() || finding.status === 'CLOSED' || !canWriteAudit()" (click)="updateFindingStatus(finding, 'CLOSED')">Close finding</button>
+                    <button type="button" class="secondary" *ngIf="!finding.linkedCapaId" [disabled]="saving() || !canCreateActions()" (click)="prepareActionFromFinding(finding)">Create audit action</button>
+                    <button type="button" class="secondary" *ngIf="!finding.linkedCapaId" [disabled]="saving() || !canCreateCapa()" (click)="createCapaFromFinding(finding)">
+                      {{ finding.linkedCapaId ? 'CAPA linked' : 'Create CAPA' }}
+                    </button>
+                    <a *ngIf="finding.linkedCapaId" [routerLink]="['/capa', finding.linkedCapaId]" [state]="auditLinkState(finding)" class="button-link secondary compact">Open CAPA</a>
+                  </div>
+                </section>
+              </section>
             </div>
 
             <section class="detail-section top-space" *ngIf="auditTouchpoints().length">
@@ -755,21 +931,40 @@ type AuditRecord = {
             </section>
           </section>
 
-          <div id="audit-actions-section">
+          <section class="page-stack" id="audit-actions-section" *ngIf="reviewStage() === 'actions'">
+            <div class="section-head">
+              <div>
+                <span class="section-eyebrow">Stage 2</span>
+                <h3>Assign audit follow-up actions</h3>
+                <p class="subtle">Use audit actions when a finding needs owned follow-up but does not need a full CAPA record. These actions stay linked to the audit as a whole and can support multiple findings.</p>
+              </div>
+            </div>
+
+            <section class="detail-section">
+              <h4>How to use audit actions</h4>
+              <p>Keep CAPA for major findings and formal corrective-action workflows. Use audit actions for lighter follow-up such as evidence completion, retraining, document updates, or verification tasks that the auditor still wants tracked.</p>
+            </section>
+
             <iso-record-work-items
               [sourceType]="'audit'"
               [sourceId]="selectedId()"
               [draftTitle]="draftActionTitle()"
               [draftDescription]="draftActionDescription()"
+              [returnNavigation]="auditReturnNavigation()"
             />
-          </div>
 
-          <section class="card panel-card">
+            <div class="button-row">
+              <button type="button" class="secondary" (click)="setReviewStage('findings')">Back to findings</button>
+              <button type="button" (click)="setReviewStage('closeout')">Continue to close-out</button>
+            </div>
+          </section>
+
+          <section class="card panel-card" *ngIf="reviewStage() === 'closeout'">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Audit close-out</span>
-                <h3>Conclusion and recommendations</h3>
-                <p class="subtle">Capture the overall conclusion, recommendations, and who completed the audit. Open findings and actions can continue after the audit itself is completed.</p>
+                <span class="section-eyebrow">Stage 3</span>
+                <h3>Complete the audit close-out</h3>
+                <p class="subtle">Capture the overall conclusion, recommendations, and auditor details once the checklist is complete and the follow-up route for findings is clear. Findings and actions can continue after the audit itself is completed.</p>
               </div>
             </div>
 
@@ -800,6 +995,7 @@ type AuditRecord = {
                 </label>
               </div>
               <div class="button-row">
+                <button type="button" class="secondary" (click)="setReviewStage('findings')">Back to findings</button>
                 <button type="button" class="secondary" (click)="saveCloseoutDraft()" [disabled]="saving() || selectedAudit()?.status === 'COMPLETED' || !canWriteAudit()">Save close-out draft</button>
                 <button type="submit" [disabled]="saving() || !canCompleteAudit()">Complete Audit</button>
               </div>
@@ -874,10 +1070,227 @@ type AuditRecord = {
       gap: 0.85rem;
     }
 
+    .review-summary-grid {
+      grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+    }
+
+    .review-summary-item {
+      min-height: auto;
+      padding: 0.85rem 1rem;
+      background: rgba(250, 251, 248, 0.96);
+      border-color: rgba(23, 50, 37, 0.08);
+    }
+
+    .review-focus-banner {
+      display: grid;
+      gap: 0.35rem;
+      padding: 1rem 1.15rem;
+      border-radius: 18px;
+      border: 1px solid rgba(184, 132, 51, 0.24);
+      background: linear-gradient(180deg, rgba(252, 248, 240, 0.96), rgba(248, 242, 230, 0.9));
+    }
+
+    .review-focus-banner strong {
+      color: #203427;
+      font-size: 1rem;
+    }
+
+    .review-focus-banner span {
+      color: #46564b;
+      line-height: 1.55;
+    }
+
     .audit-steps {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 0.85rem;
+    }
+
+    .audit-review-stages {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .audit-review-stage {
+      border: 1px solid rgba(23, 50, 37, 0.1);
+      background: rgba(248, 250, 246, 0.92);
+      border-radius: 18px;
+      padding: 0.9rem 1rem;
+      display: grid;
+      gap: 0.2rem;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+    }
+
+    .audit-review-stage small {
+      color: var(--muted);
+    }
+
+    .audit-review-stage.active {
+      border-color: rgba(36, 79, 61, 0.32);
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 18px 42px rgba(24, 45, 32, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .review-findings-layout {
+      display: grid;
+      grid-template-columns: minmax(16rem, 0.88fr) minmax(0, 1.45fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .review-findings-list,
+    .review-finding-workspace {
+      border: 1px solid rgba(23, 50, 37, 0.08);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 16px 34px rgba(24, 45, 32, 0.05);
+    }
+
+    .review-findings-list {
+      padding: 1rem;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .review-findings-list__header {
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .review-findings-list__header strong {
+      color: #203427;
+    }
+
+    .review-findings-list__header small {
+      color: #627267;
+      line-height: 1.5;
+    }
+
+    .review-finding-list-item {
+      width: 100%;
+      border: 1px solid rgba(23, 50, 37, 0.08);
+      border-radius: 18px;
+      background: rgba(246, 249, 244, 0.88);
+      padding: 0.95rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 0.75rem;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease, background 120ms ease;
+    }
+
+    .review-finding-list-item:hover {
+      border-color: rgba(36, 79, 61, 0.2);
+      background: rgba(250, 251, 249, 0.98);
+    }
+
+    .review-finding-list-item.active {
+      border-color: rgba(184, 132, 51, 0.3);
+      background: rgba(253, 248, 240, 0.96);
+      box-shadow: 0 12px 28px rgba(26, 45, 34, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .review-finding-list-item__meta {
+      display: grid;
+      gap: 0.28rem;
+      min-width: 0;
+    }
+
+    .review-finding-list-item__meta strong {
+      color: #203427;
+      line-height: 1.4;
+    }
+
+    .review-finding-list-item__meta small {
+      color: #607165;
+      line-height: 1.45;
+    }
+
+    .review-finding-list-item__status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(23, 50, 37, 0.08);
+      color: #274233;
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+
+    .review-finding-workspace {
+      padding: 1.1rem 1.15rem;
+      display: grid;
+      gap: 0.95rem;
+    }
+
+    .review-finding-workspace__header h4 {
+      margin: 0.2rem 0 0;
+      font-size: 1.2rem;
+      color: #172519;
+    }
+
+    .review-callout {
+      display: grid;
+      gap: 0.25rem;
+      padding: 0.9rem 1rem;
+      border-radius: 18px;
+      border: 1px solid rgba(184, 132, 51, 0.2);
+      background: rgba(252, 247, 238, 0.92);
+    }
+
+    .review-callout strong {
+      color: #203427;
+    }
+
+    .review-callout span {
+      color: #46564b;
+      line-height: 1.55;
+    }
+
+    .review-detail-card {
+      background: rgba(248, 250, 247, 0.92);
+    }
+
+    .review-evidence-row {
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .review-decision-panel {
+      display: grid;
+      gap: 0.9rem;
+      padding: 1rem 1.05rem;
+      border-radius: 20px;
+      border: 1px solid rgba(36, 79, 61, 0.14);
+      background: linear-gradient(180deg, rgba(242, 247, 243, 0.96), rgba(248, 251, 248, 0.96));
+    }
+
+    .review-decision-panel__copy {
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .review-decision-panel__copy strong {
+      color: #1f3427;
+    }
+
+    .review-decision-panel__copy small {
+      color: #55665b;
+      line-height: 1.55;
+    }
+
+    .review-decision-panel__actions {
+      margin-top: 0;
     }
 
     .audit-step,
@@ -1087,6 +1500,19 @@ type AuditRecord = {
       flex: 0 0 auto;
     }
 
+    .question-next-step {
+      max-width: 18rem;
+      color: #8a6322;
+      font-size: 0.84rem;
+      font-weight: 700;
+      line-height: 1.45;
+      text-align: right;
+    }
+
+    .question-next-step.success {
+      color: #2f6b45;
+    }
+
     .question-meta {
       display: flex;
       align-items: center;
@@ -1204,6 +1630,10 @@ type AuditRecord = {
       color: var(--muted);
     }
 
+    .finding-next-step h4 {
+      margin-bottom: 0.35rem;
+    }
+
     .completion-callout {
       padding: 1rem 1.1rem;
       border-radius: 20px;
@@ -1218,7 +1648,9 @@ type AuditRecord = {
 
     @media (max-width: 980px) {
       .audit-steps,
-      .audit-conduct-layout {
+      .audit-review-stages,
+      .audit-conduct-layout,
+      .review-findings-layout {
         grid-template-columns: 1fr;
       }
 
@@ -1230,6 +1662,11 @@ type AuditRecord = {
 
       .question-card__actions {
         justify-items: stretch;
+      }
+
+      .question-next-step {
+        max-width: none;
+        text-align: left;
       }
 
       .question-quick-actions {
@@ -1264,15 +1701,18 @@ export class AuditsPageComponent {
   protected readonly aspects = signal<AspectSummaryRow[]>([]);
   protected readonly changes = signal<ChangeSummaryRow[]>([]);
   protected readonly activeStep = signal<AuditStep>('plan');
+  protected readonly reviewStage = signal<AuditReviewStage>('findings');
   protected readonly currentClauseIndex = signal(0);
   protected readonly expandedChecklistId = signal<string | null>(null);
   protected readonly checklistNoteDrafts = signal<Record<string, string>>({});
   protected readonly pendingFindingChecklistId = signal<string | null>(null);
   protected readonly checklistScrollTop = signal<number | null>(null);
+  protected readonly checklistScrollTargetId = signal<string | null>(null);
   protected readonly selectedFindingId = signal<string | null>(null);
   protected readonly checklistBuilderOpen = signal(false);
   protected readonly draftActionTitle = signal<string | null>(null);
   protected readonly draftActionDescription = signal<string | null>(null);
+  protected readonly sortBy = signal<AuditSortOption>('attention');
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly generatingReport = signal(false);
@@ -1284,7 +1724,14 @@ export class AuditsPageComponent {
     title: ['', [Validators.required, Validators.maxLength(160)]],
     type: ['Internal Audit' as AuditType, Validators.required],
     standard: ['ISO 9001'],
+    programme: [''],
+    scopeType: ['Process' as AuditScopeType],
     scope: [''],
+    objectives: [''],
+    criteria: [''],
+    agenda: [''],
+    openingMeetingNotes: [''],
+    closingMeetingNotes: [''],
     leadAuditorId: [''],
     auditeeArea: [''],
     scheduledAt: [''],
@@ -1362,9 +1809,9 @@ export class AuditsPageComponent {
 
   protected pageDescription() {
     return {
-      list: 'Manage internal and supplier audits with guided execution, findings, and follow-up.',
-      create: 'Set up the audit plan first, then run the checklist from a dedicated conduct screen.',
-      detail: 'Plan the audit, work through the checklist, and close findings from a guided three-step workflow.',
+      list: 'Manage internal and supplier audits with planning, guided execution, findings, and follow-up.',
+      create: 'Set up the programme, agenda, and meeting notes first, then run the checklist from a dedicated conduct screen.',
+      detail: 'Plan the audit properly, work through the checklist, and close findings from a guided three-step workflow.',
       edit: 'Update audit metadata without mixing it with execution details.'
     }[this.mode()];
   }
@@ -1375,6 +1822,49 @@ export class AuditsPageComponent {
     if (this.mode() === 'create') return [...base, { label: 'New audit' }];
     if (this.mode() === 'edit') return [...base, { label: this.selectedAudit()?.code || 'Audit', link: `/audits/${this.selectedId()}` }, { label: 'Edit' }];
     return [...base, { label: this.selectedAudit()?.code || 'Audit' }];
+  }
+
+  protected applyAuditPlanTemplate() {
+    const raw = this.auditForm.getRawValue();
+    const auditLabel = this.auditLabel(raw.type, raw.scopeType);
+    const agenda = [
+      `1. Opening meeting and attendance for the ${auditLabel}`,
+      `2. Confirm scope, objectives, criteria, and timing`,
+      `3. Review applicable documents, records, and previous follow-up`,
+      `4. Conduct interviews, sampling, and on-site or process verification`,
+      `5. Consolidate evidence and agree the initial findings position`,
+      `6. Run the closing meeting and confirm report timing`
+    ].join('\n');
+
+    this.auditForm.patchValue({
+      agenda,
+      summary: raw.summary || `Planned ${auditLabel} covering ${this.scopeTypeSummary(raw.scopeType, raw.auditeeArea)}.`
+    });
+    this.message.set('Audit agenda template applied.');
+    this.error.set('');
+  }
+
+  protected applyMeetingTemplate() {
+    const raw = this.auditForm.getRawValue();
+    const openingMeetingNotes = [
+      `Opening meeting for ${this.auditLabel(raw.type, raw.scopeType)}`,
+      `- Confirm attendees, scope, objectives, and criteria`,
+      `- Confirm timetable, sampling approach, and communication route`,
+      `- Confirm health, safety, confidentiality, and site rules where relevant`
+    ].join('\n');
+    const closingMeetingNotes = [
+      `Closing meeting for ${this.auditLabel(raw.type, raw.scopeType)}`,
+      `- Present the summary of evidence reviewed`,
+      `- Confirm observations, nonconformities, and next steps`,
+      `- Confirm action ownership, expected response dates, and report issue timing`
+    ].join('\n');
+
+    this.auditForm.patchValue({
+      openingMeetingNotes,
+      closingMeetingNotes
+    });
+    this.message.set('Opening and closing meeting templates applied.');
+    this.error.set('');
   }
 
   protected saveAudit() {
@@ -1402,7 +1892,14 @@ export class AuditsPageComponent {
       code: raw.code.trim(),
       title: raw.title.trim(),
       standard: raw.type === 'Internal Audit' ? raw.standard : undefined,
+      programme: raw.programme.trim() || undefined,
+      scopeType: raw.scopeType || undefined,
       scope: raw.scope.trim() || undefined,
+      objectives: raw.objectives.trim() || undefined,
+      criteria: raw.criteria.trim() || undefined,
+      agenda: raw.agenda.trim() || undefined,
+      openingMeetingNotes: raw.openingMeetingNotes.trim() || undefined,
+      closingMeetingNotes: raw.closingMeetingNotes.trim() || undefined,
       leadAuditorId: raw.leadAuditorId || undefined,
       auditeeArea: raw.auditeeArea.trim() || undefined,
       scheduledAt: raw.scheduledAt || undefined,
@@ -1495,6 +1992,8 @@ export class AuditsPageComponent {
   }
 
   protected setChecklistResponse(item: AuditChecklistItem, response: ChecklistResponse) {
+    this.checklistScrollTop.set(window.scrollY);
+    this.checklistScrollTargetId.set(item.id);
     if (response === 'NO' && !this.findingForChecklist(item)) {
       this.openFindingComposer(item);
     } else if (this.pendingFindingChecklistId() === item.id && response !== 'NO') {
@@ -1528,6 +2027,8 @@ export class AuditsPageComponent {
       return;
     }
 
+    this.checklistScrollTop.set(window.scrollY);
+    this.checklistScrollTargetId.set(item.id);
     this.updateChecklistItem(item, { notes: nextValue });
   }
 
@@ -1585,7 +2086,7 @@ export class AuditsPageComponent {
     this.error.set('');
     this.message.set('');
     const raw = this.findingForm.getRawValue();
-    this.api.post(`audits/${this.selectedId()}/findings`, {
+    this.api.post<AuditFinding>(`audits/${this.selectedId()}/findings`, {
       title: raw.title.trim(),
       description: raw.description.trim(),
       severity: raw.severity,
@@ -1594,11 +2095,20 @@ export class AuditsPageComponent {
       checklistItemId: item.id,
       clause: item.clause || undefined
     }).subscribe({
-      next: () => {
+      next: (finding) => {
         this.saving.set(false);
-        this.message.set('Finding recorded. Continue with the checklist.');
-        this.selectedFindingId.set(null);
+        const shouldMoveToReview = this.isChecklistComplete();
+        this.message.set(
+          shouldMoveToReview
+            ? 'Finding recorded. Next step: review findings and decide the follow-up route.'
+            : 'Finding recorded. Continue with the checklist.'
+        );
+        this.selectedFindingId.set(finding.id);
         this.pendingFindingChecklistId.set(null);
+        if (shouldMoveToReview) {
+          this.activeStep.set('review');
+          this.reviewStage.set('findings');
+        }
         this.fetchAudit(this.selectedId() as string, { preserveStep: true });
         this.restoreChecklistScrollSoon();
       },
@@ -1640,16 +2150,20 @@ export class AuditsPageComponent {
     this.saving.set(true);
     this.error.set('');
     this.message.set('');
-    this.api.post(`audits/findings/${finding.id}/create-capa`, {
+    this.api.post<{ id: string }>(`audits/findings/${finding.id}/create-capa`, {
       title: `Audit finding CAPA: ${finding.title}`,
       problemStatement: this.cleanFindingDescription(finding.description),
       ownerId: finding.ownerId || undefined,
       dueDate: finding.dueDate || undefined
     }).subscribe({
-      next: () => {
+      next: (capa) => {
         this.saving.set(false);
-        this.message.set('CAPA created from audit finding.');
-        this.fetchAudit(this.selectedId() as string, { preserveStep: true });
+        void this.router.navigate(['/capa', capa.id, 'edit'], {
+          state: {
+            notice: 'CAPA created from audit finding.',
+            returnNavigation: this.auditReturnNavigation(finding)
+          }
+        });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
@@ -1664,19 +2178,22 @@ export class AuditsPageComponent {
       return;
     }
 
+    this.selectedFindingId.set(finding.id);
     this.draftActionTitle.set(`Audit action: ${finding.title}`);
     this.draftActionDescription.set(this.cleanFindingDescription(finding.description));
-    this.message.set('Action form prepared from the selected finding.');
+    this.setReviewStage('actions');
+    this.message.set('Audit action form prepared from the selected finding. Confirm owner and due date in Stage 2.');
   }
 
   protected openFindingComposer(item: AuditChecklistItem) {
     this.checklistScrollTop.set(window.scrollY);
+    this.checklistScrollTargetId.set(item.id);
     this.expandedChecklistId.set(item.id);
     this.pendingFindingChecklistId.set(item.id);
     this.findingForm.patchValue({
-      title: `Finding: Clause ${item.clause || 'General'} - ${item.title}`,
+      title: this.defaultFindingTitle(item),
       description: item.notes?.trim() || `Requirement not met during audit: ${item.title}`,
-      severity: 'MAJOR',
+      severity: 'MINOR',
       ownerId: '',
       dueDate: ''
     });
@@ -1692,6 +2209,27 @@ export class AuditsPageComponent {
 
   protected setActiveStep(step: AuditStep) {
     this.activeStep.set(step);
+    if (step === 'review') {
+      this.reviewStage.set('findings');
+      if (!this.selectedFindingId()) {
+        this.selectedFindingId.set(this.selectedAudit()?.findings?.[0]?.id ?? null);
+      }
+    }
+  }
+
+  protected setReviewStage(stage: AuditReviewStage) {
+    this.reviewStage.set(stage);
+    if (stage === 'findings' && !this.selectedFindingId()) {
+      this.selectedFindingId.set(this.selectedAudit()?.findings?.[0]?.id ?? null);
+    }
+    if (stage === 'actions') {
+      setTimeout(() => this.scrollToAuditActions(), 0);
+    }
+  }
+
+  protected openReviewFindings() {
+    this.setActiveStep('review');
+    this.message.set('Next step: review findings and decide closure, audit action, or CAPA for each one.');
   }
 
   protected toggleChecklistBuilder() {
@@ -1740,6 +2278,7 @@ export class AuditsPageComponent {
     }
     this.currentClauseIndex.update((index) => Math.max(0, index - 1));
     this.expandFirstQuestionInCurrentClause();
+    this.focusCurrentClauseStart();
   }
 
   protected nextClause() {
@@ -1748,6 +2287,7 @@ export class AuditsPageComponent {
     }
     this.currentClauseIndex.update((index) => Math.min(this.checklistGroups().length - 1, index + 1));
     this.expandFirstQuestionInCurrentClause();
+    this.focusCurrentClauseStart();
   }
 
   protected currentClauseLabel() {
@@ -1843,14 +2383,23 @@ export class AuditsPageComponent {
     }
 
     this.expandedChecklistId.set(finding.checklistItemId);
+    this.checklistScrollTargetId.set(finding.checklistItemId);
     this.selectedFindingId.set(finding.id);
     this.activeStep.set('conduct');
     this.message.set('Returned to the checklist question linked to this finding.');
+    requestAnimationFrame(() => this.restoreChecklistScrollSoon());
   }
 
   protected scrollToAuditActions() {
     const section = document.getElementById('audit-actions-section');
     section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  protected focusCurrentClauseStart() {
+    const firstItemId = this.currentChecklistGroup()?.items?.[0]?.id ?? null;
+    this.checklistScrollTop.set(null);
+    this.checklistScrollTargetId.set(firstItemId);
+    requestAnimationFrame(() => this.restoreChecklistScrollSoon());
   }
 
   protected cleanFindingDescription(description: string) {
@@ -1862,6 +2411,94 @@ export class AuditsPageComponent {
     const capaLinkedCount = findings.filter((finding) => !!finding.linkedCapaId).length;
     const actionCount = this.selectedAudit()?.actionItemCount || 0;
     return `Follow the chain from checklist evidence to finding, then into ${capaLinkedCount ? `${capaLinkedCount} linked CAPA record${capaLinkedCount === 1 ? '' : 's'}` : 'CAPA only where needed'} and ${actionCount} linked audit action${actionCount === 1 ? '' : 's'}.`;
+  }
+
+  protected majorFindingCount() {
+    return (this.selectedAudit()?.findings || []).filter((finding) => finding.severity === 'MAJOR').length;
+  }
+
+  protected openFindingFollowUpCount() {
+    const findings = this.selectedAudit()?.findings || [];
+    const openFindings = findings.filter((finding) => finding.status !== 'CLOSED').length;
+    return openFindings + (this.selectedAudit()?.actionItemCount || 0);
+  }
+
+  protected reviewFocusHeading() {
+    const finding = this.activeReviewFinding();
+    return finding ? `Current focus: ${finding.title}` : 'Current focus: review each finding one at a time';
+  }
+
+  protected reviewFocusCopy() {
+    const finding = this.activeReviewFinding();
+    if (!finding) {
+      return 'Select a finding, decide whether it should close, move into an audit action, or move into CAPA, then continue to the next finding.';
+    }
+    return `${this.findingDecisionBadge(finding)}. ${this.findingNextStepCopy(finding)}`;
+  }
+
+  protected selectFinding(finding: AuditFinding) {
+    this.selectedFindingId.set(finding.id);
+  }
+
+  protected activeReviewFinding() {
+    const findings = this.selectedAudit()?.findings || [];
+    if (!findings.length) {
+      return null;
+    }
+    return findings.find((finding) => finding.id === this.selectedFindingId()) || findings[0];
+  }
+
+  protected findingDecisionBadge(finding: AuditFinding) {
+    if (finding.status === 'CLOSED') {
+      return 'Closed';
+    }
+    if (finding.linkedCapaId) {
+      return 'CAPA active';
+    }
+    if (finding.severity === 'MAJOR') {
+      return 'CAPA expected';
+    }
+    if (finding.severity === 'MINOR') {
+      return 'Action or closure';
+    }
+    return 'Observation review';
+  }
+
+  protected findingDraftHeading() {
+    const severity = this.findingForm.getRawValue().severity;
+    if (severity === 'MAJOR') {
+      return 'Major finding path';
+    }
+    if (severity === 'MINOR') {
+      return 'Minor finding path';
+    }
+    return 'Observation path';
+  }
+
+  protected findingDraftGuidance() {
+    const severity = this.findingForm.getRawValue().severity;
+    if (severity === 'MAJOR') {
+      return 'Use major only when the gap needs formal corrective action and later CAPA tracking before the finding should be closed.';
+    }
+    if (severity === 'MINOR') {
+      return 'Use minor when follow-up is needed, but the gap does not need the same escalation as a major finding.';
+    }
+    return 'Use observation when the auditor wants the issue visible, but formal corrective action may not be necessary.';
+  }
+
+  protected findingModalChecklistCopy() {
+    return '1. Describe the gap and evidence. 2. Choose the right severity. 3. Save the finding. 4. Decide CAPA or audit action later in Review findings.';
+  }
+
+  protected findingSeverityHelperCopy() {
+    const severity = this.findingForm.getRawValue().severity;
+    if (severity === 'MAJOR') {
+      return 'Major: formal CAPA route is normally expected before the finding should be closed.';
+    }
+    if (severity === 'MINOR') {
+      return 'Minor: follow-up is needed, but the gap is lighter than a major nonconformity.';
+    }
+    return 'Observation: keep the issue visible when formal corrective action may not be necessary.';
   }
 
   protected auditTouchpointIntro() {
@@ -2005,6 +2642,42 @@ export class AuditsPageComponent {
     return 'Use CAPA where formal corrective action is required, or create a corrective action directly when a lighter follow-up is enough.';
   }
 
+  protected findingNextStepCopy(finding: AuditFinding) {
+    if (finding.status === 'CLOSED') {
+      return 'The finding is already closed. Keep the linked evidence trail available for later audit review.';
+    }
+    if (finding.linkedCapaId) {
+      return 'Keep the linked CAPA moving, then close the finding once the corrective path and evidence are under control.';
+    }
+    if (finding.severity === 'MAJOR') {
+      return 'Raise CAPA before closure. Use an audit action only for extra supporting tasks around that CAPA path.';
+    }
+    if (finding.severity === 'MINOR') {
+      return 'Either prepare an audit action for owned follow-up or close the finding once the necessary correction is fully evidenced.';
+    }
+    return 'Observation can stay visible, move into a light audit action, or close once the auditor is satisfied that no formal correction is needed.';
+  }
+
+  protected auditReturnNavigation(finding?: AuditFinding | null): ReturnNavigation | null {
+    return this.selectedId()
+      ? {
+          route: ['/audits', this.selectedId() as string],
+          label: 'audit',
+          state: {
+            notice: 'Returned from CAPA to the audit review trail.',
+            returnToStep: 'review',
+            returnToReviewStage: 'findings',
+            returnToFindingId: finding?.id || this.selectedFindingId()
+          }
+        }
+      : null;
+  }
+
+  protected auditLinkState(finding?: AuditFinding | null) {
+    const returnNavigation = this.auditReturnNavigation(finding);
+    return returnNavigation ? { returnNavigation } : undefined;
+  }
+
   protected auditCloseoutHeading() {
     return this.canCompleteAudit() ? 'Audit is ready for completion' : 'Close-out requirements are still open';
   }
@@ -2035,6 +2708,60 @@ export class AuditsPageComponent {
       return 'Started date';
     }
     return 'No audit date';
+  }
+
+  protected auditLabel(type: AuditType, scopeType?: AuditScopeType | string | null) {
+    const scope = scopeType?.trim() || (type === 'Supplier Audit' ? 'Supplier' : 'Process');
+    return `${scope} ${type}`.trim();
+  }
+
+  protected scopeTypeSummary(scopeType?: AuditScopeType | string | null, auditeeArea?: string | null) {
+    if (!scopeType && !auditeeArea) {
+      return 'the selected audit scope';
+    }
+    if (!scopeType) {
+      return auditeeArea || 'the selected audit scope';
+    }
+    if (!auditeeArea) {
+      return `${scopeType.toLowerCase()} scope`;
+    }
+    return `${scopeType.toLowerCase()} scope for ${auditeeArea}`;
+  }
+
+  protected auditProgrammeSummary() {
+    const audits = this.audits();
+    const withProgramme = audits.filter((item) => !!item.programme?.trim());
+    if (!audits.length) {
+      return 'No audits are recorded yet.';
+    }
+    if (!withProgramme.length) {
+      return 'No audit programme names have been assigned yet. Use the programme field to show which annual plan or audit cycle each audit belongs to.';
+    }
+    const distinctProgrammes = new Set(withProgramme.map((item) => item.programme!.trim())).size;
+    return `${withProgramme.length} of ${audits.length} audits are assigned to ${distinctProgrammes} programme${distinctProgrammes === 1 ? '' : 's'}. Use this to separate annual internal plans, supplier plans, or special audit cycles.`;
+  }
+
+  protected auditScopeMixSummary() {
+    const audits = this.audits();
+    if (!audits.length) {
+      return 'No audit scope types are visible yet.';
+    }
+    const scopeCounts = audits.reduce<Record<string, number>>((counts, audit) => {
+      const key = audit.scopeType || 'Unspecified';
+      counts[key] = (counts[key] || 0) + 1;
+      return counts;
+    }, {});
+    const topScopes = Object.entries(scopeCounts)
+      .sort((left, right) => right[1] - left[1])
+      .slice(0, 3)
+      .map(([label, count]) => `${label}: ${count}`);
+    return topScopes.length
+      ? `Current audit planning is weighted toward ${topScopes.join(', ')}.`
+      : 'No audit scope types are visible yet.';
+  }
+
+  protected sortedAudits() {
+    return [...this.audits()].sort((left, right) => this.compareAudits(left, right));
   }
 
   protected findingsFollowUpCopy(audit: AuditRecord) {
@@ -2302,6 +3029,14 @@ export class AuditsPageComponent {
     });
   }
 
+  protected readSelectValue(event: Event) {
+    return (event.target as HTMLSelectElement).value;
+  }
+
+  protected setSortBy(value: string) {
+    this.sortBy.set((value as AuditSortOption) || 'attention');
+  }
+
   protected readTextarea(event: Event) {
     return (event.target as HTMLTextAreaElement).value;
   }
@@ -2342,25 +3077,41 @@ export class AuditsPageComponent {
 
   private restoreChecklistScrollSoon() {
     const top = this.checklistScrollTop();
-    if (top === null) {
+    const targetId = this.checklistScrollTargetId();
+    if (top === null && !targetId) {
       return;
     }
     requestAnimationFrame(() => {
-      window.scrollTo({ top, behavior: 'auto' });
+      if (targetId) {
+        const element = document.getElementById(`audit-checklist-item-${targetId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }
+      } else if (top !== null) {
+        window.scrollTo({ top, behavior: 'auto' });
+      }
       this.checklistScrollTop.set(null);
+      this.checklistScrollTargetId.set(null);
     });
   }
 
   private handleRoute(params: ParamMap) {
     const id = params.get('id');
+    const historyState = history.state as {
+      notice?: string;
+      returnToStep?: AuditStep;
+      returnToReviewStage?: AuditReviewStage;
+      returnToFindingId?: string;
+    };
     this.selectedId.set(id);
-    this.message.set((history.state?.notice as string) || '');
+    this.message.set(historyState.notice || '');
     this.error.set('');
-    this.activeStep.set('plan');
+    this.activeStep.set(historyState.returnToStep || 'plan');
+    this.reviewStage.set(historyState.returnToReviewStage || 'findings');
     this.currentClauseIndex.set(0);
     this.expandedChecklistId.set(null);
     this.pendingFindingChecklistId.set(null);
-    this.selectedFindingId.set(null);
+    this.selectedFindingId.set(historyState.returnToFindingId || null);
     this.checklistNoteDrafts.set({});
     this.checklistBuilderOpen.set(false);
     this.draftActionTitle.set(null);
@@ -2390,7 +3141,14 @@ export class AuditsPageComponent {
       title: '',
       type: 'Internal Audit',
       standard: 'ISO 9001',
+      programme: '',
+      scopeType: 'Process',
       scope: '',
+      objectives: '',
+      criteria: '',
+      agenda: '',
+      openingMeetingNotes: '',
+      closingMeetingNotes: '',
       leadAuditorId: '',
       auditeeArea: '',
       scheduledAt: '',
@@ -2414,9 +3172,17 @@ export class AuditsPageComponent {
         const currentExpandedId = this.expandedChecklistId();
         const currentClauseIndex = this.currentClauseIndex();
         const currentStep = this.activeStep();
+        const currentReviewStage = this.reviewStage();
+        const currentSelectedFindingId = this.selectedFindingId();
         this.loading.set(false);
         this.selectedAudit.set(audit);
         this.activeStep.set(options?.preserveStep ? currentStep : this.deriveStep(audit));
+        this.reviewStage.set(options?.preserveStep ? currentReviewStage : 'findings');
+        this.selectedFindingId.set(
+          (audit.findings || []).some((finding) => finding.id === currentSelectedFindingId)
+            ? currentSelectedFindingId
+            : audit.findings?.[0]?.id ?? null
+        );
         this.checklistNoteDrafts.set(
           Object.fromEntries((audit.checklistItems || []).map((item) => [item.id, item.notes ?? '']))
         );
@@ -2432,7 +3198,14 @@ export class AuditsPageComponent {
           title: audit.title,
           type: audit.type,
           standard: audit.standard ?? 'ISO 9001',
+          programme: audit.programme ?? '',
+          scopeType: audit.scopeType ?? (audit.type === 'Supplier Audit' ? 'Supplier' : 'Process'),
           scope: audit.scope ?? '',
+          objectives: audit.objectives ?? '',
+          criteria: audit.criteria ?? '',
+          agenda: audit.agenda ?? '',
+          openingMeetingNotes: audit.openingMeetingNotes ?? '',
+          closingMeetingNotes: audit.closingMeetingNotes ?? '',
           leadAuditorId: audit.leadAuditorId ?? '',
           auditeeArea: audit.auditeeArea ?? '',
           scheduledAt: audit.scheduledAt?.slice(0, 10) ?? '',
@@ -2445,6 +3218,7 @@ export class AuditsPageComponent {
           completionDate: audit.completedAt?.slice(0, 10) ?? this.todayIso(),
           completedByAuditorId: audit.completedByAuditorId ?? audit.leadAuditorId ?? ''
         });
+        this.restoreChecklistScrollSoon();
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
@@ -2483,6 +3257,27 @@ export class AuditsPageComponent {
     return 'plan';
   }
 
+  private compareAudits(left: AuditRecord, right: AuditRecord) {
+    switch (this.sortBy()) {
+      case 'auditDate':
+        return this.compareOptionalDateAsc(this.auditSortDate(left), this.auditSortDate(right)) || this.compareDateDesc(left.updatedAt, right.updatedAt);
+      case 'updated':
+        return this.compareDateDesc(left.updatedAt, right.updatedAt) || this.compareOptionalDateAsc(this.auditSortDate(left), this.auditSortDate(right));
+      case 'programme':
+        return (
+          (left.programme || 'ZZZ').localeCompare(right.programme || 'ZZZ') ||
+          this.compareOptionalDateAsc(this.auditSortDate(left), this.auditSortDate(right))
+        );
+      case 'attention':
+      default:
+        return (
+          this.auditAttentionRank(left) - this.auditAttentionRank(right) ||
+          this.compareOptionalDateAsc(this.auditSortDate(left), this.auditSortDate(right)) ||
+          this.compareDateDesc(left.updatedAt, right.updatedAt)
+        );
+    }
+  }
+
   private auditAttentionReasons(audit: AuditRecord) {
     if (audit.status === 'CLOSED') {
       return [];
@@ -2501,6 +3296,41 @@ export class AuditsPageComponent {
       reasons.push('Execution stalled');
     }
     return reasons;
+  }
+
+  private auditAttentionRank(audit: AuditRecord) {
+    const reasons = this.auditAttentionReasons(audit);
+    if (reasons.includes('Audit overdue')) return 0;
+    if (reasons.includes('Findings still open')) return 1;
+    if (reasons.includes('Execution stalled')) return 2;
+    if (reasons.includes('Owner needed')) return 3;
+    if (audit.status !== 'CLOSED') return 4;
+    return 5;
+  }
+
+  private auditSortDate(audit: AuditRecord) {
+    return audit.scheduledAt || audit.startedAt || audit.completedAt || null;
+  }
+
+  private defaultFindingTitle(item: AuditChecklistItem) {
+    const clause = item.subclause?.trim() || item.clause?.trim() || 'General';
+    const trimmedTitle = item.title.trim();
+    if (trimmedTitle.length <= 64) {
+      return `Clause ${clause} gap`;
+    }
+    return `Clause ${clause} gap`;
+  }
+
+  private compareOptionalDateAsc(left?: string | null, right?: string | null) {
+    const leftTime = left ? new Date(left).getTime() : Number.POSITIVE_INFINITY;
+    const rightTime = right ? new Date(right).getTime() : Number.POSITIVE_INFINITY;
+    return leftTime - rightTime;
+  }
+
+  private compareDateDesc(left?: string | null, right?: string | null) {
+    const leftTime = left ? new Date(left).getTime() : 0;
+    const rightTime = right ? new Date(right).getTime() : 0;
+    return rightTime - leftTime;
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

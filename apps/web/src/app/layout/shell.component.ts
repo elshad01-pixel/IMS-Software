@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 
 type NavItem = {
@@ -690,6 +691,7 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
   `]
 })
 export class ShellComponent {
+  private readonly api = inject(ApiService);
   protected readonly authStore = inject(AuthStore);
   protected readonly menuOpen = signal(false);
   protected readonly mobileNavOpen = signal(false);
@@ -697,12 +699,14 @@ export class ShellComponent {
   protected readonly sidebarHovered = signal(false);
   protected readonly compactViewport = signal(this.readCompactViewport());
   protected readonly collapsedGroups = signal<Record<string, boolean>>(this.readCollapsedGroups());
+  protected readonly implementationEnabled = signal(false);
   protected readonly navGroups: NavGroup[] = [
     {
       key: 'overview',
       label: 'Overview',
       items: [
         { path: '/dashboard', label: 'Dashboard', hint: 'Executive overview', icon: 'DB', exact: true, permission: 'dashboard.read' },
+        { path: '/implementation', label: 'Implementation', hint: 'PDCA setup and rollout', icon: 'IM', permission: 'dashboard.read' },
         { path: '/reports', label: 'Reports', hint: 'Exports and summaries', icon: 'RP', permission: 'reports.read' }
       ]
     },
@@ -754,10 +758,17 @@ export class ShellComponent {
     this.navGroups
       .map((group) => ({
         ...group,
-        items: group.items.filter((item) => !item.permission || this.authStore.hasPermission(item.permission))
+        items: group.items.filter((item) =>
+          (!item.permission || this.authStore.hasPermission(item.permission)) &&
+          (item.path !== '/implementation' || this.implementationEnabled())
+        )
       }))
       .filter((group) => group.items.length)
   );
+
+  constructor() {
+    this.loadImplementationVisibility();
+  }
 
   protected sidebarExpanded() {
     if (this.isCompactViewport()) {
@@ -818,6 +829,13 @@ export class ShellComponent {
   protected logout() {
     this.menuOpen.set(false);
     this.authStore.logout();
+  }
+
+  private loadImplementationVisibility() {
+    this.api.get<{ enabled: boolean }>('settings/implementation').subscribe({
+      next: (config) => this.implementationEnabled.set(config.enabled),
+      error: () => this.implementationEnabled.set(false)
+    });
   }
 
   @HostListener('window:resize')

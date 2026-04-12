@@ -28,6 +28,12 @@ export class SettingsController {
     return this.settingsService.getConfig(tenantId);
   }
 
+  @Get('implementation')
+  @Permissions('dashboard.read')
+  implementation(@CurrentTenant() tenantId: string) {
+    return this.settingsService.getImplementationConfig(tenantId);
+  }
+
   @Get('roles')
   @Permissions('settings.read')
   roles(@CurrentTenant() tenantId: string) {

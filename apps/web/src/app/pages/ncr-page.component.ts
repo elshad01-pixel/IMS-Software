@@ -58,7 +58,7 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
         <a *ngIf="mode() === 'detail' && selectedNcr() && canWrite()" [routerLink]="['/ncr', selectedNcr()?.id, 'edit']" class="button-link">Edit NCR</a>
         <button *ngIf="mode() === 'detail' && canArchiveNcr()" type="button" class="button-link secondary" (click)="archiveCurrent()">Archive NCR</button>
         <button *ngIf="mode() === 'detail' && canDeleteNcr()" type="button" class="button-link danger" (click)="deleteCurrent()">Delete NCR</button>
-        <a *ngIf="mode() !== 'list'" routerLink="/ncr" class="button-link secondary">Back to register</a>
+        <a *ngIf="mode() !== 'list'" routerLink="/ncr" class="button-link secondary">Back to NCR log</a>
       </iso-page-header>
 
       <section *ngIf="!canRead()" class="card list-card">
@@ -72,8 +72,8 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
         <div class="card list-card">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Register</span>
-              <h3>Nonconformance register</h3>
+              <span class="section-eyebrow">NCR log</span>
+              <h3>Nonconformance log</h3>
               <p class="subtle">Track nonconformances by severity, source, owner, due date, and current lifecycle.</p>
             </div>
           </div>
@@ -81,8 +81,8 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
           <div class="toolbar top-space">
             <div class="toolbar-meta">
               <div>
-                <p class="toolbar-title">Register filters</p>
-                <p class="toolbar-copy">Filter by status, category, source, severity, owner, or overdue NCRs.</p>
+                <p class="toolbar-title">Filter NCRs</p>
+                <p class="toolbar-copy">Filter by status, category, source, severity, or owner.</p>
               </div>
               <div class="toolbar-stats">
                 <article class="toolbar-stat"><span>Total</span><strong>{{ ncrs().length }}</strong></article>
@@ -91,52 +91,46 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
               </div>
             </div>
 
-            <div class="filter-grid">
-              <label class="field">
+            <div class="filter-grid ncr-filter-grid">
+              <label class="field compact-field search-field">
                 <span>Search</span>
-                <input [value]="search()" (input)="search.set(readInput($event))" placeholder="Reference, title, location">
+                <input [value]="search()" (input)="search.set(readInput($event))" placeholder="Reference or title">
               </label>
-              <label class="field">
+              <label class="field compact-field">
                 <span>Status</span>
                 <select [value]="statusFilter()" (change)="statusFilter.set(readSelect($event))">
                   <option value="">All statuses</option>
+                  <option value="OVERDUE">Overdue</option>
                   <option *ngFor="let item of statusOptions" [value]="item">{{ labelize(item) }}</option>
                 </select>
               </label>
-              <label class="field">
+              <label class="field compact-field">
                 <span>Category</span>
                 <select [value]="categoryFilter()" (change)="categoryFilter.set(readSelect($event))">
                   <option value="">All categories</option>
                   <option *ngFor="let item of categoryOptions" [value]="item">{{ labelize(item) }}</option>
                 </select>
               </label>
-              <label class="field">
+              <label class="field compact-field">
                 <span>Source</span>
                 <select [value]="sourceFilter()" (change)="sourceFilter.set(readSelect($event))">
                   <option value="">All sources</option>
                   <option *ngFor="let item of sourceOptions" [value]="item">{{ labelize(item) }}</option>
                 </select>
               </label>
-              <label class="field">
+              <label class="field compact-field">
                 <span>Severity</span>
                 <select [value]="severityFilter()" (change)="severityFilter.set(readSelect($event))">
                   <option value="">All severities</option>
                   <option *ngFor="let item of severityOptions" [value]="item">{{ labelize(item) }}</option>
                 </select>
               </label>
-              <label class="field">
+              <label class="field compact-field">
                 <span>Owner</span>
                 <select [value]="ownerFilter()" (change)="ownerFilter.set(readSelect($event))">
                   <option value="">All owners</option>
                   <option *ngFor="let item of users()" [value]="item.id">{{ fullName(item) }}</option>
                 </select>
-              </label>
-              <label class="field checkbox-field">
-                <span>Due date focus</span>
-                <span class="toggle-line">
-                  <input type="checkbox" [checked]="overdueOnly()" (change)="overdueOnly.set(readChecked($event))">
-                  <span>Show overdue only</span>
-                </span>
               </label>
             </div>
           </div>
@@ -144,7 +138,7 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
           <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
           <div class="empty-state" *ngIf="loading()">
-            <strong>Loading NCR register</strong>
+            <strong>Loading NCR log</strong>
             <span>Refreshing tenant nonconformance records.</span>
           </div>
 
@@ -224,7 +218,7 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
             <span>{{ ncrNextStepsCopy() }}</span>
             <div class="button-row top-space">
               <a *ngIf="selectedId()" [routerLink]="['/ncr', selectedId()]" class="button-link secondary">Review NCR</a>
-              <a routerLink="/ncr" class="button-link tertiary">Review register</a>
+              <a routerLink="/ncr" class="button-link tertiary">Review NCR log</a>
             </div>
           </section>
 
@@ -492,6 +486,29 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
   `,
   styles: [`
     .top-space { margin-top: 1rem; }
+    .toolbar {
+      gap: 0.8rem;
+      padding: 0.85rem 0.95rem;
+    }
+    .toolbar-meta {
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+    .toolbar-copy {
+      font-size: 0.88rem;
+    }
+    .toolbar-stats {
+      gap: 0.5rem;
+    }
+    .toolbar-stat {
+      min-width: 6rem;
+      padding: 0.65rem 0.8rem;
+      border-radius: 14px;
+    }
+    .toolbar-stat strong {
+      margin-top: 0.22rem;
+      font-size: 1.05rem;
+    }
     .next-steps-banner {
       display: grid;
       gap: 0.35rem;
@@ -508,7 +525,13 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
       border: 1px solid rgba(138, 99, 34, 0.16);
       background: rgba(138, 99, 34, 0.08);
     }
-    .filter-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .filter-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .ncr-filter-grid { grid-template-columns: 1.3fr repeat(5, minmax(0, 0.9fr)); align-items: end; }
+    .compact-field { gap: 0.28rem; }
+    .compact-field span { font-size: 0.78rem; }
+    .compact-field input,
+    .compact-field select { min-height: 2.85rem; padding: 0.72rem 0.82rem; }
+    .search-field { min-width: 0; }
     .checkbox-field { align-self: end; }
     .toggle-line {
       display: inline-flex;
@@ -553,9 +576,10 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
     .structured-rca { border: 1px dashed var(--border-subtle); border-radius: 1rem; padding: 1rem; background: color-mix(in srgb, var(--surface-strong) 86%, white); }
     .comment-item p { margin: 0.45rem 0 0; color: var(--text-soft); line-height: 1.5; }
     tr[routerLink] { cursor: pointer; }
-    @media (max-width: 1100px) { .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 1400px) { .ncr-filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 1100px) { .filter-grid, .ncr-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 760px) {
-      .filter-grid { grid-template-columns: minmax(0, 1fr); }
+      .filter-grid, .ncr-filter-grid { grid-template-columns: minmax(0, 1fr); }
       .toggle-line { min-height: 3.5rem; }
     }
   `]
@@ -591,7 +615,6 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected readonly sourceFilter = signal('');
   protected readonly severityFilter = signal('');
   protected readonly ownerFilter = signal('');
-  protected readonly overdueOnly = signal(false);
   protected readonly statusOptions: NcrStatus[] = ['OPEN', 'UNDER_REVIEW', 'INVESTIGATION', 'ACTION_IN_PROGRESS', 'PENDING_VERIFICATION', 'CLOSED', 'ARCHIVED'];
   protected readonly categoryOptions: NcrCategory[] = ['PROCESS', 'PRODUCT', 'SERVICE', 'SUPPLIER', 'COMPLAINT'];
   protected readonly sourceOptions: NcrSource[] = ['INTERNAL', 'CUSTOMER', 'SUPPLIER', 'AUDIT'];
@@ -649,14 +672,14 @@ export class NcrPageComponent implements OnInit, OnChanges {
     const term = this.search().trim().toLowerCase();
     return this.ncrs().filter((item) => {
       const matchesSearch = !term || [item.referenceNo, item.title, item.location || '', item.department || ''].some((value) => value.toLowerCase().includes(term));
-      const matchesStatus = !this.statusFilter() || item.status === this.statusFilter();
+      const overdue = !!item.dueDate && new Date(item.dueDate) < now && item.status !== 'CLOSED' && item.status !== 'ARCHIVED';
+      const matchesStatus = !this.statusFilter() || (this.statusFilter() === 'OVERDUE' ? overdue : item.status === this.statusFilter());
       const matchesCategory = !this.categoryFilter() || item.category === this.categoryFilter();
       const matchesSource = !this.sourceFilter() || item.source === this.sourceFilter();
       const matchesSeverity = !this.severityFilter() || item.severity === this.severityFilter();
       const matchesOwner = !this.ownerFilter() || item.ownerUserId === this.ownerFilter();
-      const overdue = !!item.dueDate && new Date(item.dueDate) < now && item.status !== 'CLOSED' && item.status !== 'ARCHIVED';
-      return matchesSearch && matchesStatus && matchesCategory && matchesSource && matchesSeverity && matchesOwner && (!this.overdueOnly() || overdue);
-    });
+      return matchesSearch && matchesStatus && matchesCategory && matchesSource && matchesSeverity && matchesOwner;
+    }).sort((left, right) => this.compareNcrs(left, right));
   });
 
   ngOnInit() {
@@ -683,7 +706,7 @@ export class NcrPageComponent implements OnInit, OnChanges {
 
   protected canRead() { return this.authStore.hasPermission('ncr.read'); }
   protected canWrite() { return this.authStore.hasPermission('ncr.write'); }
-  protected pageTitle() { return { list: 'Nonconformance register', create: 'Raise NCR', detail: this.selectedNcr()?.referenceNo || 'NCR detail', edit: this.selectedNcr()?.referenceNo || 'Edit NCR' }[this.mode()]; }
+  protected pageTitle() { return { list: 'Nonconformance log', create: 'Raise NCR', detail: this.selectedNcr()?.referenceNo || 'NCR detail', edit: this.selectedNcr()?.referenceNo || 'Edit NCR' }[this.mode()]; }
   protected pageDescription() { return { list: 'Review NCRs by lifecycle, severity, source, owner, and due date.', create: 'Capture the nonconformance first, then continue the investigation from the record.', detail: 'Review overview, investigation, actions, comments, attachments, and activity.', edit: 'Update the NCR without leaving the controlled workflow.' }[this.mode()]; }
   protected breadcrumbs() {
     const crumbs: Array<{ label: string; link?: string }> = [{ label: 'NCR', link: '/ncr' }];
@@ -735,7 +758,6 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected activityLabel(action: string) { return action.replace(/^ncr\./, '').split('.').map((part) => this.labelize(part)).join(' '); }
   protected readInput(event: Event) { return (event.target as HTMLInputElement).value; }
   protected readSelect(event: Event) { return (event.target as HTMLSelectElement).value; }
-  protected readChecked(event: Event) { return (event.target as HTMLInputElement).checked; }
   protected setDetailTab(tab: 'overview' | 'investigation' | 'actions' | 'comments' | 'activity') { this.activeDetailTab.set(tab); }
   protected selectedRcaMethod() { return this.form.getRawValue().rcaMethod as NcrRcaMethod | ''; }
   protected ownerOptions() {
@@ -1014,7 +1036,7 @@ export class NcrPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'NCR register could not be loaded.'));
+        this.error.set(this.readError(error, 'NCR log could not be loaded.'));
       }
     });
   }
@@ -1179,6 +1201,38 @@ export class NcrPageComponent implements OnInit, OnChanges {
 
   private today() {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  private compareNcrs(left: NcrRecord, right: NcrRecord) {
+    return (
+      this.ncrAttentionRank(left) - this.ncrAttentionRank(right) ||
+      this.compareOptionalDateAsc(left.dueDate, right.dueDate) ||
+      this.compareDateDesc(left.dateReported, right.dateReported) ||
+      this.compareDateDesc(left.updatedAt, right.updatedAt)
+    );
+  }
+
+  private ncrAttentionRank(record: NcrRecord) {
+    const reasons = this.ncrAttentionReasons(record);
+    if (reasons.includes('Follow-up overdue')) return 0;
+    if (reasons.includes('Verification overdue')) return 1;
+    if (reasons.includes('Owner needed')) return 2;
+    if (reasons.includes('Stale')) return 3;
+    if (record.status !== 'CLOSED' && record.status !== 'ARCHIVED') return 4;
+    if (record.status === 'CLOSED') return 5;
+    return 6;
+  }
+
+  private compareOptionalDateAsc(left?: string | null, right?: string | null) {
+    const leftTime = left ? new Date(left).getTime() : Number.POSITIVE_INFINITY;
+    const rightTime = right ? new Date(right).getTime() : Number.POSITIVE_INFINITY;
+    return leftTime - rightTime;
+  }
+
+  private compareDateDesc(left?: string | null, right?: string | null) {
+    const leftTime = left ? new Date(left).getTime() : 0;
+    const rightTime = right ? new Date(right).getTime() : 0;
+    return rightTime - leftTime;
   }
 
   private structuredRootCauseSummary() {

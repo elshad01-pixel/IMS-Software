@@ -58,6 +58,7 @@ import {
   ChangeManagementEditPageComponent,
   ChangeManagementListPageComponent
 } from './pages/change-management-page.component';
+import { ImplementationPageComponent } from './pages/implementation-page.component';
 
 export const appRoutes: Routes = [
   { path: 'login', component: LoginPageComponent },
@@ -69,6 +70,7 @@ export const appRoutes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       { path: 'dashboard', component: DashboardPageComponent, data: { permission: 'dashboard.read' } },
+      { path: 'implementation', component: ImplementationPageComponent, data: { permission: 'dashboard.read' } },
       { path: 'documents', component: DocumentsRegisterPageComponent, data: { permission: 'documents.read' } },
       { path: 'documents/new', component: DocumentCreatePageComponent, data: { permission: 'documents.write' } },
       { path: 'documents/:id', component: DocumentDetailPageComponent, data: { permission: 'documents.read' } },

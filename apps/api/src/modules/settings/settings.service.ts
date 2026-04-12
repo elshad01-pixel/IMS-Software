@@ -23,6 +23,29 @@ const settingsDefaults = {
   },
   notifications: {
     enabled: true
+  },
+  implementation: {
+    enabled: true,
+    startingPoint: 'DIGITISING_EXISTING',
+    targetStandards: ['ISO 9001', 'ISO 14001', 'ISO 45001'],
+    rolloutOwner: 'Quality Manager',
+    certificationGoal: '',
+    checklist: [
+      { id: 'scope-context', label: 'Define scope, context, and interested parties', done: false },
+      { id: 'policy-documents', label: 'Approve policies and controlled document structure', done: false },
+      { id: 'objectives-kpis', label: 'Set objectives, targets, and KPI review ownership', done: false },
+      { id: 'process-risk', label: 'Map processes and assess key risks, hazards, and aspects', done: false },
+      { id: 'operations-training', label: 'Deploy operational controls, training, and provider controls', done: false },
+      { id: 'audit-review', label: 'Run internal audit and hold management review', done: false }
+    ],
+    objectivePlan: {
+      focus: '',
+      objective: '',
+      target: '',
+      owner: '',
+      reviewFrequency: 'Monthly',
+      linkedModule: 'KPIs'
+    }
   }
 } as const;
 
@@ -89,8 +112,30 @@ export class SettingsService {
       },
       notifications: {
         enabled: this.readBooleanSetting(map, 'notifications.enabled', settingsDefaults.notifications.enabled)
+      },
+      implementation: {
+        enabled: this.readBooleanSetting(map, 'implementation.enabled', settingsDefaults.implementation.enabled),
+        startingPoint: this.readSetting(map, 'implementation.startingPoint', settingsDefaults.implementation.startingPoint),
+        targetStandards: this.readJsonSetting<string[]>(map, 'implementation.targetStandards', [...settingsDefaults.implementation.targetStandards]),
+        rolloutOwner: this.readSetting(map, 'implementation.rolloutOwner', settingsDefaults.implementation.rolloutOwner),
+        certificationGoal: this.readSetting(map, 'implementation.certificationGoal', settingsDefaults.implementation.certificationGoal),
+        checklist: this.readJsonSetting<typeof settingsDefaults.implementation.checklist>(
+          map,
+          'implementation.checklist',
+          [...settingsDefaults.implementation.checklist]
+        ),
+        objectivePlan: this.readJsonSetting<typeof settingsDefaults.implementation.objectivePlan>(
+          map,
+          'implementation.objectivePlan',
+          { ...settingsDefaults.implementation.objectivePlan }
+        )
       }
     };
+  }
+
+  async getImplementationConfig(tenantId: string) {
+    const config = await this.getConfig(tenantId);
+    return config.implementation;
   }
 
   update(tenantId: string, key: string, value: string) {
@@ -107,7 +152,7 @@ export class SettingsService {
   }
 
   async updateSection(tenantId: string, section: string, values: Record<string, unknown>) {
-    const validSections = ['organization', 'document', 'risk', 'kpi', 'notifications'];
+    const validSections = ['organization', 'document', 'risk', 'kpi', 'notifications', 'implementation'];
     if (!validSections.includes(section)) {
       throw new BadRequestException('Unsupported settings section');
     }

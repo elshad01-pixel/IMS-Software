@@ -16,6 +16,7 @@ type UserOption = {
 };
 
 type ActionStatus = 'OPEN' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED';
+type ActionSortOption = 'attention' | 'dueDate' | 'updated' | 'source';
 
 type ActionRecord = {
   id: string;
@@ -28,6 +29,8 @@ type ActionRecord = {
   sourceId: string;
   sourceLabel: string;
   sourceTitle: string;
+  createdAt?: string;
+  updatedAt?: string;
   owner?: UserOption | null;
 };
 
@@ -145,8 +148,8 @@ type ReturnNavigation = {
           </section>
 
           <form class="toolbar top-space" [formGroup]="filtersForm" (ngSubmit)="reload()">
-            <div class="filter-row">
-              <label class="field">
+            <div class="filter-row standard-filter-grid">
+              <label class="field compact-field">
                 <span>Source</span>
                 <select formControlName="sourceType">
                   <option value="">All sources</option>
@@ -162,7 +165,7 @@ type ReturnNavigation = {
                   <option value="change-management">Change management</option>
                 </select>
               </label>
-              <label class="field">
+              <label class="field compact-field">
                 <span>Status</span>
                 <select formControlName="status">
                   <option value="">All statuses</option>
@@ -172,7 +175,7 @@ type ReturnNavigation = {
                   <option>CANCELLED</option>
                 </select>
               </label>
-              <label class="field">
+              <label class="field compact-field">
                 <span>Owner</span>
                 <select formControlName="ownerId">
                   <option value="">All owners</option>
@@ -185,6 +188,15 @@ type ReturnNavigation = {
                   <option value="">All due dates</option>
                   <option value="overdue">Overdue</option>
                   <option value="upcoming">Upcoming</option>
+                </select>
+              </label>
+              <label class="field compact-field">
+                <span>Sort by</span>
+                <select [value]="sortBy()" (change)="sortBy.set(readSortValue($event))">
+                  <option value="attention">Attention</option>
+                  <option value="dueDate">Due date</option>
+                  <option value="updated">Updated</option>
+                  <option value="source">Source</option>
                 </select>
               </label>
             </div>
@@ -201,12 +213,12 @@ type ReturnNavigation = {
             <span>Refreshing follow-up across the tenant.</span>
           </div>
 
-          <div class="empty-state top-space" *ngIf="!loading() && !actions().length">
+          <div class="empty-state top-space" *ngIf="!loading() && !sortedActions().length">
             <strong>No actions match the current filter</strong>
             <span>Create actions from CAPA, audits, management review, or risks to populate this tracker.</span>
           </div>
 
-          <div class="data-table-wrap" *ngIf="!loading() && actions().length">
+          <div class="data-table-wrap" *ngIf="!loading() && sortedActions().length">
             <table class="data-table">
               <thead>
                 <tr>
@@ -220,7 +232,7 @@ type ReturnNavigation = {
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let action of actions()" [class.focused-row]="focusedActionId() === action.id">
+                <tr *ngFor="let action of sortedActions()" [class.focused-row]="focusedActionId() === action.id">
                   <td>
                     <div class="table-title">
                       <strong>{{ action.title }}</strong>
@@ -356,6 +368,7 @@ export class ActionsPageComponent {
   protected readonly message = signal('');
   protected readonly error = signal('');
   protected readonly focusedActionId = signal<string | null>(null);
+  protected readonly sortBy = signal<ActionSortOption>('attention');
   protected readonly focusedAction = computed(() => this.actions().find((action) => action.id === this.focusedActionId()) ?? null);
   protected readonly returnNavigation = signal<ReturnNavigation | null>(null);
   protected readonly sourceTypeLabels = computed(() => ({
@@ -435,6 +448,10 @@ export class ActionsPageComponent {
 
   protected countByStatus(status: ActionStatus) {
     return this.actions().filter((action) => action.status === status).length;
+  }
+
+  protected sortedActions() {
+    return [...this.actions()].sort((left, right) => this.compareActions(left, right));
   }
 
   protected overdueCount() {
@@ -546,6 +563,10 @@ export class ActionsPageComponent {
     return (event.target as HTMLSelectElement).value as ActionStatus;
   }
 
+  protected readSortValue(event: Event) {
+    return (event.target as HTMLSelectElement).value as ActionSortOption;
+  }
+
   protected sourceRoute(action: ActionRecord) {
     switch (action.sourceType) {
       case 'risk':
@@ -626,6 +647,54 @@ export class ActionsPageComponent {
       return 'Soon';
     }
     return reason;
+  }
+
+  private compareActions(left: ActionRecord, right: ActionRecord) {
+    switch (this.sortBy()) {
+      case 'dueDate':
+        return this.compareActionDueDate(left, right);
+      case 'updated':
+        return this.compareDateDesc(left.updatedAt, right.updatedAt) || this.compareActionDueDate(left, right);
+      case 'source':
+        return (
+          left.sourceLabel.localeCompare(right.sourceLabel) ||
+          left.sourceTitle.localeCompare(right.sourceTitle) ||
+          this.compareActionDueDate(left, right)
+        );
+      case 'attention':
+      default:
+        return (
+          this.actionAttentionRank(left) - this.actionAttentionRank(right) ||
+          this.compareActionDueDate(left, right) ||
+          this.compareDateDesc(left.updatedAt, right.updatedAt)
+        );
+    }
+  }
+
+  private compareActionDueDate(left: ActionRecord, right: ActionRecord) {
+    return this.compareOptionalDateAsc(left.dueDate, right.dueDate) || this.compareDateDesc(left.updatedAt, right.updatedAt);
+  }
+
+  private actionAttentionRank(action: ActionRecord) {
+    const reasons = this.actionAttentionReasons(action);
+    if (reasons.includes('Overdue')) return 0;
+    if (reasons.includes('Owner needed')) return 1;
+    if (reasons.includes('Due soon')) return 2;
+    if (action.status === 'OPEN' || action.status === 'IN_PROGRESS') return 3;
+    if (action.status === 'DONE') return 4;
+    return 5;
+  }
+
+  private compareOptionalDateAsc(left?: string | null, right?: string | null) {
+    const leftTime = left ? new Date(left).getTime() : Number.POSITIVE_INFINITY;
+    const rightTime = right ? new Date(right).getTime() : Number.POSITIVE_INFINITY;
+    return leftTime - rightTime;
+  }
+
+  private compareDateDesc(left?: string | null, right?: string | null) {
+    const leftTime = left ? new Date(left).getTime() : 0;
+    const rightTime = right ? new Date(right).getTime() : 0;
+    return rightTime - leftTime;
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

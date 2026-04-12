@@ -16,6 +16,7 @@ type PageMode = 'list' | 'create' | 'detail' | 'edit';
 type RiskStatus = 'OPEN' | 'IN_TREATMENT' | 'MITIGATED' | 'ACCEPTED' | 'CLOSED';
 type RiskAssessmentType = 'RISK' | 'OPPORTUNITY';
 type RiskLifecycleStatus = 'DRAFT' | 'ASSESSED' | 'MITIGATION_PLANNED' | 'MONITORING' | 'CLOSED';
+type RiskSortOption = 'attention' | 'score' | 'targetDate' | 'updated';
 
 type UserOption = {
   id: string;
@@ -121,12 +122,12 @@ type SourceContextNavigation = {
               </div>
             </div>
 
-            <div class="filter-row">
-              <label class="field">
+            <div class="filter-row standard-filter-grid">
+              <label class="field compact-field search-field">
                 <span>Search</span>
                 <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Title or category">
               </label>
-              <label class="field">
+              <label class="field compact-field">
                 <span>Type</span>
                 <select [value]="assessmentTypeFilter()" (change)="setAssessmentTypeFilter(readSelectValue($event))">
                   <option value="">All records</option>
@@ -134,7 +135,7 @@ type SourceContextNavigation = {
                   <option value="OPPORTUNITY">Opportunities</option>
                 </select>
               </label>
-              <label class="field">
+              <label class="field compact-field">
                 <span>Status</span>
                 <select [value]="statusFilter()" (change)="setStatusFilter(readSelectValue($event))">
                   <option value="">All statuses</option>
@@ -143,6 +144,15 @@ type SourceContextNavigation = {
                   <option value="MITIGATION_PLANNED">Mitigation planned</option>
                   <option value="MONITORING">Monitoring</option>
                   <option value="CLOSED">Closed</option>
+                </select>
+              </label>
+              <label class="field compact-field">
+                <span>Sort by</span>
+                <select [value]="sortBy()" (change)="setSortBy(readSelectValue($event))">
+                  <option value="attention">Attention</option>
+                  <option value="score">Score</option>
+                  <option value="targetDate">Target date</option>
+                  <option value="updated">Updated</option>
                 </select>
               </label>
             </div>
@@ -740,6 +750,7 @@ export class RisksPageComponent implements OnInit, OnChanges {
   protected readonly search = signal('');
   protected readonly statusFilter = signal<RiskLifecycleStatus | ''>('');
   protected readonly assessmentTypeFilter = signal<RiskAssessmentType | ''>('');
+  protected readonly sortBy = signal<RiskSortOption>('attention');
   protected readonly customCategoryMode = signal(false);
   protected readonly sourceContextPrefill = signal<RiskContextPrefill | null>(null);
   protected readonly sourceContextNavigation = signal<SourceContextNavigation | null>(null);
@@ -826,7 +837,7 @@ export class RisksPageComponent implements OnInit, OnChanges {
         item.title.toLowerCase().includes(term) ||
         (item.category || '').toLowerCase().includes(term);
       return matchesStatus && matchesType && matchesTerm;
-    });
+    }).sort((left, right) => this.compareRisks(left, right));
   }
 
   protected currentScore() {
@@ -1011,6 +1022,9 @@ export class RisksPageComponent implements OnInit, OnChanges {
   }
   protected setStatusFilter(value: string) {
     this.statusFilter.set((value as RiskLifecycleStatus | '') || '');
+  }
+  protected setSortBy(value: string) {
+    this.sortBy.set((value as RiskSortOption) || 'attention');
   }
   protected assessmentIntroCopy(type: RiskAssessmentType) {
     return type === 'OPPORTUNITY'
@@ -1315,6 +1329,48 @@ export class RisksPageComponent implements OnInit, OnChanges {
     const today = new Date();
     const delta = (today.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24);
     return delta > days;
+  }
+
+  private compareRisks(left: RiskRow, right: RiskRow) {
+    switch (this.sortBy()) {
+      case 'score':
+        return right.score - left.score || this.compareDateDesc(left.updatedAt, right.updatedAt);
+      case 'targetDate':
+        return this.compareOptionalDateAsc(left.targetDate, right.targetDate) || this.compareDateDesc(left.updatedAt, right.updatedAt);
+      case 'updated':
+        return this.compareDateDesc(left.updatedAt, right.updatedAt) || right.score - left.score;
+      case 'attention':
+      default:
+        return (
+          this.riskAttentionRank(left) - this.riskAttentionRank(right) ||
+          right.score - left.score ||
+          this.compareOptionalDateAsc(left.targetDate, right.targetDate) ||
+          this.compareDateDesc(left.updatedAt, right.updatedAt)
+        );
+    }
+  }
+
+  private riskAttentionRank(item: RiskRow) {
+    const reasons = this.riskAttentionReasons(item);
+    if (reasons.includes('Follow-up overdue')) return 0;
+    if (reasons.includes('High priority')) return 1;
+    if (reasons.includes('Owner needed')) return 2;
+    if (reasons.includes('Follow-up due soon')) return 3;
+    if (reasons.includes('Stale')) return 4;
+    if (item.status !== 'CLOSED') return 5;
+    return 6;
+  }
+
+  private compareOptionalDateAsc(left?: string | null, right?: string | null) {
+    const leftTime = left ? new Date(left).getTime() : Number.POSITIVE_INFINITY;
+    const rightTime = right ? new Date(right).getTime() : Number.POSITIVE_INFINITY;
+    return leftTime - rightTime;
+  }
+
+  private compareDateDesc(left?: string | null, right?: string | null) {
+    const leftTime = left ? new Date(left).getTime() : 0;
+    const rightTime = right ? new Date(right).getTime() : 0;
+    return rightTime - leftTime;
   }
   protected routeStateWithSource() {
     return this.sourceContextNavigation() ? { sourceContextNavigation: this.sourceContextNavigation() } : undefined;

@@ -77,12 +77,12 @@ type UserRow = {
               </div>
             </div>
 
-            <div class="filter-row">
-              <label class="field">
+            <div class="filter-row standard-filter-grid">
+              <label class="field compact-field search-field">
                 <span>Search</span>
                 <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Name or email">
               </label>
-              <label class="field">
+              <label class="field compact-field">
                 <span>Status</span>
                 <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
                   <option value="">All users</option>

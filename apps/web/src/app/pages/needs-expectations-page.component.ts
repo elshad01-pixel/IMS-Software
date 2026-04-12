@@ -43,8 +43,8 @@ type SourceNavigation = { route: string[]; label: string };
                 <p class="toolbar-copy">Keep stakeholder expectations visible without introducing complex workflow.</p>
               </div>
             </div>
-            <div class="filter-row">
-              <label class="field">
+            <div class="filter-row standard-filter-grid">
+              <label class="field compact-field">
                 <span>Interested party</span>
                 <select [value]="partyFilter()" (change)="partyFilter.set(readSelectValue($event))">
                   <option value="">All parties</option>

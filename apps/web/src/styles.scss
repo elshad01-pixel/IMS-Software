@@ -315,6 +315,36 @@ label span {
   letter-spacing: 0.01em;
 }
 
+.compact-field {
+  gap: 0.28rem;
+}
+
+.compact-field span {
+  font-size: 0.78rem;
+}
+
+.compact-field input,
+.compact-field select {
+  min-height: 2.85rem;
+  padding: 0.72rem 0.82rem;
+}
+
+.standard-filter-grid {
+  display: flex;
+  gap: 0.75rem;
+  align-items: end;
+  flex-wrap: nowrap;
+}
+
+.standard-filter-grid > .field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.standard-filter-grid > .search-field {
+  flex: 1.35 1 0;
+}
+
 input,
 select,
 textarea {
@@ -652,6 +682,11 @@ button.danger {
   .detail-layout {
     grid-template-columns: 1fr;
   }
+
+  .standard-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 760px) {
@@ -675,6 +710,7 @@ button.danger {
   }
 
   .filter-row,
+  .standard-filter-grid,
   .form-grid-2,
   .form-grid-3,
   .summary-strip,

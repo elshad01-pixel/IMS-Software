@@ -455,6 +455,7 @@ export class RecordWorkItemsComponent implements OnChanges {
 
   protected sectionEyebrow() {
     if (this.sourceType === 'ncr') return 'Resolution workflow';
+    if (this.sourceType === 'audit') return 'Audit follow-up';
     if (this.sourceType === 'incident') return 'Incident follow-up';
     if (this.sourceType === 'provider') return 'Provider follow-up';
     if (this.sourceType === 'change-management') return 'Change follow-up';
@@ -467,6 +468,8 @@ export class RecordWorkItemsComponent implements OnChanges {
   protected panelDescription() {
     return this.sourceType === 'ncr'
       ? 'Actions assigned to resolve this nonconformance'
+      : this.sourceType === 'audit'
+        ? 'Track audit follow-up actions that support one or more findings before and after audit close-out.'
       : this.sourceType === 'incident'
         ? 'Track corrective and preventive follow-up linked to this incident or near miss.'
         : this.sourceType === 'provider'
@@ -504,6 +507,7 @@ export class RecordWorkItemsComponent implements OnChanges {
 
   protected createActionTitle() {
     if (this.sourceType === 'ncr') return 'Add corrective action';
+    if (this.sourceType === 'audit') return 'Prepare audit action';
     if (this.sourceType === 'risk') return 'Create action';
     if (this.sourceType === 'incident') return 'Prepare incident follow-up';
     if (this.sourceType === 'provider') return 'Prepare provider follow-up';
@@ -517,6 +521,9 @@ export class RecordWorkItemsComponent implements OnChanges {
   protected createActionDescription() {
     if (this.sourceType === 'ncr') {
       return 'Use this only when a new action is needed to resolve the NCR.';
+    }
+    if (this.sourceType === 'audit') {
+      return 'Use this when a finding needs separately owned follow-up. Keep CAPA for major findings that need formal corrective action and verification.';
     }
     if (this.sourceType === 'risk') {
       return 'Create a mitigation action directly from this record when ownership and due dates are ready.';
@@ -544,6 +551,7 @@ export class RecordWorkItemsComponent implements OnChanges {
 
   protected titlePlaceholder() {
     if (this.sourceType === 'ncr') return 'Update procedure and retrain team';
+    if (this.sourceType === 'audit') return 'Close audit follow-up gap';
     if (this.sourceType === 'risk') return 'Implement secondary supplier control';
     if (this.sourceType === 'incident') return 'Complete corrective follow-up for the event';
     if (this.sourceType === 'provider') return 'Close supplier review gap';
@@ -556,6 +564,7 @@ export class RecordWorkItemsComponent implements OnChanges {
 
   protected descriptionPlaceholder() {
     if (this.sourceType === 'ncr') return 'Describe the corrective step required to resolve the NCR';
+    if (this.sourceType === 'audit') return 'Describe the audit follow-up needed, the owner, and what evidence will show completion';
     if (this.sourceType === 'incident') return 'Describe the investigation follow-up, corrective action, or preventive step needed after this event';
     if (this.sourceType === 'provider') return 'Describe the supplier-review or provider-control follow-up needed';
     if (this.sourceType === 'change-management') return 'Describe the implementation or verification follow-up needed for this change';
@@ -567,6 +576,7 @@ export class RecordWorkItemsComponent implements OnChanges {
 
   protected submitLabel() {
     if (this.sourceType === 'ncr') return 'Add Corrective Action';
+    if (this.sourceType === 'audit') return 'Create Audit Action';
     if (this.sourceType === 'risk') return 'Create Action';
     if (this.sourceType === 'incident') return 'Create Incident Action';
     if (this.sourceType === 'provider') return 'Create Provider Action';
@@ -579,6 +589,7 @@ export class RecordWorkItemsComponent implements OnChanges {
 
   protected savingLabel() {
     if (this.sourceType === 'ncr') return 'Saving corrective action...';
+    if (this.sourceType === 'audit') return 'Saving audit action...';
     if (this.sourceType === 'incident') return 'Saving incident action...';
     if (this.sourceType === 'provider') return 'Saving provider action...';
     if (this.sourceType === 'change-management') return 'Saving change action...';
@@ -591,6 +602,7 @@ export class RecordWorkItemsComponent implements OnChanges {
 
   protected addButtonLabel() {
     if (this.sourceType === 'ncr') return 'Add Corrective Action';
+    if (this.sourceType === 'audit') return 'Prepare Audit Action';
     if (this.sourceType === 'risk') return 'Create Action';
     if (this.sourceType === 'incident') return 'Prepare Incident Action';
     if (this.sourceType === 'provider') return 'Prepare Provider Action';

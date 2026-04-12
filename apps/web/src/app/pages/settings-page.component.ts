@@ -44,6 +44,13 @@ type SettingsConfig = {
   notifications: {
     enabled: boolean;
   };
+  implementation: {
+    enabled: boolean;
+    startingPoint: string;
+    targetStandards: string[];
+    rolloutOwner: string;
+    certificationGoal: string;
+  };
 };
 
 @Component({
@@ -115,6 +122,10 @@ type SettingsConfig = {
             <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'notifications'" (click)="activeSection.set('notifications')">
               <span>Notifications</span>
               <small>Tenant preference reserved for later rollout</small>
+            </button>
+            <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'implementation'" (click)="activeSection.set('implementation')">
+              <span>Implementation</span>
+              <small>Optional PDCA setup and rollout workspace</small>
             </button>
           </nav>
         </aside>
@@ -339,6 +350,55 @@ type SettingsConfig = {
               </div>
             </form>
           </section>
+
+          <section class="card form-card page-stack" *ngIf="activeSection() === 'implementation'">
+            <div class="section-head">
+              <div>
+                <span class="section-eyebrow">Implementation</span>
+                <h3>Implementation workspace</h3>
+                <p class="subtle">Use this optional section for companies that need guided rollout, PDCA structure, and objective-establishment support. Mature companies can keep it hidden.</p>
+              </div>
+            </div>
+
+            <form [formGroup]="implementationForm" class="page-stack" (ngSubmit)="saveSection('implementation')">
+              <label class="toggle-row">
+                <input type="checkbox" formControlName="enabled" [disabled]="!canWrite()">
+                <span>Enable implementation workspace in the sidebar</span>
+              </label>
+
+              <div class="form-grid-2">
+                <label class="field">
+                  <span>Starting point</span>
+                  <select formControlName="startingPoint">
+                    <option value="NEW_IMPLEMENTATION">New implementation</option>
+                    <option value="DIGITISING_EXISTING">Digitising an existing system</option>
+                    <option value="MATURING_EXISTING">Maturing an already digital system</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>Rollout owner</span>
+                  <input formControlName="rolloutOwner" placeholder="Quality Manager">
+                </label>
+              </div>
+
+              <div class="form-grid-2">
+                <label class="field">
+                  <span>Target standards</span>
+                  <input formControlName="targetStandards" placeholder="ISO 9001, ISO 14001, ISO 45001">
+                </label>
+                <label class="field">
+                  <span>Rollout goal</span>
+                  <input formControlName="certificationGoal" placeholder="External certification in Q4 2026">
+                </label>
+              </div>
+
+              <div class="button-row">
+                <button type="submit" [disabled]="implementationForm.invalid || savingSection() === 'implementation' || !canWrite()">
+                  {{ savingSection() === 'implementation' ? 'Saving...' : 'Save implementation settings' }}
+                </button>
+              </div>
+            </form>
+          </section>
         </div>
       </section>
     </section>
@@ -450,7 +510,7 @@ export class SettingsPageComponent {
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
 
-  protected readonly activeSection = signal<'organization' | 'roles' | 'document' | 'risk' | 'kpi' | 'notifications'>('organization');
+  protected readonly activeSection = signal<'organization' | 'roles' | 'document' | 'risk' | 'kpi' | 'notifications' | 'implementation'>('organization');
   protected readonly config = signal<SettingsConfig | null>(null);
   protected readonly savingSection = signal<string | null>(null);
   protected readonly message = signal('');
@@ -483,6 +543,14 @@ export class SettingsPageComponent {
     enabled: [true]
   });
 
+  protected readonly implementationForm = this.fb.nonNullable.group({
+    enabled: [true],
+    startingPoint: ['DIGITISING_EXISTING', Validators.required],
+    targetStandards: ['ISO 9001, ISO 14001, ISO 45001', Validators.required],
+    rolloutOwner: ['Quality Manager'],
+    certificationGoal: ['']
+  });
+
   constructor() {
     this.reload();
   }
@@ -491,7 +559,7 @@ export class SettingsPageComponent {
     return this.authStore.hasPermission('settings.write');
   }
 
-  protected saveSection(section: 'organization' | 'document' | 'risk' | 'kpi' | 'notifications') {
+  protected saveSection(section: 'organization' | 'document' | 'risk' | 'kpi' | 'notifications' | 'implementation') {
     if (!this.canWrite()) {
       this.error.set('You do not have permission to update settings.');
       return;
@@ -502,7 +570,8 @@ export class SettingsPageComponent {
       document: this.documentForm,
       risk: this.riskForm,
       kpi: this.kpiForm,
-      notifications: this.notificationsForm
+      notifications: this.notificationsForm,
+      implementation: this.implementationForm
     };
     const form = formMap[section];
     if (form.invalid) {
@@ -520,6 +589,11 @@ export class SettingsPageComponent {
             ...form.getRawValue(),
             types: this.parseDocumentTypes()
           }
+        : section === 'implementation'
+          ? {
+              ...form.getRawValue(),
+              targetStandards: this.parseImplementationStandards()
+            }
         : form.getRawValue();
 
     this.api.put('settings/section/' + section, { values }).subscribe({
@@ -601,10 +675,24 @@ export class SettingsPageComponent {
     this.notificationsForm.reset({
       enabled: config.notifications.enabled
     });
+    this.implementationForm.reset({
+      enabled: config.implementation.enabled,
+      startingPoint: config.implementation.startingPoint,
+      targetStandards: config.implementation.targetStandards.join(', '),
+      rolloutOwner: config.implementation.rolloutOwner,
+      certificationGoal: config.implementation.certificationGoal
+    });
   }
 
   private parseDocumentTypes() {
     return this.documentForm.getRawValue().types
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  private parseImplementationStandards() {
+    return this.implementationForm.getRawValue().targetStandards
       .split(',')
       .map((item) => item.trim())
       .filter(Boolean);

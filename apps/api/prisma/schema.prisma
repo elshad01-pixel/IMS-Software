@@ -1115,7 +1115,14 @@ model Audit {
   title           String
   type            String
   standard        String?
+  programme       String?
+  scopeType       String?
   scope           String?
+  objectives      String?
+  criteria        String?
+  agenda          String?
+  openingMeetingNotes String?
+  closingMeetingNotes String?
   leadAuditorId   String?
   auditeeArea     String?
   scheduledAt     DateTime?

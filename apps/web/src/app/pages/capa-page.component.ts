@@ -7,10 +7,15 @@ import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
-import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
 
 type PageMode = 'list' | 'create' | 'detail' | 'edit';
 type CapaStatus = 'OPEN' | 'INVESTIGATING' | 'ACTION_PLANNED' | 'IN_PROGRESS' | 'VERIFIED' | 'CLOSED';
+type CapaSortOption = 'attention' | 'dueDate' | 'updated' | 'status';
+type ReturnNavigation = {
+  route: string[];
+  label: string;
+  state?: Record<string, unknown>;
+};
 
 type UserOption = {
   id: string;
@@ -42,7 +47,7 @@ type CapaRow = {
 @Component({
   selector: 'iso-capa-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, RecordWorkItemsComponent, AttachmentPanelComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, AttachmentPanelComponent],
   template: `
     <section class="page-grid">
       <iso-page-header
@@ -52,8 +57,9 @@ type CapaRow = {
         [breadcrumbs]="breadcrumbs()"
       >
         <a *ngIf="mode() === 'list' && canWrite()" routerLink="/capa/new" class="button-link">+ New CAPA</a>
-        <a *ngIf="mode() === 'detail' && selectedCapa() && canWrite()" [routerLink]="['/capa', selectedCapa()?.id, 'edit']" class="button-link">Edit CAPA</a>
+        <a *ngIf="mode() === 'detail' && selectedCapa() && canWrite()" [routerLink]="['/capa', selectedCapa()?.id, 'edit']" [state]="returnLinkState()" class="button-link">Edit CAPA</a>
         <button *ngIf="mode() === 'detail' && canDeleteCapa()" type="button" class="button-link danger" (click)="deleteCapa()">Delete CAPA</button>
+        <a *ngIf="mode() !== 'list' && returnNavigation()" [routerLink]="returnNavigation()!.route" [state]="returnNavigation()!.state" class="button-link secondary">Back to {{ returnNavigation()!.label }}</a>
         <a *ngIf="mode() !== 'list'" routerLink="/capa" class="button-link secondary">Back to register</a>
       </iso-page-header>
 
@@ -93,12 +99,12 @@ type CapaRow = {
               </div>
             </div>
 
-            <div class="filter-row">
-              <label class="field">
+            <div class="filter-row standard-filter-grid">
+              <label class="field compact-field search-field">
                 <span>Search</span>
                 <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Title or source">
               </label>
-              <label class="field">
+              <label class="field compact-field">
                 <span>Status</span>
                 <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
                   <option value="">All statuses</option>
@@ -108,6 +114,15 @@ type CapaRow = {
                   <option>IN_PROGRESS</option>
                   <option>VERIFIED</option>
                   <option>CLOSED</option>
+                </select>
+              </label>
+              <label class="field compact-field">
+                <span>Sort by</span>
+                <select [value]="sortBy()" (change)="setSortBy(readSelectValue($event))">
+                  <option value="attention">Attention</option>
+                  <option value="dueDate">Due date</option>
+                  <option value="updated">Updated</option>
+                  <option value="status">Status</option>
                 </select>
               </label>
             </div>
@@ -129,6 +144,7 @@ type CapaRow = {
                 <tr>
                   <th>CAPA</th>
                   <th>Source</th>
+                  <th>Owner</th>
                   <th>Status</th>
                   <th>Due date</th>
                   <th>Attention</th>
@@ -143,6 +159,7 @@ type CapaRow = {
                     </div>
                   </td>
                   <td>{{ item.source }}</td>
+                  <td>{{ ownerName(item.ownerId) }}</td>
                   <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ item.status }}</span></td>
                   <td>{{ item.dueDate ? (item.dueDate | date:'yyyy-MM-dd') : 'N/A' }}</td>
                   <td><span class="status-badge" [ngClass]="attentionClass(item)">{{ attentionLabel(item) }}</span></td>
@@ -271,7 +288,7 @@ type CapaRow = {
 
           <div class="button-row">
             <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save CAPA' }}</button>
-            <a [routerLink]="selectedId() ? ['/capa', selectedId()] : ['/capa']" class="button-link secondary">Cancel</a>
+            <a [routerLink]="selectedId() ? ['/capa', selectedId()] : ['/capa']" [state]="returnLinkState()" class="button-link secondary">Cancel</a>
           </div>
         </form>
 
@@ -292,7 +309,11 @@ type CapaRow = {
 
             <div class="summary-strip top-space">
               <article class="summary-item">
-                <span>Owner due date</span>
+                <span>Owner</span>
+                <strong>{{ ownerName(selectedCapa()?.ownerId) }}</strong>
+              </article>
+              <article class="summary-item">
+                <span>Due date</span>
                 <strong>{{ selectedCapa()?.dueDate ? (selectedCapa()?.dueDate | date:'yyyy-MM-dd') : 'Not set' }}</strong>
               </article>
               <article class="summary-item">
@@ -353,8 +374,6 @@ type CapaRow = {
               <p>{{ selectedCapa()?.closureSummary || 'No closure summary recorded.' }}</p>
             </section>
           </section>
-
-          <iso-record-work-items [sourceType]="'capa'" [sourceId]="selectedId()" />
         </div>
 
         <div class="page-stack">
@@ -413,6 +432,8 @@ export class CapaPageComponent implements OnInit, OnChanges {
   protected readonly error = signal('');
   protected readonly search = signal('');
   protected readonly statusFilter = signal('');
+  protected readonly sortBy = signal<CapaSortOption>('attention');
+  protected readonly returnNavigation = signal<ReturnNavigation | null>(null);
 
   protected readonly form = this.fb.nonNullable.group({
     title: ['', [Validators.required, Validators.maxLength(160)]],
@@ -488,7 +509,7 @@ export class CapaPageComponent implements OnInit, OnChanges {
         item.title.toLowerCase().includes(term) ||
         item.source.toLowerCase().includes(term);
       return matchesStatus && matchesTerm;
-    });
+    }).sort((left, right) => this.compareCapas(left, right));
   }
 
   protected countByStatus(status: CapaStatus) {
@@ -548,6 +569,10 @@ export class CapaPageComponent implements OnInit, OnChanges {
     return (event.target as HTMLSelectElement).value;
   }
 
+  protected setSortBy(value: string) {
+    this.sortBy.set((value as CapaSortOption) || 'attention');
+  }
+
   protected save() {
     if (!this.canWrite()) {
       this.error.set('You do not have permission to update CAPA records.');
@@ -570,7 +595,12 @@ export class CapaPageComponent implements OnInit, OnChanges {
     request.subscribe({
       next: (capa) => {
         this.saving.set(false);
-        this.router.navigate(['/capa', capa.id], { state: { notice: 'CAPA saved successfully.' } });
+        this.router.navigate(['/capa', capa.id], {
+          state: {
+            notice: 'CAPA saved successfully.',
+            returnNavigation: this.returnNavigation()
+          }
+        });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
@@ -637,6 +667,14 @@ export class CapaPageComponent implements OnInit, OnChanges {
     return this.capas().filter((item) => this.isOverdue(item)).length;
   }
 
+  protected ownerName(ownerId?: string | null) {
+    if (!ownerId) {
+      return 'Unassigned';
+    }
+    const user = this.users().find((item) => item.id === ownerId);
+    return user ? `${user.firstName} ${user.lastName}` : 'Assigned';
+  }
+
   protected attentionLabel(item: CapaRow) {
     const reasons = this.capaAttentionReasons(item);
     if (!reasons.length) return 'Under control';
@@ -665,6 +703,11 @@ export class CapaPageComponent implements OnInit, OnChanges {
       return 'Ownership, due date, verification, and current CAPA stage are controlled enough for routine follow-up.';
     }
     return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+  }
+
+  protected returnLinkState() {
+    const returnNavigation = this.returnNavigation();
+    return returnNavigation ? { returnNavigation } : undefined;
   }
 
   protected canWrite() {
@@ -700,6 +743,7 @@ export class CapaPageComponent implements OnInit, OnChanges {
     this.selectedId.set(id);
     this.message.set((history.state?.notice as string) || '');
     this.error.set('');
+    this.returnNavigation.set((history.state?.returnNavigation as ReturnNavigation | undefined) ?? null);
 
     if (this.mode() === 'list') {
       this.selectedCapa.set(null);
@@ -835,6 +879,57 @@ export class CapaPageComponent implements OnInit, OnChanges {
       reasons.push('Stale');
     }
     return reasons;
+  }
+
+  private compareCapas(left: CapaRow, right: CapaRow) {
+    switch (this.sortBy()) {
+      case 'dueDate':
+        return this.compareOptionalDateAsc(left.dueDate, right.dueDate) || this.compareDateDesc(left.updatedAt, right.updatedAt);
+      case 'updated':
+        return this.compareDateDesc(left.updatedAt, right.updatedAt) || this.compareOptionalDateAsc(left.dueDate, right.dueDate);
+      case 'status':
+        return this.capaStatusRank(left.status) - this.capaStatusRank(right.status) || this.compareOptionalDateAsc(left.dueDate, right.dueDate);
+      case 'attention':
+      default:
+        return (
+          this.capaAttentionRank(left) - this.capaAttentionRank(right) ||
+          this.compareOptionalDateAsc(left.dueDate, right.dueDate) ||
+          this.compareDateDesc(left.updatedAt, right.updatedAt)
+        );
+    }
+  }
+
+  private capaAttentionRank(item: CapaRow) {
+    const reasons = this.capaAttentionReasons(item);
+    if (reasons.includes('Overdue')) return 0;
+    if (reasons.includes('Owner needed')) return 1;
+    if (reasons.includes('Closure evidence needed')) return 2;
+    if (reasons.includes('Stale')) return 3;
+    if (item.status !== 'CLOSED') return 4;
+    return 5;
+  }
+
+  private capaStatusRank(status: CapaStatus) {
+    return {
+      OPEN: 0,
+      INVESTIGATING: 1,
+      ACTION_PLANNED: 2,
+      IN_PROGRESS: 3,
+      VERIFIED: 4,
+      CLOSED: 5
+    }[status];
+  }
+
+  private compareOptionalDateAsc(left?: string | null, right?: string | null) {
+    const leftTime = left ? new Date(left).getTime() : Number.POSITIVE_INFINITY;
+    const rightTime = right ? new Date(right).getTime() : Number.POSITIVE_INFINITY;
+    return leftTime - rightTime;
+  }
+
+  private compareDateDesc(left?: string | null, right?: string | null) {
+    const leftTime = left ? new Date(left).getTime() : 0;
+    const rightTime = right ? new Date(right).getTime() : 0;
+    return rightTime - leftTime;
   }
 }
 

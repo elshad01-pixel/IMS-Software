@@ -43,12 +43,12 @@ type SourceNavigation = { route: string[]; label: string };
                 <p class="toolbar-copy">Keep customers, regulators, employees, suppliers, and other parties visible in the IMS context.</p>
               </div>
             </div>
-            <div class="filter-row">
-              <label class="field">
+            <div class="filter-row standard-filter-grid">
+              <label class="field compact-field search-field">
                 <span>Search</span>
                 <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Name or description">
               </label>
-              <label class="field">
+              <label class="field compact-field">
                 <span>Type</span>
                 <select [value]="typeFilter()" (change)="typeFilter.set(readSelectValue($event))">
                   <option value="">All types</option>

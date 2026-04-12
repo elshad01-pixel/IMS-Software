@@ -22,8 +22,43 @@ export class CreateAuditDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(120)
+  programme?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  scopeType?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(2000)
   scope?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  objectives?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  criteria?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  agenda?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  openingMeetingNotes?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  closingMeetingNotes?: string;
 
   @IsOptional()
   @IsString()
