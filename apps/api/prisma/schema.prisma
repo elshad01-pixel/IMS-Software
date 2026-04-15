@@ -104,6 +104,7 @@ enum AuditStatus {
 
 enum AuditFindingSeverity {
   OBSERVATION
+  OPPORTUNITY
   MINOR
   MAJOR
 }

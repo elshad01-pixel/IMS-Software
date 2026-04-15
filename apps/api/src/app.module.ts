@@ -27,6 +27,7 @@ import { EnvironmentalAspectsModule } from './modules/environmental-aspects/envi
 import { HazardsModule } from './modules/hazards/hazards.module';
 import { ExternalProvidersModule } from './modules/external-providers/external-providers.module';
 import { ChangeManagementModule } from './modules/change-management/change-management.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -56,7 +57,8 @@ import { ChangeManagementModule } from './modules/change-management/change-manag
     HazardsModule,
     ExternalProvidersModule,
     ChangeManagementModule,
-    ContentLibraryModule
+    ContentLibraryModule,
+    AiModule
   ]
 })
 export class AppModule implements NestModule {

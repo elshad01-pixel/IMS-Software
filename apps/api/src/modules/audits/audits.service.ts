@@ -709,10 +709,10 @@ export class AuditsService {
       : null;
     if (
       dto.status === AuditFindingStatus.CLOSED &&
-      finding.severity === AuditFindingSeverity.MAJOR &&
+      (finding.severity === AuditFindingSeverity.MAJOR || finding.severity === AuditFindingSeverity.MINOR) &&
       !finding.linkedCapaId
     ) {
-      throw new BadRequestException('Major findings require a linked CAPA before closure');
+      throw new BadRequestException('Minor and major findings require a linked CAPA before closure');
     }
 
     const updated = await this.prisma.auditFinding.update({
@@ -761,6 +761,10 @@ export class AuditsService {
 
     if (finding.linkedCapaId) {
       throw new ConflictException('A CAPA is already linked to this finding');
+    }
+
+    if (finding.severity !== AuditFindingSeverity.MINOR && finding.severity !== AuditFindingSeverity.MAJOR) {
+      throw new BadRequestException('Only minor or major findings can move into CAPA');
     }
 
     await this.ensureUserBelongsToTenant(tenantId, dto.ownerId ?? finding.ownerId ?? undefined);

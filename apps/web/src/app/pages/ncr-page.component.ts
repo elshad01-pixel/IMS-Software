@@ -365,8 +365,8 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
               <strong>{{ message() }}</strong>
               <span>{{ ncrNextStepsCopy() }}</span>
               <div class="button-row top-space">
-                <button type="button" (click)="setDetailTab(selectedNcr()?.status === 'OPEN' || selectedNcr()?.status === 'UNDER_REVIEW' ? 'investigation' : 'actions')">
-                  {{ selectedNcr()?.status === 'OPEN' || selectedNcr()?.status === 'UNDER_REVIEW' ? 'Continue investigation' : 'Review actions' }}
+                <button type="button" (click)="setDetailTab(primaryWorkflowTab())">
+                  {{ primaryWorkflowButtonLabel() }}
                 </button>
                 <button type="button" class="secondary" (click)="setDetailTab('comments')">Open comments</button>
                 <button type="button" class="secondary" (click)="setDetailTab('activity')">Review evidence</button>
@@ -379,14 +379,15 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
               <div>
                 <span class="section-eyebrow">Workflow</span>
                 <h3>NCR workflow</h3>
-                <p class="subtle">Work from investigation to root cause and then assign corrective actions before closure.</p>
+                <p class="subtle">Work from investigation to task follow-up and then formal verification before closure.</p>
               </div>
             </div>
 
             <nav class="detail-tabs top-space" aria-label="NCR detail sections">
               <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'overview'" (click)="setDetailTab('overview')">Overview</button>
               <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'investigation'" (click)="setDetailTab('investigation')">Investigation</button>
-              <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'actions'" (click)="setDetailTab('actions')">Actions</button>
+              <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'actions'" (click)="setDetailTab('actions')">Follow-up actions</button>
+              <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'verification'" (click)="setDetailTab('verification')">Verification</button>
               <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'comments'" (click)="setDetailTab('comments')">Comments</button>
               <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'activity'" (click)="setDetailTab('activity')">Activity & evidence</button>
             </nav>
@@ -419,7 +420,7 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
               <div>
                 <span class="section-eyebrow">Investigation</span>
                 <h3>Investigation</h3>
-                <p class="subtle">Containment, summary, root cause, and corrective response.</p>
+                <p class="subtle">Containment, summary, root cause, and corrective response planning.</p>
               </div>
             </div>
             <div class="section-grid-2 top-space">
@@ -428,18 +429,51 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
               <section class="detail-section"><h4>Root cause</h4><p>{{ selectedNcr()?.rootCause || 'No root cause recorded.' }}</p></section>
               <section class="detail-section"><h4>RCA method</h4><p>{{ selectedNcr()?.rcaMethod ? labelize(selectedNcr()?.rcaMethod || '') : 'Not set' }}</p></section>
               <section class="detail-section"><h4>Corrective action summary</h4><p>{{ selectedNcr()?.correctiveActionSummary || 'No corrective action summary recorded.' }}</p></section>
-              <section class="detail-section"><h4>Verified by</h4><p>{{ selectedNcr()?.verifiedBy ? fullName(selectedNcr()?.verifiedBy!) : 'Not assigned' }}<span *ngIf="selectedNcr()?.verificationDate"> | {{ selectedNcr()?.verificationDate | date:'yyyy-MM-dd' }}</span></p></section>
             </div>
-            <section class="compliance-note top-space">
-              <strong>{{ verificationHeading(selectedNcr()?.verificationStatus || 'PENDING') }}</strong>
-              <span>{{ verificationGuidance(selectedNcr()?.verificationStatus || 'PENDING') }}</span>
-            </section>
             <div class="button-row top-space" *ngIf="availableTransitions().length && canWrite()">
               <button *ngFor="let item of availableTransitions()" type="button" class="secondary" [disabled]="saving()" (click)="changeStatus(item)">Move to {{ labelize(item) }}</button>
             </div>
           </section>
 
-          <iso-record-work-items *ngIf="activeDetailTab() === 'actions'" [sourceType]="'ncr'" [sourceId]="selectedId()" />
+          <section *ngIf="activeDetailTab() === 'actions'" class="page-stack">
+            <section class="card panel-card">
+              <div class="section-head">
+                <div>
+                  <span class="section-eyebrow">Follow-up actions</span>
+                  <h3>Task-level corrective follow-up</h3>
+                  <p class="subtle">Use linked actions for owned tasks that support the NCR. Keep the corrective action summary in the investigation record, and use the action tracker for who-does-what follow-up.</p>
+                </div>
+              </div>
+              <section class="compliance-note top-space">
+                <strong>How to use linked actions</strong>
+                <span>Create actions here when the NCR needs specific owners, due dates, or multiple follow-up tasks. Do not repeat the whole NCR narrative in each action.</span>
+              </section>
+            </section>
+            <iso-record-work-items [sourceType]="'ncr'" [sourceId]="selectedId()" />
+          </section>
+
+          <section *ngIf="activeDetailTab() === 'verification'" class="card detail-card">
+            <div class="section-head">
+              <div>
+                <span class="section-eyebrow">Verification</span>
+                <h3>Verification</h3>
+                <p class="subtle">Confirm whether the corrective action was effective, not only completed.</p>
+              </div>
+            </div>
+            <section class="compliance-note top-space">
+              <strong>{{ verificationHeading(selectedNcr()?.verificationStatus || 'PENDING') }}</strong>
+              <span>{{ verificationGuidance(selectedNcr()?.verificationStatus || 'PENDING') }}</span>
+            </section>
+            <div class="section-grid-2 top-space">
+              <section class="detail-section"><h4>Verification status</h4><p>{{ labelize(selectedNcr()?.verificationStatus || '') }}</p></section>
+              <section class="detail-section"><h4>Verified by</h4><p>{{ selectedNcr()?.verifiedBy ? fullName(selectedNcr()?.verifiedBy!) : 'Not assigned' }}</p></section>
+              <section class="detail-section"><h4>Verification date</h4><p>{{ selectedNcr()?.verificationDate ? (selectedNcr()?.verificationDate | date:'yyyy-MM-dd') : 'Not recorded' }}</p></section>
+              <section class="detail-section"><h4>Current NCR status</h4><p>{{ labelize(selectedNcr()?.status || '') }}</p></section>
+            </div>
+            <div class="button-row top-space" *ngIf="availableTransitions().length && canWrite()">
+              <button *ngFor="let item of availableTransitions()" type="button" class="secondary" [disabled]="saving()" (click)="changeStatus(item)">Move to {{ labelize(item) }}</button>
+            </div>
+          </section>
 
           <section *ngIf="activeDetailTab() === 'comments'" class="card panel-card">
             <div class="section-head">
@@ -598,7 +632,7 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected readonly ncrs = signal<NcrRecord[]>([]);
   protected readonly selectedNcr = signal<NcrRecord | null>(null);
   protected readonly selectedId = signal<string | null>(null);
-  protected readonly activeDetailTab = signal<'overview' | 'investigation' | 'actions' | 'comments' | 'activity'>('overview');
+  protected readonly activeDetailTab = signal<'overview' | 'investigation' | 'actions' | 'verification' | 'comments' | 'activity'>('overview');
   protected readonly users = signal<UserOption[]>([]);
   protected readonly processOptions = signal<ProcessOption[]>([]);
   protected readonly ownerProcessFilterId = signal('');
@@ -707,7 +741,7 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected canRead() { return this.authStore.hasPermission('ncr.read'); }
   protected canWrite() { return this.authStore.hasPermission('ncr.write'); }
   protected pageTitle() { return { list: 'Nonconformance log', create: 'Raise NCR', detail: this.selectedNcr()?.referenceNo || 'NCR detail', edit: this.selectedNcr()?.referenceNo || 'Edit NCR' }[this.mode()]; }
-  protected pageDescription() { return { list: 'Review NCRs by lifecycle, severity, source, owner, and due date.', create: 'Capture the nonconformance first, then continue the investigation from the record.', detail: 'Review overview, investigation, actions, comments, attachments, and activity.', edit: 'Update the NCR without leaving the controlled workflow.' }[this.mode()]; }
+  protected pageDescription() { return { list: 'Review NCRs by lifecycle, severity, source, owner, and due date.', create: 'Capture the nonconformance first, then continue the investigation from the record.', detail: 'Review overview, investigation, follow-up actions, verification, comments, attachments, and activity.', edit: 'Update the NCR without leaving the controlled workflow.' }[this.mode()]; }
   protected breadcrumbs() {
     const crumbs: Array<{ label: string; link?: string }> = [{ label: 'NCR', link: '/ncr' }];
     if (this.mode() === 'create') crumbs.push({ label: 'New NCR' });
@@ -758,7 +792,28 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected activityLabel(action: string) { return action.replace(/^ncr\./, '').split('.').map((part) => this.labelize(part)).join(' '); }
   protected readInput(event: Event) { return (event.target as HTMLInputElement).value; }
   protected readSelect(event: Event) { return (event.target as HTMLSelectElement).value; }
-  protected setDetailTab(tab: 'overview' | 'investigation' | 'actions' | 'comments' | 'activity') { this.activeDetailTab.set(tab); }
+  protected setDetailTab(tab: 'overview' | 'investigation' | 'actions' | 'verification' | 'comments' | 'activity') { this.activeDetailTab.set(tab); }
+  protected primaryWorkflowTab() {
+    const record = this.selectedNcr();
+    if (!record) return 'investigation' as const;
+    if (record.status === 'OPEN' || record.status === 'UNDER_REVIEW' || record.status === 'INVESTIGATION') {
+      return 'investigation' as const;
+    }
+    if (record.status === 'ACTION_IN_PROGRESS') {
+      return 'actions' as const;
+    }
+    if (record.status === 'PENDING_VERIFICATION') {
+      return 'verification' as const;
+    }
+    return 'overview' as const;
+  }
+  protected primaryWorkflowButtonLabel() {
+    const tab = this.primaryWorkflowTab();
+    if (tab === 'investigation') return 'Continue investigation';
+    if (tab === 'actions') return 'Review follow-up actions';
+    if (tab === 'verification') return 'Open verification';
+    return 'Review overview';
+  }
   protected selectedRcaMethod() { return this.form.getRawValue().rcaMethod as NcrRcaMethod | ''; }
   protected ownerOptions() {
     const processId = this.ownerProcessFilterId();

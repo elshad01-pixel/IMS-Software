@@ -24,6 +24,16 @@ const settingsDefaults = {
   notifications: {
     enabled: true
   },
+  ai: {
+    enabled: false,
+    provider: 'openai',
+    features: {
+      auditFindingAssistant: true,
+      documentDraftAssistant: false,
+      managementReviewAssistant: false,
+      riskSuggestionAssistant: false
+    }
+  },
   implementation: {
     enabled: true,
     startingPoint: 'DIGITISING_EXISTING',
@@ -113,6 +123,15 @@ export class SettingsService {
       notifications: {
         enabled: this.readBooleanSetting(map, 'notifications.enabled', settingsDefaults.notifications.enabled)
       },
+      ai: {
+        enabled: this.readBooleanSetting(map, 'ai.enabled', settingsDefaults.ai.enabled),
+        provider: this.readSetting(map, 'ai.provider', settingsDefaults.ai.provider),
+        features: this.readJsonSetting<typeof settingsDefaults.ai.features>(
+          map,
+          'ai.features',
+          { ...settingsDefaults.ai.features }
+        )
+      },
       implementation: {
         enabled: this.readBooleanSetting(map, 'implementation.enabled', settingsDefaults.implementation.enabled),
         startingPoint: this.readSetting(map, 'implementation.startingPoint', settingsDefaults.implementation.startingPoint),
@@ -152,7 +171,7 @@ export class SettingsService {
   }
 
   async updateSection(tenantId: string, section: string, values: Record<string, unknown>) {
-    const validSections = ['organization', 'document', 'risk', 'kpi', 'notifications', 'implementation'];
+    const validSections = ['organization', 'document', 'risk', 'kpi', 'notifications', 'ai', 'implementation'];
     if (!validSections.includes(section)) {
       throw new BadRequestException('Unsupported settings section');
     }

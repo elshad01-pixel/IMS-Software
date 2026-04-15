@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
@@ -44,12 +45,35 @@ type SettingsConfig = {
   notifications: {
     enabled: boolean;
   };
+  ai: {
+    enabled: boolean;
+    provider: string;
+    features: {
+      auditFindingAssistant: boolean;
+      documentDraftAssistant: boolean;
+      managementReviewAssistant: boolean;
+      riskSuggestionAssistant: boolean;
+    };
+  };
   implementation: {
     enabled: boolean;
     startingPoint: string;
     targetStandards: string[];
     rolloutOwner: string;
     certificationGoal: string;
+  };
+};
+
+type AiRuntimeConfig = {
+  enabled: boolean;
+  provider: string;
+  model: string;
+  status: 'ready' | 'not_configured' | 'disabled';
+  features: {
+    auditFindingAssistant: boolean;
+    documentDraftAssistant: boolean;
+    managementReviewAssistant: boolean;
+    riskSuggestionAssistant: boolean;
   };
 };
 
@@ -122,6 +146,10 @@ type SettingsConfig = {
             <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'notifications'" (click)="activeSection.set('notifications')">
               <span>Notifications</span>
               <small>Tenant preference reserved for later rollout</small>
+            </button>
+            <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'ai'" (click)="activeSection.set('ai')">
+              <span>AI assistance</span>
+              <small>Optional draft and summary helpers with tenant-level control</small>
             </button>
             <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'implementation'" (click)="activeSection.set('implementation')">
               <span>Implementation</span>
@@ -351,6 +379,92 @@ type SettingsConfig = {
             </form>
           </section>
 
+          <section class="card form-card page-stack" *ngIf="activeSection() === 'ai'">
+            <div class="section-head">
+              <div>
+                <span class="section-eyebrow">AI assistance</span>
+                <h3>Tenant AI settings</h3>
+                <p class="subtle">Keep AI optional and narrow at first. The app should still work fully without it, and every AI result stays editable before save.</p>
+              </div>
+            </div>
+
+            <section class="detail-section compact-runtime-panel" *ngIf="aiRuntime() as runtime">
+              <div class="compact-runtime-grid">
+                <article>
+                  <span class="section-eyebrow">Runtime</span>
+                  <strong>{{ runtime.status === 'ready' ? 'Ready' : runtime.status === 'not_configured' ? 'Provider not configured' : 'Disabled' }}</strong>
+                </article>
+                <article>
+                  <span class="section-eyebrow">Provider</span>
+                  <strong>{{ runtime.provider | titlecase }}</strong>
+                </article>
+                <article>
+                  <span class="section-eyebrow">Model</span>
+                  <strong>{{ runtime.model }}</strong>
+                </article>
+              </div>
+              <p class="subtle">
+                {{ runtime.status === 'ready'
+                  ? 'Live provider credentials are available. Drafting can use the configured model.'
+                  : runtime.status === 'not_configured'
+                    ? 'The tenant can still use built-in fallback guidance until provider credentials are added.'
+                    : 'AI assistance is currently turned off for this tenant.' }}
+              </p>
+            </section>
+
+            <form [formGroup]="aiForm" class="page-stack" (ngSubmit)="saveSection('ai')">
+              <label class="toggle-row">
+                <input type="checkbox" formControlName="enabled" [disabled]="!canWrite()">
+                <span>Enable AI assistance for this tenant</span>
+              </label>
+
+              <div class="form-grid-2">
+                <label class="field">
+                  <span>Provider</span>
+                  <select formControlName="provider">
+                    <option value="openai">OpenAI</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>Model in use</span>
+                  <input [value]="aiRuntime()?.model || 'gpt-5-mini'" disabled>
+                </label>
+              </div>
+
+              <div class="entity-list compact-entity-list">
+                <div class="entity-item">
+                  <strong>Feature rollout</strong>
+                  <small>Start with one assistant only, keep the rest disabled until the workflow and prompting are proven.</small>
+                </div>
+              </div>
+
+              <div class="role-toggle-grid ai-feature-grid">
+                <label class="toggle-row">
+                  <input type="checkbox" formControlName="auditFindingAssistant" [disabled]="!canWrite()">
+                  <span>Audit finding assistant</span>
+                </label>
+                <label class="toggle-row">
+                  <input type="checkbox" formControlName="documentDraftAssistant" [disabled]="!canWrite()">
+                  <span>Document draft assistant</span>
+                </label>
+                <label class="toggle-row">
+                  <input type="checkbox" formControlName="managementReviewAssistant" [disabled]="!canWrite()">
+                  <span>Management review assistant</span>
+                </label>
+                <label class="toggle-row">
+                  <input type="checkbox" formControlName="riskSuggestionAssistant" [disabled]="!canWrite()">
+                  <span>Risk suggestion assistant</span>
+                </label>
+              </div>
+
+              <div class="button-row">
+                <button type="submit" [disabled]="aiForm.invalid || savingSection() === 'ai' || !canWrite()">
+                  {{ savingSection() === 'ai' ? 'Saving...' : 'Save AI settings' }}
+                </button>
+              </div>
+            </form>
+          </section>
+
           <section class="card form-card page-stack" *ngIf="activeSection() === 'implementation'">
             <div class="section-head">
               <div>
@@ -479,6 +593,25 @@ type SettingsConfig = {
       gap: 0.65rem;
     }
 
+    .compact-runtime-panel {
+      gap: 0.75rem;
+    }
+
+    .compact-runtime-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .compact-runtime-grid article {
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .ai-feature-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .toggle-row {
       display: flex;
       gap: 0.75rem;
@@ -495,7 +628,9 @@ type SettingsConfig = {
     @media (max-width: 1100px) {
       .settings-summary-strip,
       .settings-layout,
-      .role-grid {
+      .role-grid,
+      .compact-runtime-grid,
+      .ai-feature-grid {
         grid-template-columns: 1fr;
       }
 
@@ -510,8 +645,9 @@ export class SettingsPageComponent {
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
 
-  protected readonly activeSection = signal<'organization' | 'roles' | 'document' | 'risk' | 'kpi' | 'notifications' | 'implementation'>('organization');
+  protected readonly activeSection = signal<'organization' | 'roles' | 'document' | 'risk' | 'kpi' | 'notifications' | 'ai' | 'implementation'>('organization');
   protected readonly config = signal<SettingsConfig | null>(null);
+  protected readonly aiRuntime = signal<AiRuntimeConfig | null>(null);
   protected readonly savingSection = signal<string | null>(null);
   protected readonly message = signal('');
   protected readonly error = signal('');
@@ -543,6 +679,15 @@ export class SettingsPageComponent {
     enabled: [true]
   });
 
+  protected readonly aiForm = this.fb.nonNullable.group({
+    enabled: [false],
+    provider: ['openai', Validators.required],
+    auditFindingAssistant: [true],
+    documentDraftAssistant: [false],
+    managementReviewAssistant: [false],
+    riskSuggestionAssistant: [false]
+  });
+
   protected readonly implementationForm = this.fb.nonNullable.group({
     enabled: [true],
     startingPoint: ['DIGITISING_EXISTING', Validators.required],
@@ -559,7 +704,7 @@ export class SettingsPageComponent {
     return this.authStore.hasPermission('settings.write');
   }
 
-  protected saveSection(section: 'organization' | 'document' | 'risk' | 'kpi' | 'notifications' | 'implementation') {
+  protected saveSection(section: 'organization' | 'document' | 'risk' | 'kpi' | 'notifications' | 'ai' | 'implementation') {
     if (!this.canWrite()) {
       this.error.set('You do not have permission to update settings.');
       return;
@@ -571,6 +716,7 @@ export class SettingsPageComponent {
       risk: this.riskForm,
       kpi: this.kpiForm,
       notifications: this.notificationsForm,
+      ai: this.aiForm,
       implementation: this.implementationForm
     };
     const form = formMap[section];
@@ -589,6 +735,17 @@ export class SettingsPageComponent {
             ...form.getRawValue(),
             types: this.parseDocumentTypes()
           }
+        : section === 'ai'
+          ? {
+              enabled: this.aiForm.getRawValue().enabled,
+              provider: this.aiForm.getRawValue().provider,
+              features: {
+                auditFindingAssistant: this.aiForm.getRawValue().auditFindingAssistant,
+                documentDraftAssistant: this.aiForm.getRawValue().documentDraftAssistant,
+                managementReviewAssistant: this.aiForm.getRawValue().managementReviewAssistant,
+                riskSuggestionAssistant: this.aiForm.getRawValue().riskSuggestionAssistant
+              }
+            }
         : section === 'implementation'
           ? {
               ...form.getRawValue(),
@@ -601,6 +758,9 @@ export class SettingsPageComponent {
         this.savingSection.set(null);
         this.message.set('Settings saved successfully.');
         this.applyConfig(config as SettingsConfig);
+        if (section === 'ai') {
+          this.reloadAiRuntime();
+        }
       },
       error: (error: HttpErrorResponse) => {
         this.savingSection.set(null);
@@ -645,8 +805,14 @@ export class SettingsPageComponent {
   }
 
   private reload() {
-    this.api.get<SettingsConfig>('settings/config').subscribe({
-      next: (config) => this.applyConfig(config),
+    forkJoin({
+      config: this.api.get<SettingsConfig>('settings/config'),
+      aiRuntime: this.api.get<AiRuntimeConfig>('ai/config')
+    }).subscribe({
+      next: ({ config, aiRuntime }) => {
+        this.applyConfig(config);
+        this.aiRuntime.set(aiRuntime);
+      },
       error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Settings could not be loaded.'))
     });
   }
@@ -675,6 +841,14 @@ export class SettingsPageComponent {
     this.notificationsForm.reset({
       enabled: config.notifications.enabled
     });
+    this.aiForm.reset({
+      enabled: config.ai.enabled,
+      provider: config.ai.provider,
+      auditFindingAssistant: config.ai.features.auditFindingAssistant,
+      documentDraftAssistant: config.ai.features.documentDraftAssistant,
+      managementReviewAssistant: config.ai.features.managementReviewAssistant,
+      riskSuggestionAssistant: config.ai.features.riskSuggestionAssistant
+    });
     this.implementationForm.reset({
       enabled: config.implementation.enabled,
       startingPoint: config.implementation.startingPoint,
@@ -696,6 +870,13 @@ export class SettingsPageComponent {
       .split(',')
       .map((item) => item.trim())
       .filter(Boolean);
+  }
+
+  private reloadAiRuntime() {
+    this.api.get<AiRuntimeConfig>('ai/config').subscribe({
+      next: (config) => this.aiRuntime.set(config),
+      error: () => this.aiRuntime.set(null)
+    });
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

@@ -555,6 +555,10 @@ export class AuditReportService {
       return 'Minor Nonconformity';
     }
 
+    if (severity === AuditFindingSeverity.OPPORTUNITY) {
+      return 'Opportunity for Improvement';
+    }
+
     return 'Observation';
   }
 
