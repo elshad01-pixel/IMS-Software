@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiService } from './api.service';
-import { ContextDashboardResponse, ContextIssueProcessLink, ContextIssueRecord, ContextIssueRiskLink, InterestedPartyRecord, NeedExpectationRecord } from './context.models';
+import { ContextDashboardResponse, ContextIssueProcessLink, ContextIssueRecord, ContextIssueRiskLink, CustomerSurveyRequestRecord, InterestedPartyRecord, NeedExpectationRecord } from './context.models';
 
 @Injectable({ providedIn: 'root' })
 export class ContextApiService {
@@ -74,6 +74,50 @@ export class ContextApiService {
 
   removeInterestedParty(id: string) {
     return this.api.delete<{ success: boolean }>(`context/interested-parties/${id}`);
+  }
+
+  createCustomerSurveyRequest(
+    interestedPartyId: string,
+    payload: { recipientName?: string; recipientEmail?: string; expiresAt?: string }
+  ) {
+    return this.api.post<CustomerSurveyRequestRecord>(
+      `context/interested-parties/${interestedPartyId}/survey-requests`,
+      payload
+    );
+  }
+
+  getPublicCustomerSurvey(token: string) {
+    return this.api.get<{
+      id: string;
+      token: string;
+      title: string;
+      intro?: string | null;
+      scaleMax: number;
+      categoryLabels: string[];
+      status: 'OPEN' | 'COMPLETED' | 'EXPIRED' | 'CANCELLED';
+      expiresAt?: string | null;
+      completedAt?: string | null;
+      partyName: string;
+    }>(`public/customer-surveys/${token}`);
+  }
+
+  submitPublicCustomerSurvey(
+    token: string,
+    payload: {
+      respondentName?: string;
+      respondentEmail?: string;
+      respondentCompany?: string;
+      respondentReference?: string;
+      ratings: Record<string, number>;
+      whatWorkedWell?: string;
+      improvementPriority?: string;
+      comments?: string;
+    }
+  ) {
+    return this.api.post<{ success: boolean; averageScore: number; status: string }>(
+      `public/customer-surveys/${token}/submit`,
+      payload
+    );
   }
 
   listNeeds(params?: Record<string, string>) {

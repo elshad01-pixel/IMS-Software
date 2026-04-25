@@ -155,6 +155,14 @@ type NeedExpectationDelegate = {
   count(args?: unknown): Promise<number>;
 };
 
+type CustomerSurveyRequestDelegate = {
+  findMany(args?: unknown): Promise<any[]>;
+  create(args: unknown): Promise<any>;
+  update(args: unknown): Promise<any>;
+  findFirst(args?: unknown): Promise<any>;
+  count(args?: unknown): Promise<number>;
+};
+
 type ContextIssueRiskLinkDelegate = {
   findMany(args?: unknown): Promise<any[]>;
   create(args: unknown): Promise<any>;
@@ -292,6 +300,12 @@ export function getNeedExpectationDelegate(
   client: PrismaClient | object
 ): NeedExpectationDelegate {
   return (client as { needExpectation: NeedExpectationDelegate }).needExpectation;
+}
+
+export function getCustomerSurveyRequestDelegate(
+  client: PrismaClient | object
+): CustomerSurveyRequestDelegate {
+  return (client as { customerSurveyRequest: CustomerSurveyRequestDelegate }).customerSurveyRequest;
 }
 
 export function getContextIssueRiskLinkDelegate(

@@ -8,8 +8,10 @@ import { CurrentTenant } from '../../common/tenancy/current-tenant.decorator';
 import { CreateContextIssueProcessLinkDto } from './dto/create-context-issue-process-link.dto';
 import { CreateContextIssueRiskLinkDto } from './dto/create-context-issue-risk-link.dto';
 import { CreateContextIssueDto } from './dto/create-context-issue.dto';
+import { CreateCustomerSurveyRequestDto } from './dto/create-customer-survey-request.dto';
 import { CreateInterestedPartyDto } from './dto/create-interested-party.dto';
 import { CreateNeedExpectationDto } from './dto/create-need-expectation.dto';
+import { SubmitCustomerSurveyDto } from './dto/submit-customer-survey.dto';
 import { UpdateContextIssueDto } from './dto/update-context-issue.dto';
 import { UpdateInterestedPartyDto } from './dto/update-interested-party.dto';
 import { UpdateNeedExpectationDto } from './dto/update-need-expectation.dto';
@@ -123,6 +125,17 @@ export class ContextController {
     return this.contextService.updateInterestedParty(tenantId, user.sub, id, dto);
   }
 
+  @Post('interested-parties/:id/survey-requests')
+  @Permissions('context.write')
+  createCustomerSurveyRequest(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { sub: string },
+    @Param('id') id: string,
+    @Body() dto: CreateCustomerSurveyRequestDto
+  ) {
+    return this.contextService.createCustomerSurveyRequest(tenantId, user.sub, id, dto);
+  }
+
   @Delete('interested-parties/:id')
   @Permissions('admin.delete')
   removeInterestedParty(@CurrentTenant() tenantId: string, @CurrentUser() user: { sub: string }, @Param('id') id: string) {
@@ -157,5 +170,21 @@ export class ContextController {
   @Permissions('admin.delete')
   removeNeed(@CurrentTenant() tenantId: string, @CurrentUser() user: { sub: string }, @Param('id') id: string) {
     return this.contextService.removeNeed(tenantId, user.sub, id);
+  }
+}
+
+@ApiTags('public-customer-surveys')
+@Controller('public/customer-surveys')
+export class PublicCustomerSurveyController {
+  constructor(private readonly contextService: ContextService) {}
+
+  @Get(':token')
+  getSurvey(@Param('token') token: string) {
+    return this.contextService.getPublicCustomerSurvey(token);
+  }
+
+  @Post(':token/submit')
+  submitSurvey(@Param('token') token: string, @Body() dto: SubmitCustomerSurveyDto) {
+    return this.contextService.submitPublicCustomerSurvey(token, dto);
   }
 }

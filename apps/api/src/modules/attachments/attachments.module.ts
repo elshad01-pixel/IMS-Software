@@ -6,6 +6,7 @@ import { AttachmentsService } from './attachments.service';
 @Module({
   imports: [AuditLogsModule],
   controllers: [AttachmentsController],
-  providers: [AttachmentsService]
+  providers: [AttachmentsService],
+  exports: [AttachmentsService]
 })
 export class AttachmentsModule {}

@@ -370,6 +370,13 @@ enum InterestedPartyType {
   OTHER
 }
 
+enum CustomerSurveyRequestStatus {
+  OPEN
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
 model Tenant {
   id                String             @id @default(cuid())
   name              String
@@ -417,6 +424,7 @@ model Tenant {
   contextIssues     ContextIssue[]
   interestedParties InterestedParty[]
   needExpectations  NeedExpectation[]
+  customerSurveyRequests CustomerSurveyRequest[]
   contextIssueRiskLinks ContextIssueRiskLink[]
 }
 
@@ -1068,14 +1076,54 @@ model InterestedParty {
   name        String
   type        InterestedPartyType
   description String?
+  surveyEnabled Boolean           @default(false)
+  surveyTitle String?
+  surveyIntro String?
+  surveyScaleMax Int?
+  surveyCategoryLabels Json?
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
   deletedAt   DateTime?
   tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   needs       NeedExpectation[]
+  surveyRequests CustomerSurveyRequest[]
 
   @@index([tenantId, type])
   @@index([tenantId, deletedAt])
+}
+
+model CustomerSurveyRequest {
+  id                  String                      @id @default(cuid())
+  tenantId            String
+  interestedPartyId   String
+  token               String                      @unique
+  title               String
+  intro               String?
+  scaleMax            Int
+  categoryLabels      Json
+  recipientName       String?
+  recipientEmail      String?
+  status              CustomerSurveyRequestStatus @default(OPEN)
+  sentAt              DateTime?
+  expiresAt           DateTime?
+  completedAt         DateTime?
+  respondentName      String?
+  respondentEmail     String?
+  respondentCompany   String?
+  respondentReference String?
+  ratings             Json?
+  whatWorkedWell      String?
+  improvementPriority String?
+  comments            String?
+  averageScore        Float?
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
+  tenant              Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  interestedParty     InterestedParty             @relation(fields: [interestedPartyId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, interestedPartyId])
+  @@index([tenantId, status])
+  @@index([tenantId, createdAt])
 }
 
 model NeedExpectation {

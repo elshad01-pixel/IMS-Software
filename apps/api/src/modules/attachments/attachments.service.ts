@@ -100,6 +100,41 @@ export class AttachmentsService {
     };
   }
 
+  async readLatestSourceAttachmentBuffer(
+    tenantId: string,
+    sourceType: string,
+    sourceId: string
+  ) {
+    const attachment = await this.prisma.attachment.findFirst({
+      where: {
+        tenantId,
+        sourceType,
+        sourceId,
+        deletedAt: null
+      },
+      orderBy: [{ createdAt: 'desc' }]
+    });
+
+    if (!attachment) {
+      return null;
+    }
+
+    const objectStream = (await this.minioClient.getObject(
+      this.bucket,
+      attachment.objectKey
+    )) as Readable;
+
+    const chunks: Buffer[] = [];
+    for await (const chunk of objectStream) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+
+    return {
+      attachment,
+      buffer: Buffer.concat(chunks)
+    };
+  }
+
   async upload(
     tenantId: string,
     actorId: string,

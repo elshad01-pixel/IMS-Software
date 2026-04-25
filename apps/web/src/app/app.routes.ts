@@ -22,6 +22,7 @@ import { ContextDashboardPageComponent } from './pages/context-dashboard-page.co
 import { ExternalIssueCreatePageComponent, ExternalIssueEditPageComponent, ExternalIssuesListPageComponent, InternalIssueCreatePageComponent, InternalIssueEditPageComponent, InternalIssuesListPageComponent } from './pages/context-issues-page.component';
 import { InterestedPartiesListPageComponent, InterestedPartyCreatePageComponent, InterestedPartyEditPageComponent } from './pages/interested-parties-page.component';
 import { NeedExpectationCreatePageComponent, NeedExpectationEditPageComponent, NeedsExpectationsListPageComponent } from './pages/needs-expectations-page.component';
+import { PublicCustomerSurveyPageComponent } from './pages/public-customer-survey-page.component';
 import {
   ComplianceObligationsCreatePageComponent,
   ComplianceObligationsDetailPageComponent,
@@ -62,6 +63,7 @@ import { ImplementationPageComponent } from './pages/implementation-page.compone
 
 export const appRoutes: Routes = [
   { path: 'login', component: LoginPageComponent },
+  { path: 'survey/:token', component: PublicCustomerSurveyPageComponent },
   {
     path: '',
     component: ShellComponent,

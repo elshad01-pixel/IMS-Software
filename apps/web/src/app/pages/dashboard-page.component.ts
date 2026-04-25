@@ -12,6 +12,15 @@ type DashboardResponse = {
   auditSummary: { planned: number; inProgress: number; completed: number };
   kpiSummaryCounts: { watch: number; breach: number };
   trainingSummaryCounts: { assigned: number; inProgress: number; completed: number };
+  feedbackSummary: {
+    responseCount: number;
+    openRequestCount: number;
+    averageScore?: number | null;
+    lowScoreCount: number;
+    mediumScoreCount: number;
+    highScoreCount: number;
+    health: 'NO_DATA' | 'ATTENTION' | 'WATCH' | 'STRONG';
+  };
   kpiSummary: Array<{ id: string; name: string; actual: number; target: number; unit: string; status: string }>;
   actionItems: Array<{
     id: string;
@@ -32,7 +41,7 @@ type ContextDashboardResponse = {
   };
 };
 
-type DashboardModule = 'risks' | 'capa' | 'actions' | 'audits' | 'context';
+type DashboardModule = 'risks' | 'capa' | 'actions' | 'audits' | 'context' | 'feedback';
 type DashboardRange = 'month' | 'quarter' | 'year';
 type DashboardChartType = 'bar' | 'line' | 'pie' | 'donut';
 
@@ -107,6 +116,7 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
               <option value="actions">Actions</option>
               <option value="audits">Audits</option>
               <option value="context">Context</option>
+              <option value="feedback">Customer Feedback</option>
             </select>
           </label>
 
@@ -696,6 +706,15 @@ export class DashboardPageComponent {
     auditSummary: { planned: 0, inProgress: 0, completed: 0 },
     kpiSummaryCounts: { watch: 0, breach: 0 },
     trainingSummaryCounts: { assigned: 0, inProgress: 0, completed: 0 },
+    feedbackSummary: {
+      responseCount: 0,
+      openRequestCount: 0,
+      averageScore: null,
+      lowScoreCount: 0,
+      mediumScoreCount: 0,
+      highScoreCount: 0,
+      health: 'NO_DATA'
+    },
     kpiSummary: [],
     actionItems: []
   });
@@ -790,6 +809,21 @@ export class DashboardPageComponent {
         copy: 'Breaches',
         link: '/kpis',
         tone: this.data().kpiSummaryCounts.breach > 0 ? 'critical' : 'focus'
+      },
+      {
+        label: 'Customer feedback',
+        value: this.data().feedbackSummary.averageScore != null ? `${this.data().feedbackSummary.averageScore}/10` : 'No data',
+        copy:
+          this.data().feedbackSummary.responseCount > 0
+            ? `${this.data().feedbackSummary.responseCount} responses`
+            : 'Awaiting responses',
+        link: '/context/interested-parties',
+        tone:
+          this.data().feedbackSummary.health === 'ATTENTION'
+            ? 'critical'
+            : this.data().feedbackSummary.health === 'WATCH'
+              ? 'warning'
+              : 'focus'
       }
     ];
   }
@@ -800,7 +834,8 @@ export class DashboardPageComponent {
       capa: 'CAPA',
       actions: 'Actions',
       audits: 'Audits',
-      context: 'Context'
+      context: 'Context',
+      feedback: 'Customer Feedback'
     }[this.selectedModule()];
   }
 
@@ -826,7 +861,8 @@ export class DashboardPageComponent {
       capa: '/capa',
       actions: '/actions',
       audits: '/audits',
-      context: '/context'
+      context: '/context',
+      feedback: '/context/interested-parties'
     }[this.selectedModule()];
   }
 
@@ -939,7 +975,8 @@ export class DashboardPageComponent {
       capa: 'Status distribution',
       actions: 'Status distribution',
       audits: 'Program status',
-      context: 'Issue distribution'
+      context: 'Issue distribution',
+      feedback: 'Score distribution'
     }[this.selectedModule()];
   }
 
@@ -983,6 +1020,13 @@ export class DashboardPageComponent {
           { label: 'Needs', value: summary?.needsExpectations ?? 0, color: '#6f9d7f', link: '/context/needs-expectations' }
         ];
       }
+      case 'feedback':
+        return [
+          { label: 'Needs attention (0-6)', value: this.data().feedbackSummary.lowScoreCount, color: '#b45a47', link: '/context/interested-parties' },
+          { label: 'Acceptable (7-8)', value: this.data().feedbackSummary.mediumScoreCount, color: '#c39545', link: '/context/interested-parties' },
+          { label: 'Strong (9-10)', value: this.data().feedbackSummary.highScoreCount, color: '#3f6f59', link: '/context/interested-parties' },
+          { label: 'Open links', value: this.data().feedbackSummary.openRequestCount, color: '#446d8e', link: '/context/interested-parties' }
+        ];
       case 'risks':
       default:
         return [

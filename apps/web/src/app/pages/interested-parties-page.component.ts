@@ -7,7 +7,7 @@ import { AuthStore } from '../core/auth.store';
 import { InterestedPartyTypeGuide } from '../core/content-library.models';
 import { ContentLibraryService } from '../core/content-library.service';
 import { ContextApiService } from '../core/context-api.service';
-import { InterestedPartyRecord, InterestedPartyType } from '../core/context.models';
+import { CustomerSurveyRequestRecord, InterestedPartyRecord, InterestedPartyType } from '../core/context.models';
 import { IconActionButtonComponent } from '../shared/icon-action-button.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
@@ -35,6 +35,84 @@ type SourceNavigation = { route: string[]; label: string };
       </section>
 
       <section *ngIf="canRead() && mode() === 'list'" class="page-stack">
+        <div class="card panel-card" *ngIf="customerParties().length">
+          <div class="section-head">
+            <div>
+              <span class="section-eyebrow">Customer survey</span>
+              <h3>Issue survey from the register</h3>
+              <p class="subtle">Create customer records normally first. Use this register panel only when you want to send a survey link and review the live response position.</p>
+            </div>
+          </div>
+
+          <p class="feedback top-space" [class.is-empty]="!surveyError() && !surveyMessage()" [class.error]="!!surveyError()" [class.success]="!!surveyMessage() && !surveyError()">{{ surveyError() || surveyMessage() }}</p>
+
+          <div class="form-grid-2 top-space">
+            <label class="field">
+              <span>Customer</span>
+              <select [value]="selectedSurveyPartyId()" (change)="selectedSurveyPartyId.set(readSelectValue($event))">
+                <option value="">Select customer</option>
+                <option *ngFor="let item of customerParties()" [value]="item.id">{{ item.name }}</option>
+              </select>
+            </label>
+            <section class="guidance-card" *ngIf="selectedSurveyParty()">
+              <strong>{{ selectedSurveyParty()!.name }}</strong>
+              <p>
+                Responses: {{ selectedSurveyParty()?.surveySummary?.responseCount ?? 0 }}
+                | Open links: {{ selectedSurveyParty()?.surveySummary?.openRequestCount ?? 0 }}
+                | Average: {{ formatScore(selectedSurveyParty()?.surveySummary?.averageScore) }}
+              </p>
+              <small>Scale guide: 0-6 needs attention, 7-8 acceptable, 9-10 strong.</small>
+            </section>
+          </div>
+
+          <div class="form-grid-4 top-space category-score-grid" *ngIf="selectedSurveyParty()">
+            <article class="mini-metric" *ngFor="let metric of selectedSurveyPartyMetrics()">
+              <span>{{ metric.label }}</span>
+              <strong>{{ formatScore(metric.averageScore) }}</strong>
+            </article>
+          </div>
+
+          <form class="page-stack top-space" [formGroup]="surveyRequestForm" (ngSubmit)="createSurveyRequest()">
+            <div class="form-grid-3">
+              <label class="field"><span>Recipient name</span><input formControlName="recipientName" placeholder="Optional contact name"></label>
+              <label class="field"><span>Recipient email</span><input formControlName="recipientEmail" placeholder="Optional email reference"></label>
+              <label class="field"><span>Expiry date</span><input type="date" formControlName="expiresAt"></label>
+            </div>
+            <div class="button-row">
+              <button type="submit" [disabled]="!selectedSurveyPartyId() || surveyRequestForm.invalid || surveySaving() || !canWrite()">{{ surveySaving() ? 'Preparing link...' : 'Prepare survey link' }}</button>
+            </div>
+          </form>
+
+          <section class="guidance-card top-space" *ngIf="latestSurveyUrl()">
+            <strong>Latest survey link</strong>
+            <p class="survey-link">{{ latestSurveyUrl() }}</p>
+            <div class="button-row top-space">
+              <a [href]="latestSurveyUrl()" target="_blank" rel="noopener noreferrer" class="button-link">Open survey</a>
+              <button type="button" class="secondary" (click)="copyLatestSurveyLink()">Copy link</button>
+            </div>
+          </section>
+
+          <div class="entity-list top-space" *ngIf="selectedSurveyParty()?.surveyRequests?.length">
+            <article class="entity-item" *ngFor="let item of selectedSurveyParty()?.surveyRequests || []">
+              <div class="entity-item__head">
+                <strong>{{ item.title }}</strong>
+                <span class="status-badge" [class.warn]="item.status === 'OPEN' || item.status === 'EXPIRED'" [class.success]="item.status === 'COMPLETED'">{{ item.status }}</span>
+              </div>
+              <small>
+                {{ item.recipientEmail || item.recipientName || 'No recipient reference' }}
+                | Sent {{ item.sentAt ? (item.sentAt | date:'yyyy-MM-dd') : 'Not sent' }}
+                | {{ item.averageScore != null ? ('Average ' + item.averageScore) : 'Awaiting response' }}
+              </small>
+              <small *ngIf="item.improvementPriority">Improve first: {{ item.improvementPriority }}</small>
+              <small *ngIf="item.whatWorkedWell">Worked well: {{ item.whatWorkedWell }}</small>
+              <small *ngIf="item.comments">{{ item.comments }}</small>
+              <div class="button-row top-space">
+                <a [href]="buildAbsoluteSurveyUrl(item.surveyUrl)" target="_blank" rel="noopener noreferrer" class="button-link secondary">Open survey</a>
+              </div>
+            </article>
+          </div>
+        </div>
+
         <div class="card list-card">
           <div class="toolbar">
             <div class="toolbar-meta">
@@ -65,12 +143,13 @@ type SourceNavigation = { route: string[]; label: string };
 
           <div class="data-table-wrap top-space" *ngIf="!loading() && filteredParties().length">
             <table class="data-table">
-              <thead><tr><th>Name</th><th>Type</th><th>Needs</th><th>Updated</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Name</th><th>Type</th><th>Needs</th><th>Survey</th><th>Updated</th><th>Actions</th></tr></thead>
               <tbody>
                 <tr *ngFor="let item of filteredParties()">
                   <td><div class="table-title"><strong>{{ item.name }}</strong><small>{{ item.description || 'No description recorded' }}</small></div></td>
                   <td>{{ labelize(item.type) }}</td>
                   <td>{{ item.needCount || 0 }}</td>
+                  <td>{{ interestedPartySurveyStatus(item) }}</td>
                   <td>{{ item.updatedAt | date:'yyyy-MM-dd' }}</td>
                   <td>
                     <div class="inline-actions">
@@ -102,6 +181,7 @@ type SourceNavigation = { route: string[]; label: string };
               <label class="field"><span>Name</span><input formControlName="name" placeholder="Regulator, customer group, supplier"></label>
               <label class="field"><span>Type</span><select formControlName="type"><option *ngFor="let item of typeOptions" [value]="item">{{ labelize(item) }}</option></select></label>
             </div>
+
             <label class="field top-space"><span>Description</span><textarea formControlName="description" rows="5" placeholder="Optional context about this interested party"></textarea></label>
 
             <div class="top-space content-guidance" *ngIf="selectedTypeGuide() as guide">
@@ -115,12 +195,64 @@ type SourceNavigation = { route: string[]; label: string };
                 <button type="button" class="chip-button" *ngFor="let example of guide.examples" (click)="applyPartyExample(example)">{{ example }}</button>
               </div>
             </div>
+
           </section>
           <div class="button-row">
             <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save interested party' }}</button>
             <a routerLink="/context/interested-parties" class="button-link secondary">Cancel</a>
           </div>
         </form>
+
+        <section class="card panel-card page-stack" *ngIf="mode() === 'edit' && selectedParty()?.type === 'CUSTOMER' && selectedParty()?.surveyRequests?.length">
+          <div class="section-head">
+            <div>
+              <span class="section-eyebrow">Survey history</span>
+              <h3>Recorded customer survey responses</h3>
+              <p class="subtle">This page keeps the customer record simple. Use the survey panel on the Interested Parties register to issue new survey links.</p>
+            </div>
+          </div>
+          <div class="summary-strip">
+            <article class="summary-item">
+              <span>Responses</span>
+              <strong>{{ selectedParty()?.surveySummary?.responseCount ?? 0 }}</strong>
+            </article>
+            <article class="summary-item">
+              <span>Open links</span>
+              <strong>{{ selectedParty()?.surveySummary?.openRequestCount ?? 0 }}</strong>
+            </article>
+            <article class="summary-item">
+              <span>Average</span>
+              <strong>{{ formatScore(selectedParty()?.surveySummary?.averageScore) }}</strong>
+            </article>
+          </div>
+
+          <div class="form-grid-4 top-space category-score-grid">
+            <article class="mini-metric" *ngFor="let metric of categoryMetrics()">
+              <span>{{ metric.label }}</span>
+              <strong>{{ formatScore(metric.averageScore) }}</strong>
+            </article>
+          </div>
+
+          <div class="entity-list top-space">
+            <article class="entity-item" *ngFor="let item of selectedParty()?.surveyRequests || []">
+              <div class="entity-item__head">
+                <strong>{{ item.title }}</strong>
+                <span class="status-badge" [class.warn]="item.status === 'OPEN' || item.status === 'EXPIRED'" [class.success]="item.status === 'COMPLETED'">{{ item.status }}</span>
+              </div>
+              <small>
+                {{ item.recipientEmail || item.recipientName || 'No recipient reference' }}
+                | Sent {{ item.sentAt ? (item.sentAt | date:'yyyy-MM-dd') : 'Not sent' }}
+                | {{ item.averageScore != null ? ('Average ' + item.averageScore) : 'Awaiting response' }}
+              </small>
+              <small *ngIf="item.improvementPriority">Improve first: {{ item.improvementPriority }}</small>
+              <small *ngIf="item.whatWorkedWell">Worked well: {{ item.whatWorkedWell }}</small>
+              <small *ngIf="item.comments">{{ item.comments }}</small>
+              <div class="button-row top-space">
+                <a [href]="buildAbsoluteSurveyUrl(item.surveyUrl)" target="_blank" rel="noopener noreferrer" class="button-link secondary">Open survey</a>
+              </div>
+            </article>
+          </div>
+        </section>
 
       </section>
     </section>
@@ -152,6 +284,42 @@ type SourceNavigation = { route: string[]; label: string };
       border: 1px solid rgba(47, 107, 69, 0.16);
       background: rgba(47, 107, 69, 0.08);
     }
+    .toggle-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 600;
+      color: var(--text-strong);
+    }
+    .category-score-grid {
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+    .mini-metric {
+      border: 1px solid var(--border-subtle);
+      border-radius: 1rem;
+      padding: 0.85rem 1rem;
+      background: color-mix(in srgb, var(--surface-strong) 92%, white);
+      display: grid;
+      gap: 0.2rem;
+    }
+    .mini-metric span {
+      color: var(--text-muted);
+      font-size: 0.86rem;
+    }
+    .mini-metric strong {
+      font-size: 1.35rem;
+    }
+    .survey-link {
+      word-break: break-all;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92rem;
+    }
+    .entity-item__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
   `]
 })
 export class InterestedPartiesPageComponent implements OnInit, OnChanges {
@@ -172,6 +340,11 @@ export class InterestedPartiesPageComponent implements OnInit, OnChanges {
   protected readonly saving = signal(false);
   protected readonly error = signal('');
   protected readonly message = signal((history.state?.notice as string) || '');
+  protected readonly surveySaving = signal(false);
+  protected readonly surveyError = signal('');
+  protected readonly surveyMessage = signal('');
+  protected readonly latestSurveyUrl = signal('');
+  protected readonly selectedSurveyPartyId = signal('');
   protected readonly search = signal('');
   protected readonly typeFilter = signal('');
   protected readonly typeGuides = signal<InterestedPartyTypeGuide[]>([]);
@@ -182,6 +355,11 @@ export class InterestedPartiesPageComponent implements OnInit, OnChanges {
     type: ['CUSTOMER' as InterestedPartyType, Validators.required],
     description: ['', [Validators.maxLength(2000)]]
   });
+  protected readonly surveyRequestForm = this.fb.nonNullable.group({
+    recipientName: ['', [Validators.maxLength(160)]],
+    recipientEmail: ['', [Validators.email, Validators.maxLength(160)]],
+    expiresAt: ['']
+  });
   protected readonly filteredParties = computed(() => {
     const term = this.search().trim().toLowerCase();
     return this.parties().filter((item) => {
@@ -190,6 +368,10 @@ export class InterestedPartiesPageComponent implements OnInit, OnChanges {
       return matchesSearch && matchesType;
     });
   });
+  protected readonly customerParties = computed(() => this.parties().filter((item) => item.type === 'CUSTOMER'));
+  protected readonly selectedSurveyParty = computed(
+    () => this.customerParties().find((item) => item.id === this.selectedSurveyPartyId()) ?? null
+  );
 
   ngOnInit() {
     this.loadContentLibrary();
@@ -229,6 +411,29 @@ export class InterestedPartiesPageComponent implements OnInit, OnChanges {
       ? 'Next: add the main need or expectation for this party so Clause 4 stays connected and reviewable.'
       : 'Next: keep this party current and add or review its main needs and expectations as they change.';
   }
+  protected formatScore(value?: number | null) {
+    return value == null ? 'No data' : value.toFixed(2);
+  }
+  protected categoryMetrics() {
+    return this.selectedParty()?.surveySummary?.categoryAverages || [];
+  }
+  protected selectedSurveyPartyMetrics() {
+    return this.selectedSurveyParty()?.surveySummary?.categoryAverages || [];
+  }
+  protected interestedPartySurveyStatus(item: InterestedPartyRecord) {
+    if (item.type !== 'CUSTOMER') {
+      return 'Not used';
+    }
+    const responseCount = item.surveySummary?.responseCount ?? 0;
+    const openLinks = item.surveySummary?.openRequestCount ?? 0;
+    if (responseCount) {
+      return `${responseCount} responses`;
+    }
+    if (openLinks) {
+      return `${openLinks} open link${openLinks === 1 ? '' : 's'}`;
+    }
+    return 'Ready';
+  }
   protected applyPartyExample(example: string) {
     this.form.patchValue({ name: example });
   }
@@ -255,9 +460,15 @@ export class InterestedPartiesPageComponent implements OnInit, OnChanges {
       return;
     }
     this.saving.set(true);
+    const raw = this.form.getRawValue();
+    const payload = {
+      name: raw.name,
+      type: raw.type,
+      description: raw.description
+    };
     const request = this.mode() === 'edit' && this.selectedId()
-      ? this.contextApi.updateInterestedParty(this.selectedId()!, this.form.getRawValue())
-      : this.contextApi.createInterestedParty(this.form.getRawValue());
+      ? this.contextApi.updateInterestedParty(this.selectedId()!, payload)
+      : this.contextApi.createInterestedParty(payload);
     request.subscribe({
       next: (party) => {
         this.saving.set(false);
@@ -270,6 +481,42 @@ export class InterestedPartiesPageComponent implements OnInit, OnChanges {
         this.error.set(this.readError(error, 'Interested party could not be saved.'));
       }
     });
+  }
+
+  protected createSurveyRequest() {
+    if (!this.selectedSurveyPartyId() || this.surveyRequestForm.invalid || !this.canWrite()) {
+      this.surveyRequestForm.markAllAsTouched();
+      return;
+    }
+    this.surveySaving.set(true);
+    this.surveyError.set('');
+    this.surveyMessage.set('');
+    this.contextApi.createCustomerSurveyRequest(this.selectedSurveyPartyId(), this.surveyRequestForm.getRawValue()).subscribe({
+      next: (request) => {
+        this.surveySaving.set(false);
+        this.latestSurveyUrl.set(this.buildAbsoluteSurveyUrl(request.surveyUrl));
+        this.surveyMessage.set('Survey link prepared. Share it with the customer.');
+        this.surveyRequestForm.reset({
+          recipientName: '',
+          recipientEmail: '',
+          expiresAt: ''
+        });
+        this.reloadCurrentParty();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.surveySaving.set(false);
+        this.surveyError.set(this.readError(error, 'Survey link could not be prepared.'));
+      }
+    });
+  }
+
+  protected copyLatestSurveyLink() {
+    const url = this.latestSurveyUrl();
+    if (!url) {
+      return;
+    }
+    void navigator.clipboard?.writeText(url);
+    this.surveyMessage.set('Survey link copied.');
   }
 
   protected deleteParty(id: string) {
@@ -290,6 +537,9 @@ export class InterestedPartiesPageComponent implements OnInit, OnChanges {
     const id = params.get('id');
     this.selectedId.set(id);
     this.message.set((history.state?.notice as string) || '');
+    this.surveyMessage.set('');
+    this.surveyError.set('');
+    this.latestSurveyUrl.set('');
     this.sourceNavigation.set((history.state?.sourceNavigation as SourceNavigation | undefined) ?? null);
     if (this.mode() === 'list') {
       this.selectedParty.set(null);
@@ -306,7 +556,11 @@ export class InterestedPartiesPageComponent implements OnInit, OnChanges {
       next: (party) => {
         this.loading.set(false);
         this.selectedParty.set(party);
-        this.form.reset({ name: party.name, type: party.type, description: party.description || '' });
+        this.form.reset({
+          name: party.name,
+          type: party.type,
+          description: party.description || ''
+        });
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
@@ -321,6 +575,9 @@ export class InterestedPartiesPageComponent implements OnInit, OnChanges {
       next: (parties) => {
         this.loading.set(false);
         this.parties.set(parties);
+        if (!this.selectedSurveyPartyId() || !parties.some((item) => item.id === this.selectedSurveyPartyId())) {
+          this.selectedSurveyPartyId.set(parties.find((item) => item.type === 'CUSTOMER')?.id || '');
+        }
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
@@ -330,7 +587,12 @@ export class InterestedPartiesPageComponent implements OnInit, OnChanges {
   }
 
   private resetForm() {
-    this.form.reset({ name: '', type: 'CUSTOMER', description: '' });
+    this.form.reset({
+      name: '',
+      type: 'CUSTOMER',
+      description: ''
+    });
+    this.surveyRequestForm.reset({ recipientName: '', recipientEmail: '', expiresAt: '' });
   }
 
   private loadContentLibrary() {
@@ -343,6 +605,20 @@ export class InterestedPartiesPageComponent implements OnInit, OnChanges {
   private readError(error: HttpErrorResponse, fallback: string) {
     const message = error.error?.message;
     return Array.isArray(message) ? message.join(', ') : (message as string) || fallback;
+  }
+
+  private reloadCurrentParty() {
+    if (!this.selectedId()) {
+      return;
+    }
+    this.contextApi.getInterestedParty(this.selectedId()!).subscribe({
+      next: (party) => this.selectedParty.set(party),
+      error: () => undefined
+    });
+  }
+
+  protected buildAbsoluteSurveyUrl(path: string) {
+    return new URL(path, window.location.origin).toString();
   }
 }
 

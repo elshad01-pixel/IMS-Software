@@ -76,6 +76,16 @@ import { PageHeaderComponent } from '../shared/page-header.component';
               <a *ngIf="canWrite()" routerLink="/context/needs-expectations/new" class="button-link tertiary compact">Create</a>
             </div>
           </article>
+          <article class="card summary-card">
+            <div class="summary-copy">
+              <span>Customer Feedback</span>
+              <small>Completed survey responses and current voice-of-customer position.</small>
+            </div>
+            <strong>{{ customerFeedbackHeadline() }}</strong>
+            <div class="summary-actions">
+              <a routerLink="/context/interested-parties" class="button-link secondary compact">Open Register</a>
+            </div>
+          </article>
         </div>
 
         <section class="card focus-card">
@@ -296,6 +306,14 @@ export class ContextDashboardPageComponent implements OnInit {
       parts.push(`${item.linkedProcesses.length} process${item.linkedProcesses.length === 1 ? '' : 'es'}`);
     }
     return parts.join(' | ');
+  }
+
+  protected customerFeedbackHeadline() {
+    const summary = this.dashboard()?.summary;
+    if (!summary || !summary.customerSurveyResponses) {
+      return 'No data';
+    }
+    return `${summary.customerSurveyAverage ?? 0}/10`;
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

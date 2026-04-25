@@ -28,5 +28,10 @@ export class AiController {
   ) {
     return this.aiService.draftAuditFinding(tenantId, dto);
   }
-}
 
+  @Post('management-review-input-draft')
+  @Permissions('management-review.write')
+  draftManagementReviewInputs(@CurrentTenant() tenantId: string) {
+    return this.aiService.draftManagementReviewInputs(tenantId);
+  }
+}

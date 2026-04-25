@@ -188,6 +188,25 @@ type CapaRow = {
             <small>{{ capaWorkflowHint() }}</small>
           </section>
 
+          <nav class="capa-stage-strip" aria-label="CAPA lifecycle">
+            <div class="capa-stage" [class.active]="capaLifecycleStage(form.getRawValue().status) === 'define'">
+              <strong>1. Define</strong>
+              <small>Problem and source</small>
+            </div>
+            <div class="capa-stage" [class.active]="capaLifecycleStage(form.getRawValue().status) === 'investigate'">
+              <strong>2. Investigate</strong>
+              <small>Containment and cause</small>
+            </div>
+            <div class="capa-stage" [class.active]="capaLifecycleStage(form.getRawValue().status) === 'act'">
+              <strong>3. Act</strong>
+              <small>Correction and action</small>
+            </div>
+            <div class="capa-stage" [class.active]="capaLifecycleStage(form.getRawValue().status) === 'verify'">
+              <strong>4. Verify & close</strong>
+              <small>Effectiveness and closure</small>
+            </div>
+          </nav>
+
           <section class="detail-section">
             <h4>Issue definition</h4>
             <div class="form-grid-2 top-space">
@@ -258,32 +277,48 @@ type CapaRow = {
                 <textarea rows="3" formControlName="preventiveAction" placeholder="Action to prevent recurrence"></textarea>
               </label>
               <label class="field">
-                <span>Verification method</span>
-                <textarea rows="3" formControlName="verificationMethod" placeholder="How effectiveness will be checked"></textarea>
-              </label>
-            </div>
-
-            <label class="field top-space">
-              <span>Closure summary</span>
-              <textarea rows="3" formControlName="closureSummary" placeholder="Evidence supporting closure"></textarea>
-            </label>
-          </section>
-
-          <section class="detail-section">
-            <h4>Ownership</h4>
-            <div class="form-grid-2 top-space">
-              <label class="field">
                 <span>Owner</span>
                 <select formControlName="ownerId">
                   <option value="">Unassigned</option>
                   <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
                 </select>
               </label>
+            </div>
+
+            <div class="form-grid-2 top-space">
               <label class="field">
                 <span>Due date</span>
                 <input type="date" formControlName="dueDate">
               </label>
+              <div class="detail-section inner-note">
+                <h4>Action control</h4>
+                <p>{{ capaActionControlCopy() }}</p>
+              </div>
             </div>
+          </section>
+
+          <section class="detail-section">
+            <h4>Verification and closure</h4>
+            <div class="form-grid-2 top-space">
+              <label class="field">
+                <span>Verification method</span>
+                <textarea rows="3" formControlName="verificationMethod" placeholder="How effectiveness will be checked"></textarea>
+              </label>
+              <div class="detail-section inner-note">
+                <h4>Closure readiness</h4>
+                <p>{{ capaClosureReadinessCopy(form.getRawValue().status) }}</p>
+              </div>
+            </div>
+
+            <label class="field top-space">
+              <span>Closure summary</span>
+              <textarea rows="3" formControlName="closureSummary" placeholder="Evidence supporting closure"></textarea>
+            </label>
+
+            <section class="closure-blocker-note top-space" *ngIf="form.getRawValue().status === 'CLOSED' && capaClosureBlockers().length">
+              <strong>CAPA cannot close yet</strong>
+              <span>{{ capaClosureBlockers().join(' | ') }}</span>
+            </section>
           </section>
 
           <div class="button-row">
@@ -337,9 +372,30 @@ type CapaRow = {
               <p>{{ attentionNarrative() }}</p>
             </section>
 
+            <nav class="capa-stage-strip top-space" aria-label="CAPA lifecycle">
+              <div class="capa-stage" [class.active]="capaLifecycleStage(selectedCapa()?.status || 'OPEN') === 'define'">
+                <strong>1. Define</strong>
+                <small>Problem and source</small>
+              </div>
+              <div class="capa-stage" [class.active]="capaLifecycleStage(selectedCapa()?.status || 'OPEN') === 'investigate'">
+                <strong>2. Investigate</strong>
+                <small>Containment and cause</small>
+              </div>
+              <div class="capa-stage" [class.active]="capaLifecycleStage(selectedCapa()?.status || 'OPEN') === 'act'">
+                <strong>3. Act</strong>
+                <small>Correction and action</small>
+              </div>
+              <div class="capa-stage" [class.active]="capaLifecycleStage(selectedCapa()?.status || 'OPEN') === 'verify'">
+                <strong>4. Verify & close</strong>
+                <small>Effectiveness and closure</small>
+              </div>
+            </nav>
+
             <section class="detail-section top-space">
-              <h4>Problem statement</h4>
-              <p>{{ selectedCapa()?.problemStatement }}</p>
+              <h4>Issue definition</h4>
+              <p><strong>Problem:</strong> {{ selectedCapa()?.problemStatement }}</p>
+              <p><strong>Source:</strong> {{ selectedCapa()?.source }}</p>
+              <p><strong>Category:</strong> {{ selectedCapa()?.category || 'Not set' }}</p>
             </section>
 
             <div class="section-grid-2 top-space">
@@ -370,8 +426,9 @@ type CapaRow = {
             </div>
 
             <section class="detail-section top-space">
-              <h4>Closure summary</h4>
-              <p>{{ selectedCapa()?.closureSummary || 'No closure summary recorded.' }}</p>
+              <h4>Closure and effectiveness</h4>
+              <p><strong>Closure summary:</strong> {{ selectedCapa()?.closureSummary || 'No closure summary recorded.' }}</p>
+              <p><strong>Current readiness:</strong> {{ capaReadinessHint() }}</p>
             </section>
           </section>
         </div>
@@ -409,6 +466,48 @@ type CapaRow = {
       margin-top: 0.4rem;
       color: var(--muted);
       line-height: 1.45;
+    }
+
+    .capa-stage-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+      gap: 0.75rem;
+    }
+
+    .capa-stage {
+      border: 1px solid rgba(46, 67, 56, 0.1);
+      border-radius: 1rem;
+      padding: 0.85rem 0.95rem;
+      background: rgba(248, 250, 246, 0.92);
+      display: grid;
+      gap: 0.15rem;
+    }
+
+    .capa-stage.active {
+      border-color: rgba(36, 79, 61, 0.3);
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 12px 28px rgba(24, 45, 32, 0.06);
+    }
+
+    .capa-stage small {
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .inner-note {
+      background: rgba(248, 250, 247, 0.92);
+      border-radius: 1rem;
+      padding: 0.9rem 1rem;
+      height: 100%;
+    }
+
+    .closure-blocker-note {
+      display: grid;
+      gap: 0.35rem;
+      padding: 1rem 1.1rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(145, 80, 63, 0.18);
+      background: rgba(253, 244, 240, 0.95);
     }
   `]
 })
@@ -559,6 +658,50 @@ export class CapaPageComponent implements OnInit, OnChanges {
     return raw.ownerId
       ? 'Owner already assigned. Keep the due date and verification method aligned with the selected status.'
       : 'Assign an owner once the CAPA moves beyond initial definition so accountability is visible.';
+  }
+
+  protected capaLifecycleStage(status: CapaStatus) {
+    if (status === 'OPEN') return 'define';
+    if (status === 'INVESTIGATING') return 'investigate';
+    if (status === 'ACTION_PLANNED' || status === 'IN_PROGRESS') return 'act';
+    return 'verify';
+  }
+
+  protected capaActionControlCopy() {
+    const raw = this.form.getRawValue();
+    if (!raw.ownerId && !raw.dueDate) {
+      return 'Assign an owner and due date once the CAPA moves into action planning so follow-up is visible.';
+    }
+    if (!raw.ownerId) {
+      return 'Due date is set, but owner is still missing. Assign ownership before the CAPA relies on action follow-up.';
+    }
+    if (!raw.dueDate) {
+      return 'Owner is assigned, but due date is still missing. Add a due date so the CAPA can be monitored properly.';
+    }
+    return 'Owner and due date are set. Keep them aligned with the current CAPA stage and any linked tasks.';
+  }
+
+  protected capaClosureBlockers() {
+    const raw = this.form.getRawValue();
+    const blockers: string[] = [];
+    if (!raw.rootCause.trim()) blockers.push('Root cause is missing');
+    if (!raw.correctiveAction.trim()) blockers.push('Corrective action is missing');
+    if (!raw.verificationMethod.trim()) blockers.push('Verification method is missing');
+    if (!raw.closureSummary.trim()) blockers.push('Closure summary is missing');
+    return blockers;
+  }
+
+  protected capaClosureReadinessCopy(status: CapaStatus) {
+    if (status === 'CLOSED') {
+      const blockers = this.capaClosureBlockers();
+      return blockers.length
+        ? `This CAPA is marked for closure, but it still needs: ${blockers.join(', ')}.`
+        : 'Closure requirements are in place. Save the record to complete closure when the evidence is ready.';
+    }
+    if (status === 'VERIFIED') {
+      return 'Verification is the last review point before closure. Make sure the closure summary explains why recurrence is controlled.';
+    }
+    return 'Keep verification method and closure summary ready before the CAPA moves into final closure.';
   }
 
   protected readInputValue(event: Event) {

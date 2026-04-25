@@ -96,6 +96,14 @@ export class CreateAuditDto {
   @IsString()
   completedByAuditorId?: string;
 
+  @IsOptional()
+  @IsString()
+  procedureProcessId?: string;
+
+  @IsOptional()
+  @IsString()
+  procedureDocumentId?: string;
+
   @ApiPropertyOptional({ enum: AuditStatus, default: AuditStatus.PLANNED })
   @IsOptional()
   @IsEnum(AuditStatus)

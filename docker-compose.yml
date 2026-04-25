@@ -54,6 +54,8 @@ services:
       MINIO_PORT: ${MINIO_PORT:-9000}
       MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
       MINIO_BUCKET: ${MINIO_BUCKET:-attachments}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-gpt-5-mini}
       SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
       SEED_TENANT_SLUG: ${SEED_TENANT_SLUG:-demo-tenant}
       SEED_TENANT_NAME: ${SEED_TENANT_NAME:-Demo Tenant}

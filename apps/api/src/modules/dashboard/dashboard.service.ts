@@ -31,7 +31,8 @@ export class DashboardService {
       openActions,
       overdueActions,
       trainingAssignments,
-      overdueTrainingAssignments
+      overdueTrainingAssignments,
+      customerSurveyRequests
     ] = await Promise.all([
       this.prisma.document.count({ where: { tenantId, deletedAt: null } }),
       this.prisma.document.count({ where: { tenantId, deletedAt: null, status: DocumentStatus.APPROVED } }),
@@ -61,6 +62,13 @@ export class DashboardService {
           dueDate: { lt: today },
           status: { not: TrainingAssignmentStatus.COMPLETED }
         }
+      }),
+      this.prisma.customerSurveyRequest.findMany({
+        where: { tenantId },
+        select: {
+          status: true,
+          averageScore: true
+        }
       })
     ]);
 
@@ -71,6 +79,21 @@ export class DashboardService {
 
     const kpiBreaches = kpis.filter((kpi) => this.getKpiStatus(kpi.actual, kpi.target, kpi.warningThreshold, kpi.direction) === 'BREACH').length;
     const kpiWatch = kpis.filter((kpi) => this.getKpiStatus(kpi.actual, kpi.target, kpi.warningThreshold, kpi.direction) === 'WATCH').length;
+    const completedSurveyResponses = customerSurveyRequests.filter((item) => item.status === 'COMPLETED' && item.averageScore != null);
+    const feedbackAverage = completedSurveyResponses.length
+      ? Number(
+          (
+            completedSurveyResponses.reduce((sum, item) => sum + (item.averageScore ?? 0), 0) /
+            completedSurveyResponses.length
+          ).toFixed(2)
+        )
+      : null;
+    const lowFeedbackCount = completedSurveyResponses.filter((item) => (item.averageScore ?? 0) <= 6).length;
+    const mediumFeedbackCount = completedSurveyResponses.filter((item) => {
+      const score = item.averageScore ?? 0;
+      return score >= 7 && score <= 8;
+    }).length;
+    const highFeedbackCount = completedSurveyResponses.filter((item) => (item.averageScore ?? 0) >= 9).length;
 
     const [highRisks, recentDocuments, recentCapas, actionItems, recentAudits, kpiSummary, trainingSummary] =
       await Promise.all([
@@ -164,7 +187,9 @@ export class DashboardService {
         openActions,
         overdueActions,
         trainingAssignments,
-        overdueTrainingAssignments
+        overdueTrainingAssignments,
+        customerSurveyResponses: completedSurveyResponses.length,
+        customerSurveyOpen: customerSurveyRequests.filter((item) => item.status === 'OPEN').length
       },
       riskSummary: {
         open: await this.prisma.risk.count({ where: { tenantId, deletedAt: null, status: RiskStatus.OPEN } }),
@@ -196,6 +221,22 @@ export class DashboardService {
         completed: await this.prisma.trainingAssignment.count({
           where: { tenantId, status: TrainingAssignmentStatus.COMPLETED }
         })
+      },
+      feedbackSummary: {
+        responseCount: completedSurveyResponses.length,
+        openRequestCount: customerSurveyRequests.filter((item) => item.status === 'OPEN').length,
+        averageScore: feedbackAverage,
+        lowScoreCount: lowFeedbackCount,
+        mediumScoreCount: mediumFeedbackCount,
+        highScoreCount: highFeedbackCount,
+        health:
+          feedbackAverage == null
+            ? 'NO_DATA'
+            : lowFeedbackCount > 0 || feedbackAverage < 7
+              ? 'ATTENTION'
+              : feedbackAverage < 9
+                ? 'WATCH'
+                : 'STRONG'
       },
       highRisks,
       recentDocuments,

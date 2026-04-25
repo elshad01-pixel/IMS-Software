@@ -14,6 +14,8 @@ import {
 } from '@nestjs/common';
 import { getAuditChecklistQuestionDelegate } from '../../common/prisma/prisma-delegate-compat';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { AiService } from '../ai/ai.service';
+import { AttachmentsService } from '../attachments/attachments.service';
 import {
   CLAUSE_SORT_ORDER,
   createStarterQuestionSeedData,
@@ -41,9 +43,11 @@ const AUDIT_STATUS_FLOW: Record<AuditStatus, AuditStatus[]> = {
 
 type ChecklistResponse = 'YES' | 'NO' | 'PARTIAL';
 type ExistingAudit = {
+  id: string;
   status: AuditStatus;
   type: string;
   standard?: string | null;
+  scopeType?: string | null;
   startedAt?: Date | null;
   checklistCompletedAt?: Date | null;
   completedAt?: Date | null;
@@ -53,11 +57,23 @@ type ExistingAudit = {
   checklistItems: Array<{ id: string; response?: ChecklistResponse | null; isComplete?: boolean }>;
 };
 
+type ProcedureSelectionMetadata = {
+  processId: string;
+  processName: string;
+  procedureDocumentId: string;
+  procedureLabel: string;
+  checklistTitle: string;
+  generatedAt: string;
+  cacheKey: string;
+};
+
 @Injectable()
 export class AuditsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly auditLogsService: AuditLogsService
+    private readonly auditLogsService: AuditLogsService,
+    private readonly aiService: AiService,
+    private readonly attachmentsService: AttachmentsService
   ) {}
 
   async list(tenantId: string) {
@@ -136,7 +152,12 @@ export class AuditsService {
       })
     ]);
 
-    return this.mapAuditSummary(audit, { actionItemCount, openActionItemCount });
+    const procedureSelection = await this.getProcedureSelectionMetadata(tenantId, id);
+
+    return {
+      ...this.mapAuditSummary(audit, { actionItemCount, openActionItemCount }),
+      procedureSelection
+    };
   }
 
   async createChecklistQuestion(
@@ -314,7 +335,12 @@ export class AuditsService {
   async create(tenantId: string, actorId: string, dto: CreateAuditDto) {
     await this.ensureUserBelongsToTenant(tenantId, dto.leadAuditorId);
     await this.ensureUserBelongsToTenant(tenantId, dto.completedByAuditorId);
-    this.assertAuditType(dto.type, dto.standard);
+    this.assertAuditType(
+      dto.type,
+      dto.standard,
+      Boolean(dto.procedureProcessId && dto.procedureDocumentId)
+    );
+    this.assertProcedureAuditSelection(dto.type, dto.scopeType, dto.procedureProcessId, dto.procedureDocumentId);
 
     try {
       const audit = await this.prisma.audit.create({
@@ -352,8 +378,18 @@ export class AuditsService {
         } as Prisma.AuditUncheckedCreateInput
       });
 
-      if (this.isInternalAudit(dto.type) && dto.standard) {
-        await this.seedChecklistTemplate(tenantId, audit.id, dto.standard);
+      if (this.isInternalAudit(dto.type)) {
+        if (dto.procedureProcessId && dto.procedureDocumentId) {
+          await this.seedProcedureChecklistTemplate(
+            tenantId,
+            audit.id,
+            dto.standard,
+            dto.procedureProcessId,
+            dto.procedureDocumentId
+          );
+        } else if (dto.standard) {
+          await this.seedChecklistTemplate(tenantId, audit.id, dto.standard);
+        }
       }
 
       await this.auditLogsService.create({
@@ -375,9 +411,11 @@ export class AuditsService {
     const existing = await this.prisma.audit.findFirst({
       where: { tenantId, id, deletedAt: null },
       select: {
+        id: true,
         status: true,
         type: true,
         standard: true,
+        scopeType: true,
         startedAt: true,
         checklistCompletedAt: true,
         completedAt: true,
@@ -401,7 +439,17 @@ export class AuditsService {
     await this.ensureUserBelongsToTenant(tenantId, dto.leadAuditorId);
     await this.ensureUserBelongsToTenant(tenantId, dto.completedByAuditorId);
     this.assertValidAuditTransition(existing.status, dto.status ?? existing.status);
-    this.assertAuditType(dto.type ?? existing.type, dto.standard ?? existing.standard ?? undefined);
+    this.assertAuditType(
+      dto.type ?? existing.type,
+      dto.standard ?? existing.standard ?? undefined,
+      Boolean(dto.procedureProcessId && dto.procedureDocumentId)
+    );
+    this.assertProcedureAuditSelection(
+      dto.type ?? existing.type,
+      dto.scopeType ?? existing.scopeType ?? undefined,
+      dto.procedureProcessId,
+      dto.procedureDocumentId
+    );
 
     if ((dto.status ?? existing.status) === AuditStatus.CHECKLIST_COMPLETED) {
       this.assertChecklistComplete(existing);
@@ -457,10 +505,41 @@ export class AuditsService {
 
       if (
         this.isInternalAudit(dto.type ?? existing.type) &&
-        (dto.standard ?? existing.standard) &&
         existing.checklistItems.length === 0
       ) {
-        await this.seedChecklistTemplate(tenantId, audit.id, dto.standard ?? existing.standard!);
+        if (dto.procedureProcessId && dto.procedureDocumentId) {
+          await this.seedProcedureChecklistTemplate(
+            tenantId,
+            audit.id,
+            dto.standard ?? existing.standard ?? undefined,
+            dto.procedureProcessId,
+            dto.procedureDocumentId
+          );
+        } else if (dto.standard ?? existing.standard) {
+          await this.seedChecklistTemplate(tenantId, audit.id, dto.standard ?? existing.standard!);
+        }
+      }
+
+      if (dto.procedureProcessId && dto.procedureDocumentId) {
+        const existingProcedureSelection = await this.getProcedureSelectionMetadata(tenantId, id);
+        if (
+          existing.checklistItems.length > 0 &&
+          existingProcedureSelection &&
+          (existingProcedureSelection.processId !== dto.procedureProcessId ||
+            existingProcedureSelection.procedureDocumentId !== dto.procedureDocumentId)
+        ) {
+          throw new BadRequestException(
+            'This audit already has a checklist. Create a new audit if you want to use a different procedure-specific checklist.'
+          );
+        }
+
+        await this.ensureProcedureSelectionMetadata(
+          tenantId,
+          audit.id,
+          dto.procedureProcessId,
+          dto.procedureDocumentId,
+          dto.standard ?? existing.standard!
+        );
       }
 
       await this.auditLogsService.create({
@@ -911,6 +990,60 @@ export class AuditsService {
     });
   }
 
+  private async seedProcedureChecklistTemplate(
+    tenantId: string,
+    auditId: string,
+    standard: string | undefined,
+    processId: string,
+    documentId: string
+  ) {
+    const { process, document } = await this.validateProcedureSelection(tenantId, processId, documentId);
+    const cacheKey = this.procedureChecklistCacheKey(processId, documentId);
+    const cachedChecklist = await this.readProcedureChecklistCache(tenantId, cacheKey);
+
+    const extractedProcedureContent = await this.extractProcedureDocumentContent(
+      tenantId,
+      document.id
+    );
+
+    const procedureChecklist =
+      cachedChecklist &&
+      cachedChecklist.documentUpdatedAt === document.updatedAt.toISOString()
+        ? cachedChecklist
+        : await this.generateAndCacheProcedureChecklist(
+            tenantId,
+            cacheKey,
+            standard,
+            process,
+            document,
+            extractedProcedureContent
+          );
+
+    await this.prisma.auditChecklistItem.createMany({
+      data: procedureChecklist.questions.map(
+        (item: { clause: string; subclause?: string; title: string }, index: number) => ({
+          tenantId,
+          auditId,
+          clause: item.clause,
+          subclause: item.subclause || null,
+          standard,
+          title: item.title,
+          sortOrder: index + 1
+        })
+      )
+    });
+
+    await this.writeProcedureSelectionMetadata(tenantId, auditId, {
+      processId,
+      processName: process.name,
+      procedureDocumentId: document.id,
+      procedureLabel: `${document.code} - ${document.title}`,
+      checklistTitle: procedureChecklist.checklistTitle,
+      generatedAt: new Date().toISOString(),
+      cacheKey
+    });
+  }
+
   private async nextChecklistSortOrder(tenantId: string, auditId: string) {
     const lastItem = await this.prisma.auditChecklistItem.findFirst({
       where: { tenantId, auditId },
@@ -1083,13 +1216,42 @@ export class AuditsService {
     }
   }
 
-  private assertAuditType(type: string, standard?: string) {
-    if (this.isInternalAudit(type) && !standard) {
+  private assertAuditType(type: string, standard?: string, procedureMode = false) {
+    if (this.isInternalAudit(type) && !standard && !procedureMode) {
       throw new BadRequestException('Internal audits require an ISO standard');
     }
 
     if (!this.isInternalAudit(type) && standard) {
       throw new BadRequestException('Only internal audits can use ISO checklist templates');
+    }
+  }
+
+  private assertProcedureAuditSelection(
+    type: string,
+    scopeType: string | undefined,
+    processId?: string,
+    documentId?: string
+  ) {
+    if (!processId && !documentId) {
+      return;
+    }
+
+    if (!processId || !documentId) {
+      throw new BadRequestException(
+        'Select both the audit area and the linked procedure before generating a procedure-specific checklist.'
+      );
+    }
+
+    if (!this.isInternalAudit(type)) {
+      throw new BadRequestException(
+        'Procedure-specific checklist generation is available only for internal audits.'
+      );
+    }
+
+    if ((scopeType || '').trim().toLowerCase() !== 'process') {
+      throw new BadRequestException(
+        'Procedure-specific checklist generation is available only when the audit scope type is Process.'
+      );
     }
   }
 
@@ -1145,6 +1307,293 @@ export class AuditsService {
     if (!completionDate) {
       throw new BadRequestException('Set a completion date before completing the audit.');
     }
+  }
+
+  private async validateProcedureSelection(tenantId: string, processId: string, documentId: string) {
+    const [process, document, link] = await Promise.all([
+      this.prisma.processRegister.findFirst({
+        where: { tenantId, id: processId, deletedAt: null },
+        select: {
+          id: true,
+          name: true,
+          purpose: true,
+          department: true,
+          scope: true,
+          inputsText: true,
+          outputsText: true
+        }
+      }),
+      this.prisma.document.findFirst({
+        where: { tenantId, id: documentId, deletedAt: null },
+        select: {
+          id: true,
+          code: true,
+          title: true,
+          type: true,
+          summary: true,
+          changeSummary: true,
+          status: true,
+          version: true,
+          revision: true,
+          updatedAt: true
+        }
+      }),
+      this.prisma.processRegisterLink.findFirst({
+        where: {
+          tenantId,
+          processId,
+          linkType: 'DOCUMENT',
+          linkedId: documentId
+        },
+        select: { id: true }
+      })
+    ]);
+
+    if (!process) {
+      throw new BadRequestException('Selected audit area was not found in the process register.');
+    }
+
+    if (!document) {
+      throw new BadRequestException('Selected procedure document was not found.');
+    }
+
+    if (!link) {
+      throw new BadRequestException(
+        'The selected procedure must already be linked to the selected audit area in the process register.'
+      );
+    }
+
+    return { process, document };
+  }
+
+  private procedureChecklistCacheKey(processId: string, documentId: string) {
+    return `audit.procedureChecklist.${processId}.${documentId}`;
+  }
+
+  private procedureSelectionMetadataKey(auditId: string) {
+    return `audit.procedureSelection.${auditId}`;
+  }
+
+  private async readProcedureChecklistCache(tenantId: string, key: string) {
+    const cache = await this.prisma.tenantSetting.findUnique({
+      where: { tenantId_key: { tenantId, key } },
+      select: { value: true }
+    });
+
+    if (!cache?.value) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(cache.value) as {
+        processId: string;
+        procedureDocumentId: string;
+        documentUpdatedAt: string;
+        checklistTitle: string;
+        rationale: string;
+        questions: Array<{ clause: string; subclause?: string; title: string }>;
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private async generateAndCacheProcedureChecklist(
+    tenantId: string,
+    cacheKey: string,
+    standard: string | undefined,
+    process: {
+      id: string;
+      name: string;
+      purpose: string | null;
+      department: string | null;
+      scope: string | null;
+      inputsText: string | null;
+      outputsText: string | null;
+    },
+    document: {
+      id: string;
+      code: string;
+      title: string;
+      type: string;
+      summary: string | null;
+      changeSummary: string | null;
+      status: string;
+      version: number;
+      revision: number;
+      updatedAt: Date;
+    },
+    extractedProcedureContent: string | null
+  ) {
+    const draft = await this.aiService.draftProcedureChecklist(tenantId, {
+      standard,
+      process,
+      procedure: {
+        id: document.id,
+        code: document.code,
+        title: document.title,
+        type: document.type,
+        summary: document.summary,
+        changeSummary: document.changeSummary,
+        status: document.status,
+        version: document.version,
+        revision: document.revision
+      },
+      procedureContent: extractedProcedureContent || undefined
+    });
+
+    const payload = {
+      processId: process.id,
+      procedureDocumentId: document.id,
+      documentUpdatedAt: document.updatedAt.toISOString(),
+      checklistTitle: draft.checklistTitle,
+      rationale: draft.rationale,
+      questions: draft.questions
+    };
+
+    await this.prisma.tenantSetting.upsert({
+      where: { tenantId_key: { tenantId, key: cacheKey } },
+      update: { value: JSON.stringify(payload) },
+      create: {
+        tenantId,
+        key: cacheKey,
+        value: JSON.stringify(payload)
+      }
+    });
+
+    return payload;
+  }
+
+  private async writeProcedureSelectionMetadata(
+    tenantId: string,
+    auditId: string,
+    metadata: ProcedureSelectionMetadata
+  ) {
+    const key = this.procedureSelectionMetadataKey(auditId);
+    await this.prisma.tenantSetting.upsert({
+      where: { tenantId_key: { tenantId, key } },
+      update: { value: JSON.stringify(metadata) },
+      create: {
+        tenantId,
+        key,
+        value: JSON.stringify(metadata)
+      }
+    });
+  }
+
+  private async getProcedureSelectionMetadata(tenantId: string, auditId: string) {
+    const record = await this.prisma.tenantSetting.findUnique({
+      where: {
+        tenantId_key: {
+          tenantId,
+          key: this.procedureSelectionMetadataKey(auditId)
+        }
+      },
+      select: { value: true }
+    });
+
+    if (!record?.value) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(record.value) as ProcedureSelectionMetadata;
+    } catch {
+      return null;
+    }
+  }
+
+  private async ensureProcedureSelectionMetadata(
+    tenantId: string,
+    auditId: string,
+    processId: string,
+    documentId: string,
+    standard: string | undefined
+  ) {
+    const existing = await this.getProcedureSelectionMetadata(tenantId, auditId);
+    if (existing?.processId === processId && existing.procedureDocumentId === documentId) {
+      return;
+    }
+
+    const { process, document } = await this.validateProcedureSelection(tenantId, processId, documentId);
+    const cacheKey = this.procedureChecklistCacheKey(processId, documentId);
+    const cachedChecklist =
+      (await this.readProcedureChecklistCache(tenantId, cacheKey)) ??
+      (await this.generateAndCacheProcedureChecklist(
+        tenantId,
+        cacheKey,
+        standard,
+        process,
+        document,
+        await this.extractProcedureDocumentContent(tenantId, document.id)
+      ));
+
+    await this.writeProcedureSelectionMetadata(tenantId, auditId, {
+      processId,
+      processName: process.name,
+      procedureDocumentId: document.id,
+      procedureLabel: `${document.code} - ${document.title}`,
+      checklistTitle: cachedChecklist.checklistTitle,
+      generatedAt: new Date().toISOString(),
+      cacheKey
+    });
+  }
+
+  private async extractProcedureDocumentContent(tenantId: string, documentId: string) {
+    const attachmentRecord = await this.attachmentsService.readLatestSourceAttachmentBuffer(
+      tenantId,
+      'document',
+      documentId
+    );
+
+    if (!attachmentRecord) {
+      return null;
+    }
+
+    const mime = attachmentRecord.attachment.mimeType.toLowerCase();
+    const fileName = attachmentRecord.attachment.fileName.toLowerCase();
+
+    try {
+      if (mime.includes('pdf') || fileName.endsWith('.pdf')) {
+        const pdfParseModule = await import('pdf-parse');
+        const pdfParse = (pdfParseModule as unknown as { default?: (buffer: Buffer) => Promise<{ text: string }> }).default
+          ?? (pdfParseModule as unknown as (buffer: Buffer) => Promise<{ text: string }>);
+        const parsed = await pdfParse(attachmentRecord.buffer);
+        return this.normalizeExtractedDocumentText(parsed.text);
+      }
+
+      if (
+        mime.includes('wordprocessingml') ||
+        mime.includes('msword') ||
+        fileName.endsWith('.docx')
+      ) {
+        const mammoth = await import('mammoth');
+        const parsed = await mammoth.extractRawText({ buffer: attachmentRecord.buffer });
+        return this.normalizeExtractedDocumentText(parsed.value);
+      }
+
+      if (
+        mime.startsWith('text/') ||
+        fileName.endsWith('.txt') ||
+        fileName.endsWith('.md')
+      ) {
+        return this.normalizeExtractedDocumentText(
+          attachmentRecord.buffer.toString('utf-8')
+        );
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
+  }
+
+  private normalizeExtractedDocumentText(value: string | null | undefined) {
+    const cleaned = (value || '').replace(/\s+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    if (!cleaned) {
+      return null;
+    }
+    return cleaned.length > 12000 ? `${cleaned.slice(0, 12000).trim()}\n...` : cleaned;
   }
 
   private async assertAuditReadyForClosure(tenantId: string, auditId: string) {

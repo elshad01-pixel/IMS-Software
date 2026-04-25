@@ -33,6 +33,31 @@ type UserOption = {
   email: string;
 };
 
+type ProcessOption = {
+  id: string;
+  referenceNo?: string | null;
+  name: string;
+  purpose?: string | null;
+  department?: string | null;
+  scope?: string | null;
+};
+
+type ProcessDocumentOption = {
+  id: string;
+  label: string;
+  subtitle?: string | null;
+};
+
+type AuditProcedureSelection = {
+  processId: string;
+  processName: string;
+  procedureDocumentId: string;
+  procedureLabel: string;
+  checklistTitle: string;
+  generatedAt: string;
+  cacheKey: string;
+};
+
 type IncidentSummaryRow = { id: string; status: string; severity: string };
 type ProviderSummaryRow = {
   id: string;
@@ -127,8 +152,31 @@ type AuditRecord = {
   openFindingCount?: number;
   actionItemCount?: number;
   openActionItemCount?: number;
+  procedureSelection?: AuditProcedureSelection | null;
   checklistItems?: AuditChecklistItem[];
   findings?: AuditFinding[];
+};
+
+type AuditFormValue = {
+  code: string;
+  title: string;
+  type: AuditType;
+  standard: string;
+  programme: string;
+  scopeType: AuditScopeType;
+  scope: string;
+  objectives: string;
+  criteria: string;
+  agenda: string;
+  openingMeetingNotes: string;
+  closingMeetingNotes: string;
+  leadAuditorId: string;
+  auditeeArea: string;
+  procedureProcessId: string;
+  procedureDocumentId: string;
+  scheduledAt: string;
+  summary: string;
+  status: AuditStatus;
 };
 
 @Component({
@@ -258,7 +306,7 @@ type AuditRecord = {
             <label class="field"><span>Code</span><input formControlName="code" placeholder="IA-2026-001"></label>
             <label class="field">
               <span>Audit type</span>
-              <select formControlName="type">
+              <select formControlName="type" (change)="onAuditTypeChange(readSelectValue($event))">
                 <option>Internal Audit</option>
                 <option>Supplier Audit</option>
               </select>
@@ -267,7 +315,7 @@ type AuditRecord = {
 
           <div class="form-grid-2">
             <label class="field"><span>Title</span><input formControlName="title" placeholder="Purchasing process audit"></label>
-            <label class="field" *ngIf="auditForm.getRawValue().type === 'Internal Audit'">
+            <label class="field" *ngIf="auditForm.getRawValue().type === 'Internal Audit' && !isProcedureAuditMode()">
               <span>ISO standard</span>
               <select formControlName="standard">
                 <option value="">Select standard</option>
@@ -285,7 +333,7 @@ type AuditRecord = {
             </label>
             <label class="field">
               <span>Scope type</span>
-              <select formControlName="scopeType">
+              <select formControlName="scopeType" (change)="onScopeTypeChange(readSelectValue($event))">
                 <option>Company-wide</option>
                 <option>Department</option>
                 <option>Process</option>
@@ -296,6 +344,36 @@ type AuditRecord = {
           </div>
 
           <label class="field"><span>Scope</span><textarea rows="3" formControlName="scope" placeholder="Process, site, supplier, or function under audit"></textarea></label>
+
+          <section class="guidance-card" *ngIf="auditForm.getRawValue().type === 'Internal Audit' && auditForm.getRawValue().scopeType === 'Process'">
+            <strong>AI procedure checklist</strong>
+            <p>Select the audit area first, then choose one linked controlled procedure. This is the AI checklist option for process audits. When you save the audit, the app will reuse an existing checklist for that procedure when available, or ask AI to prepare it once and cache it for future audits.</p>
+            <div class="form-grid-2 top-space">
+              <label class="field">
+                <span>Audit area</span>
+                <select formControlName="procedureProcessId" (change)="onProcedureProcessChange(readSelectValue($event))">
+                  <option value="">Select process</option>
+                  <option *ngFor="let item of processOptions()" [value]="item.id">{{ processOptionLabel(item) }}</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Specific procedure</span>
+                <select formControlName="procedureDocumentId" [disabled]="!auditForm.getRawValue().procedureProcessId">
+                  <option value="">Select linked procedure</option>
+                  <option *ngFor="let item of procedureDocuments()" [value]="item.id">{{ item.label }}</option>
+                </select>
+              </label>
+            </div>
+            <small class="top-space" *ngIf="auditForm.getRawValue().procedureProcessId && !procedureDocuments().length">
+              No controlled procedures are linked to this process yet. Link the procedure in Process Register first, then return here.
+            </small>
+            <small class="top-space" *ngIf="auditForm.getRawValue().procedureProcessId && !auditForm.getRawValue().procedureDocumentId && procedureDocuments().length">
+              Select one linked procedure to activate AI checklist generation for this audit.
+            </small>
+            <small class="top-space" *ngIf="auditForm.getRawValue().procedureDocumentId">
+              AI checklist ready. Saving this audit will prepare a reusable checklist from the selected procedure and continue with the normal audit flow.
+            </small>
+          </section>
 
           <div class="form-grid-2">
             <label class="field"><span>Audit objectives</span><textarea rows="3" formControlName="objectives" placeholder="Confirm process conformity, evaluate control effectiveness, and verify previous action closure."></textarea></label>
@@ -327,14 +405,14 @@ type AuditRecord = {
             </label>
           </div>
 
-          <div class="button-row">
+          <div class="button-row" *ngIf="!isProcedureAuditMode()">
             <button type="button" class="secondary" (click)="applyAuditPlanTemplate()">Fill agenda template</button>
             <button type="button" class="secondary" (click)="applyMeetingTemplate()">Fill opening / closing notes</button>
           </div>
 
-          <label class="field"><span>Audit agenda</span><textarea rows="5" formControlName="agenda" placeholder="Opening meeting, scope confirmation, process walk-through, evidence review, interviews, close-out."></textarea></label>
+          <label class="field" *ngIf="!isProcedureAuditMode()"><span>Audit agenda</span><textarea rows="5" formControlName="agenda" placeholder="Opening meeting, scope confirmation, process walk-through, evidence review, interviews, close-out."></textarea></label>
 
-          <div class="form-grid-2">
+          <div class="form-grid-2" *ngIf="!isProcedureAuditMode()">
             <label class="field"><span>Opening meeting notes</span><textarea rows="4" formControlName="openingMeetingNotes" placeholder="Attendance, scope confirmation, timing, health and safety rules, and communication expectations."></textarea></label>
             <label class="field"><span>Closing meeting notes</span><textarea rows="4" formControlName="closingMeetingNotes" placeholder="Summary of findings, agreed follow-up, next steps, and expected report timing."></textarea></label>
           </div>
@@ -342,7 +420,7 @@ type AuditRecord = {
           <label class="field"><span>Summary</span><textarea rows="3" formControlName="summary" placeholder="Audit objective, site, and expected outputs"></textarea></label>
 
           <div class="button-row">
-            <button type="submit" [disabled]="auditForm.invalid || saving() || !canWriteAudit()">{{ saving() ? 'Saving...' : 'Save audit' }}</button>
+            <button type="submit" [disabled]="auditForm.invalid || saving() || !canWriteAudit()">{{ auditSaveButtonLabel() }}</button>
             <a [routerLink]="selectedId() ? ['/audits', selectedId()] : ['/audits']" class="button-link secondary">Cancel</a>
           </div>
         </form>
@@ -363,6 +441,10 @@ type AuditRecord = {
             <div class="entity-item">
               <strong>Department, process, or supplier audits</strong>
               <small>Use the scope type to show whether this is a process audit, department audit, company-wide review, site audit, or supplier audit.</small>
+            </div>
+            <div class="entity-item">
+              <strong>AI checklist from a controlled procedure</strong>
+              <small>For a process audit, select one linked procedure and save the plan to prepare or reuse a cached AI checklist from the uploaded document.</small>
             </div>
             <div class="entity-item">
               <strong>Meeting templates</strong>
@@ -401,6 +483,15 @@ type AuditRecord = {
           <section class="guidance-card top-space">
             <strong>{{ attentionHeadline(selectedAudit()) }}</strong>
             <p>{{ attentionNarrative(selectedAudit()) }}</p>
+          </section>
+
+          <section class="guidance-card top-space" *ngIf="selectedAudit()?.procedureSelection">
+            <strong>Procedure-specific checklist in use</strong>
+            <p>
+              Audit area: {{ selectedAudit()?.procedureSelection?.processName }}.
+              Procedure: {{ selectedAudit()?.procedureSelection?.procedureLabel }}.
+              Checklist: {{ selectedAudit()?.procedureSelection?.checklistTitle }}.
+            </p>
           </section>
 
           <section class="feedback next-steps-banner success top-space" *ngIf="message() && !error()">
@@ -1866,6 +1957,8 @@ export class AuditsPageComponent {
   protected readonly checklistBuilderOpen = signal(false);
   protected readonly draftActionTitle = signal<string | null>(null);
   protected readonly draftActionDescription = signal<string | null>(null);
+  protected readonly processOptions = signal<ProcessOption[]>([]);
+  protected readonly procedureDocuments = signal<ProcessDocumentOption[]>([]);
   protected readonly sortBy = signal<AuditSortOption>('attention');
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
@@ -1891,6 +1984,8 @@ export class AuditsPageComponent {
     closingMeetingNotes: [''],
     leadAuditorId: [''],
     auditeeArea: [''],
+    procedureProcessId: [''],
+    procedureDocumentId: [''],
     scheduledAt: [''],
     summary: [''],
     status: ['PLANNED' as AuditStatus, Validators.required]
@@ -1920,6 +2015,7 @@ export class AuditsPageComponent {
 
   constructor() {
     this.loadUsers();
+    this.loadProcessOptions();
     this.loadAssuranceInputs();
     this.route.data.subscribe((data) => {
       this.mode.set((data['mode'] as PageMode) || 'list');
@@ -2086,7 +2182,7 @@ export class AuditsPageComponent {
     }
 
     const raw = this.auditForm.getRawValue();
-    if (raw.type === 'Internal Audit' && !raw.standard) {
+    if (raw.type === 'Internal Audit' && !raw.standard && !this.isProcedureAuditMode()) {
       this.error.set('Select an ISO standard for internal audits.');
       return;
     }
@@ -2098,17 +2194,30 @@ export class AuditsPageComponent {
       ...raw,
       code: raw.code.trim(),
       title: raw.title.trim(),
-      standard: raw.type === 'Internal Audit' ? raw.standard : undefined,
+      standard:
+        raw.type === 'Internal Audit' && !this.isProcedureAuditMode()
+          ? raw.standard
+          : undefined,
       programme: raw.programme.trim() || undefined,
       scopeType: raw.scopeType || undefined,
-      scope: raw.scope.trim() || undefined,
+      scope: this.resolvedScope(raw),
       objectives: raw.objectives.trim() || undefined,
-      criteria: raw.criteria.trim() || undefined,
-      agenda: raw.agenda.trim() || undefined,
-      openingMeetingNotes: raw.openingMeetingNotes.trim() || undefined,
-      closingMeetingNotes: raw.closingMeetingNotes.trim() || undefined,
+      criteria: this.resolvedCriteria(raw),
+      agenda: this.isProcedureAuditMode() ? undefined : raw.agenda.trim() || undefined,
+      openingMeetingNotes:
+        this.isProcedureAuditMode() ? undefined : raw.openingMeetingNotes.trim() || undefined,
+      closingMeetingNotes:
+        this.isProcedureAuditMode() ? undefined : raw.closingMeetingNotes.trim() || undefined,
       leadAuditorId: raw.leadAuditorId || undefined,
-      auditeeArea: raw.auditeeArea.trim() || undefined,
+      auditeeArea: this.resolvedAuditeeArea(raw),
+      procedureProcessId:
+        raw.type === 'Internal Audit' && raw.scopeType === 'Process'
+          ? raw.procedureProcessId || undefined
+          : undefined,
+      procedureDocumentId:
+        raw.type === 'Internal Audit' && raw.scopeType === 'Process'
+          ? raw.procedureDocumentId || undefined
+          : undefined,
       scheduledAt: raw.scheduledAt || undefined,
       summary: raw.summary.trim() || undefined
     };
@@ -2120,7 +2229,13 @@ export class AuditsPageComponent {
     request.subscribe({
       next: (audit) => {
         this.saving.set(false);
-        this.router.navigate(['/audits', audit.id], { state: { notice: 'Audit saved successfully.' } });
+        this.router.navigate(['/audits', audit.id], {
+          state: {
+            notice: this.hasProcedureChecklistSelection()
+              ? 'Audit saved and AI checklist prepared for the selected procedure.'
+              : 'Audit saved successfully.'
+          }
+        });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
@@ -3515,7 +3630,100 @@ export class AuditsPageComponent {
       '8': 'Operation',
       '9': 'Performance evaluation',
       '10': 'Improvement'
-    }[clause] || 'Additional checklist items';
+    }[clause] || clause;
+  }
+
+  protected onProcedureProcessChange(processId: string) {
+    this.auditForm.patchValue({
+      procedureProcessId: processId,
+      procedureDocumentId: ''
+    });
+    this.procedureDocuments.set([]);
+
+    if (!processId) {
+      return;
+    }
+
+    const selectedProcess = this.processOptions().find((item) => item.id === processId);
+    if (selectedProcess) {
+      if (!this.auditForm.getRawValue().auditeeArea.trim()) {
+        this.auditForm.patchValue({ auditeeArea: selectedProcess.name });
+      }
+      if (!this.auditForm.getRawValue().scope.trim() && selectedProcess.scope) {
+        this.auditForm.patchValue({ scope: selectedProcess.scope });
+      }
+    }
+
+    this.api.get<{ links?: Array<{ linkType: string; linkedId: string; title: string; subtitle?: string | null; missing: boolean }> }>(`process-register/${processId}`).subscribe({
+      next: (process) => {
+        const documents = (process.links || [])
+          .filter((item) => item.linkType === 'DOCUMENT' && !item.missing)
+          .map((item) => ({
+            id: item.linkedId,
+            label: item.title,
+            subtitle: item.subtitle
+          }));
+        this.procedureDocuments.set(documents);
+      },
+      error: () => this.procedureDocuments.set([])
+    });
+  }
+
+  protected onScopeTypeChange(scopeType: string) {
+    this.auditForm.patchValue({ scopeType: (scopeType as AuditScopeType) || 'Process' });
+    if (scopeType !== 'Process') {
+      this.auditForm.patchValue({
+        procedureProcessId: '',
+        procedureDocumentId: ''
+      });
+      this.procedureDocuments.set([]);
+    }
+  }
+
+  protected onAuditTypeChange(type: string) {
+    this.auditForm.patchValue({ type: (type as AuditType) || 'Internal Audit' });
+    if (type !== 'Internal Audit') {
+      this.auditForm.patchValue({
+        standard: '',
+        procedureProcessId: '',
+        procedureDocumentId: ''
+      });
+      this.procedureDocuments.set([]);
+    }
+  }
+
+  protected processOptionLabel(item: ProcessOption) {
+    return `${item.referenceNo || 'Uncoded'} - ${item.name}`;
+  }
+
+  protected isProcedureAuditMode() {
+    const raw = this.auditForm.getRawValue();
+    return (
+      raw.type === 'Internal Audit' &&
+      raw.scopeType === 'Process' &&
+      !!raw.procedureProcessId
+    );
+  }
+
+  protected auditSaveButtonLabel() {
+    if (this.saving()) {
+      return this.hasProcedureChecklistSelection()
+        ? 'Saving and preparing AI checklist...'
+        : 'Saving...';
+    }
+    return this.hasProcedureChecklistSelection()
+      ? 'Save audit and prepare AI checklist'
+      : 'Save audit';
+  }
+
+  private hasProcedureChecklistSelection() {
+    const raw = this.auditForm.getRawValue();
+    return (
+      raw.type === 'Internal Audit' &&
+      raw.scopeType === 'Process' &&
+      !!raw.procedureProcessId &&
+      !!raw.procedureDocumentId
+    );
   }
 
   private expandFirstQuestionInCurrentClause() {
@@ -3599,10 +3807,13 @@ export class AuditsPageComponent {
       closingMeetingNotes: '',
       leadAuditorId: '',
       auditeeArea: '',
+      procedureProcessId: '',
+      procedureDocumentId: '',
       scheduledAt: '',
       summary: '',
       status: 'PLANNED'
     });
+    this.procedureDocuments.set([]);
     this.checklistForm.reset({ clause: '', subclause: '', title: '', notes: '' });
     this.findingForm.reset({ title: '', description: '', severity: 'OBSERVATION', ownerId: '', dueDate: '' });
     this.closeoutForm.reset({
@@ -3656,10 +3867,23 @@ export class AuditsPageComponent {
           closingMeetingNotes: audit.closingMeetingNotes ?? '',
           leadAuditorId: audit.leadAuditorId ?? '',
           auditeeArea: audit.auditeeArea ?? '',
+          procedureProcessId: audit.procedureSelection?.processId ?? '',
+          procedureDocumentId: audit.procedureSelection?.procedureDocumentId ?? '',
           scheduledAt: audit.scheduledAt?.slice(0, 10) ?? '',
           summary: audit.summary ?? '',
           status: audit.status
         });
+        if (audit.procedureSelection?.processId) {
+          this.onProcedureProcessChange(audit.procedureSelection.processId);
+          queueMicrotask(() => {
+            this.auditForm.patchValue({
+              procedureProcessId: audit.procedureSelection?.processId ?? '',
+              procedureDocumentId: audit.procedureSelection?.procedureDocumentId ?? ''
+            });
+          });
+        } else {
+          this.procedureDocuments.set([]);
+        }
         this.closeoutForm.reset({
           conclusion: audit.conclusion ?? '',
           recommendations: audit.recommendations ?? '',
@@ -3691,6 +3915,13 @@ export class AuditsPageComponent {
 
   private loadUsers() {
     this.api.get<UserOption[]>('users').subscribe((users) => this.users.set(users));
+  }
+
+  private loadProcessOptions() {
+    this.api.get<ProcessOption[]>('process-register').subscribe({
+      next: (items) => this.processOptions.set(items),
+      error: () => this.processOptions.set([])
+    });
   }
 
   private deriveStep(audit: AuditRecord): AuditStep {
@@ -3805,5 +4036,67 @@ export class AuditsPageComponent {
 
   private todayIso() {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  private resolvedAuditeeArea(raw: AuditFormValue) {
+    if (raw.auditeeArea.trim()) {
+      return raw.auditeeArea.trim();
+    }
+
+    if (
+      raw.type === 'Internal Audit' &&
+      raw.scopeType === 'Process' &&
+      raw.procedureProcessId
+    ) {
+      return this.processOptions().find((item) => item.id === raw.procedureProcessId)?.name || undefined;
+    }
+
+    return undefined;
+  }
+
+  private resolvedScope(raw: AuditFormValue) {
+    if (raw.scope.trim()) {
+      return raw.scope.trim();
+    }
+
+    if (
+      raw.type === 'Internal Audit' &&
+      raw.scopeType === 'Process' &&
+      raw.procedureProcessId
+    ) {
+      return this.processOptions().find((item) => item.id === raw.procedureProcessId)?.scope?.trim() || undefined;
+    }
+
+    return undefined;
+  }
+
+  private resolvedCriteria(raw: AuditFormValue) {
+    const base = raw.criteria.trim();
+    if (
+      raw.type !== 'Internal Audit' ||
+      raw.scopeType !== 'Process' ||
+      !raw.procedureDocumentId
+    ) {
+      return base || undefined;
+    }
+
+    const selectedProcedure = this.procedureDocuments().find(
+      (item) => item.id === raw.procedureDocumentId
+    );
+    const procedureLine = selectedProcedure
+      ? `Controlled procedure under review: ${selectedProcedure.label}.`
+      : '';
+
+    if (!base) {
+      return [raw.standard ? `${raw.standard} internal audit criteria.` : '', procedureLine]
+        .filter(Boolean)
+        .join(' ');
+    }
+
+    if (procedureLine && !base.includes(procedureLine)) {
+      return `${base}\n${procedureLine}`;
+    }
+
+    return base;
   }
 }

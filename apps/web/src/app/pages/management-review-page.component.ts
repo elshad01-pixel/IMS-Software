@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
@@ -31,6 +31,33 @@ type ObligationSummaryRow = { id: string; status: string; nextReviewDate?: strin
 type HazardSummaryRow = { id: string; status: string; severity: string };
 type AspectSummaryRow = { id: string; status: string; significance: string };
 type ChangeSummaryRow = { id: string; status: string; reviewDate?: string | null; targetImplementationDate?: string | null };
+type ContextFeedbackSummary = {
+  summary: {
+    customerSurveyResponses: number;
+    customerSurveyAverage?: number | null;
+    customerFeedbackAttention: number;
+  };
+};
+type ManagementReviewAiSections = {
+  auditResults: string;
+  capaStatus: string;
+  kpiPerformance: string;
+  customerInterestedPartiesFeedback: string;
+  providerPerformance: string;
+  complianceObligations: string;
+  incidentEmergencyPerformance: string;
+  consultationCommunication: string;
+  risksOpportunities: string;
+  changesAffectingSystem: string;
+  previousActions: string;
+};
+type ManagementReviewAiDraft = {
+  provider: string;
+  model: string;
+  mode: 'provider' | 'template';
+  sections: ManagementReviewAiSections;
+  warning?: string;
+};
 
 type ReviewRecord = {
   id: string;
@@ -72,6 +99,12 @@ type ReviewRecord = {
         [breadcrumbs]="breadcrumbs()"
       >
         <a *ngIf="mode() === 'list' && canWrite()" routerLink="/management-review/new" class="button-link">+ New review meeting</a>
+        <button *ngIf="mode() === 'detail' && selectedReview()" type="button" class="button-link secondary" [disabled]="generatingReport()" (click)="generateReport()">
+          {{ generatingReport() ? 'Preparing PDF...' : 'Download PDF protocol' }}
+        </button>
+        <button *ngIf="mode() === 'detail' && selectedReview()" type="button" class="button-link secondary" [disabled]="generatingPresentation()" (click)="generatePresentation()">
+          {{ generatingPresentation() ? 'Preparing PPT...' : 'Download PPT dashboard' }}
+        </button>
         <a *ngIf="mode() === 'detail' && selectedReview() && canWrite()" [routerLink]="['/management-review', selectedReview()?.id, 'edit']" class="button-link">Edit meeting</a>
         <button *ngIf="mode() === 'detail' && canArchiveReview()" type="button" class="button-link secondary" (click)="archiveReview()">Archive meeting</button>
         <a *ngIf="mode() !== 'list'" routerLink="/management-review" class="button-link secondary">Back to meetings</a>
@@ -158,7 +191,7 @@ type ReviewRecord = {
 
           <section class="guidance-card">
             <strong>Live system inputs</strong>
-            <p>These registers do not auto-fill the meeting. Use them as live evidence when writing the input sections below.</p>
+            <p>Use these registers as live evidence when writing the input sections below. You can also ask AI to draft the input text from the current tenant records, then edit it before saving.</p>
             <div class="touchpoint-grid top-space">
               <a class="touchpoint-card" *ngFor="let item of managementSignals()" [routerLink]="item.link">
                 <span>{{ item.label }}</span>
@@ -166,6 +199,12 @@ type ReviewRecord = {
                 <small>{{ item.copy }}</small>
               </a>
             </div>
+            <div class="button-row top-space">
+              <button type="button" class="secondary" [disabled]="generatingAiInputs() || saving() || !canWrite()" (click)="draftInputsWithAi()">
+                {{ generatingAiInputs() ? 'Drafting inputs...' : 'AI draft inputs from live records' }}
+              </button>
+            </div>
+            <small class="top-space">AI fills only the management review input sections. You can edit every field before saving the meeting.</small>
           </section>
 
           <label class="field"><span>Title</span><input formControlName="title" placeholder="Q1 2026 management review"></label>
@@ -431,10 +470,14 @@ export class ManagementReviewPageComponent {
   protected readonly hazards = signal<HazardSummaryRow[]>([]);
   protected readonly aspects = signal<AspectSummaryRow[]>([]);
   protected readonly changes = signal<ChangeSummaryRow[]>([]);
+  protected readonly customerFeedback = signal<ContextFeedbackSummary | null>(null);
   protected readonly draftActionTitle = signal<string | null>(null);
   protected readonly draftActionDescription = signal<string | null>(null);
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
+  protected readonly generatingAiInputs = signal(false);
+  protected readonly generatingReport = signal(false);
+  protected readonly generatingPresentation = signal(false);
   protected readonly message = signal((history.state?.notice as string) || '');
   protected readonly error = signal('');
 
@@ -499,6 +542,10 @@ export class ManagementReviewPageComponent {
     this.api.get<ChangeSummaryRow[]>('change-management').subscribe({
       next: (items) => this.changes.set(items),
       error: () => this.changes.set([])
+    });
+    this.api.get<ContextFeedbackSummary>('context/dashboard').subscribe({
+      next: (summary) => this.customerFeedback.set(summary),
+      error: () => this.customerFeedback.set(null)
     });
   }
 
@@ -567,8 +614,20 @@ export class ManagementReviewPageComponent {
     const highHazards = this.hazards().filter((item) => item.status !== 'OBSOLETE' && item.severity === 'HIGH').length;
     const highAspects = this.aspects().filter((item) => item.status !== 'OBSOLETE' && item.significance === 'HIGH').length;
     const activeChanges = this.changes().filter((item) => !['CLOSED', 'REJECTED'].includes(item.status)).length;
+    const feedbackResponses = this.customerFeedback()?.summary.customerSurveyResponses ?? 0;
+    const feedbackAverage = this.customerFeedback()?.summary.customerSurveyAverage;
+    const feedbackAttention = this.customerFeedback()?.summary.customerFeedbackAttention ?? 0;
 
     return [
+      {
+        label: 'Customer feedback',
+        value: feedbackResponses,
+        copy: feedbackResponses
+          ? `${feedbackResponses} completed survey response${feedbackResponses === 1 ? '' : 's'} with an average of ${feedbackAverage ?? 0}/10. ${feedbackAttention} response${feedbackAttention === 1 ? '' : 's'} sit in the 0-6 attention range.`
+          : 'No completed customer surveys are recorded yet, so this section may still rely on NCRs, complaints, and direct stakeholder discussion.',
+        reviewCopy: 'Use customer survey scores, low-score comments, complaints, and other interested-party feedback when writing this section.',
+        link: '/context/interested-parties'
+      },
       {
         label: 'Audit and supplier assurance',
         value: openIncidents + providerReviews,
@@ -759,6 +818,49 @@ export class ManagementReviewPageComponent {
     });
   }
 
+  protected draftInputsWithAi() {
+    if (!this.canWrite()) {
+      this.error.set('You do not have permission to update management reviews.');
+      return;
+    }
+
+    if (this.hasExistingInputContent() && !window.confirm('Replace the current management review input text with a new AI draft from live records?')) {
+      return;
+    }
+
+    this.generatingAiInputs.set(true);
+    this.message.set('');
+    this.error.set('');
+
+    this.api.post<ManagementReviewAiDraft>('ai/management-review-input-draft', {}).subscribe({
+      next: (draft) => {
+        this.generatingAiInputs.set(false);
+        this.reviewForm.patchValue({
+          auditResults: draft.sections.auditResults,
+          capaStatus: draft.sections.capaStatus,
+          kpiPerformance: draft.sections.kpiPerformance,
+          customerInterestedPartiesFeedback: draft.sections.customerInterestedPartiesFeedback,
+          providerPerformance: draft.sections.providerPerformance,
+          complianceObligations: draft.sections.complianceObligations,
+          incidentEmergencyPerformance: draft.sections.incidentEmergencyPerformance,
+          consultationCommunication: draft.sections.consultationCommunication,
+          risksOpportunities: draft.sections.risksOpportunities,
+          changesAffectingSystem: draft.sections.changesAffectingSystem,
+          previousActions: draft.sections.previousActions
+        });
+        this.message.set(
+          draft.warning
+            ? draft.warning
+            : `Management review inputs drafted from live records using ${draft.provider} ${draft.model}.`
+        );
+      },
+      error: (error: HttpErrorResponse) => {
+        this.generatingAiInputs.set(false);
+        this.error.set(this.readError(error, 'Management review AI draft failed.'));
+      }
+    });
+  }
+
   protected prepareAction(sectionLabel: string, content?: string | null) {
     if (!this.canCreateActions()) {
       this.error.set('You do not have permission to create actions.');
@@ -823,6 +925,52 @@ export class ManagementReviewPageComponent {
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
         this.error.set(this.readError(error, 'Management review archive failed.'));
+      }
+    });
+  }
+
+  protected generateReport() {
+    if (!this.selectedId()) {
+      return;
+    }
+
+    this.generatingReport.set(true);
+    this.message.set('');
+    this.error.set('');
+
+    this.api.getBlobResponse(`management-review/${this.selectedId()}/report`).subscribe({
+      next: (response) => {
+        this.generatingReport.set(false);
+        this.downloadResponse(response, 'management-review-protocol.pdf');
+        this.message.set('Management review PDF download started.');
+      },
+      error: (error: HttpErrorResponse) => {
+        this.generatingReport.set(false);
+        this.error.set(this.readError(error, 'Management review PDF could not be prepared.'));
+      }
+    });
+  }
+
+  protected generatePresentation() {
+    if (!this.selectedId()) {
+      return;
+    }
+
+    this.generatingPresentation.set(true);
+    this.message.set('');
+    this.error.set('');
+
+    this.api.getBlobResponse(`management-review/${this.selectedId()}/presentation`).subscribe({
+      next: (response) => {
+        this.generatingPresentation.set(false);
+        this.downloadResponse(response, 'management-review-dashboard.pptx');
+        this.message.set('Management review PPT download started.');
+      },
+      error: (error: HttpErrorResponse) => {
+        this.generatingPresentation.set(false);
+        this.error.set(
+          this.readError(error, 'Management review PPT could not be prepared.')
+        );
       }
     });
   }
@@ -945,6 +1093,23 @@ export class ManagementReviewPageComponent {
     return Array.isArray(message) ? message.join(', ') : (message as string) || fallback;
   }
 
+  private downloadResponse(response: HttpResponse<Blob>, fallbackName: string) {
+    const blob = response.body;
+    if (!blob) {
+      return;
+    }
+
+    const disposition = response.headers.get('content-disposition') || '';
+    const match = disposition.match(/filename="(.+?)"/i);
+    const fileName = match?.[1] || fallbackName;
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(objectUrl);
+  }
+
   private inputValues(review: Partial<ReviewRecord>) {
     return [
       review.auditResults,
@@ -976,6 +1141,10 @@ export class ManagementReviewPageComponent {
 
   private countFilledValues(values: Array<string | null | undefined>) {
     return values.filter((value) => !!String(value ?? '').trim()).length;
+  }
+
+  private hasExistingInputContent() {
+    return this.countFilledValues(this.inputValues(this.reviewForm.getRawValue())) > 0;
   }
 
 }
