@@ -86,21 +86,6 @@ type HazardIdentificationLinkDelegate = {
   findFirst(args?: unknown): Promise<any>;
 };
 
-type EmergencyPreparednessDelegate = {
-  findMany(args?: unknown): Promise<any[]>;
-  create(args: unknown): Promise<any>;
-  update(args: unknown): Promise<any>;
-  delete(args: unknown): Promise<any>;
-  findFirst(args?: unknown): Promise<any>;
-};
-
-type EmergencyPreparednessLinkDelegate = {
-  findMany(args?: unknown): Promise<any[]>;
-  create(args: unknown): Promise<any>;
-  delete(args: unknown): Promise<any>;
-  findFirst(args?: unknown): Promise<any>;
-};
-
 type ExternalProviderControlDelegate = {
   findMany(args?: unknown): Promise<any[]>;
   create(args: unknown): Promise<any>;
@@ -246,18 +231,6 @@ export function getHazardIdentificationLinkDelegate(
   client: PrismaClient | object
 ): HazardIdentificationLinkDelegate {
   return (client as { hazardIdentificationLink: HazardIdentificationLinkDelegate }).hazardIdentificationLink;
-}
-
-export function getEmergencyPreparednessDelegate(
-  client: PrismaClient | object
-): EmergencyPreparednessDelegate {
-  return (client as { emergencyPreparedness: EmergencyPreparednessDelegate }).emergencyPreparedness;
-}
-
-export function getEmergencyPreparednessLinkDelegate(
-  client: PrismaClient | object
-): EmergencyPreparednessLinkDelegate {
-  return (client as { emergencyPreparednessLink: EmergencyPreparednessLinkDelegate }).emergencyPreparednessLink;
 }
 
 export function getExternalProviderControlDelegate(

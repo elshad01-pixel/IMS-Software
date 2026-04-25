@@ -786,6 +786,22 @@ export class AuditsService {
     const checklistItem = dto.checklistItemId
       ? await this.requireChecklistItem(tenantId, finding.auditId, dto.checklistItemId)
       : null;
+    const linkedActionItem =
+      dto.linkedActionItemId !== undefined && dto.linkedActionItemId
+        ? await this.prisma.actionItem.findFirst({
+            where: {
+              tenantId,
+              id: dto.linkedActionItemId,
+              deletedAt: null,
+              sourceType: 'audit',
+              sourceId: finding.auditId
+            },
+            select: { id: true }
+          })
+        : null;
+    if (dto.linkedActionItemId && !linkedActionItem) {
+      throw new BadRequestException('Selected audit action is not linked to this audit');
+    }
     if (
       dto.status === AuditFindingStatus.CLOSED &&
       (finding.severity === AuditFindingSeverity.MAJOR || finding.severity === AuditFindingSeverity.MINOR) &&
@@ -807,6 +823,7 @@ export class AuditsService {
         severity: dto.severity,
         ownerId: dto.ownerId !== undefined ? dto.ownerId || null : undefined,
         dueDate: dto.dueDate !== undefined ? (dto.dueDate ? new Date(dto.dueDate) : null) : undefined,
+        linkedActionItemId: dto.linkedActionItemId !== undefined ? dto.linkedActionItemId || null : undefined,
         status: dto.status
       }
     });
@@ -896,6 +913,7 @@ export class AuditsService {
           severity: AuditFindingSeverity;
           dueDate?: Date | null;
           ownerId?: string | null;
+          linkedActionItemId?: string | null;
           checklistItemId?: string | null;
           clause?: string | null;
           createdAt: Date;
@@ -927,6 +945,7 @@ export class AuditsService {
             severity: finding.severity,
             dueDate: finding.dueDate,
             ownerId: finding.ownerId,
+            linkedActionItemId: finding.linkedActionItemId,
             checklistItemId: finding.checklistItemId,
             clause: finding.clause,
             createdAt: finding.createdAt

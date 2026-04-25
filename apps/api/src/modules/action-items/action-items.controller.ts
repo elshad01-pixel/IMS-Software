@@ -18,7 +18,7 @@ export class ActionItemsController {
   constructor(private readonly actionItemsService: ActionItemsService) {}
 
   @Get()
-  @Permissions('dashboard.read')
+  @Permissions('action-items.read')
   list(
     @CurrentTenant() tenantId: string,
     @Query('sourceType') sourceType?: string,

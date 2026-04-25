@@ -12,8 +12,6 @@ import {
   EnvironmentalAspectSignificance,
   EnvironmentalAspectStage,
   EnvironmentalAspectStatus,
-  EmergencyPreparednessStatus,
-  EmergencyPreparednessType,
   NcrCategory,
   NcrPriority,
   NcrSeverity,
@@ -32,8 +30,6 @@ import {
   getChangeRequestLinkDelegate,
   getEnvironmentalAspectDelegate,
   getEnvironmentalAspectLinkDelegate,
-  getEmergencyPreparednessDelegate,
-  getEmergencyPreparednessLinkDelegate,
   getExternalProviderControlDelegate,
   getExternalProviderLinkDelegate,
   getHazardIdentificationDelegate,
@@ -985,91 +981,6 @@ async function ensureHazardIdentificationLink(
   });
 }
 
-async function ensureEmergencyPreparedness(
-  prisma: PrismaClient,
-  params: {
-    tenantId: string;
-    referenceNo: string;
-    scenario: string;
-    emergencyType: EmergencyPreparednessType;
-    potentialImpact: string;
-    responseSummary?: string;
-    resourceSummary?: string;
-    ownerUserId?: string;
-    drillFrequencyMonths?: number;
-    nextDrillDate?: Date;
-    status?: EmergencyPreparednessStatus;
-  }
-) {
-  return (getEmergencyPreparednessDelegate(prisma) as any).upsert({
-    where: {
-      tenantId_referenceNo: {
-        tenantId: params.tenantId,
-        referenceNo: params.referenceNo
-      }
-    },
-    update: {
-      scenario: params.scenario,
-      emergencyType: params.emergencyType,
-      potentialImpact: params.potentialImpact,
-      responseSummary: params.responseSummary,
-      resourceSummary: params.resourceSummary,
-      ownerUserId: params.ownerUserId,
-      drillFrequencyMonths: params.drillFrequencyMonths,
-      nextDrillDate: params.nextDrillDate,
-      status: params.status ?? EmergencyPreparednessStatus.ACTIVE,
-      deletedAt: null
-    },
-    create: {
-      tenantId: params.tenantId,
-      referenceNo: params.referenceNo,
-      scenario: params.scenario,
-      emergencyType: params.emergencyType,
-      potentialImpact: params.potentialImpact,
-      responseSummary: params.responseSummary,
-      resourceSummary: params.resourceSummary,
-      ownerUserId: params.ownerUserId,
-      drillFrequencyMonths: params.drillFrequencyMonths,
-      nextDrillDate: params.nextDrillDate,
-      status: params.status ?? EmergencyPreparednessStatus.ACTIVE
-    }
-  });
-}
-
-async function ensureEmergencyPreparednessLink(
-  prisma: PrismaClient,
-  params: {
-    tenantId: string;
-    emergencyId: string;
-    linkType: 'PROCESS' | 'RISK' | 'ACTION' | 'INCIDENT';
-    linkedId: string;
-    createdById?: string;
-    note?: string;
-  }
-) {
-  return (getEmergencyPreparednessLinkDelegate(prisma) as any).upsert({
-    where: {
-      emergencyId_linkType_linkedId: {
-        emergencyId: params.emergencyId,
-        linkType: params.linkType,
-        linkedId: params.linkedId
-      }
-    },
-    update: {
-      note: params.note,
-      createdById: params.createdById
-    },
-    create: {
-      tenantId: params.tenantId,
-      emergencyId: params.emergencyId,
-      linkType: params.linkType,
-      linkedId: params.linkedId,
-      createdById: params.createdById,
-      note: params.note
-    }
-  });
-}
-
 async function ensureExternalProvider(
   prisma: PrismaClient,
   params: {
@@ -1903,32 +1814,6 @@ export async function createDigitXDemoDataset(
     reviewDate: toDate('2026-09-15'),
     status: 'ACTIVE'
   });
-  const emergency1 = await ensureEmergencyPreparedness(prisma, {
-    tenantId: params.tenantId,
-    referenceNo: 'DTX-EP-001',
-    scenario: 'Coolant spill during SMT line startup transfer',
-    emergencyType: EmergencyPreparednessType.CHEMICAL_SPILL,
-    potentialImpact: 'Localized spill, operator exposure, line interruption, and waste handling escalation if the spill is not contained quickly.',
-    responseSummary: 'Isolate the area, stop transfer, deploy spill kit, notify the supervisor, and dispose of contaminated material under controlled handling.',
-    resourceSummary: 'Spill kit at transfer point, isolation cones, emergency contact list, and startup supervisor checklist.',
-    ownerUserId: operationsSupervisor.id,
-    drillFrequencyMonths: 6,
-    nextDrillDate: toDate('2026-08-15'),
-    status: EmergencyPreparednessStatus.ACTIVE
-  });
-  const emergency2 = await ensureEmergencyPreparedness(prisma, {
-    tenantId: params.tenantId,
-    referenceNo: 'DTX-EP-002',
-    scenario: 'Pedestrian evacuation and dispatch route control during peak movement',
-    emergencyType: EmergencyPreparednessType.EVACUATION,
-    potentialImpact: 'Unsafe evacuation path, collision risk, and uncontrolled dispatch movement if pedestrian segregation fails during a site alarm or emergency response.',
-    responseSummary: 'Pause dispatch traffic, assign route marshal, direct pedestrians to segregated assembly path, and confirm lane clearance before resuming movement.',
-    resourceSummary: 'Alarm call tree, dispatch lane signage, temporary route barriers, and supervisor-led muster checklist.',
-    ownerUserId: qualityManager.id,
-    drillFrequencyMonths: 12,
-    nextDrillDate: toDate('2026-10-10'),
-    status: EmergencyPreparednessStatus.MONITORING
-  });
   const provider1 = await ensureExternalProvider(prisma, {
     tenantId: params.tenantId,
     referenceNo: 'DTX-SP-001',
@@ -2202,55 +2087,6 @@ export async function createDigitXDemoDataset(
     createdById: admin.id,
     note: 'Incident follow-up action is also the immediate control improvement for this hazard.'
   });
-  await ensureEmergencyPreparednessLink(prisma, {
-    tenantId: params.tenantId,
-    emergencyId: emergency1.id,
-    linkType: 'PROCESS',
-    linkedId: productionProcess.id,
-    createdById: admin.id,
-    note: 'Production owns the startup transfer area and first response controls.'
-  });
-  await ensureEmergencyPreparednessLink(prisma, {
-    tenantId: params.tenantId,
-    emergencyId: emergency1.id,
-    linkType: 'INCIDENT',
-    linkedId: incident1.id,
-    createdById: admin.id,
-    note: 'This spill incident is the live event that the response scenario is built around.'
-  });
-  await ensureEmergencyPreparednessLink(prisma, {
-    tenantId: params.tenantId,
-    emergencyId: emergency1.id,
-    linkType: 'ACTION',
-    linkedId: incidentAction.id,
-    createdById: admin.id,
-    note: 'The action strengthens preparedness at the same transfer point.'
-  });
-  await ensureEmergencyPreparednessLink(prisma, {
-    tenantId: params.tenantId,
-    emergencyId: emergency2.id,
-    linkType: 'PROCESS',
-    linkedId: productionProcess.id,
-    createdById: admin.id,
-    note: 'The dispatch interface and route control sit inside the production process.'
-  });
-  await ensureEmergencyPreparednessLink(prisma, {
-    tenantId: params.tenantId,
-    emergencyId: emergency2.id,
-    linkType: 'INCIDENT',
-    linkedId: nearMiss1.id,
-    createdById: admin.id,
-    note: 'The near miss shows why evacuation and dispatch route separation needs rehearsal.'
-  });
-  await ensureEmergencyPreparednessLink(prisma, {
-    tenantId: params.tenantId,
-    emergencyId: emergency2.id,
-    linkType: 'RISK',
-    linkedId: competenceRisk.id,
-    createdById: admin.id,
-    note: 'Awareness and role clarity remain part of the wider operational risk picture.'
-  });
-
   await ensureExternalProviderLink(prisma, {
     tenantId: params.tenantId,
     providerId: provider1.id,

@@ -146,11 +146,9 @@ type ManagementReviewSourceSnapshot = {
     overdue: number;
     recent: string[];
   };
-  incidentEmergency: {
+  incidentPerformance: {
     openIncidents: number;
     criticalIncidents: number;
-    activeEmergencyPlans: number;
-    upcomingDrills: number;
     recent: string[];
   };
   consultation: {
@@ -510,7 +508,7 @@ class OpenAiProviderAdapter implements AiProviderAdapter {
       ),
       incidentEmergencyPerformance: this.normalizeManagementSection(
         sections.incidentEmergencyPerformance,
-        `There are ${snapshot.incidentEmergency.openIncidents} open incidents in the current record set, including ${snapshot.incidentEmergency.criticalIncidents} critical incidents. ${snapshot.incidentEmergency.activeEmergencyPlans} emergency scenarios remain active, with ${snapshot.incidentEmergency.upcomingDrills} drill dates upcoming or overdue for attention.`
+        `There are ${snapshot.incidentPerformance.openIncidents} open incidents in the current record set, including ${snapshot.incidentPerformance.criticalIncidents} critical incidents. ${snapshot.incidentPerformance.recent[0] ? `A recent incident signal is ${snapshot.incidentPerformance.recent[0]}` : 'Recent incident themes should be confirmed from the live incident register.'}`
       ),
       consultationCommunication: this.normalizeManagementSection(
         sections.consultationCommunication,
@@ -761,7 +759,6 @@ export class AiService {
       providers,
       obligations,
       incidents,
-      emergencyPlans,
       risks,
       hazards,
       aspects,
@@ -869,15 +866,6 @@ export class AiService {
           type: true,
           severity: true,
           status: true
-        }
-      }),
-      this.prisma.emergencyPreparedness.findMany({
-        where: { tenantId, deletedAt: null },
-        orderBy: [{ nextDrillDate: 'asc' }, { updatedAt: 'desc' }],
-        select: {
-          scenario: true,
-          status: true,
-          nextDrillDate: true
         }
       }),
       this.prisma.risk.findMany({
@@ -1039,11 +1027,9 @@ export class AiService {
           `${item.title} (${item.status}${item.nextReviewDate ? `, review ${this.formatDate(item.nextReviewDate)}` : ''})`
         )
       },
-      incidentEmergency: {
+      incidentPerformance: {
         openIncidents: incidents.filter((item) => item.status !== 'CLOSED' && item.status !== 'ARCHIVED').length,
         criticalIncidents: incidents.filter((item) => item.status !== 'CLOSED' && item.status !== 'ARCHIVED' && item.severity === 'CRITICAL').length,
-        activeEmergencyPlans: emergencyPlans.filter((item) => item.status !== 'OBSOLETE').length,
-        upcomingDrills: emergencyPlans.filter((item) => !!item.nextDrillDate && item.nextDrillDate < now).length,
         recent: incidents.slice(0, 4).map((item) =>
           `${item.title} (${item.type}, ${item.severity}, ${item.status})`
         )
@@ -1139,7 +1125,7 @@ export class AiService {
           `The obligation register shows ${snapshot.compliance.underReview} items under review and ${snapshot.compliance.overdue} overdue review dates. ${snapshot.compliance.recent[0] ? `A current compliance signal is ${snapshot.compliance.recent[0]}` : 'Detailed compliance commentary should be added from the obligation register'}`
         ),
         incidentEmergencyPerformance: this.ensureSentence(
-          `There are ${snapshot.incidentEmergency.openIncidents} open incidents in the current records, including ${snapshot.incidentEmergency.criticalIncidents} critical incidents. ${snapshot.incidentEmergency.activeEmergencyPlans} emergency scenarios remain active and ${snapshot.incidentEmergency.upcomingDrills} drill dates now need attention.`
+          `There are ${snapshot.incidentPerformance.openIncidents} open incidents in the current records, including ${snapshot.incidentPerformance.criticalIncidents} critical incidents. ${snapshot.incidentPerformance.recent[0] ? `A current incident signal is ${snapshot.incidentPerformance.recent[0]}` : 'Recent incident themes should be confirmed from the live incident register.'}`
         ),
         consultationCommunication: this.ensureSentence(
           `Structured consultation and communication evidence is currently represented by ${snapshot.consultation.interestedParties} interested parties, ${snapshot.consultation.needs} recorded needs or expectations, and ${snapshot.consultation.openContextIssues} open context issues. If additional worker consultation evidence exists outside the app, it should be added manually.`

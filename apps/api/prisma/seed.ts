@@ -45,8 +45,6 @@ const permissionKeys = [
   'aspects.write',
   'hazards.read',
   'hazards.write',
-  'emergency.read',
-  'emergency.write',
   'providers.read',
   'providers.write',
   'change.read',
@@ -65,6 +63,7 @@ const permissionKeys = [
   'documents.approve',
   'capa.close',
   'attachments.write',
+  'action-items.read',
   'action-items.write',
   'admin.delete'
 ];
@@ -92,15 +91,17 @@ const systemRoleDefinitions = [
       'management-review.read',
       'kpis.read',
       'training.read',
+      'context.read',
       'incidents.read',
       'aspects.read',
       'hazards.read',
-      'emergency.read',
       'providers.read',
       'change.read',
       'obligations.read',
+      'processes.read',
       'ncr.read',
       'reports.read',
+      'action-items.read',
       'action-items.write'
     ]
   }

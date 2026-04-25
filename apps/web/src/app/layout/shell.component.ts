@@ -741,7 +741,7 @@ export class ShellComponent {
         { path: '/incidents', label: 'Incidents', hint: 'Incidents and near misses', icon: 'IN', permission: 'incidents.read' },
         { path: '/ncr', label: 'NCR', hint: 'Nonconformance control', icon: 'NC', permission: 'ncr.read' },
         { path: '/capa', label: 'CAPA', hint: 'Corrective workflows', icon: 'CP', permission: 'capa.read' },
-        { path: '/actions', label: 'Actions', hint: 'Global follow-up tracker', icon: 'AC', permission: 'dashboard.read' },
+        { path: '/actions', label: 'Actions', hint: 'Global follow-up tracker', icon: 'AC', permission: 'action-items.read' },
         { path: '/management-review', label: 'Management Review', hint: 'Meetings and decisions', icon: 'MR', permission: 'management-review.read' }
       ]
     },

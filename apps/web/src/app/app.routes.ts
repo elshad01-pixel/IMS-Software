@@ -102,7 +102,7 @@ export const appRoutes: Routes = [
       { path: 'training/new', component: TrainingPageComponent, data: { mode: 'create', permission: 'training.write' } },
       { path: 'training/:id', component: TrainingPageComponent, data: { mode: 'detail', permission: 'training.read' } },
       { path: 'training/:id/edit', component: TrainingPageComponent, data: { mode: 'edit', permission: 'training.write' } },
-      { path: 'actions', component: ActionsPageComponent, data: { permission: 'dashboard.read' } },
+      { path: 'actions', component: ActionsPageComponent, data: { permission: 'action-items.read' } },
       { path: 'ncr', component: NcrRegisterPageComponent, data: { permission: 'ncr.read' } },
       { path: 'ncr/new', component: NcrCreatePageComponent, data: { permission: 'ncr.write' } },
       { path: 'ncr/:id', component: NcrDetailPageComponent, data: { permission: 'ncr.read' } },

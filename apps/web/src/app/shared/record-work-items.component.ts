@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, ElementRef, Input, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
@@ -312,6 +312,7 @@ export class RecordWorkItemsComponent implements OnChanges {
   @Input() draftTitle: string | null = null;
   @Input() draftDescription: string | null = null;
   @Input() returnNavigation: ReturnNavigation | null = null;
+  @Output() actionCreated = new EventEmitter<ActionItem>();
 
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
@@ -376,11 +377,12 @@ export class RecordWorkItemsComponent implements OnChanges {
         ...this.actionForm.getRawValue()
       })
       .subscribe({
-        next: () => {
+        next: (actionItem) => {
           this.actionsSaving.set(false);
           this.actionsMessage.set('Action item added.');
           this.actionForm.reset({ title: '', description: '', ownerId: '', dueDate: '' });
           this.composerOpen.set(false);
+          this.actionCreated.emit(actionItem);
           this.reloadActions();
         },
         error: (error: HttpErrorResponse) => {

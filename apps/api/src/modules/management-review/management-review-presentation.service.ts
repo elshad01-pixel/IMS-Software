@@ -117,7 +117,7 @@ export class ManagementReviewPresentationService {
         value: review.complianceObligations || 'No content recorded.'
       },
       {
-        label: 'Incidents and emergency performance',
+        label: 'Incidents and response performance',
         value: review.incidentEmergencyPerformance || 'No content recorded.'
       },
       {

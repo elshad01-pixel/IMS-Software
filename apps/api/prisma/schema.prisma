@@ -256,28 +256,6 @@ enum HazardLinkType {
   INCIDENT
 }
 
-enum EmergencyPreparednessType {
-  FIRE
-  CHEMICAL_SPILL
-  MEDICAL
-  EVACUATION
-  POWER_LOSS
-  OTHER
-}
-
-enum EmergencyPreparednessStatus {
-  ACTIVE
-  MONITORING
-  OBSOLETE
-}
-
-enum EmergencyPreparednessLinkType {
-  PROCESS
-  RISK
-  ACTION
-  INCIDENT
-}
-
 enum ExternalProviderType {
   SUPPLIER
   OUTSOURCED_SERVICE
@@ -415,8 +393,6 @@ model Tenant {
   environmentalAspectLinks EnvironmentalAspectLink[]
   hazards          HazardIdentification[]
   hazardLinks      HazardIdentificationLink[]
-  emergencyPlans   EmergencyPreparedness[]
-  emergencyPlanLinks EmergencyPreparednessLink[]
   externalProviders ExternalProviderControl[]
   externalProviderLinks ExternalProviderLink[]
   changeRequests    ChangeRequest[]
@@ -908,50 +884,6 @@ model HazardIdentificationLink {
   @@index([tenantId, linkType, linkedId])
 }
 
-model EmergencyPreparedness {
-  id                String                     @id @default(cuid())
-  tenantId          String
-  referenceNo       String?
-  scenario          String
-  emergencyType     EmergencyPreparednessType
-  potentialImpact   String
-  responseSummary   String?
-  resourceSummary   String?
-  ownerUserId       String?
-  drillFrequencyMonths Int?
-  nextDrillDate     DateTime?
-  status            EmergencyPreparednessStatus @default(ACTIVE)
-  createdAt         DateTime                   @default(now())
-  updatedAt         DateTime                   @updatedAt
-  deletedAt         DateTime?
-  deletedById       String?
-  tenant            Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  links             EmergencyPreparednessLink[]
-
-  @@unique([tenantId, referenceNo])
-  @@index([tenantId, status])
-  @@index([tenantId, ownerUserId])
-  @@index([tenantId, nextDrillDate])
-  @@index([tenantId, deletedAt])
-}
-
-model EmergencyPreparednessLink {
-  id          String                        @id @default(cuid())
-  tenantId    String
-  emergencyId String
-  linkType    EmergencyPreparednessLinkType
-  linkedId    String
-  note        String?
-  createdAt   DateTime                      @default(now())
-  createdById String?
-  tenant      Tenant                        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  emergency   EmergencyPreparedness         @relation(fields: [emergencyId], references: [id], onDelete: Cascade)
-
-  @@unique([emergencyId, linkType, linkedId])
-  @@index([tenantId, emergencyId])
-  @@index([tenantId, linkType, linkedId])
-}
-
 model ExternalProviderControl {
   id               String                    @id @default(cuid())
   tenantId         String
@@ -1326,6 +1258,7 @@ model AuditFinding {
   ownerId      String?
   dueDate      DateTime?
   linkedCapaId String?
+  linkedActionItemId String?
   status       AuditFindingStatus  @default(OPEN)
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt

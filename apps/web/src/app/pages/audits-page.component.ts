@@ -112,7 +112,17 @@ type AuditFinding = {
   ownerId?: string | null;
   dueDate?: string | null;
   linkedCapaId?: string | null;
+  linkedActionItemId?: string | null;
   status: FindingStatus;
+};
+
+type LinkedActionItem = {
+  id: string;
+  title: string;
+  description?: string | null;
+  dueDate?: string | null;
+  status: string;
+  owner?: UserOption | null;
 };
 
 type AuditRecord = {
@@ -480,6 +490,37 @@ type AuditFormValue = {
             </article>
           </div>
 
+          <section class="workflow-position-card top-space">
+            <div class="workflow-position-card__copy">
+              <span class="section-eyebrow">Current step</span>
+              <h4>{{ auditWorkflowHeading() }}</h4>
+              <p>{{ auditWorkflowCopy() }}</p>
+            </div>
+            <div class="workflow-position-card__meta">
+              <span class="review-mini-chip">{{ auditWorkflowStatusLabel() }}</span>
+              <span class="review-mini-chip requires-capa" *ngIf="unresolvedFindingCount()">
+                {{ unresolvedFindingCount() }} route{{ unresolvedFindingCount() === 1 ? '' : 's' }} still open
+              </span>
+              <span class="review-mini-chip ready" *ngIf="isChecklistComplete() && !unresolvedFindingCount()">
+                Ready for close-out
+              </span>
+            </div>
+            <div class="button-row compact-row">
+              <button *ngIf="selectedAudit()?.status !== 'COMPLETED' && selectedAudit()?.status !== 'CLOSED' && !selectedAudit()?.isChecklistCompleted" type="button" (click)="setActiveStep('conduct')">
+                {{ activeStep() === 'plan' ? 'Start audit' : 'Continue checklist' }}
+              </button>
+              <button *ngIf="selectedAudit()?.status !== 'COMPLETED' && selectedAudit()?.status !== 'CLOSED' && selectedAudit()?.isChecklistCompleted && unresolvedFindingCount()" type="button" (click)="openReviewFindings()">
+                Review findings
+              </button>
+              <button *ngIf="selectedAudit()?.status !== 'COMPLETED' && selectedAudit()?.status !== 'CLOSED' && selectedAudit()?.isChecklistCompleted && !unresolvedFindingCount()" type="button" (click)="setActiveStep('review'); setReviewStage('closeout')">
+                Go to close-out
+              </button>
+              <button *ngIf="selectedAudit()?.status === 'COMPLETED' || selectedAudit()?.status === 'CLOSED'" type="button" class="secondary" [disabled]="generatingReport()" (click)="generateReport()">
+                {{ generatingReport() ? 'Preparing PDF...' : 'Download PDF report' }}
+              </button>
+            </div>
+          </section>
+
           <section class="guidance-card top-space">
             <strong>{{ attentionHeadline(selectedAudit()) }}</strong>
             <p>{{ attentionNarrative(selectedAudit()) }}</p>
@@ -526,8 +567,8 @@ type AuditFormValue = {
             <button type="button" class="audit-step" [class.active]="activeStep() === 'review'" (click)="setActiveStep('review')">
               <span>3</span>
               <div>
-                <strong>Review findings</strong>
-                <small>Close-out and completion</small>
+                <strong>Findings and close-out</strong>
+                <small>Decide routes and finish</small>
               </div>
             </button>
           </nav>
@@ -890,8 +931,8 @@ type AuditFormValue = {
             <div class="section-head">
               <div>
                 <span class="section-eyebrow">Review flow</span>
-                <h3>Review findings, then finish the audit</h3>
-                <p class="subtle">Finish the finding routes first. Use Audit actions only for lighter follow-up, then complete close-out last.</p>
+                <h3>Finish finding routes, then close the audit</h3>
+                <p class="subtle">Keep the chain simple: review each finding, decide CAPA or lighter follow-up inside that finding, then record close-out last.</p>
               </div>
             </div>
 
@@ -937,8 +978,8 @@ type AuditFormValue = {
               <small>Decide the route</small>
             </button>
             <button type="button" class="audit-review-stage" [class.active]="reviewStage() === 'actions'" (click)="setReviewStage('actions')">
-              <strong>2. Audit actions</strong>
-              <small>Lighter follow-up only</small>
+              <strong>2. Action tracker</strong>
+              <small>Optional lighter follow-up view</small>
             </button>
             <button type="button" class="audit-review-stage" [class.active]="reviewStage() === 'closeout'" (click)="setReviewStage('closeout')">
               <strong>3. Close-out</strong>
@@ -951,7 +992,7 @@ type AuditFormValue = {
               <div>
                 <span class="section-eyebrow">Stage 1</span>
                 <h3>Review findings and decide the follow-up route</h3>
-                <p class="subtle">Pick one finding, review the gap, then choose the right route: CAPA for nonconformities, audit action for lighter follow-up, or close when no tracked action is needed.</p>
+                <p class="subtle">Pick one finding, review the gap, then choose the right route: CAPA for nonconformities, lighter audit action for observation or OFI, or close when no tracked action is needed.</p>
               </div>
             </div>
 
@@ -965,6 +1006,11 @@ type AuditFormValue = {
                 <header class="review-findings-list__header">
                   <strong>Findings in this audit</strong>
                   <small>Select one finding to review its gap, evidence route, and follow-up decision.</small>
+                  <div class="review-finding-chip-row top-space">
+                    <span class="review-mini-chip requires-capa" *ngIf="capaLinkedFindingCount()">{{ capaLinkedFindingCount() }} on CAPA</span>
+                    <span class="review-mini-chip light-route" *ngIf="lighterRouteFindingCount()">{{ lighterRouteFindingCount() }} action draft{{ lighterRouteFindingCount() === 1 ? '' : 's' }} ready</span>
+                    <span class="review-mini-chip ready" *ngIf="closedFindingCount()">{{ closedFindingCount() }} closed</span>
+                  </div>
                 </header>
 
                 <button
@@ -980,12 +1026,15 @@ type AuditFormValue = {
                       <span class="review-mini-chip" [class.requires-capa]="requiresCapaRoute(finding)" [class.light-route]="canUseAuditActionRoute(finding)">
                         {{ findingSeverityLabel(finding.severity) }}
                       </span>
-                      <span class="review-mini-chip" [class.ready]="!findingNeedsRoute(finding)">
+                      <span class="review-mini-chip" [class.requires-capa]="requiresCapaRoute(finding) && !finding.linkedCapaId && finding.status !== 'CLOSED'" [class.light-route]="isPreparedActionFinding(finding)" [class.ready]="!findingNeedsRoute(finding) || isPreparedActionFinding(finding)">
                         {{ findingRouteStateLabel(finding) }}
                       </span>
+                      <span class="review-mini-chip light-route" *ngIf="finding.linkedActionItemId">Audit action linked</span>
+                      <span class="review-mini-chip light-route" *ngIf="isPreparedActionFinding(finding)">Action draft ready</span>
                     </div>
                     <small>{{ findingStatusLabel(finding.status) }}{{ finding.clause ? ' | clause ' + finding.clause : '' }}</small>
                     <small *ngIf="findingOwnerDueCopy(finding)">{{ findingOwnerDueCopy(finding) }}</small>
+                    <small>{{ findingListGuidanceCopy(finding) }}</small>
                   </span>
                   <span class="review-finding-list-item__status">{{ findingDecisionBadge(finding) }}</span>
                 </button>
@@ -1009,6 +1058,7 @@ type AuditFormValue = {
                   <h4>Route status</h4>
                   <p>{{ findingRouteSummaryCopy(finding) }}</p>
                   <small *ngIf="findingOwnerDueCopy(finding)">{{ findingOwnerDueCopy(finding) }}</small>
+                  <small *ngIf="isPreparedActionFinding(finding)">A lighter audit action draft is already open below for this finding. Create it there, then close the finding once the route is set.</small>
                 </section>
 
                 <section class="detail-section review-detail-card">
@@ -1028,7 +1078,8 @@ type AuditFormValue = {
                   </div>
                   <div class="button-row compact-row">
                     <button type="button" class="secondary" (click)="focusChecklistQuestion(finding)" [disabled]="!finding.checklistItemId">Open question & evidence</button>
-                    <button type="button" class="tertiary" (click)="setReviewStage('actions')">Review audit actions</button>
+                    <button type="button" class="tertiary" (click)="setReviewStage('actions')">Open action tracker</button>
+                    <a *ngIf="finding.linkedActionItemId" [routerLink]="['/actions']" [queryParams]="{ focusActionId: finding.linkedActionItemId }" [state]="auditLinkState(finding)" class="button-link secondary compact">Open linked action</a>
                     <a *ngIf="finding.linkedCapaId" [routerLink]="['/capa', finding.linkedCapaId]" [state]="auditLinkState(finding)" class="button-link secondary compact">Open linked CAPA</a>
                   </div>
                 </section>
@@ -1040,16 +1091,33 @@ type AuditFormValue = {
                   </div>
                   <div class="button-row review-decision-panel__actions">
                     <button type="button" class="secondary" [disabled]="saving() || finding.status === 'CLOSED' || !canWriteAudit() || (requiresCapaRoute(finding) && !finding.linkedCapaId)" (click)="updateFindingStatus(finding, 'CLOSED')">Close finding</button>
-                    <button type="button" class="secondary" *ngIf="canUseAuditActionRoute(finding) && !finding.linkedCapaId" [disabled]="saving() || !canCreateActions()" (click)="prepareActionFromFinding(finding)">Create audit action</button>
+                    <button type="button" class="secondary" *ngIf="canUseAuditActionRoute(finding) && !finding.linkedCapaId && !finding.linkedActionItemId" [disabled]="saving() || !canCreateActions()" (click)="prepareActionFromFinding(finding)">{{ auditActionButtonLabel(finding) }}</button>
                     <button type="button" class="secondary" *ngIf="requiresCapaRoute(finding) && !finding.linkedCapaId" [disabled]="saving() || !canCreateCapa()" (click)="createCapaFromFinding(finding)">
                       Create CAPA
                     </button>
+                    <a *ngIf="finding.linkedActionItemId" [routerLink]="['/actions']" [queryParams]="{ focusActionId: finding.linkedActionItemId }" [state]="auditLinkState(finding)" class="button-link secondary compact">Open action</a>
                     <a *ngIf="requiresCapaRoute(finding) && finding.linkedCapaId" [routerLink]="['/capa', finding.linkedCapaId]" [state]="auditLinkState(finding)" class="button-link secondary compact">Open CAPA</a>
                   </div>
                   <div class="button-row compact-row" *ngIf="!findingNeedsRoute(finding) || nextUnresolvedFindingId(finding.id)">
                     <button type="button" class="secondary" *ngIf="nextUnresolvedFindingId(finding.id)" (click)="goToNextUnresolvedFinding(finding.id)">Next unresolved finding</button>
                     <button type="button" class="secondary" *ngIf="!unresolvedFindingCount()" (click)="setReviewStage('closeout')">All routes decided: go to close-out</button>
                   </div>
+                </section>
+
+                <section class="review-inline-action" *ngIf="showInlineActionWorkspace(finding)">
+                  <div class="review-inline-action__copy">
+                    <strong>Prepare lighter follow-up inside this finding</strong>
+                    <span>Create the audit action below, then return to the buttons above and close the finding once ownership and due date are clear.</span>
+                  </div>
+
+                  <iso-record-work-items
+                    [sourceType]="'audit'"
+                    [sourceId]="selectedId()"
+                    [draftTitle]="draftActionTitle()"
+                    [draftDescription]="draftActionDescription()"
+                    [returnNavigation]="auditReturnNavigation(finding)"
+                    (actionCreated)="handleFindingActionCreated(finding, $event)"
+                  />
                 </section>
               </section>
             </div>
@@ -1071,8 +1139,8 @@ type AuditFormValue = {
             <div class="section-head">
               <div>
                 <span class="section-eyebrow">Stage 2</span>
-                <h3>Assign audit follow-up actions</h3>
-                <p class="subtle">Use this only for observations and opportunities for improvement that need tracked follow-up.</p>
+                <h3>Optional audit action tracker</h3>
+                <p class="subtle">Use this as the overview page for lighter audit actions already linked to the audit. The main route still starts from each finding.</p>
               </div>
             </div>
 
@@ -1094,8 +1162,8 @@ type AuditFormValue = {
             <iso-record-work-items
               [sourceType]="'audit'"
               [sourceId]="selectedId()"
-              [draftTitle]="draftActionTitle()"
-              [draftDescription]="draftActionDescription()"
+              [draftTitle]="null"
+              [draftDescription]="null"
               [returnNavigation]="auditReturnNavigation()"
             />
 
@@ -1188,6 +1256,38 @@ type AuditFormValue = {
       border-radius: 1rem;
       border: 1px solid rgba(47, 107, 69, 0.16);
       background: rgba(47, 107, 69, 0.08);
+    }
+
+    .workflow-position-card {
+      display: grid;
+      gap: 0.8rem;
+      padding: 1rem 1.1rem;
+      border-radius: 1.1rem;
+      border: 1px solid rgba(36, 79, 61, 0.14);
+      background: linear-gradient(180deg, rgba(244, 248, 244, 0.96), rgba(250, 252, 249, 0.98));
+    }
+
+    .workflow-position-card__copy {
+      display: grid;
+      gap: 0.3rem;
+    }
+
+    .workflow-position-card__copy h4 {
+      margin: 0;
+      color: #1f3427;
+      font-size: 1.1rem;
+    }
+
+    .workflow-position-card__copy p {
+      margin: 0;
+      color: #4a5d51;
+      line-height: 1.55;
+    }
+
+    .workflow-position-card__meta {
+      display: flex;
+      gap: 0.45rem;
+      flex-wrap: wrap;
     }
 
     .compliance-note {
@@ -1506,6 +1606,29 @@ type AuditFormValue = {
 
     .review-decision-panel__actions {
       margin-top: 0;
+    }
+
+    .review-inline-action {
+      display: grid;
+      gap: 0.85rem;
+      padding: 1rem 1.05rem;
+      border-radius: 20px;
+      border: 1px solid rgba(184, 132, 51, 0.18);
+      background: linear-gradient(180deg, rgba(252, 249, 243, 0.96), rgba(248, 245, 237, 0.9));
+    }
+
+    .review-inline-action__copy {
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .review-inline-action__copy strong {
+      color: #1f3427;
+    }
+
+    .review-inline-action__copy span {
+      color: #55665b;
+      line-height: 1.55;
     }
 
     .audit-step,
@@ -1954,6 +2077,7 @@ export class AuditsPageComponent {
   protected readonly checklistScrollTop = signal<number | null>(null);
   protected readonly checklistScrollTargetId = signal<string | null>(null);
   protected readonly selectedFindingId = signal<string | null>(null);
+  protected readonly preparedActionFindingId = signal<string | null>(null);
   protected readonly checklistBuilderOpen = signal(false);
   protected readonly draftActionTitle = signal<string | null>(null);
   protected readonly draftActionDescription = signal<string | null>(null);
@@ -2453,6 +2577,9 @@ export class AuditsPageComponent {
     this.api.patch(`audits/findings/${finding.id}`, { status }).subscribe({
       next: () => {
         this.saving.set(false);
+        if (status === 'CLOSED') {
+          this.clearPreparedActionDraft(finding.id);
+        }
         this.message.set('Finding updated.');
         this.fetchAudit(this.selectedId() as string, { preserveStep: true });
       },
@@ -2480,6 +2607,7 @@ export class AuditsPageComponent {
     }).subscribe({
       next: (capa) => {
         this.saving.set(false);
+        this.clearPreparedActionDraft(finding.id);
         void this.router.navigate(['/capa', capa.id, 'edit'], {
           state: {
             notice: 'CAPA created from audit finding.',
@@ -2501,10 +2629,39 @@ export class AuditsPageComponent {
     }
 
     this.selectedFindingId.set(finding.id);
+    this.preparedActionFindingId.set(finding.id);
     this.draftActionTitle.set(`Audit action: ${finding.title}`);
     this.draftActionDescription.set(this.cleanFindingDescription(finding.description));
-    this.setReviewStage('actions');
-    this.message.set('Audit action form prepared from the selected finding. Create the action in Stage 2, then return to Findings and close the finding when the route is set.');
+    this.setReviewStage('findings');
+    this.message.set('Audit action form prepared inside the current finding. Create the lighter follow-up below, then close the finding once the route is clear.');
+  }
+
+  protected handleFindingActionCreated(finding: AuditFinding, actionItem: LinkedActionItem) {
+    if (!finding.id || !actionItem.id) {
+      return;
+    }
+
+    this.saving.set(true);
+    this.error.set('');
+    this.message.set('');
+    this.api.patch(`audits/findings/${finding.id}`, {
+      linkedActionItemId: actionItem.id,
+      ownerId: actionItem.owner?.id || finding.ownerId || undefined,
+      dueDate: actionItem.dueDate || finding.dueDate || undefined
+    }).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.preparedActionFindingId.set(null);
+        this.draftActionTitle.set(null);
+        this.draftActionDescription.set(null);
+        this.message.set('Audit action created and linked to this finding. You can open the linked action here or close the finding when the route is clear.');
+        this.fetchAudit(this.selectedId() as string, { preserveStep: true });
+      },
+      error: (error: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.error.set(this.readError(error, 'The audit action was created, but linking it back to the finding failed.'));
+      }
+    });
   }
 
   protected openFindingComposer(item: AuditChecklistItem) {
@@ -2819,6 +2976,15 @@ export class AuditsPageComponent {
     section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  private clearPreparedActionDraft(findingId?: string | null) {
+    if (findingId && this.preparedActionFindingId() !== findingId) {
+      return;
+    }
+    this.preparedActionFindingId.set(null);
+    this.draftActionTitle.set(null);
+    this.draftActionDescription.set(null);
+  }
+
   protected focusCurrentClauseStart() {
     const firstItemId = this.currentChecklistGroup()?.items?.[0]?.id ?? null;
     this.checklistScrollTop.set(null);
@@ -2847,6 +3013,18 @@ export class AuditsPageComponent {
     return openFindings + (this.selectedAudit()?.actionItemCount || 0);
   }
 
+  protected capaLinkedFindingCount() {
+    return (this.selectedAudit()?.findings || []).filter((finding) => !!finding.linkedCapaId).length;
+  }
+
+  protected lighterRouteFindingCount() {
+    return (this.selectedAudit()?.findings || []).filter((finding) => this.isPreparedActionFinding(finding)).length;
+  }
+
+  protected closedFindingCount() {
+    return (this.selectedAudit()?.findings || []).filter((finding) => finding.status === 'CLOSED').length;
+  }
+
   protected reviewFocusHeading() {
     const finding = this.activeReviewFinding();
     return finding ? `Current focus: ${finding.title}` : 'Current focus: review each finding one at a time';
@@ -2864,6 +3042,14 @@ export class AuditsPageComponent {
     this.selectedFindingId.set(finding.id);
   }
 
+  protected showInlineActionWorkspace(finding: AuditFinding) {
+    return this.preparedActionFindingId() === finding.id && this.canUseAuditActionRoute(finding) && !finding.linkedCapaId && !finding.linkedActionItemId;
+  }
+
+  protected isPreparedActionFinding(finding: AuditFinding) {
+    return this.preparedActionFindingId() === finding.id && this.canUseAuditActionRoute(finding) && finding.status !== 'CLOSED' && !finding.linkedCapaId && !finding.linkedActionItemId;
+  }
+
   protected activeReviewFinding() {
     const findings = this.selectedAudit()?.findings || [];
     if (!findings.length) {
@@ -2873,7 +3059,7 @@ export class AuditsPageComponent {
   }
 
   protected findingNeedsRoute(finding: AuditFinding) {
-    return finding.status !== 'CLOSED' && !finding.linkedCapaId;
+    return finding.status !== 'CLOSED' && !finding.linkedCapaId && !finding.linkedActionItemId;
   }
 
   protected requiresCapaRoute(finding: AuditFinding) {
@@ -2890,6 +3076,12 @@ export class AuditsPageComponent {
     }
     if (finding.linkedCapaId) {
       return 'CAPA linked';
+    }
+    if (finding.linkedActionItemId) {
+      return 'Audit action linked';
+    }
+    if (this.isPreparedActionFinding(finding)) {
+      return 'Action draft ready';
     }
     return this.requiresCapaRoute(finding) ? 'CAPA still needed' : 'Route still needed';
   }
@@ -2937,6 +3129,12 @@ export class AuditsPageComponent {
     if (finding.linkedCapaId) {
       return 'CAPA active';
     }
+    if (finding.linkedActionItemId) {
+      return 'Action active';
+    }
+    if (this.isPreparedActionFinding(finding)) {
+      return 'Action draft open';
+    }
     if (finding.severity === 'MAJOR') {
       return 'CAPA expected';
     }
@@ -2947,6 +3145,32 @@ export class AuditsPageComponent {
       return 'Action recommended';
     }
     return 'Observation review';
+  }
+
+  protected findingListGuidanceCopy(finding: AuditFinding) {
+    if (finding.status === 'CLOSED') {
+      return 'Route is complete in the audit record.';
+    }
+    if (finding.linkedCapaId) {
+      return 'Continue the linked CAPA, then return here only when you need to review closure.';
+    }
+    if (finding.linkedActionItemId) {
+      return 'A lighter audit action is already linked to this finding.';
+    }
+    if (this.isPreparedActionFinding(finding)) {
+      return 'Lighter follow-up is already prepared for this finding below.';
+    }
+    if (this.requiresCapaRoute(finding)) {
+      return 'This nonconformity still needs CAPA before the route is complete.';
+    }
+    return 'Choose lighter follow-up or close directly when satisfied.';
+  }
+
+  protected auditActionButtonLabel(finding: AuditFinding) {
+    if (finding.linkedActionItemId) {
+      return 'Audit action already linked';
+    }
+    return this.isPreparedActionFinding(finding) ? 'Action form ready below' : 'Prepare audit action here';
   }
 
   protected findingOwnerDueCopy(finding: AuditFinding) {
@@ -3097,6 +3321,69 @@ export class AuditsPageComponent {
     return 'Next: continue the checklist, record findings where needed, and return to the review step when the checklist is complete.';
   }
 
+  protected auditWorkflowHeading() {
+    const audit = this.selectedAudit();
+    if (!audit) {
+      return 'Open an audit record';
+    }
+    if (audit.status === 'COMPLETED' || audit.status === 'CLOSED') {
+      return 'Audit complete';
+    }
+    if (this.activeStep() === 'plan') {
+      return 'Step 1: confirm scope and audit setup';
+    }
+    if (!audit.isChecklistCompleted) {
+      return 'Step 2: complete the checklist';
+    }
+    if (this.unresolvedFindingCount()) {
+      return 'Step 3: decide the route for each finding';
+    }
+    if (this.reviewStage() === 'closeout') {
+      return 'Step 3: record the audit close-out';
+    }
+    return 'Step 3: move into close-out';
+  }
+
+  protected auditWorkflowCopy() {
+    const audit = this.selectedAudit();
+    if (!audit) {
+      return 'Select an audit to continue the workflow.';
+    }
+    if (audit.status === 'COMPLETED' || audit.status === 'CLOSED') {
+      return 'The audit record is already complete. You can still review findings, linked CAPA, lighter audit actions, and the final PDF report.';
+    }
+    if (this.activeStep() === 'plan') {
+      return 'Check the programme, scope, objectives, criteria, and meeting notes first. Once the setup reads correctly, start the audit and move into the checklist.';
+    }
+    if (!audit.isChecklistCompleted) {
+      return 'Work through the checklist question by question. Record findings only where the requirement is not met, then keep moving through the audit.';
+    }
+    if (this.unresolvedFindingCount()) {
+      return 'Stay in the findings trail until every gap has a clear route. Minor and major findings move into CAPA; observations and opportunities can use a lighter audit action or close directly.';
+    }
+    return 'All finding routes are clear. Record the conclusion, recommendations, completion date, and auditor to finish the audit without reopening the checklist.';
+  }
+
+  protected auditWorkflowStatusLabel() {
+    const audit = this.selectedAudit();
+    if (!audit) {
+      return 'No audit selected';
+    }
+    if (audit.status === 'COMPLETED' || audit.status === 'CLOSED') {
+      return 'Completed';
+    }
+    if (this.activeStep() === 'plan') {
+      return 'Planning';
+    }
+    if (!audit.isChecklistCompleted) {
+      return 'Checklist in progress';
+    }
+    if (this.unresolvedFindingCount()) {
+      return 'Routes still open';
+    }
+    return this.reviewStage() === 'closeout' ? 'Close-out in progress' : 'Ready for close-out';
+  }
+
   protected findingSeverityLabel(severity: FindingSeverity) {
     if (severity === 'MAJOR') return 'Major nonconformity';
     if (severity === 'MINOR') return 'Minor nonconformity';
@@ -3148,6 +3435,9 @@ export class AuditsPageComponent {
     if (finding.linkedCapaId) {
       return 'This finding already has a linked CAPA. Keep the corrective workflow and evidence trail current before closing the finding.';
     }
+    if (finding.linkedActionItemId) {
+      return 'This finding already has a linked lighter audit action. Use that action for follow-up evidence, then close the finding once the route is satisfactory.';
+    }
     if (finding.severity === 'MAJOR') {
       return 'A major nonconformity should move into CAPA so the audit trail shows formal corrective action ownership and verification.';
     }
@@ -3170,6 +3460,9 @@ export class AuditsPageComponent {
     if (finding.linkedCapaId) {
       return 'The finding has moved into CAPA. Continue that corrective route, then return here and close the finding when the CAPA evidence trail is in place.';
     }
+    if (finding.linkedActionItemId) {
+      return 'This finding already has a linked lighter audit action. Continue that follow-up route and close the finding when ownership and evidence are clear.';
+    }
     if (this.requiresCapaRoute(finding)) {
       return 'This nonconformity still needs a linked CAPA before the audit route is complete. Audit close-out should wait until that route is decided.';
     }
@@ -3182,6 +3475,9 @@ export class AuditsPageComponent {
     }
     if (finding.linkedCapaId) {
       return 'Keep the linked CAPA moving, then close the finding once the corrective path and evidence are under control.';
+    }
+    if (finding.linkedActionItemId) {
+      return 'Keep the linked audit action moving, then close the finding once the lighter follow-up route is under control.';
     }
     if (finding.severity === 'MAJOR') {
       return 'Raise CAPA before closure. Major findings should not stay on the lighter audit-action route.';
@@ -3199,6 +3495,9 @@ export class AuditsPageComponent {
     if (finding.linkedCapaId) {
       return 'This finding already has a linked CAPA. Keep that corrective route moving and close the finding only when the evidence trail is ready.';
     }
+    if (finding.linkedActionItemId) {
+      return 'This finding already has a linked lighter audit action. Keep that route moving and close the finding only when the follow-up is clearly assigned.';
+    }
     if (finding.severity === 'MAJOR') {
       return 'Major nonconformity: create CAPA. Audit action is not used for this route.';
     }
@@ -3215,7 +3514,7 @@ export class AuditsPageComponent {
     if (this.requiresCapaRoute(finding)) {
       return 'This finding belongs on the CAPA route, not the lighter audit-action route. Return to Findings and create CAPA for it there.';
     }
-    return 'Create the lighter follow-up action here, then return to Findings and close this finding once ownership and due date are set.';
+    return 'Use this page only as the overview for lighter audit actions. The main route still starts from the finding itself, where you can prepare the action and then close the finding once ownership and due date are set.';
   }
 
   protected auditReturnNavigation(finding?: AuditFinding | null): ReturnNavigation | null {
@@ -3768,6 +4067,7 @@ export class AuditsPageComponent {
     this.expandedChecklistId.set(null);
     this.pendingFindingChecklistId.set(null);
     this.selectedFindingId.set(historyState.returnToFindingId || null);
+    this.preparedActionFindingId.set(null);
     this.checklistNoteDrafts.set({});
     this.checklistBuilderOpen.set(false);
     this.draftActionTitle.set(null);
@@ -3833,6 +4133,7 @@ export class AuditsPageComponent {
         const currentStep = this.activeStep();
         const currentReviewStage = this.reviewStage();
         const currentSelectedFindingId = this.selectedFindingId();
+        const currentPreparedActionFindingId = this.preparedActionFindingId();
         this.loading.set(false);
         this.selectedAudit.set(audit);
         this.activeStep.set(options?.preserveStep ? currentStep : this.deriveStep(audit));
@@ -3841,6 +4142,11 @@ export class AuditsPageComponent {
           (audit.findings || []).some((finding) => finding.id === currentSelectedFindingId)
             ? currentSelectedFindingId
             : audit.findings?.[0]?.id ?? null
+        );
+        this.preparedActionFindingId.set(
+          (audit.findings || []).some((finding) => finding.id === currentPreparedActionFindingId)
+            ? currentPreparedActionFindingId
+            : null
         );
         this.checklistNoteDrafts.set(
           Object.fromEntries((audit.checklistItems || []).map((item) => [item.id, item.notes ?? '']))
