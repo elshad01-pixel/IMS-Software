@@ -220,37 +220,6 @@ async function main() {
     }
   });
 
-  if (seedDemoData) {
-    const additionalUsers = [
-      { email: 'quality.manager@demo.local', firstName: 'Quality', lastName: 'Manager', roleName: 'Manager' },
-      { email: 'internal.auditor@demo.local', firstName: 'Internal', lastName: 'Auditor', roleName: 'User' },
-      { email: 'ops.supervisor@demo.local', firstName: 'Operations', lastName: 'Supervisor', roleName: 'Manager' }
-    ];
-
-    for (const user of additionalUsers) {
-      await prisma.user.upsert({
-        where: {
-          tenantId_email: {
-            tenantId: tenant.id,
-            email: user.email
-          }
-        },
-        update: {
-          roleId: roleIds.get(user.roleName),
-          passwordHash
-        },
-        create: {
-          tenantId: tenant.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          passwordHash,
-          roleId: roleIds.get(user.roleName)
-        }
-      });
-    }
-  }
-
   await prisma.tenantSetting.upsert({
     where: {
       tenantId_key: {

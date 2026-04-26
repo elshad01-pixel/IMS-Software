@@ -40,6 +40,7 @@ type UserRow = {
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
+        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">Back to Start Here</a>
         <a *ngIf="mode() === 'list' && canWrite()" routerLink="/users/new" class="button-link">+ New user</a>
         <a *ngIf="mode() === 'detail' && selectedUser() && canWrite()" [routerLink]="['/users', selectedUser()?.id, 'edit']" class="button-link">Edit user</a>
         <a *ngIf="mode() !== 'list'" routerLink="/users" class="button-link secondary">Back to users</a>
@@ -283,6 +284,10 @@ export class UsersPageComponent implements OnInit, OnChanges {
   protected readonly error = signal('');
   protected readonly search = signal('');
   protected readonly statusFilter = signal('');
+
+  protected showStartHereBackLink() {
+    return this.route.snapshot.queryParamMap.get('from') === 'start-here';
+  }
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(120)]],

@@ -39,58 +39,63 @@ type SourceNavigation = { route: string[]; label: string };
           <div class="section-head">
             <div>
               <span class="section-eyebrow">Customer survey</span>
-              <h3>Issue survey from the register</h3>
-              <p class="subtle">Create customer records normally first. Use this register panel only when you want to send a survey link and review the live response position.</p>
+              <h3>Customer feedback links</h3>
+              <p class="subtle">Prepare a survey link when you need live customer feedback, then keep the response picture visible here.</p>
             </div>
           </div>
 
           <p class="feedback top-space" [class.is-empty]="!surveyError() && !surveyMessage()" [class.error]="!!surveyError()" [class.success]="!!surveyMessage() && !surveyError()">{{ surveyError() || surveyMessage() }}</p>
 
-          <div class="form-grid-2 top-space">
-            <label class="field">
-              <span>Customer</span>
-              <select [value]="selectedSurveyPartyId()" (change)="selectedSurveyPartyId.set(readSelectValue($event))">
-                <option value="">Select customer</option>
-                <option *ngFor="let item of customerParties()" [value]="item.id">{{ item.name }}</option>
-              </select>
-            </label>
-            <section class="guidance-card" *ngIf="selectedSurveyParty()">
-              <strong>{{ selectedSurveyParty()!.name }}</strong>
-              <p>
-                Responses: {{ selectedSurveyParty()?.surveySummary?.responseCount ?? 0 }}
-                | Open links: {{ selectedSurveyParty()?.surveySummary?.openRequestCount ?? 0 }}
-                | Average: {{ formatScore(selectedSurveyParty()?.surveySummary?.averageScore) }}
-              </p>
-              <small>Scale guide: 0-6 needs attention, 7-8 acceptable, 9-10 strong.</small>
-            </section>
+          <div class="survey-workspace top-space">
+            <div class="survey-primary page-stack">
+              <label class="field">
+                <span>Customer</span>
+                <select [value]="selectedSurveyPartyId()" (change)="selectedSurveyPartyId.set(readSelectValue($event))">
+                  <option value="">Select customer</option>
+                  <option *ngFor="let item of customerParties()" [value]="item.id">{{ item.name }}</option>
+                </select>
+              </label>
+
+              <form class="page-stack" [formGroup]="surveyRequestForm" (ngSubmit)="createSurveyRequest()">
+                <div class="form-grid-3">
+                  <label class="field"><span>Recipient name</span><input formControlName="recipientName" placeholder="Optional contact name"></label>
+                  <label class="field"><span>Recipient email</span><input formControlName="recipientEmail" placeholder="Optional email reference"></label>
+                  <label class="field"><span>Expiry date</span><input type="date" formControlName="expiresAt"></label>
+                </div>
+                <div class="button-row">
+                  <button type="submit" [disabled]="!selectedSurveyPartyId() || surveyRequestForm.invalid || surveySaving() || !canWrite()">{{ surveySaving() ? 'Preparing link...' : 'Prepare survey link' }}</button>
+                </div>
+              </form>
+
+              <section class="guidance-card" *ngIf="latestSurveyUrl()">
+                <strong>Latest survey link</strong>
+                <p class="survey-link">{{ latestSurveyUrl() }}</p>
+                <div class="button-row top-space">
+                  <a [href]="latestSurveyUrl()" target="_blank" rel="noopener noreferrer" class="button-link">Open survey</a>
+                  <button type="button" class="secondary" (click)="copyLatestSurveyLink()">Copy link</button>
+                </div>
+              </section>
+            </div>
+
+            <aside class="survey-secondary page-stack" *ngIf="selectedSurveyParty()">
+              <section class="guidance-card">
+                <strong>{{ selectedSurveyParty()!.name }}</strong>
+                <p>
+                  Responses: {{ selectedSurveyParty()?.surveySummary?.responseCount ?? 0 }}
+                  | Open links: {{ selectedSurveyParty()?.surveySummary?.openRequestCount ?? 0 }}
+                  | Average: {{ formatScore(selectedSurveyParty()?.surveySummary?.averageScore) }}
+                </p>
+                <small>Scale guide: 0-6 needs attention, 7-8 acceptable, 9-10 strong.</small>
+              </section>
+
+              <div class="compact-metric-grid" *ngIf="selectedSurveyParty()">
+                <article class="mini-metric" *ngFor="let metric of selectedSurveyPartyMetrics()">
+                  <span>{{ metric.label }}</span>
+                  <strong>{{ formatScore(metric.averageScore) }}</strong>
+                </article>
+              </div>
+            </aside>
           </div>
-
-          <div class="form-grid-4 top-space category-score-grid" *ngIf="selectedSurveyParty()">
-            <article class="mini-metric" *ngFor="let metric of selectedSurveyPartyMetrics()">
-              <span>{{ metric.label }}</span>
-              <strong>{{ formatScore(metric.averageScore) }}</strong>
-            </article>
-          </div>
-
-          <form class="page-stack top-space" [formGroup]="surveyRequestForm" (ngSubmit)="createSurveyRequest()">
-            <div class="form-grid-3">
-              <label class="field"><span>Recipient name</span><input formControlName="recipientName" placeholder="Optional contact name"></label>
-              <label class="field"><span>Recipient email</span><input formControlName="recipientEmail" placeholder="Optional email reference"></label>
-              <label class="field"><span>Expiry date</span><input type="date" formControlName="expiresAt"></label>
-            </div>
-            <div class="button-row">
-              <button type="submit" [disabled]="!selectedSurveyPartyId() || surveyRequestForm.invalid || surveySaving() || !canWrite()">{{ surveySaving() ? 'Preparing link...' : 'Prepare survey link' }}</button>
-            </div>
-          </form>
-
-          <section class="guidance-card top-space" *ngIf="latestSurveyUrl()">
-            <strong>Latest survey link</strong>
-            <p class="survey-link">{{ latestSurveyUrl() }}</p>
-            <div class="button-row top-space">
-              <a [href]="latestSurveyUrl()" target="_blank" rel="noopener noreferrer" class="button-link">Open survey</a>
-              <button type="button" class="secondary" (click)="copyLatestSurveyLink()">Copy link</button>
-            </div>
-          </section>
 
           <div class="entity-list top-space" *ngIf="selectedSurveyParty()?.surveyRequests?.length">
             <article class="entity-item" *ngFor="let item of selectedSurveyParty()?.surveyRequests || []">
@@ -168,35 +173,42 @@ type SourceNavigation = { route: string[]; label: string };
         <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
           <div class="section-head"><div><span class="section-eyebrow">Interested party</span><h3>{{ mode() === 'create' ? 'Create interested party' : 'Edit interested party' }}</h3><p class="subtle">Keep the record lightweight and link expectations in the dedicated register.</p></div></div>
           <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
-          <section class="feedback next-steps-banner success" *ngIf="message() && !error()">
-            <strong>{{ message() }}</strong>
-            <span>{{ nextStepsCopy() }}</span>
-            <div class="button-row top-space" *ngIf="mode() === 'edit' && selectedParty()">
-              <button type="button" (click)="createNeedFromParty()">Add need / expectation</button>
-              <a routerLink="/context" class="button-link tertiary">Review context</a>
-            </div>
-          </section>
-          <section class="detail-section">
-            <div class="form-grid-2">
-              <label class="field"><span>Name</span><input formControlName="name" placeholder="Regulator, customer group, supplier"></label>
-              <label class="field"><span>Type</span><select formControlName="type"><option *ngFor="let item of typeOptions" [value]="item">{{ labelize(item) }}</option></select></label>
-            </div>
-
-            <label class="field top-space"><span>Description</span><textarea formControlName="description" rows="5" placeholder="Optional context about this interested party"></textarea></label>
-
-            <div class="top-space content-guidance" *ngIf="selectedTypeGuide() as guide">
-              <div class="section-head compact-head">
-                <div>
-                  <h4>Starter examples</h4>
-                  <p class="subtle">Use one of these as a starting point, then rename it to fit your organization.</p>
+          <div class="workspace-layout">
+            <div class="primary-column page-stack">
+              <section class="feedback next-steps-banner success" *ngIf="message() && !error()">
+                <strong>{{ message() }}</strong>
+                <span>{{ nextStepsCopy() }}</span>
+                <div class="button-row top-space" *ngIf="mode() === 'edit' && selectedParty()">
+                  <button type="button" (click)="createNeedFromParty()">Add need / expectation</button>
+                  <a routerLink="/context" class="button-link tertiary">Review context</a>
                 </div>
-              </div>
-              <div class="chip-row">
-                <button type="button" class="chip-button" *ngFor="let example of guide.examples" (click)="applyPartyExample(example)">{{ example }}</button>
-              </div>
+              </section>
+
+              <section class="detail-section">
+                <div class="form-grid-2">
+                  <label class="field"><span>Name</span><input formControlName="name" placeholder="Regulator, customer group, supplier"></label>
+                  <label class="field"><span>Type</span><select formControlName="type"><option *ngFor="let item of typeOptions" [value]="item">{{ labelize(item) }}</option></select></label>
+                </div>
+
+                <label class="field top-space"><span>Description</span><textarea formControlName="description" rows="5" placeholder="Optional context about this interested party"></textarea></label>
+              </section>
             </div>
 
-          </section>
+            <aside class="secondary-column page-stack">
+              <section class="content-guidance" *ngIf="selectedTypeGuide() as guide">
+                <div class="section-head compact-head">
+                  <div>
+                    <h4>Starter examples</h4>
+                    <p class="subtle">Use one of these as a starting point, then rename it to fit your organization.</p>
+                  </div>
+                </div>
+                <div class="chip-row">
+                  <button type="button" class="chip-button" *ngFor="let example of guide.examples" (click)="applyPartyExample(example)">{{ example }}</button>
+                </div>
+              </section>
+            </aside>
+          </div>
+
           <div class="button-row">
             <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save interested party' }}</button>
             <a routerLink="/context/interested-parties" class="button-link secondary">Cancel</a>
@@ -258,6 +270,18 @@ type SourceNavigation = { route: string[]; label: string };
     </section>
   `,
   styles: [`
+    .workspace-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.95fr);
+      gap: 1rem;
+      align-items: start;
+    }
+    .survey-workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+      gap: 1rem;
+      align-items: start;
+    }
     .chip-row { display: flex; flex-wrap: wrap; gap: 0.6rem; }
     .chip-button {
       border: 1px solid var(--border-subtle);
@@ -294,6 +318,11 @@ type SourceNavigation = { route: string[]; label: string };
     .category-score-grid {
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     }
+    .compact-metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(120px, 1fr));
+      gap: 0.75rem;
+    }
     .mini-metric {
       border: 1px solid var(--border-subtle);
       border-radius: 1rem;
@@ -319,6 +348,12 @@ type SourceNavigation = { route: string[]; label: string };
       align-items: center;
       justify-content: space-between;
       gap: 0.75rem;
+    }
+    @media (max-width: 1040px) {
+      .workspace-layout,
+      .survey-workspace {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
   `]
 })

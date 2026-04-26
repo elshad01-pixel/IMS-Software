@@ -108,178 +108,186 @@ type ProcessCandidate = { id: string; name: string; referenceNo?: string | null;
             <div>
               <span class="section-eyebrow">{{ issueTypeLabel() }}</span>
               <h3>{{ mode() === 'create' ? 'Create record' : 'Edit record' }}</h3>
-              <p class="subtle">Keep the issue concise, then move naturally into risk assessment if treatment or monitoring is needed.</p>
+              <p class="subtle">Record the issue clearly first, then use links and follow-up only where they add value.</p>
             </div>
           </div>
 
           <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
-          <section class="feedback next-steps-banner success" *ngIf="message() && !error()">
-            <strong>{{ message() }}</strong>
-            <span>{{ nextStepsCopy() }}</span>
-          </section>
+          <div class="workspace-layout">
+            <div class="primary-column page-stack">
+              <section class="feedback next-steps-banner success" *ngIf="message() && !error()">
+                <strong>{{ message() }}</strong>
+                <span>{{ nextStepsCopy() }}</span>
+              </section>
 
-          <section class="detail-section">
-            <h4>Issue details</h4>
-            <div class="form-grid-2 top-space">
-              <label class="field"><span>Title</span><input formControlName="title" placeholder="Describe the issue"></label>
-              <label class="field"><span>Status</span><select formControlName="status"><option *ngFor="let item of statusOptions" [value]="item">{{ labelize(item) }}</option></select></label>
-            </div>
-            <label class="field top-space"><span>Description</span><textarea formControlName="description" rows="5" placeholder="Describe the internal or external issue"></textarea></label>
-            <label class="field top-space">
-              <span>Impact on business</span>
-              <textarea formControlName="impactOnBusiness" rows="3" placeholder="Describe the practical business effect if this issue is not addressed"></textarea>
-            </label>
-          </section>
+              <section class="detail-section">
+                <h4>Issue details</h4>
+                <p class="subtle section-copy">Capture the issue itself first. Keep the wording plain and specific so it can be understood later in management review.</p>
+                <div class="form-grid-2 top-space">
+                  <label class="field"><span>Title</span><input formControlName="title" placeholder="Describe the issue"></label>
+                  <label class="field"><span>Status</span><select formControlName="status"><option *ngFor="let item of statusOptions" [value]="item">{{ labelize(item) }}</option></select></label>
+                </div>
+                <label class="field top-space"><span>Description</span><textarea formControlName="description" rows="5" placeholder="Describe the internal or external issue"></textarea></label>
+                <label class="field top-space">
+                  <span>Impact on business</span>
+                  <textarea formControlName="impactOnBusiness" rows="3" placeholder="Describe the practical business effect if this issue is not addressed"></textarea>
+                </label>
+              </section>
 
-          <section class="detail-section">
-            <h4>Category and suggestions</h4>
-            <div class="form-grid-2 top-space">
-              <label class="field">
-                <span>Category</span>
-                <select [value]="selectedCategoryOption()" (change)="onCategoryOptionChange(readSelectValue($event))">
-                  <option value="">Choose a starter category</option>
-                  <option *ngFor="let category of categoryLabels()" [value]="category">{{ category }}</option>
-                  <option value="__custom__">Custom category</option>
-                </select>
-              </label>
-              <label class="field" *ngIf="customCategoryMode()">
-                <span>Custom category</span>
-                <input formControlName="category" placeholder="Enter a custom category">
-              </label>
-            </div>
-
-            <div class="top-space page-stack" *ngIf="libraryReady()">
-              <div class="content-guidance">
-                <div class="guidance-head">
-                  <div>
-                    <h5>Suggested issues</h5>
-                    <p class="subtle">Choose a starter suggestion, then edit it to match your organization.</p>
-                  </div>
+              <section class="detail-section">
+                <h4>Category and suggestions</h4>
+                <p class="subtle section-copy">Choose a simple category if it helps with review. Starter suggestions are optional, not required.</p>
+                <div class="form-grid-2 top-space">
+                  <label class="field">
+                    <span>Category</span>
+                    <select [value]="selectedCategoryOption()" (change)="onCategoryOptionChange(readSelectValue($event))">
+                      <option value="">Choose a starter category</option>
+                      <option *ngFor="let category of categoryLabels()" [value]="category">{{ category }}</option>
+                      <option value="__custom__">Custom category</option>
+                    </select>
+                  </label>
+                  <label class="field" *ngIf="customCategoryMode()">
+                    <span>Custom category</span>
+                    <input formControlName="category" placeholder="Enter a custom category">
+                  </label>
                 </div>
 
-                <div class="entity-list" *ngIf="suggestionsForCurrentCategory().length; else noIssueSuggestions">
-                  <div class="entity-item suggestion-card" *ngFor="let suggestion of suggestionsForCurrentCategory()">
-                    <div class="page-stack">
-                      <strong>{{ suggestion.title }}</strong>
-                      <small>{{ suggestion.description }}</small>
+                <div class="top-space page-stack" *ngIf="libraryReady()">
+                  <div class="content-guidance">
+                    <div class="guidance-head">
+                      <div>
+                        <h5>Suggested issues</h5>
+                        <p class="subtle">Choose a starter suggestion, then edit it to match your organization.</p>
+                      </div>
                     </div>
-                    <button type="button" class="button-link secondary compact" (click)="applySuggestion(suggestion)">Use suggestion</button>
+
+                    <div class="entity-list" *ngIf="suggestionsForCurrentCategory().length; else noIssueSuggestions">
+                      <div class="entity-item suggestion-card" *ngFor="let suggestion of suggestionsForCurrentCategory()">
+                        <div class="page-stack">
+                          <strong>{{ suggestion.title }}</strong>
+                          <small>{{ suggestion.description }}</small>
+                        </div>
+                        <button type="button" class="button-link secondary compact" (click)="applySuggestion(suggestion)">Use suggestion</button>
+                      </div>
+                    </div>
+                    <ng-template #noIssueSuggestions>
+                      <div class="empty-state compact-empty">
+                        <strong>{{ suggestionEmptyStateTitle() }}</strong>
+                        <span>{{ suggestionEmptyStateCopy() }}</span>
+                      </div>
+                    </ng-template>
                   </div>
                 </div>
-                <ng-template #noIssueSuggestions>
-                  <div class="empty-state compact-empty">
-                    <strong>{{ suggestionEmptyStateTitle() }}</strong>
-                    <span>{{ suggestionEmptyStateCopy() }}</span>
-                  </div>
-                </ng-template>
-              </div>
-            </div>
-          </section>
-
-          <section class="detail-section" *ngIf="mode() === 'edit' && selectedIssue()">
-            <div class="section-head compact-head">
-              <div>
-                <h4>Traceability</h4>
-                <p class="subtle">Keep this issue connected to the downstream records it shapes, without losing the Clause 4 context it started from.</p>
-              </div>
+              </section>
             </div>
 
-            <div class="summary-strip top-space">
-              <article class="summary-item">
-                <span>Status</span>
-                <strong>{{ labelize(selectedIssue()?.status || 'OPEN') }}</strong>
-              </article>
-              <article class="summary-item">
-                <span>Linked risks</span>
-                <strong>{{ riskLinks().length }}</strong>
-              </article>
-              <article class="summary-item">
-                <span>Linked processes</span>
-                <strong>{{ processLinks().length }}</strong>
-              </article>
-            </div>
-
-            <div class="button-row top-space">
-              <button type="button" class="secondary" (click)="createRiskFromIssue()">Create Risk</button>
-              <a *ngIf="firstRiskLinkPath()" [routerLink]="firstRiskLinkPath()" [state]="linkedRiskState()" class="button-link secondary">Open linked risk</a>
-              <a *ngIf="firstProcessLinkPath()" [routerLink]="firstProcessLinkPath()" [state]="linkedProcessState()" class="button-link tertiary">Open linked process</a>
-            </div>
-          </section>
-
-          <section class="detail-section" *ngIf="mode() === 'edit' && selectedIssue()">
-            <div class="section-head compact-head">
-              <div>
-                <h4>Linked risks</h4>
-                <p class="subtle">Risks raised from this issue stay visible here. Use the guided handoff to create a new risk when the issue needs assessment.</p>
-              </div>
-              <button type="button" class="button-link secondary compact" (click)="createRiskFromIssue()">Create Risk</button>
-            </div>
-
-            <div class="empty-state top-space" *ngIf="!riskLinks().length">
-              <strong>No linked risks</strong>
-              <span>Create the first risk from this issue when it needs formal assessment or mitigation tracking.</span>
-            </div>
-
-            <div class="entity-list top-space" *ngIf="riskLinks().length">
-              <div class="entity-item" *ngFor="let link of riskLinks()">
-                <div class="link-row">
+            <aside class="secondary-column page-stack" *ngIf="mode() === 'edit' && selectedIssue()">
+              <section class="detail-section support-section">
+                <div class="section-head compact-head">
                   <div>
-                    <strong>{{ link.title }}</strong>
-                    <small *ngIf="link.score !== null && link.score !== undefined">Risk score {{ link.score }}</small>
-                  </div>
-                  <div class="route-context">
-                    <span *ngIf="link.status" class="status-badge neutral">{{ labelize(link.status) }}</span>
-                    <a *ngIf="link.path && !link.missing" [routerLink]="link.path" [state]="linkedRiskState()" class="button-link secondary compact">Open</a>
-                    <button type="button" class="button-link tertiary compact" (click)="removeRiskLink(link.id)">Remove</button>
+                    <h4>Follow-up at a glance</h4>
+                    <p class="subtle">Use links only when this issue should stay visible in risk assessment or process review.</p>
                   </div>
                 </div>
-              </div>
-            </div>
-          </section>
 
-          <section class="detail-section" *ngIf="mode() === 'edit' && selectedIssue()">
-            <div class="section-head compact-head">
-              <div>
-                <h4>Linked processes</h4>
-                <p class="subtle">Link the relevant existing processes so Clause 4 context stays visible without duplicating process records.</p>
-              </div>
-            </div>
+                <div class="summary-strip top-space">
+                  <article class="summary-item">
+                    <span>Status</span>
+                    <strong>{{ labelize(selectedIssue()?.status || 'OPEN') }}</strong>
+                  </article>
+                  <article class="summary-item">
+                    <span>Linked risks</span>
+                    <strong>{{ riskLinks().length }}</strong>
+                  </article>
+                  <article class="summary-item">
+                    <span>Linked processes</span>
+                    <strong>{{ processLinks().length }}</strong>
+                  </article>
+                </div>
 
-            <div class="empty-state top-space" *ngIf="!processLinks().length">
-              <strong>No linked processes</strong>
-              <span>Link the process records that are shaped by this issue.</span>
-            </div>
+                <div class="button-row top-space">
+                  <button type="button" class="secondary" (click)="createRiskFromIssue()">Create Risk</button>
+                  <a *ngIf="firstRiskLinkPath()" [routerLink]="firstRiskLinkPath()" [state]="linkedRiskState()" class="button-link secondary">Open linked risk</a>
+                  <a *ngIf="firstProcessLinkPath()" [routerLink]="firstProcessLinkPath()" [state]="linkedProcessState()" class="button-link tertiary">Open linked process</a>
+                </div>
+              </section>
 
-            <div class="entity-list top-space" *ngIf="processLinks().length">
-              <div class="entity-item" *ngFor="let link of processLinks()">
-                <div class="link-row">
+              <section class="detail-section support-section">
+                <div class="section-head compact-head">
                   <div>
-                    <strong>{{ link.title }}</strong>
-                    <small *ngIf="link.subtitle">{{ link.subtitle }}</small>
+                    <h4>Linked risks</h4>
+                    <p class="subtle">Risks raised from this issue stay visible here.</p>
                   </div>
-                  <div class="route-context">
-                    <span *ngIf="link.status" class="status-badge neutral">{{ labelize(link.status) }}</span>
-                    <a *ngIf="link.path && !link.missing" [routerLink]="link.path" [state]="linkedProcessState()" class="button-link secondary compact">Open</a>
-                    <button type="button" class="button-link tertiary compact" (click)="removeProcessLink(link.id)">Remove</button>
+                  <button type="button" class="button-link secondary compact" (click)="createRiskFromIssue()">Create Risk</button>
+                </div>
+
+                <div class="empty-state top-space" *ngIf="!riskLinks().length">
+                  <strong>No linked risks</strong>
+                  <span>Create the first risk from this issue when it needs formal assessment or mitigation tracking.</span>
+                </div>
+
+                <div class="entity-list top-space" *ngIf="riskLinks().length">
+                  <div class="entity-item" *ngFor="let link of riskLinks()">
+                    <div class="link-row">
+                      <div>
+                        <strong>{{ link.title }}</strong>
+                        <small *ngIf="link.score !== null && link.score !== undefined">Risk score {{ link.score }}</small>
+                      </div>
+                      <div class="route-context">
+                        <span *ngIf="link.status" class="status-badge neutral">{{ labelize(link.status) }}</span>
+                        <a *ngIf="link.path && !link.missing" [routerLink]="link.path" [state]="linkedRiskState()" class="button-link secondary compact">Open</a>
+                        <button type="button" class="button-link tertiary compact" (click)="removeRiskLink(link.id)">Remove</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </section>
 
-            <div class="form-grid-2 top-space">
-              <label class="field">
-                <span>Process</span>
-                <select [value]="selectedProcessId()" (change)="selectedProcessId.set(readSelectValue($event))">
-                  <option value="">Select an existing process</option>
-                  <option *ngFor="let process of processCandidates()" [value]="process.id">{{ processLabel(process) }}</option>
-                </select>
-              </label>
-              <div class="button-row align-end">
-                <button type="button" [disabled]="!selectedProcessId() || processLinkSaving()" (click)="addProcessLink()">{{ processLinkSaving() ? 'Linking...' : 'Link process' }}</button>
-              </div>
-            </div>
-          </section>
+              <section class="detail-section support-section">
+                <div class="section-head compact-head">
+                  <div>
+                    <h4>Linked processes</h4>
+                    <p class="subtle">Link the existing processes shaped by this issue without duplicating process records.</p>
+                  </div>
+                </div>
+
+                <div class="empty-state top-space" *ngIf="!processLinks().length">
+                  <strong>No linked processes</strong>
+                  <span>Link the process records that are shaped by this issue.</span>
+                </div>
+
+                <div class="entity-list top-space" *ngIf="processLinks().length">
+                  <div class="entity-item" *ngFor="let link of processLinks()">
+                    <div class="link-row">
+                      <div>
+                        <strong>{{ link.title }}</strong>
+                        <small *ngIf="link.subtitle">{{ link.subtitle }}</small>
+                      </div>
+                      <div class="route-context">
+                        <span *ngIf="link.status" class="status-badge neutral">{{ labelize(link.status) }}</span>
+                        <a *ngIf="link.path && !link.missing" [routerLink]="link.path" [state]="linkedProcessState()" class="button-link secondary compact">Open</a>
+                        <button type="button" class="button-link tertiary compact" (click)="removeProcessLink(link.id)">Remove</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-grid-2 top-space">
+                  <label class="field">
+                    <span>Process</span>
+                    <select [value]="selectedProcessId()" (change)="selectedProcessId.set(readSelectValue($event))">
+                      <option value="">Select an existing process</option>
+                      <option *ngFor="let process of processCandidates()" [value]="process.id">{{ processLabel(process) }}</option>
+                    </select>
+                  </label>
+                  <div class="button-row align-end">
+                    <button type="button" [disabled]="!selectedProcessId() || processLinkSaving()" (click)="addProcessLink()">{{ processLinkSaving() ? 'Linking...' : 'Link process' }}</button>
+                  </div>
+                </div>
+              </section>
+            </aside>
+          </div>
 
           <div class="button-row">
             <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save record' }}</button>
@@ -294,6 +302,21 @@ type ProcessCandidate = { id: string; name: string; referenceNo?: string | null;
     .link-row { display: flex; justify-content: space-between; align-items: start; gap: 1rem; }
     .compact-head { align-items: center; }
     .align-end { align-items: end; justify-content: flex-start; }
+    .workspace-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.95fr);
+      gap: 1rem;
+      align-items: start;
+    }
+    .support-section {
+      padding: 1rem;
+      border: 1px solid var(--border-subtle);
+      border-radius: 1rem;
+      background: color-mix(in srgb, var(--surface-strong) 95%, white);
+    }
+    .section-copy {
+      margin: 0.35rem 0 0;
+    }
     .content-guidance {
       border: 1px solid var(--border-subtle);
       border-radius: 1rem;
@@ -307,6 +330,11 @@ type ProcessCandidate = { id: string; name: string; referenceNo?: string | null;
       justify-content: space-between;
       gap: 1rem;
       align-items: start;
+    }
+    @media (max-width: 1040px) {
+      .workspace-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
   `]
 })

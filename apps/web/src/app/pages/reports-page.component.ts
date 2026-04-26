@@ -32,8 +32,8 @@ type ReportFilterForm = FormGroup;
     <section class="page-grid">
       <iso-page-header
         [label]="'Reports'"
-        [title]="'Report downloads'"
-        [description]="'Download tenant-scoped CSV reports for operational records, compliance review, and follow-up tracking.'"
+        [title]="'Data exports'"
+        [description]="'Export operational data for review and analysis. These downloads are CSV exports, not formatted management reports.'"
         [breadcrumbs]="[{ label: 'Reports' }]"
       />
 
@@ -42,8 +42,8 @@ type ReportFilterForm = FormGroup;
           <div class="section-head">
             <div>
               <span class="section-eyebrow">Exports</span>
-              <h3>Available downloads</h3>
-              <p class="subtle">Each report uses current tenant data and downloads as a CSV file.</p>
+              <h3>Available exports</h3>
+              <p class="subtle">Each export uses current tenant data and downloads as a CSV file for analysis, review, or offline reporting.</p>
             </div>
           </div>
 

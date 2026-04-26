@@ -53,6 +53,7 @@ type ReturnNavigation = { route: string[]; label: string };
   template: `
     <section class="page-grid">
       <iso-page-header [label]="'Process Register'" [title]="pageTitle()" [description]="pageDescription()" [breadcrumbs]="breadcrumbs()">
+        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">Back to Start Here</a>
         <a *ngIf="mode() === 'list' && canWrite()" routerLink="/process-register/new" class="button-link">+ New process</a>
         <a *ngIf="mode() === 'detail' && selectedProcess() && canWrite()" [routerLink]="['/process-register', selectedId(), 'edit']" class="button-link">Edit process</a>
         <button *ngIf="mode() === 'detail' && selectedProcess() && canDelete()" type="button" class="button-link danger" (click)="archiveProcess()">Archive</button>
@@ -604,12 +605,16 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
   }
 
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: 'Process Register' }];
-    const base = [{ label: 'Process Register', link: '/process-register' }];
-    if (this.mode() === 'create') return [...base, { label: 'New process' }];
-    if (this.mode() === 'edit') return [...base, { label: this.selectedProcess()?.name || 'Process', link: `/process-register/${this.selectedId()}` }, { label: 'Edit' }];
-    return [...base, { label: this.selectedProcess()?.name || 'Process' }];
-  }
+      if (this.mode() === 'list') return [{ label: 'Process Register' }];
+      const base = [{ label: 'Process Register', link: '/process-register' }];
+      if (this.mode() === 'create') return [...base, { label: 'New process' }];
+      if (this.mode() === 'edit') return [...base, { label: this.selectedProcess()?.name || 'Process', link: `/process-register/${this.selectedId()}` }, { label: 'Edit' }];
+      return [...base, { label: this.selectedProcess()?.name || 'Process' }];
+    }
+
+    protected showStartHereBackLink() {
+      return this.route.snapshot.queryParamMap.get('from') === 'start-here';
+    }
 
   protected filteredProcesses() {
     const term = this.search().trim().toLowerCase();

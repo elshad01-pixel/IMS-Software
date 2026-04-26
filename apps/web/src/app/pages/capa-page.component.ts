@@ -69,7 +69,7 @@ type CapaRow = {
             <div>
               <span class="section-eyebrow">Register</span>
               <h3>CAPA register</h3>
-              <p class="subtle">A premium corrective and preventive action register for ownership, investigation, and closure readiness.</p>
+              <p class="subtle">CAPA manages root cause, corrective action, verification, and closure after a significant issue is raised.</p>
             </div>
           </div>
 
@@ -583,10 +583,10 @@ export class CapaPageComponent implements OnInit, OnChanges {
 
   protected pageDescription() {
     return {
-      list: 'A cleaner CAPA register for nonconformity ownership, investigation, and closure.',
-      create: 'Raise a new CAPA in a dedicated workflow instead of an overloaded split screen.',
-      detail: 'Review the problem, cause, actions, and closure evidence in one clear detail page.',
-      edit: 'Update CAPA content with a focused edit form.'
+      list: 'Use CAPA for formal corrective action: define the issue, confirm root cause, assign action, verify effectiveness, and close with evidence.',
+      create: 'Create a CAPA record for issues that need formal corrective action and tracked closure.',
+      detail: 'Review the problem, root cause, actions, verification, and closure evidence in one place.',
+      edit: 'Update the CAPA record while keeping the corrective-action trail clear.'
     }[this.mode()];
   }
 
@@ -633,23 +633,23 @@ export class CapaPageComponent implements OnInit, OnChanges {
 
   protected capaWorkflowHeadline(status: CapaStatus) {
     return {
-      OPEN: 'Define the nonconformity clearly',
-      INVESTIGATING: 'The record should now show containment and cause',
-      ACTION_PLANNED: 'Corrective action should be clearly designed',
-      IN_PROGRESS: 'Ownership and due-date follow-up are now critical',
-      VERIFIED: 'Effectiveness should be evidenced before closure',
+      OPEN: 'Start by defining the issue clearly',
+      INVESTIGATING: 'Capture containment and root cause',
+      ACTION_PLANNED: 'Plan the corrective action clearly',
+      IN_PROGRESS: 'Keep ownership and due dates visible',
+      VERIFIED: 'Confirm the action worked before closure',
       CLOSED: 'Closure should be supported by a clear summary'
     }[status];
   }
 
   protected capaWorkflowNarrative(status: CapaStatus) {
     return {
-      OPEN: 'Start with a precise problem statement and source so the CAPA can be reviewed consistently later.',
-      INVESTIGATING: 'Containment and root cause should be explicit before the CAPA progresses to action planning.',
-      ACTION_PLANNED: 'At this stage the corrective and preventive response should be clear enough to assign and monitor.',
-      IN_PROGRESS: 'Once actions are underway, owner accountability and due-date control become the main management focus.',
+      OPEN: 'Record the problem clearly so the team understands what happened and why formal corrective action is needed.',
+      INVESTIGATING: 'Containment and root cause should be clear before the CAPA moves into action planning.',
+      ACTION_PLANNED: 'The corrective response should now be clear enough to assign, track, and review.',
+      IN_PROGRESS: 'Once actions are underway, owner accountability and due-date control become the main focus.',
       VERIFIED: 'Verification should confirm that the action was effective, not only completed.',
-      CLOSED: 'A closed CAPA should explain what evidence supports closure and why recurrence is controlled.'
+      CLOSED: 'A closed CAPA should explain what evidence supports closure and why recurrence is now controlled.'
     }[status];
   }
 

@@ -98,6 +98,7 @@ type ReviewRecord = {
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
+        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">Back to Start Here</a>
         <a *ngIf="mode() === 'list' && canWrite()" routerLink="/management-review/new" class="button-link">+ New review meeting</a>
         <button *ngIf="mode() === 'detail' && selectedReview()" type="button" class="button-link secondary" [disabled]="generatingReport()" (click)="generateReport()">
           {{ generatingReport() ? 'Preparing PDF...' : 'Download PDF protocol' }}
@@ -472,6 +473,10 @@ export class ManagementReviewPageComponent {
   protected readonly changes = signal<ChangeSummaryRow[]>([]);
   protected readonly customerFeedback = signal<ContextFeedbackSummary | null>(null);
   protected readonly draftActionTitle = signal<string | null>(null);
+
+  protected showStartHereBackLink() {
+    return this.route.snapshot.queryParamMap.get('from') === 'start-here';
+  }
   protected readonly draftActionDescription = signal<string | null>(null);
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);

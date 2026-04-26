@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
@@ -79,7 +80,7 @@ type AiRuntimeConfig = {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, AttachmentPanelComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, AttachmentPanelComponent],
   template: `
     <section class="page-grid">
       <iso-page-header
@@ -87,7 +88,9 @@ type AiRuntimeConfig = {
         [title]="'Tenant configuration'"
         [description]="'Manage the live defaults that shape documents, risk assessment, KPIs, and role capabilities for this tenant.'"
         [breadcrumbs]="[{ label: 'Settings' }]"
-      />
+      >
+        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">Back to Start Here</a>
+      </iso-page-header>
 
       <section class="summary-strip settings-summary-strip" *ngIf="config() as current">
         <article class="summary-item">
@@ -644,6 +647,7 @@ export class SettingsPageComponent {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly activeSection = signal<'organization' | 'roles' | 'document' | 'risk' | 'kpi' | 'notifications' | 'ai' | 'implementation'>('organization');
   protected readonly config = signal<SettingsConfig | null>(null);
@@ -651,6 +655,10 @@ export class SettingsPageComponent {
   protected readonly savingSection = signal<string | null>(null);
   protected readonly message = signal('');
   protected readonly error = signal('');
+
+  protected showStartHereBackLink() {
+    return this.route.snapshot.queryParamMap.get('from') === 'start-here';
+  }
 
   protected readonly organizationForm = this.fb.nonNullable.group({
     companyName: ['', Validators.required],

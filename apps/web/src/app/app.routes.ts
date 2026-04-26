@@ -60,6 +60,7 @@ import {
   ChangeManagementListPageComponent
 } from './pages/change-management-page.component';
 import { ImplementationPageComponent } from './pages/implementation-page.component';
+import { NoAccessPageComponent } from './pages/no-access-page.component';
 
 export const appRoutes: Routes = [
   { path: 'login', component: LoginPageComponent },
@@ -71,6 +72,7 @@ export const appRoutes: Routes = [
     canActivateChild: [permissionGuard],
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      { path: 'no-access', component: NoAccessPageComponent },
       { path: 'dashboard', component: DashboardPageComponent, data: { permission: 'dashboard.read' } },
       { path: 'implementation', component: ImplementationPageComponent, data: { permission: 'dashboard.read' } },
       { path: 'documents', component: DocumentsRegisterPageComponent, data: { permission: 'documents.read' } },

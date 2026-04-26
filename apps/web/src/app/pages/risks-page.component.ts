@@ -83,6 +83,7 @@ type SourceContextNavigation = {
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
+        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">Back to Start Here</a>
         <a *ngIf="mode() === 'list' && canWrite()" routerLink="/risks/new" class="button-link">+ New record</a>
         <a *ngIf="mode() === 'detail' && selectedRisk() && canWrite()" [routerLink]="['/risks', selectedRisk()?.id, 'edit']" [state]="routeStateWithSource()" class="button-link">Edit {{ assessmentEntityLabel(selectedRisk()?.assessmentType || 'RISK').toLowerCase() }}</a>
         <button *ngIf="mode() === 'detail' && canDeleteRisk()" type="button" class="button-link danger" (click)="deleteRisk()">Delete {{ assessmentEntityLabel(selectedRisk()?.assessmentType || 'RISK').toLowerCase() }}</button>
@@ -749,6 +750,10 @@ export class RisksPageComponent implements OnInit, OnChanges {
   protected readonly error = signal('');
   protected readonly search = signal('');
   protected readonly statusFilter = signal<RiskLifecycleStatus | ''>('');
+
+  protected showStartHereBackLink() {
+    return this.route.snapshot.queryParamMap.get('from') === 'start-here';
+  }
   protected readonly assessmentTypeFilter = signal<RiskAssessmentType | ''>('');
   protected readonly sortBy = signal<RiskSortOption>('attention');
   protected readonly customCategoryMode = signal(false);

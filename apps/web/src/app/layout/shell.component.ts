@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 
 type NavItem = {
@@ -691,7 +690,6 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
   `]
 })
 export class ShellComponent {
-  private readonly api = inject(ApiService);
   protected readonly authStore = inject(AuthStore);
   protected readonly menuOpen = signal(false);
   protected readonly mobileNavOpen = signal(false);
@@ -699,15 +697,13 @@ export class ShellComponent {
   protected readonly sidebarHovered = signal(false);
   protected readonly compactViewport = signal(this.readCompactViewport());
   protected readonly collapsedGroups = signal<Record<string, boolean>>(this.readCollapsedGroups());
-  protected readonly implementationEnabled = signal(false);
   protected readonly navGroups: NavGroup[] = [
     {
-      key: 'overview',
-      label: 'Overview',
+      key: 'start',
+      label: 'Start',
       items: [
-        { path: '/dashboard', label: 'Dashboard', hint: 'Executive overview', icon: 'DB', exact: true, permission: 'dashboard.read' },
-        { path: '/implementation', label: 'Implementation', hint: 'PDCA setup and rollout', icon: 'IM', permission: 'dashboard.read' },
-        { path: '/reports', label: 'Reports', hint: 'Exports and summaries', icon: 'RP', permission: 'reports.read' }
+        { path: '/dashboard', label: 'Dashboard', hint: 'Workspace overview', icon: 'DB', exact: true, permission: 'dashboard.read' },
+        { path: '/implementation', label: 'Start Here', hint: 'Readiness and rollout path', icon: 'SH', permission: 'dashboard.read' }
       ]
     },
     {
@@ -715,13 +711,10 @@ export class ShellComponent {
       label: 'Planning',
       items: [
         { path: '/context', label: 'Context', hint: 'Clause 4 issues and parties', icon: 'CX', permission: 'context.read' },
-        { path: '/compliance-obligations', label: 'Obligations', hint: 'Legal and external requirements', icon: 'OB', permission: 'obligations.read' },
-        { path: '/change-management', label: 'Change Management', hint: 'Planned and reviewed changes', icon: 'CH', permission: 'change.read' },
-        { path: '/environmental-aspects', label: 'Environmental Aspects', hint: 'Aspects and impacts', icon: 'EA', permission: 'aspects.read' },
-        { path: '/hazards', label: 'Hazards', hint: 'Hazards and harm review', icon: 'HZ', permission: 'hazards.read' },
         { path: '/process-register', label: 'Process Register', hint: 'Business process links', icon: 'PR', permission: 'processes.read' },
         { path: '/risks', label: 'Risks', hint: 'Assessment and treatment', icon: 'RK', permission: 'risks.read' },
-        { path: '/kpis', label: 'KPIs', hint: 'Targets and trends', icon: 'KP', permission: 'kpis.read' }
+        { path: '/compliance-obligations', label: 'Obligations', hint: 'Legal and external requirements', icon: 'OB', permission: 'obligations.read' },
+        { path: '/compliance-obligations', label: 'Compliance Obligations', hint: 'Legal and external requirements', icon: 'OB', permission: 'obligations.read' }
       ]
     },
     {
@@ -729,8 +722,12 @@ export class ShellComponent {
       label: 'Operations',
       items: [
         { path: '/documents', label: 'Documents', hint: 'Controlled library', icon: 'DC', permission: 'documents.read' },
+        { path: '/training', label: 'Training', hint: 'Assignments and evidence', icon: 'TR', permission: 'training.read' },
         { path: '/external-providers', label: 'External Providers', hint: 'Supplier and service control', icon: 'EV', permission: 'providers.read' },
-        { path: '/training', label: 'Training', hint: 'Assignments and evidence', icon: 'TR', permission: 'training.read' }
+        { path: '/change-management', label: 'Change Management', hint: 'Planned and reviewed changes', icon: 'CH', permission: 'change.read' },
+        { path: '/incidents', label: 'Incidents', hint: 'Incidents and near misses', icon: 'IN', permission: 'incidents.read' },
+        { path: '/environmental-aspects', label: 'Environmental Aspects', hint: 'Aspects and impacts', icon: 'EA', permission: 'aspects.read' },
+        { path: '/hazards', label: 'Hazards', hint: 'Hazards and harm review', icon: 'HZ', permission: 'hazards.read' }
       ]
     },
     {
@@ -738,11 +735,18 @@ export class ShellComponent {
       label: 'Assurance',
       items: [
         { path: '/audits', label: 'Audits', hint: 'Plans and findings', icon: 'AU', permission: 'audits.read' },
-        { path: '/incidents', label: 'Incidents', hint: 'Incidents and near misses', icon: 'IN', permission: 'incidents.read' },
         { path: '/ncr', label: 'NCR', hint: 'Nonconformance control', icon: 'NC', permission: 'ncr.read' },
         { path: '/capa', label: 'CAPA', hint: 'Corrective workflows', icon: 'CP', permission: 'capa.read' },
-        { path: '/actions', label: 'Actions', hint: 'Global follow-up tracker', icon: 'AC', permission: 'action-items.read' },
-        { path: '/management-review', label: 'Management Review', hint: 'Meetings and decisions', icon: 'MR', permission: 'management-review.read' }
+        { path: '/actions', label: 'Actions', hint: 'Global follow-up tracker', icon: 'AC', permission: 'action-items.read' }
+      ]
+    },
+    {
+      key: 'leadership',
+      label: 'Leadership',
+      items: [
+        { path: '/kpis', label: 'KPIs', hint: 'Targets and trends', icon: 'KP', permission: 'kpis.read' },
+        { path: '/management-review', label: 'Management Review', hint: 'Meetings and decisions', icon: 'MR', permission: 'management-review.read' },
+        { path: '/reports', label: 'Reports', hint: 'Exports and summaries', icon: 'RP', permission: 'reports.read' }
       ]
     },
     {
@@ -758,17 +762,10 @@ export class ShellComponent {
     this.navGroups
       .map((group) => ({
         ...group,
-        items: group.items.filter((item) =>
-          (!item.permission || this.authStore.hasPermission(item.permission)) &&
-          (item.path !== '/implementation' || this.implementationEnabled())
-        )
+        items: group.items.filter((item) => !item.permission || this.authStore.hasPermission(item.permission))
       }))
       .filter((group) => group.items.length)
   );
-
-  constructor() {
-    this.loadImplementationVisibility();
-  }
 
   protected sidebarExpanded() {
     if (this.isCompactViewport()) {
@@ -829,13 +826,6 @@ export class ShellComponent {
   protected logout() {
     this.menuOpen.set(false);
     this.authStore.logout();
-  }
-
-  private loadImplementationVisibility() {
-    this.api.get<{ enabled: boolean }>('settings/implementation').subscribe({
-      next: (config) => this.implementationEnabled.set(config.enabled),
-      error: () => this.implementationEnabled.set(false)
-    });
   }
 
   @HostListener('window:resize')

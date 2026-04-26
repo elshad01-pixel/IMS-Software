@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
@@ -47,14 +47,15 @@ type ReturnNavigation = {
       <iso-page-header
         [label]="'Actions'"
         [title]="'Global action tracker'"
-        [description]="'Track follow-up from risks, incidents, hazards, environmental aspects, obligations, CAPA, change management, provider reviews, audits, and management review in one operational register.'"
+        [description]="'Actions track assigned follow-up from any module so owners, due dates, and status stay visible in one place.'"
         [breadcrumbs]="[{ label: 'Actions' }]"
       >
+        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">Back to Start Here</a>
         <a *ngIf="returnNavigation()" [routerLink]="returnNavigation()!.route" class="button-link secondary">Back to {{ returnNavigation()!.label }}</a>
       </iso-page-header>
 
       <section class="page-stack">
-        <section class="card detail-card" *ngIf="focusedAction() as focused">
+        <section class="card detail-card" *ngIf="focusedAction() as focused" #focusedActionPanel>
           <div class="section-head">
             <div>
               <span class="section-eyebrow">Focused action</span>
@@ -119,7 +120,7 @@ type ReturnNavigation = {
             <div>
               <span class="section-eyebrow">Register</span>
               <h3>Cross-module follow-up</h3>
-              <p class="subtle">A single action view for owners, due dates, status, and source context.</p>
+              <p class="subtle">Actions track assigned follow-up from audits, CAPA, risks, incidents, management review, and other modules.</p>
             </div>
           </div>
 
@@ -226,18 +227,25 @@ type ReturnNavigation = {
                   <th>Source</th>
                   <th>Owner</th>
                   <th>Due date</th>
-                  <th>Attention</th>
                   <th>Status</th>
                   <th *ngIf="canDeleteActions()">Admin</th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let action of sortedActions()" [class.focused-row]="focusedActionId() === action.id">
+                <tr
+                  *ngFor="let action of sortedActions()"
+                  [class.focused-row]="focusedActionId() === action.id"
+                  class="action-row"
+                  tabindex="0"
+                  (click)="focusAction(action)"
+                  (keydown.enter)="focusAction(action)"
+                  (keydown.space)="focusAction(action); $event.preventDefault()"
+                >
                   <td>
                     <div class="table-title">
                       <strong>{{ action.title }}</strong>
                       <small>{{ action.description || 'No description' }}</small>
-                      <small class="attention-copy" *ngIf="actionAttentionSummary(action) as attention">{{ attention }}</small>
+                      <small class="opened-indicator" *ngIf="focusedActionId() === action.id">Opened above</small>
                     </div>
                   </td>
                   <td>
@@ -245,17 +253,14 @@ type ReturnNavigation = {
                       <strong>{{ action.sourceLabel }}</strong>
                       <small>{{ action.sourceTitle }}</small>
                       <small *ngIf="sourceRoute(action) as route">
-                        <a [routerLink]="route" class="table-link">Open source record</a>
+                        <a [routerLink]="route" class="table-link" (click)="$event.stopPropagation()">Open source record</a>
                       </small>
                     </div>
                   </td>
                   <td>{{ action.owner ? action.owner.firstName + ' ' + action.owner.lastName : 'Unassigned' }}</td>
                   <td>{{ action.dueDate ? (action.dueDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
                   <td>
-                    <span class="status-badge" [ngClass]="attentionClass(action)">{{ attentionLabel(action) }}</span>
-                  </td>
-                  <td>
-                    <select [value]="action.status" [disabled]="!canWriteActions()" (change)="updateStatus(action, readStatus($event))">
+                    <select [value]="action.status" [disabled]="!canWriteActions()" (click)="$event.stopPropagation()" (change)="updateStatus(action, readStatus($event))">
                       <option>OPEN</option>
                       <option>IN_PROGRESS</option>
                       <option>DONE</option>
@@ -263,13 +268,15 @@ type ReturnNavigation = {
                     </select>
                   </td>
                   <td *ngIf="canDeleteActions()">
-                    <iso-icon-action-button
-                      [icon]="'delete'"
-                      [label]="'Delete action'"
-                      [variant]="'danger'"
-                      [disabled]="action.status === 'DONE'"
-                      (pressed)="deleteAction(action)"
-                    />
+                    <span (click)="$event.stopPropagation()">
+                      <iso-icon-action-button
+                        [icon]="'delete'"
+                        [label]="'Delete action'"
+                        [variant]="'danger'"
+                        [disabled]="action.status === 'DONE'"
+                        (pressed)="deleteAction(action)"
+                      />
+                    </span>
                   </td>
                 </tr>
               </tbody>
@@ -333,6 +340,15 @@ type ReturnNavigation = {
       background: rgba(36, 79, 61, 0.05);
     }
 
+    .action-row {
+      cursor: pointer;
+    }
+
+    .action-row:focus-visible {
+      outline: 2px solid rgba(36, 79, 61, 0.35);
+      outline-offset: -2px;
+    }
+
     .top-space {
       margin-top: 1rem;
     }
@@ -340,6 +356,11 @@ type ReturnNavigation = {
     .attention-copy {
       color: var(--brand-strong);
       font-weight: 700;
+    }
+
+    .opened-indicator {
+      color: var(--brand-strong);
+      font-weight: 800;
     }
 
     @media (max-width: 1100px) {
@@ -361,6 +382,7 @@ export class ActionsPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  @ViewChild('focusedActionPanel') private focusedActionPanel?: ElementRef<HTMLElement>;
 
   protected readonly users = signal<UserOption[]>([]);
   protected readonly actions = signal<ActionRecord[]>([]);
@@ -387,6 +409,10 @@ export class ActionsPageComponent {
     context: 'Context issue'
   }));
 
+  protected showStartHereBackLink() {
+    return this.route.snapshot.queryParamMap.get('from') === 'start-here';
+  }
+
   protected readonly filtersForm = this.fb.nonNullable.group({
     sourceType: [''],
     status: [''],
@@ -397,8 +423,14 @@ export class ActionsPageComponent {
   constructor() {
     this.api.get<UserOption[]>('users').subscribe((users) => this.users.set(users));
     this.route.queryParamMap.subscribe((params) => {
-      this.focusedActionId.set(params.get('focusActionId'));
+      const nextFocusedActionId = params.get('focusActionId');
+      const focusChanged = nextFocusedActionId !== this.focusedActionId();
+      this.focusedActionId.set(nextFocusedActionId);
       this.returnNavigation.set((history.state?.returnNavigation as ReturnNavigation | undefined) ?? null);
+      if (nextFocusedActionId && focusChanged) {
+        this.message.set('Selected action opened above.');
+        setTimeout(() => this.scrollToFocusedAction(), 0);
+      }
     });
     this.reload();
   }
@@ -468,28 +500,28 @@ export class ActionsPageComponent {
 
   protected followUpHeadline() {
     if (this.overdueCount() > 0) {
-      return 'Some follow-up is overdue';
+      return 'Some assigned follow-up is overdue';
     }
     if (this.ownerNeededCount() > 0) {
-      return 'Some follow-up needs ownership';
+      return 'Some actions still need an owner';
     }
     if (this.countByStatus('OPEN') > 0 || this.countByStatus('IN_PROGRESS') > 0) {
       return 'Follow-up is active across the system';
     }
-    return 'Follow-up is currently under control';
+    return 'Assigned follow-up is currently under control';
   }
 
   protected followUpNarrative() {
     if (this.overdueCount() > 0) {
-      return 'Use the overdue actions as the first management attention point. They represent follow-up that has already missed the committed due date.';
+      return 'Start with overdue actions first. They represent assigned follow-up that has already missed the committed due date.';
     }
     if (this.ownerNeededCount() > 0) {
       return 'Some actions are still open or in progress without a named owner. Assign responsibility before the next review cycle so follow-up does not stall.';
     }
     if (this.countByStatus('OPEN') > 0 || this.countByStatus('IN_PROGRESS') > 0) {
-      return 'Open and in-progress actions are visible here across risks, incidents, hazards, environmental aspects, obligations, provider reviews, change management, audits, CAPA, and management review so ownership stays clear.';
+      return 'Use this page to track assigned follow-up from any module so ownership, due dates, and status stay visible in one place.';
     }
-    return 'Current action records are either complete or not yet requiring additional intervention.';
+    return 'Current action records are either complete or not yet needing extra intervention.';
   }
 
   protected attentionHeadline(action: ActionRecord) {
@@ -599,7 +631,30 @@ export class ActionsPageComponent {
   }
 
   protected clearFocusedAction() {
-    void this.router.navigate(['/actions']);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { focusActionId: null },
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  protected focusAction(action: ActionRecord) {
+    if (this.focusedActionId() === action.id) {
+      this.scrollToFocusedAction();
+      return;
+    }
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { focusActionId: action.id },
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  private scrollToFocusedAction() {
+    this.focusedActionPanel?.nativeElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
   }
 
   private isOverdueRecord(action: ActionRecord) {

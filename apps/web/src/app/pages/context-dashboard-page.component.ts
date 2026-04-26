@@ -16,7 +16,7 @@ import { PageHeaderComponent } from '../shared/page-header.component';
       <iso-page-header
         [label]="'Clause 4'"
         [title]="'Context of Organization'"
-        [description]="'Keep internal and external issues, interested parties, needs, and risk links visible in one lightweight place.'"
+        [description]="'Manage the issues, parties, and expectations that shape the management system.'"
         [breadcrumbs]="[{ label: 'Context of Organization' }]"
       >
         <a *ngIf="canWrite()" routerLink="/context/internal-issues/new" class="button-link">+ New internal issue</a>
@@ -31,72 +31,15 @@ import { PageHeaderComponent } from '../shared/page-header.component';
       </section>
 
       <section *ngIf="canRead()" class="page-stack">
-        <div class="summary-grid">
-          <article class="card summary-card">
-            <div class="summary-copy">
-              <span>Internal Issues</span>
-              <small>Operational and organizational factors inside the IMS.</small>
-            </div>
-            <strong>{{ dashboard()?.summary?.internalIssues ?? 0 }}</strong>
-            <div class="summary-actions">
-              <a routerLink="/context/internal-issues" class="button-link secondary compact">Open Register</a>
-              <a *ngIf="canWrite()" routerLink="/context/internal-issues/new" class="button-link tertiary compact">Create</a>
-            </div>
-          </article>
-          <article class="card summary-card">
-            <div class="summary-copy">
-              <span>External Issues</span>
-              <small>Regulatory, supplier, market, and stakeholder factors.</small>
-            </div>
-            <strong>{{ dashboard()?.summary?.externalIssues ?? 0 }}</strong>
-            <div class="summary-actions">
-              <a routerLink="/context/external-issues" class="button-link secondary compact">Open Register</a>
-              <a *ngIf="canWrite()" routerLink="/context/external-issues/new" class="button-link tertiary compact">Create</a>
-            </div>
-          </article>
-          <article class="card summary-card">
-            <div class="summary-copy">
-              <span>Interested Parties</span>
-              <small>Customers, regulators, employees, suppliers, and others.</small>
-            </div>
-            <strong>{{ dashboard()?.summary?.interestedParties ?? 0 }}</strong>
-            <div class="summary-actions">
-              <a routerLink="/context/interested-parties" class="button-link secondary compact">Open Register</a>
-              <a *ngIf="canWrite()" routerLink="/context/interested-parties/new" class="button-link tertiary compact">Create</a>
-            </div>
-          </article>
-          <article class="card summary-card">
-            <div class="summary-copy">
-              <span>Needs & Expectations</span>
-              <small>What interested parties need or expect from the IMS.</small>
-            </div>
-            <strong>{{ dashboard()?.summary?.needsExpectations ?? 0 }}</strong>
-            <div class="summary-actions">
-              <a routerLink="/context/needs-expectations" class="button-link secondary compact">Open Register</a>
-              <a *ngIf="canWrite()" routerLink="/context/needs-expectations/new" class="button-link tertiary compact">Create</a>
-            </div>
-          </article>
-          <article class="card summary-card">
-            <div class="summary-copy">
-              <span>Customer Feedback</span>
-              <small>Completed survey responses and current voice-of-customer position.</small>
-            </div>
-            <strong>{{ customerFeedbackHeadline() }}</strong>
-            <div class="summary-actions">
-              <a routerLink="/context/interested-parties" class="button-link secondary compact">Open Register</a>
-            </div>
-          </article>
-        </div>
-
         <section class="card focus-card">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Clause 4 review focus</span>
+              <span class="section-eyebrow">Review focus</span>
               <h3>{{ reviewHeadline() }}</h3>
               <p class="subtle">{{ reviewNarrative() }}</p>
             </div>
           </div>
-          <div class="summary-strip top-space">
+          <div class="summary-strip compact-summary-strip top-space">
             <article class="summary-item">
               <span>Open</span>
               <strong>{{ recentIssueCount('OPEN') }}</strong>
@@ -109,6 +52,70 @@ import { PageHeaderComponent } from '../shared/page-header.component';
               <span>Resolved</span>
               <strong>{{ recentIssueCount('RESOLVED') }}</strong>
             </article>
+            <article class="summary-item">
+              <span>Customer feedback</span>
+              <strong>{{ customerFeedbackHeadline() }}</strong>
+            </article>
+          </div>
+        </section>
+
+        <section class="card areas-card">
+          <div class="section-head compact-head">
+            <div>
+              <span class="section-eyebrow">Context areas</span>
+              <h3>Open one working area at a time</h3>
+              <p class="subtle">Choose the register you want to review, then work inside that area without losing the Clause 4 view.</p>
+            </div>
+          </div>
+
+          <div class="areas-grid top-space">
+            <article class="area-card">
+              <div class="area-copy">
+                <span>Internal issues</span>
+                <p>Operational, organizational, and culture factors inside the business.</p>
+              </div>
+              <strong>{{ dashboard()?.summary?.internalIssues ?? 0 }}</strong>
+              <div class="area-actions">
+                <a routerLink="/context/internal-issues" class="button-link secondary compact">Open</a>
+                <a *ngIf="canWrite()" routerLink="/context/internal-issues/new" class="button-link tertiary compact">Add</a>
+              </div>
+            </article>
+
+            <article class="area-card">
+              <div class="area-copy">
+                <span>External issues</span>
+                <p>Regulatory, supplier, market, and stakeholder influences on the IMS.</p>
+              </div>
+              <strong>{{ dashboard()?.summary?.externalIssues ?? 0 }}</strong>
+              <div class="area-actions">
+                <a routerLink="/context/external-issues" class="button-link secondary compact">Open</a>
+                <a *ngIf="canWrite()" routerLink="/context/external-issues/new" class="button-link tertiary compact">Add</a>
+              </div>
+            </article>
+
+            <article class="area-card">
+              <div class="area-copy">
+                <span>Interested parties</span>
+                <p>Customers, regulators, employees, suppliers, and other key stakeholders.</p>
+              </div>
+              <strong>{{ dashboard()?.summary?.interestedParties ?? 0 }}</strong>
+              <div class="area-actions">
+                <a routerLink="/context/interested-parties" class="button-link secondary compact">Open</a>
+                <a *ngIf="canWrite()" routerLink="/context/interested-parties/new" class="button-link tertiary compact">Add</a>
+              </div>
+            </article>
+
+            <article class="area-card">
+              <div class="area-copy">
+                <span>Needs & expectations</span>
+                <p>The requirements and expectations that should stay visible in planning and review.</p>
+              </div>
+              <strong>{{ dashboard()?.summary?.needsExpectations ?? 0 }}</strong>
+              <div class="area-actions">
+                <a routerLink="/context/needs-expectations" class="button-link secondary compact">Open</a>
+                <a *ngIf="canWrite()" routerLink="/context/needs-expectations/new" class="button-link tertiary compact">Add</a>
+              </div>
+            </article>
           </div>
         </section>
 
@@ -117,7 +124,7 @@ import { PageHeaderComponent } from '../shared/page-header.component';
             <div>
               <span class="section-eyebrow">Recent issues</span>
               <h3>Latest context records</h3>
-              <p class="subtle">Review the latest internal and external issues, then continue into risk review or process visibility where needed.</p>
+              <p class="subtle">Review the latest internal and external issues, then continue into risk or process follow-up where needed.</p>
             </div>
           </div>
 
@@ -157,45 +164,66 @@ import { PageHeaderComponent } from '../shared/page-header.component';
       margin-top: 1rem;
     }
 
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.85rem;
-    }
-
     .focus-card {
       padding: 1.05rem;
     }
 
-    .summary-card {
+    .areas-card {
+      padding: 1.05rem;
+    }
+
+    .areas-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto auto;
-      align-items: center;
+      grid-template-columns: repeat(4, minmax(220px, 300px));
       gap: 0.9rem;
-      padding: 0.95rem 1.05rem;
+      justify-content: start;
+    }
+
+    .area-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.8rem 1rem;
+      align-items: start;
+      padding: 1rem;
+      border: 1px solid var(--border-subtle);
+      border-radius: 1rem;
+      background: color-mix(in srgb, var(--surface-strong) 94%, white);
+    }
+
+    .compact-summary-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 260px));
+      gap: 0.75rem;
+      justify-content: start;
+      align-items: stretch;
+    }
+
+    .compact-summary-strip .summary-item {
       min-height: 0;
     }
 
-    .summary-copy {
+    .area-copy {
       display: grid;
-      gap: 0.2rem;
+      gap: 0.3rem;
       min-width: 0;
     }
 
-    .summary-card span {
+    .area-card span {
       color: var(--muted);
       font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
 
-    .summary-copy small {
+    .area-copy p {
+      margin: 0;
       color: var(--muted);
       line-height: 1.35;
+      font-size: 0.92rem;
     }
 
-    .summary-card strong {
-      font-size: 1.85rem;
+    .area-card strong {
+      font-size: 1.75rem;
       line-height: 1;
       letter-spacing: -0.04em;
       color: var(--text-soft);
@@ -203,11 +231,11 @@ import { PageHeaderComponent } from '../shared/page-header.component';
       text-align: right;
     }
 
-    .summary-actions {
+    .area-actions {
       display: flex;
       gap: 0.45rem;
       flex-wrap: wrap;
-      justify-content: flex-end;
+      grid-column: 1 / -1;
     }
 
     .link-row {
@@ -217,15 +245,26 @@ import { PageHeaderComponent } from '../shared/page-header.component';
       align-items: start;
     }
 
+    .compact-head {
+      align-items: center;
+    }
+
     @media (max-width: 1100px) {
-      .summary-grid { grid-template-columns: minmax(0, 1fr); }
-      .summary-card { grid-template-columns: minmax(0, 1fr) auto; }
-      .summary-actions { grid-column: 1 / -1; justify-content: flex-start; }
+      .compact-summary-strip {
+        grid-template-columns: repeat(2, minmax(180px, 260px));
+      }
+
+      .areas-grid { grid-template-columns: repeat(2, minmax(240px, 1fr)); }
     }
 
     @media (max-width: 760px) {
-      .summary-card { grid-template-columns: minmax(0, 1fr); }
-      .summary-card strong { text-align: left; }
+      .compact-summary-strip {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .areas-grid { grid-template-columns: minmax(0, 1fr); }
+      .area-card { grid-template-columns: minmax(0, 1fr); }
+      .area-card strong { text-align: left; }
     }
   `]
 })

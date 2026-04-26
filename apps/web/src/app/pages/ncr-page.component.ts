@@ -74,7 +74,7 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
             <div>
               <span class="section-eyebrow">NCR log</span>
               <h3>Nonconformance log</h3>
-              <p class="subtle">Track nonconformances by severity, source, owner, due date, and current lifecycle.</p>
+              <p class="subtle">NCR records the nonconformance first, then keeps the investigation, action follow-up, and verification trail together.</p>
             </div>
           </div>
 
@@ -741,7 +741,7 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected canRead() { return this.authStore.hasPermission('ncr.read'); }
   protected canWrite() { return this.authStore.hasPermission('ncr.write'); }
   protected pageTitle() { return { list: 'Nonconformance log', create: 'Raise NCR', detail: this.selectedNcr()?.referenceNo || 'NCR detail', edit: this.selectedNcr()?.referenceNo || 'Edit NCR' }[this.mode()]; }
-  protected pageDescription() { return { list: 'Review NCRs by lifecycle, severity, source, owner, and due date.', create: 'Capture the nonconformance first, then continue the investigation from the record.', detail: 'Review overview, investigation, follow-up actions, verification, comments, attachments, and activity.', edit: 'Update the NCR without leaving the controlled workflow.' }[this.mode()]; }
+  protected pageDescription() { return { list: 'Use NCR to record the nonconformance, who owns it, what follow-up is needed, and whether verification is complete.', create: 'Capture the nonconformance first, then continue the investigation and corrective trail from the record.', detail: 'Review the nonconformance, investigation, follow-up actions, verification, comments, attachments, and activity.', edit: 'Update the NCR while keeping the investigation and verification trail clear.' }[this.mode()]; }
   protected breadcrumbs() {
     const crumbs: Array<{ label: string; link?: string }> = [{ label: 'NCR', link: '/ncr' }];
     if (this.mode() === 'create') crumbs.push({ label: 'New NCR' });
@@ -829,7 +829,7 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected ownerFilterCopy() {
     const processId = this.ownerProcessFilterId();
     if (!processId) {
-      return 'Select a process if you want to narrow the owner list to the process owner.';
+      return 'Select a process if you want to suggest the process owner as the most likely NCR owner.';
     }
     const process = this.processOptions().find((item) => item.id === processId);
     return process?.owner
@@ -840,7 +840,7 @@ export class NcrPageComponent implements OnInit, OnChanges {
     const record = this.selectedNcr();
     if (!record) {
       return this.mode() === 'create'
-        ? 'Next: review the saved NCR and continue the investigation from the record.'
+        ? 'Next: open the saved NCR and continue with investigation, actions, and verification from the record.'
         : 'Next: continue the NCR from the relevant workflow tab.';
     }
     if (record.status === 'OPEN' || record.status === 'UNDER_REVIEW') {

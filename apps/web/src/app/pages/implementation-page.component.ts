@@ -38,16 +38,23 @@ type PdcaCard = {
   modules: Array<{ label: string; route: string; hint: string }>;
 };
 
+type ReadinessChecklistCard = {
+  label: string;
+  hint: string;
+  route: string;
+  permission: string;
+};
+
 @Component({
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent],
   template: `
-    <section class="page-grid">
-      <iso-page-header
-        [label]="'Implementation'"
-        [title]="'PDCA setup and rollout'"
-        [description]="'Guide tenant rollout through PDCA, objective establishment, and the recommended module sequence without forcing mature companies into a second app.'"
-        [breadcrumbs]="[{ label: 'Implementation' }]"
+      <section class="page-grid">
+        <iso-page-header
+        [label]="'Start Here'"
+        [title]="'Implementation and readiness path'"
+        [description]="'Use this page as the first stop for tenant setup: review the core readiness checklist, then use the optional implementation workspace when guided rollout is needed.'"
+        [breadcrumbs]="[{ label: 'Start Here' }]"
       />
 
       <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">
@@ -63,9 +70,9 @@ type PdcaCard = {
         <section class="card implementation-intro implementation-card">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Start here</span>
-              <h3>Implementation workspace</h3>
-              <p class="subtle">Use this only when the tenant needs guided setup. Mature companies can keep it hidden and work directly in the operational modules.</p>
+              <span class="section-eyebrow">Launch point</span>
+              <h3>Start here</h3>
+              <p class="subtle">Use this page to orient a new tenant quickly. The readiness checklist stays available for everyone with workspace access, and the implementation workspace can remain optional for mature companies.</p>
             </div>
           </div>
 
@@ -89,10 +96,39 @@ type PdcaCard = {
           </div>
         </section>
 
+        <section class="card page-stack implementation-card">
+          <div class="section-head">
+            <div>
+              <span class="section-eyebrow">Readiness</span>
+              <h3>Core setup checklist</h3>
+              <p class="subtle">Walk through these essentials in order so the tenant has a clear first-use path before deeper rollout work begins.</p>
+            </div>
+          </div>
+
+          <div class="readiness-grid">
+            <article class="readiness-card" *ngFor="let item of readinessChecklist()">
+              <div class="readiness-card__top">
+                <span class="phase-pill readiness-pill">Setup</span>
+                <strong>{{ item.label }}</strong>
+              </div>
+              <p>{{ item.hint }}</p>
+              <a *ngIf="item.accessible; else lockedReadiness" class="readiness-link" [routerLink]="[item.route]" [queryParams]="{ from: 'start-here' }">Open</a>
+              <ng-template #lockedReadiness>
+                <span class="readiness-state">Needs access</span>
+              </ng-template>
+            </article>
+          </div>
+        </section>
+
+        <section class="card guidance-card implementation-card">
+          <strong>Recommended first-use flow</strong>
+          <p>Company profile -> Users -> Processes -> Documents -> Risks -> Audits -> NCR/CAPA -> KPIs -> Management Review.</p>
+        </section>
+
         <section class="card guidance-card implementation-card" *ngIf="!current.enabled">
           <strong>The implementation workspace is currently hidden for this tenant.</strong>
           <p>
-            That is useful for companies that already have ISO implemented and only need the operational modules. You can turn it back on later in
+            That is useful for companies that already have ISO implemented and only need the operational modules. This Start Here page still stays available for orientation, and you can turn the deeper rollout workspace back on later in
             <a [routerLink]="['/settings']">Settings</a>.
           </p>
         </section>
@@ -309,6 +345,65 @@ type PdcaCard = {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .readiness-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.9rem;
+    }
+
+    .readiness-card {
+      display: grid;
+      gap: 0.65rem;
+      min-height: 100%;
+      padding: 1rem;
+      border: 1px solid rgba(46, 67, 56, 0.08);
+      border-radius: 1rem;
+      background: rgba(252, 253, 250, 0.86);
+    }
+
+    .readiness-card__top {
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .readiness-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .readiness-pill {
+      min-width: 4.2rem;
+    }
+
+    .readiness-link,
+    .readiness-state {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.5rem;
+      width: fit-content;
+      padding: 0.55rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .readiness-link {
+      background: rgba(36, 79, 61, 0.1);
+      color: var(--brand-strong);
+    }
+
+    .readiness-link:hover {
+      background: rgba(36, 79, 61, 0.16);
+    }
+
+    .readiness-state {
+      background: rgba(113, 126, 118, 0.12);
+      color: var(--muted-strong);
+    }
+
     .pdca-grid {
       display: grid;
       gap: 1rem;
@@ -411,6 +506,7 @@ type PdcaCard = {
     }
 
     @media (max-width: 1180px) {
+      .readiness-grid,
       .pdca-grid {
         grid-template-columns: 1fr;
       }
@@ -422,6 +518,7 @@ type PdcaCard = {
       }
 
       .implementation-summary,
+      .readiness-grid,
       .module-chip-grid {
         grid-template-columns: 1fr;
       }
@@ -463,6 +560,12 @@ export class ImplementationPageComponent {
   });
 
   protected readonly completedChecklistCount = computed(() => this.config()?.checklist.filter((item) => item.done).length ?? 0);
+  protected readonly readinessChecklist = computed(() =>
+    this.readinessCards.map((item) => ({
+      ...item,
+      accessible: this.authStore.hasPermission(item.permission)
+    }))
+  );
   protected readonly objectiveReadinessLabel = computed(() => {
     const current = this.config()?.objectivePlan;
     if (!current) {
@@ -520,6 +623,17 @@ export class ImplementationPageComponent {
         { label: 'Management Review', route: '/management-review', hint: 'Decisions, resources, and system effectiveness' }
       ]
     }
+  ];
+  private readonly readinessCards: ReadinessChecklistCard[] = [
+    { label: 'Company profile', hint: 'Confirm tenant identity, numbering defaults, and system setup.', route: '/settings', permission: 'settings.read' },
+    { label: 'Users and roles', hint: 'Set access, ownership, and who will operate each module.', route: '/users', permission: 'users.read' },
+    { label: 'Process map', hint: 'Define the main processes and how they connect across the system.', route: '/process-register', permission: 'processes.read' },
+    { label: 'Controlled documents', hint: 'Load the policies, procedures, forms, and work instructions needed for operation.', route: '/documents', permission: 'documents.read' },
+    { label: 'Risks', hint: 'Capture key business, compliance, QHSE, and operational risks early.', route: '/risks', permission: 'risks.read' },
+    { label: 'Audits', hint: 'Set the audit programme and prepare how effectiveness will be checked.', route: '/audits', permission: 'audits.read' },
+    { label: 'NCR/CAPA/actions', hint: 'Make sure nonconformities, corrective action, and follow-up ownership are ready.', route: '/actions', permission: 'action-items.read' },
+    { label: 'KPIs', hint: 'Define the measures and thresholds that show whether the system is working.', route: '/kpis', permission: 'kpis.read' },
+    { label: 'Management review', hint: 'Prepare the leadership review path for decisions, resources, and improvement.', route: '/management-review', permission: 'management-review.read' }
   ];
 
   constructor() {

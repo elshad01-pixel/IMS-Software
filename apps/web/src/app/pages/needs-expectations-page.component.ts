@@ -42,6 +42,10 @@ type SourceNavigation = { route: string[]; label: string };
                 <p class="toolbar-title">Needs & expectations</p>
                 <p class="toolbar-copy">Keep stakeholder expectations visible without introducing complex workflow.</p>
               </div>
+              <div class="toolbar-stats">
+                <article class="toolbar-stat"><span>Total</span><strong>{{ needs().length }}</strong></article>
+                <article class="toolbar-stat"><span>Parties</span><strong>{{ interestedParties().length }}</strong></article>
+              </div>
             </div>
             <div class="filter-row standard-filter-grid">
               <label class="field compact-field">
@@ -84,30 +88,37 @@ type SourceNavigation = { route: string[]; label: string };
         <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
           <div class="section-head"><div><span class="section-eyebrow">Needs & expectations</span><h3>{{ mode() === 'create' ? 'Create record' : 'Edit record' }}</h3><p class="subtle">Capture a stakeholder need or expectation in plain language.</p></div></div>
           <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
-          <section class="feedback next-steps-banner success" *ngIf="message() && !error()">
-            <strong>{{ message() }}</strong>
-            <span>{{ nextStepsCopy() }}</span>
-            <div class="button-row top-space">
-              <a *ngIf="sourceNavigation()" [routerLink]="sourceNavigation()!.route" class="button-link secondary">Review {{ sourceNavigation()!.label }}</a>
-              <a routerLink="/context" class="button-link tertiary">Review context</a>
-            </div>
-          </section>
-          <section class="detail-section">
-            <label class="field"><span>Interested party</span><select formControlName="interestedPartyId"><option value="">Select a party</option><option *ngFor="let item of interestedParties()" [value]="item.id">{{ item.name }}</option></select></label>
-            <label class="field top-space"><span>Description</span><textarea formControlName="description" rows="6" placeholder="Describe the need or expectation"></textarea></label>
-
-            <div class="top-space content-guidance" *ngIf="suggestedNeeds().length">
-              <div class="section-head compact-head">
-                <div>
-                  <h4>Starter examples</h4>
-                  <p class="subtle">Choose a common expectation for this interested party type, then refine it as needed.</p>
+          <div class="workspace-layout">
+            <div class="primary-column page-stack">
+              <section class="feedback next-steps-banner success" *ngIf="message() && !error()">
+                <strong>{{ message() }}</strong>
+                <span>{{ nextStepsCopy() }}</span>
+                <div class="button-row top-space">
+                  <a *ngIf="sourceNavigation()" [routerLink]="sourceNavigation()!.route" class="button-link secondary">Review {{ sourceNavigation()!.label }}</a>
+                  <a routerLink="/context" class="button-link tertiary">Review context</a>
                 </div>
-              </div>
-              <div class="chip-row">
-                <button type="button" class="chip-button" *ngFor="let item of suggestedNeeds()" (click)="applyNeedExample(item)">{{ item }}</button>
-              </div>
+              </section>
+
+              <section class="detail-section">
+                <label class="field"><span>Interested party</span><select formControlName="interestedPartyId"><option value="">Select a party</option><option *ngFor="let item of interestedParties()" [value]="item.id">{{ item.name }}</option></select></label>
+                <label class="field top-space"><span>Description</span><textarea formControlName="description" rows="6" placeholder="Describe the need or expectation"></textarea></label>
+              </section>
             </div>
-          </section>
+
+            <aside class="secondary-column page-stack">
+              <section class="content-guidance" *ngIf="suggestedNeeds().length">
+                <div class="section-head compact-head">
+                  <div>
+                    <h4>Starter examples</h4>
+                    <p class="subtle">Choose a common expectation for this interested party type, then refine it as needed.</p>
+                  </div>
+                </div>
+                <div class="chip-row">
+                  <button type="button" class="chip-button" *ngFor="let item of suggestedNeeds()" (click)="applyNeedExample(item)">{{ item }}</button>
+                </div>
+              </section>
+            </aside>
+          </div>
           <div class="button-row">
             <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save need / expectation' }}</button>
             <a routerLink="/context/needs-expectations" class="button-link secondary">Cancel</a>
@@ -118,6 +129,12 @@ type SourceNavigation = { route: string[]; label: string };
     </section>
   `,
   styles: [`
+    .workspace-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.95fr);
+      gap: 1rem;
+      align-items: start;
+    }
     .chip-row { display: flex; flex-wrap: wrap; gap: 0.6rem; }
     .chip-button {
       border: 1px solid var(--border-subtle);
@@ -143,6 +160,11 @@ type SourceNavigation = { route: string[]; label: string };
       border-radius: 1rem;
       border: 1px solid rgba(47, 107, 69, 0.16);
       background: rgba(47, 107, 69, 0.08);
+    }
+    @media (max-width: 1040px) {
+      .workspace-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
   `]
 })

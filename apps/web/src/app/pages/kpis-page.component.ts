@@ -58,6 +58,7 @@ type KpiRecord = {
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
+        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">Back to Start Here</a>
         <a *ngIf="mode() === 'list'" routerLink="/kpis/new" class="button-link">+ New KPI</a>
         <a *ngIf="mode() === 'detail' && selectedKpi()" [routerLink]="['/kpis', selectedKpi()?.id, 'edit']" class="button-link">Edit KPI</a>
         <a *ngIf="mode() !== 'list'" routerLink="/kpis" class="button-link secondary">Back to KPIs</a>
@@ -269,6 +270,10 @@ export class KpisPageComponent {
   protected readonly saving = signal(false);
   protected readonly message = signal((history.state?.notice as string) || '');
   protected readonly error = signal('');
+
+  protected showStartHereBackLink() {
+    return this.route.snapshot.queryParamMap.get('from') === 'start-here';
+  }
 
   protected readonly kpiForm = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(160)]],

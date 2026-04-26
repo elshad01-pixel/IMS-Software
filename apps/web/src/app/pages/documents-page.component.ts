@@ -65,6 +65,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
+        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">Back to Start Here</a>
         <a *ngIf="mode() === 'list' && canWrite()" routerLink="/documents/new" class="button-link">+ New document</a>
         <a *ngIf="mode() === 'detail' && selectedDocument() && canWrite()" [routerLink]="['/documents', selectedDocument()?.id, 'edit']" class="button-link">Edit document</a>
         <button *ngIf="mode() === 'detail' && canArchiveDocument()" type="button" class="button-link secondary" (click)="archiveDocument()">Obsolete document</button>
@@ -78,7 +79,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
             <div>
               <span class="section-eyebrow">Register</span>
               <h3>Controlled document register</h3>
-              <p class="subtle">A premium document-control register for status, revision, and ownership without inline form clutter.</p>
+              <p class="subtle">Controlled documents are the live policies, procedures, forms, and instructions people use to run the system every day.</p>
             </div>
           </div>
 
@@ -153,7 +154,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
                     </div>
                   </td>
                   <td>{{ item.type }}</td>
-                  <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ item.status }}</span></td>
+                  <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ documentStatusLabel(item.status) }}</span></td>
                   <td>V{{ item.version }}.{{ item.revision }}</td>
                   <td>{{ item.reviewDueDate ? (item.reviewDueDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
                   <td>{{ item.updatedAt | date:'yyyy-MM-dd' }}</td>
@@ -170,7 +171,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
             <div>
               <span class="section-eyebrow">Metadata</span>
               <h3>{{ mode() === 'create' ? 'New controlled document' : 'Edit document' }}</h3>
-              <p class="subtle">Keep the record metadata focused here. Evidence and actions stay in dedicated panels once the record exists.</p>
+              <p class="subtle">Set the document identity, owner, and lifecycle here. Evidence and actions stay in dedicated panels once the record exists.</p>
             </div>
           </div>
 
@@ -220,10 +221,10 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
               <label class="field">
                 <span>Status</span>
                 <select formControlName="status">
-                  <option>DRAFT</option>
-                  <option>REVIEW</option>
-                  <option>APPROVED</option>
-                  <option>OBSOLETE</option>
+                  <option value="DRAFT">Draft</option>
+                  <option value="REVIEW">Review</option>
+                  <option value="APPROVED">Approved</option>
+                  <option value="OBSOLETE">Obsolete</option>
                 </select>
               </label>
             </div>
@@ -263,7 +264,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
                 <h3>{{ selectedDocument()?.title }}</h3>
                 <p class="subtle">{{ selectedDocument()?.code }} | {{ selectedDocument()?.type }}</p>
               </div>
-              <span class="status-badge" [ngClass]="statusClass(selectedDocument()?.status || 'DRAFT')">{{ selectedDocument()?.status }}</span>
+              <span class="status-badge" [ngClass]="statusClass(selectedDocument()?.status || 'DRAFT')">{{ documentStatusLabel(selectedDocument()?.status || 'DRAFT') }}</span>
             </div>
 
             <div class="summary-strip top-space">
@@ -470,6 +471,10 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
   protected readonly search = signal('');
   protected readonly statusFilter = signal('');
 
+  protected showStartHereBackLink() {
+    return this.route.snapshot.queryParamMap.get('from') === 'start-here';
+  }
+
   protected readonly form = this.fb.nonNullable.group({
     code: ['', [Validators.required, Validators.maxLength(40)]],
     title: ['', [Validators.required, Validators.maxLength(160)]],
@@ -517,10 +522,10 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
 
   protected pageDescription() {
     return {
-      list: 'A focused register for controlled documents, status control, and revision history.',
-      create: 'Create a new controlled document in a dedicated workflow without competing panels.',
-      detail: 'Review controlled metadata, move status forward, and manage evidence and actions.',
-      edit: 'Update document metadata in a dedicated editing view.'
+      list: 'Review controlled documents and move them through a simple lifecycle: Draft, Review, Approved, and Obsolete.',
+      create: 'Create a controlled document and prepare it for review, approval, and future revision control.',
+      detail: 'Review document details, confirm lifecycle status, and keep evidence and actions together with the record.',
+      edit: 'Update document details without losing the controlled lifecycle and revision history.'
     }[this.mode()];
   }
 
@@ -588,10 +593,10 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
   }
 
   protected documentStatusLabel(status: DocumentStatus) {
-    if (status === 'DRAFT') return 'Working draft';
-    if (status === 'REVIEW') return 'Under review';
-    if (status === 'APPROVED') return 'Controlled live version';
-    return 'Retained as obsolete';
+    if (status === 'DRAFT') return 'Draft';
+    if (status === 'REVIEW') return 'Review';
+    if (status === 'APPROVED') return 'Approved';
+    return 'Obsolete';
   }
 
   protected documentLifecycleSteps() {
@@ -617,23 +622,23 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
   }
 
   protected documentLifecycleHeading(status: DocumentStatus) {
-    if (status === 'DRAFT') return 'Draft control';
-    if (status === 'REVIEW') return 'Review control';
-    if (status === 'APPROVED') return 'Approved document control';
-    return 'Obsolete document control';
+    if (status === 'DRAFT') return 'Draft stage';
+    if (status === 'REVIEW') return 'Review stage';
+    if (status === 'APPROVED') return 'Approved stage';
+    return 'Obsolete stage';
   }
 
   protected documentLifecycleHint(status: DocumentStatus) {
     if (status === 'DRAFT') {
-      return 'Use draft while content is being prepared. Only draft records can be deleted if a document should be withdrawn before release.';
+      return 'Use Draft while the content is being prepared. This is the working version before review and approval.';
     }
     if (status === 'REVIEW') {
-      return 'Use review when the content is ready for checking and approval. Keep the revision note and supporting evidence current before approval.';
+      return 'Use Review when the content is ready to be checked and approved. Keep the revision note and supporting evidence current before approval.';
     }
     if (status === 'APPROVED') {
-      return 'Approved records represent the controlled live version. Keep the effective date and review due date current so periodic review stays visible.';
+      return 'Approved is the controlled live version in use. Keep the effective date and review due date current so periodic review stays visible.';
     }
-    return 'Obsolete keeps the historical record available for traceability. It should replace deletion once a live document has been superseded.';
+    return 'Obsolete keeps the old version available for traceability after it has been replaced by a new live document.';
   }
 
   protected detailLifecycleGuidance(status: DocumentStatus) {
