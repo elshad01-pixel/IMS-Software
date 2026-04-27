@@ -1,0 +1,1587 @@
+{
+  "common": {
+    "loading": "Yüklənir...",
+    "open": "Aç",
+    "save": "Yadda saxla",
+    "cancel": "Ləğv et",
+    "enabled": "Aktivdir",
+    "hidden": "Gizlidir",
+    "notLoaded": "Yüklənməyib",
+    "notSet": "Təyin edilməyib",
+    "notRecordedYet": "Hələ qeyd olunmayıb",
+    "inProgress": "Davam edir",
+    "language": "Dil",
+    "needsAccess": "Giriş tələb olunur",
+    "na": "mövcud deyil"
+  },
+  "shell": {
+    "brandTag": "ISO SaaS",
+    "brandTitle": "Vahid idarəetmə",
+    "brandDescription": "Sənədlər, risklər, auditlər, CAPA, icmallar, KPI-lar və təlim üçün əməliyyat nəzarəti.",
+    "pinShortPinned": "SAB",
+    "pinShortUnpinned": "SAB",
+    "pinLabelPinned": "Bərkidilib",
+    "pinLabelUnpinned": "Yan paneli bərkid",
+    "workspaceLabel": "İş sahəsi",
+    "workspaceName": "Vahid İdarəetmə Sistemi",
+    "unpinSidebar": "Yan paneli aç",
+    "pinSidebar": "Yan paneli bərkid",
+    "rolePrefix": "Rol",
+    "signOut": "Çıxış et",
+    "mobileNav": "MENYU",
+    "navGroups": {
+      "start": "Başlanğıc",
+      "planning": "Planlaşdırma",
+      "operations": "Əməliyyatlar",
+      "assurance": "Təminat",
+      "leadership": "Rəhbərlik",
+      "administration": "İdarəetmə"
+    },
+    "nav": {
+      "dashboard": { "label": "İdarəetmə paneli", "hint": "İş sahəsinə ümumi baxış" },
+      "startHere": { "label": "Buradan başlayın", "hint": "Hazırlıq və tətbiq yolu" },
+      "context": { "label": "Təşkilatın konteksti", "hint": "4-cü bənd məsələləri və tərəflər" },
+      "processRegister": { "label": "Proses reyestri", "hint": "Biznes proses əlaqələri" },
+      "risks": { "label": "Risklər və imkanlar", "hint": "Qiymətləndirmə və tədbirlər" },
+      "obligations": { "label": "Öhdəliklər", "hint": "Hüquqi və xarici tələblər" },
+      "complianceObligations": { "label": "Uyğunluq öhdəlikləri", "hint": "Hüquqi və xarici tələblər" },
+      "documents": { "label": "Sənədlər", "hint": "Nəzarətli kitabxana" },
+      "training": { "label": "Təlim və səriştə", "hint": "Tapşırıqlar və sübutlar" },
+      "externalProviders": { "label": "Təchizatçılar və podratçılar", "hint": "Təchizatçı və xidmət nəzarəti" },
+      "changeManagement": { "label": "Dəyişikliklərin idarə edilməsi", "hint": "Planlaşdırılmış və nəzərdən keçirilmiş dəyişikliklər" },
+      "incidents": { "label": "Hadisələr", "hint": "Hadisələr və az qala baş verənlər" },
+      "environmentalAspects": { "label": "Ekoloji aspektlər", "hint": "Aspektlər və təsirlər" },
+      "hazards": { "label": "Təhlükələr", "hint": "Təhlükə və zərər icmalı" },
+      "audits": { "label": "Auditlər", "hint": "Planlar və uyğunsuzluqlar" },
+      "ncr": { "label": "Uyğunsuzluqlar", "hint": "Uyğunsuzluğa nəzarət" },
+      "capa": { "label": "Düzəldici tədbirlər", "hint": "Düzəldici iş axınları" },
+      "actions": { "label": "Tapşırıqlar", "hint": "Qlobal izləmə siyahısı" },
+      "kpis": { "label": "Əsas performans göstəriciləri", "hint": "Hədəflər və trendlər" },
+      "managementReview": { "label": "Rəhbərliyin təhlili", "hint": "İclaslar və qərarlar" },
+      "reports": { "label": "Məlumat ixracı", "hint": "İxrac və xülasələr" },
+      "users": { "label": "İstifadəçilər", "hint": "Giriş və məsuliyyət" },
+      "settings": { "label": "Ayarlar", "hint": "Sistem konfiqurasiyası" }
+    }
+  },
+  "implementation": {
+    "page": {
+      "label": "Buradan başlayın",
+      "title": "Tətbiq və hazırlıq yolu",
+      "description": "Bu səhifədən tenant sazlamasının ilk dayanacağı kimi istifadə edin: əsas hazırlıq siyahısını yoxlayın, sonra istiqamətləndirilmiş tətbiq lazım olduqda əlavə tətbiq iş sahəsindən istifadə edin.",
+      "breadcrumb": "Buradan başlayın"
+    },
+    "feedback": {
+      "loadingTitle": "Tətbiq iş sahəsi yüklənir",
+      "loadingCopy": "Tenant tətbiq ayarları və məqsəd istiqamətləri gətirilir.",
+      "noWriteWorkspace": "Tətbiq iş sahəsini yeniləmək üçün icazəniz yoxdur.",
+      "noWriteChecklist": "Tətbiq yoxlama siyahısını yeniləmək üçün icazəniz yoxdur.",
+      "updated": "Tətbiq iş sahəsi yeniləndi.",
+      "loadError": "Tətbiq iş sahəsi yüklənə bilmədi.",
+      "saveError": "Tətbiq iş sahəsi yadda saxlanıla bilmədi."
+    },
+    "intro": {
+      "eyebrow": "Başlanğıc nöqtəsi",
+      "title": "Buradan başlayın",
+      "copy": "Yeni tenantı tez istiqamətləndirmək üçün bu səhifədən istifadə edin. Hazırlıq siyahısı iş sahəsinə çıxışı olan hər kəs üçün görünür, tətbiq iş sahəsi isə daha yetkin şirkətlər üçün opsional qala bilər."
+    },
+    "summary": {
+      "workspace": "İş sahəsi",
+      "startingPoint": "Başlanğıc nöqtəsi",
+      "checklistProgress": "Siyahı irəliləyişi",
+      "objectiveStarter": "Məqsəd başlanğıcı",
+      "readyToDeploy": "Tətbiqə hazırdır",
+      "needsSetup": "Sazlama tələb olunur"
+    },
+    "readiness": {
+      "eyebrow": "Hazırlıq",
+      "title": "Əsas sazlama siyahısı",
+      "copy": "Tenantın ilkin istifadə yolunu aydın etmək üçün daha dərin tətbiq işlərinə keçməzdən əvvəl bu əsas maddələri ardıcıllıqla keçin.",
+      "setupPill": "Sazlama",
+      "items": {
+        "companyProfile": { "label": "Şirkət profili", "hint": "Tenant kimliyini, nömrələmə standartlarını və sistem sazlamasını təsdiqləyin." },
+        "usersRoles": { "label": "İstifadəçilər və rollar", "hint": "Girişi, məsuliyyəti və hər modulu kimin işlədəcəyini təyin edin." },
+        "processMap": { "label": "Proses xəritəsi", "hint": "Əsas prosesləri və onların sistem boyunca necə bağlandığını müəyyən edin." },
+        "controlledDocuments": { "label": "Nəzarətli sənədlər", "hint": "Əməliyyat üçün lazım olan siyasətləri, prosedurları, formaları və təlimatları yükləyin." },
+        "risks": { "label": "Risklər", "hint": "Əsas biznes, uyğunluq, QHSE və əməliyyat risklərini erkən mərhələdə qeyd edin." },
+        "audits": { "label": "Auditlər", "hint": "Audit proqramını qurun və effektivliyin necə yoxlanacağını hazırlayın." },
+        "ncrCapaActions": { "label": "NCR/CAPA/tapşırıqlar", "hint": "Uyğunsuzluqların, düzəldici tədbirlərin və izləmə məsuliyyətinin hazır olduğuna əmin olun." },
+        "kpis": { "label": "KPI-lar", "hint": "Sistemin işlədiyini göstərən ölçüləri və hədləri müəyyən edin." },
+        "managementReview": { "label": "Rəhbərliyin təhlili", "hint": "Qərarlar, resurslar və təkmilləşdirmə üçün rəhbərlik təhlili yolunu hazırlayın." }
+      }
+    },
+    "guidance": {
+      "flowTitle": "Tövsiyə olunan ilk istifadə axını",
+      "flowCopy": "Şirkət profili -> İstifadəçilər -> Proseslər -> Sənədlər -> Risklər -> Auditlər -> NCR/CAPA -> KPI-lar -> Rəhbərliyin təhlili.",
+      "hiddenTitle": "Bu tenant üçün tətbiq iş sahəsi hazırda gizlidir.",
+      "hiddenCopy": "Bu, artıq ISO tətbiq etmiş və yalnız əməliyyat modullarına ehtiyacı olan şirkətlər üçün faydalıdır. Bu Buradan başlayın səhifəsi yenə də istiqamətləndirmə üçün əlçatan qalır və daha dərin tətbiq iş sahəsini sonradan yenidən",
+      "settingsLink": "Ayarlarda"
+    },
+    "profile": {
+      "eyebrow": "Profil",
+      "title": "Tətbiq profili",
+      "copy": "Sazlama kontekstini qısa və görünən saxlayın ki, tenant bu iş sahəsinin necə istifadə olunduğunu başa düşsün.",
+      "enable": "Tətbiq iş sahəsini aktiv et",
+      "startingPoint": "Başlanğıc nöqtəsi",
+      "rolloutOwner": "Tətbiq sahibi",
+      "targetStandards": "Hədəf standartlar",
+      "rolloutGoal": "Tətbiq məqsədi",
+      "startingPoints": {
+        "NEW_IMPLEMENTATION": "Yeni tətbiq",
+        "DIGITISING_EXISTING": "Mövcud sistemi rəqəmsallaşdırmaq",
+        "MATURING_EXISTING": "Artıq rəqəmsal sistemi yetkinləşdirmək"
+      },
+      "placeholders": {
+        "rolloutOwner": "Keyfiyyət meneceri",
+        "targetStandards": "ISO 9001, ISO 14001, ISO 45001",
+        "rolloutGoal": "2026-cı ilin 4-cü rübündə xarici sertifikatlaşdırma"
+      },
+      "save": "Tətbiq profilini yadda saxla",
+      "saving": "Yadda saxlanılır...",
+      "goalLabel": "Məqsəd"
+    },
+    "checklist": {
+      "eyebrow": "Siyahı",
+      "title": "Tətbiq mərhələləri",
+      "copy": "Yalnız yüksək səviyyəli sazlama. Bu hissə layihə planından daha yüngül qalmalı və sadəcə əsasların hazır olub-olmadığını göstərməlidir.",
+      "items": {
+        "scopeContext": "Əhatə dairəsini, konteksti və maraqlı tərəfləri müəyyən edin",
+        "policyDocuments": "Siyasətləri və nəzarətli sənəd strukturunu təsdiqləyin",
+        "objectivesKpis": "Məqsədləri, hədəfləri və KPI baxış məsuliyyətini müəyyən edin",
+        "processRisk": "Prosesləri xəritələyin və əsas riskləri, təhlükələri və aspektləri qiymətləndirin",
+        "operationsTraining": "Əməliyyat nəzarətlərini, təlimi və təchizatçı nəzarətini tətbiq edin",
+        "auditReview": "Daxili auditi həyata keçirin və rəhbərliyin təhlilini keçirin"
+      }
+    },
+    "objective": {
+      "eyebrow": "Məqsədlər",
+      "title": "Məqsəd qurulması üçün başlanğıc",
+      "copy": "Burada bir praktik başlanğıc məqsədi saxlayın, sonra canlı ölçünü və göstəriciləri KPI-lara köçürün.",
+      "focus": "Biznes fokusu",
+      "owner": "Məqsəd sahibi",
+      "statement": "Məqsəd ifadəsi",
+      "target": "Hədəf / ölçü",
+      "reviewFrequency": "Baxış tezliyi",
+      "linkedModule": "Əlaqəli modul",
+      "frequencies": {
+        "Monthly": "Aylıq",
+        "Quarterly": "Rüblük",
+        "Biannual": "Yarımillik",
+        "Annual": "İllik"
+      },
+      "modules": {
+        "KPIs": "Əsas performans göstəriciləri",
+        "Risks": "Risklər və imkanlar",
+        "Management Review": "Rəhbərliyin təhlili",
+        "Process Register": "Proses reyestri",
+        "Context": "Təşkilatın konteksti",
+        "Obligations": "Öhdəliklər",
+        "Documents": "Sənədlər",
+        "Training": "Təlim və səriştə",
+        "External Providers": "Təchizatçılar və podratçılar",
+        "Audits": "Auditlər",
+        "Incidents": "Hadisələr",
+        "Hazards": "Təhlükələr",
+        "Environmental Aspects": "Ekoloji aspektlər",
+        "NCR": "Uyğunsuzluqlar",
+        "CAPA": "Düzəldici tədbirlər",
+        "Actions": "Tapşırıqlar"
+      },
+      "placeholders": {
+        "focus": "Təchizatçı performansı və izləniləbilənlik",
+        "owner": "Əməliyyatlar meneceri",
+        "statement": "İlin sonuna qədər təchizatçı təsdiqinin vaxtında olmasını yaxşılaşdırın və izləniləbilənlik boşluqlarını azaldın.",
+        "target": "4-cü rübə qədər 95% təsdiqlənmiş təchizatçı göstəricisi"
+      },
+      "save": "Məqsəd başlanğıcını yadda saxla",
+      "saving": "Yadda saxlanılır...",
+      "openKpis": "KPI-ları aç",
+      "reviewCadence": "Baxış tezliyi"
+    },
+    "pdca": {
+      "eyebrow": "PDCA",
+      "title": "Tövsiyə olunan modul ardıcıllığı",
+      "copy": "PDCA-nı yenilənən başqa bir reyestr kimi deyil, tövsiyə olunan tətbiq ardıcıllığı kimi istifadə edin.",
+      "phases": {
+        "Plan": { "label": "Plan", "summary": "Qeydləri gündəlik istifadəyə keçirməzdən əvvəl idarəetmə sisteminin istiqamətini müəyyən edin." },
+        "Do": { "label": "Do", "summary": "Nəzarətləri, səriştəni və təchizatçı idarəetməsini gündəlik əməliyyatlara tətbiq edin." },
+        "Check": { "label": "Check", "summary": "Sistemin nəzərdə tutulduğu kimi işlədiyini yoxlamaq üçün sübutlardan, hadisələrdən və auditlərdən istifadə edin." },
+        "Act": { "label": "Act", "summary": "Uyğunsuzluqlardan, uğursuzluqlardan, dəyişikliklərdən və rəhbərlik qərarlarından təkmilləşdirmə aparın." }
+      },
+      "modules": {
+        "Context": "Əhatə dairəsi, məsələlər, maraqlı tərəflər və ehtiyaclar",
+        "Obligations": "Xarici və uyğunluq tələbləri",
+        "Risks": "Risk və imkan qiymətləndirilməsi",
+        "KPIs": "Məqsədlər, ölçülər və hədlər",
+        "Documents": "Siyasətlər, prosedurlar, formalar və təlimatlar",
+        "Process Register": "Proses sahibliyi və interfeyslər",
+        "Training": "Səriştə və tapşırıq izlənməsi",
+        "External Providers": "Təchizatçı və xidmət nəzarəti",
+        "Audits": "Proqram, icra, uyğunsuzluqlar və hesabatlar",
+        "Incidents": "Hadisələr, az qala baş verənlər və araşdırma",
+        "Hazards": "Əməyin mühafizəsi təhlükələrinin icmalı",
+        "Environmental Aspects": "Aspekt və təsir icmalı",
+        "NCR": "Uyğunsuzluğa nəzarət və araşdırma",
+        "CAPA": "Düzəldici tədbir iş axını",
+        "Actions": "Modullar arası izləmə siyahısı",
+        "Management Review": "Qərarlar, resurslar və sistemin effektivliyi"
+      }
+    }
+  },
+  "dashboard": {
+    "page": {
+      "label": "İdarəetmə paneli",
+      "title": "Vahid İdarəetmə Sistemi",
+      "description": "Keyfiyyət, ətraf mühit və əməyin mühafizəsi üçün strukturlaşdırılmış əməliyyat iş sahəsi.",
+      "supportingLine": "ISO 9001 • ISO 14001 • ISO 45001",
+      "breadcrumb": "İdarəetmə paneli"
+    },
+    "summary": {
+      "eyebrow": "Xülasə",
+      "title": "KPI xülasəsi",
+      "copy": "Əsas göstəricilər"
+    },
+    "controls": {
+      "eyebrow": "Nəzarətlər",
+      "title": "Panel görünüşü",
+      "module": "Modul",
+      "timeRange": "Zaman aralığı",
+      "chartType": "Qrafik növü"
+    },
+    "modules": {
+      "risks": "Risklər və imkanlar",
+      "capa": "Düzəldici tədbirlər",
+      "actions": "Tapşırıqlar",
+      "audits": "Auditlər",
+      "context": "Təşkilatın konteksti",
+      "feedback": "Müştəri rəyi"
+    },
+    "ranges": {
+      "month": "Bu ay",
+      "quarter": "Bu rüb",
+      "year": "Bu il",
+      "monthOption": "Ay",
+      "quarterOption": "Rüb",
+      "yearOption": "İl"
+    },
+    "chartTypes": {
+      "bar": "Sütun qrafiki",
+      "line": "Xətt qrafiki",
+      "pie": "Dairə qrafiki",
+      "donut": "Halqa qrafiki",
+      "barOption": "Sütun",
+      "lineOption": "Xətt",
+      "pieOption": "Dairə",
+      "donutOption": "Halqa"
+    },
+    "chart": {
+      "openModule": "{{module}} modulunu aç",
+      "moduleOverview": "{{module}} icmalı"
+    },
+    "metrics": {
+      "openRisks": { "label": "Açıq risklər", "copy": "Açıq" },
+      "openCapa": { "label": "Açıq CAPA", "copy": "Davam edir" },
+      "activeAudits": { "label": "Aktiv auditlər", "copy": "Davam edir" },
+      "overdueActions": { "label": "Gecikmiş tapşırıqlar", "copy": "Gecikib" },
+      "kpiBreaches": { "label": "Əsas performans göstəriciləri", "copy": "İzlənir" },
+      "customerFeedback": {
+        "label": "Müştəri rəyi",
+        "noData": "Məlumat yoxdur",
+        "awaiting": "Cavab gözlənilir",
+        "responses": "{{count}} cavab"
+      }
+    },
+    "mainMetrics": {
+      "risks": "Risk bölgüsü",
+      "capa": "Status bölgüsü",
+      "actions": "Status bölgüsü",
+      "audits": "Proqram statusu",
+      "context": "Məsələ bölgüsü",
+      "feedback": "Bal bölgüsü"
+    },
+    "status": {
+      "open": "Açıq",
+      "inProgress": "Davam edir",
+      "closed": "Bağlı",
+      "done": "Tamamlanıb",
+      "overdue": "Gecikib",
+      "planned": "Planlaşdırılıb",
+      "completed": "Tamamlanıb"
+    },
+    "watchlist": {
+      "title": "Modullar arası izləmə siyahısı",
+      "copy": "Hazırda diqqət tələb edən yeni ISO/QHSE modullarına qısa baxış.",
+      "items": {
+        "incidents": "Hadisələr",
+        "providers": "Təchizatçı baxışı",
+        "obligations": "Öhdəliklər",
+        "hazards": "Yüksək təhlükələr",
+        "aspects": "Yüksək aspektlər"
+      }
+    },
+    "breakdown": {
+      "title": "{{module}} bölgüsü",
+      "copy": "Əsas {{chart}} arxasındakı {{metric}} üzrə qısa görünüş."
+    },
+    "context": {
+      "internalIssues": "Daxili amillər",
+      "externalIssues": "Xarici amillər",
+      "interestedParties": "Maraqlı tərəflər",
+      "needs": "Ehtiyaclar"
+    },
+    "feedback": {
+      "low": "Diqqət tələb edir (0-6)",
+      "medium": "Qənaətbəxş (7-8)",
+      "high": "Güclü (9-10)",
+      "openLinks": "Açıq keçidlər"
+    },
+    "riskLevels": {
+      "low": "Aşağı",
+      "medium": "Orta",
+      "high": "Yüksək"
+    }
+  },
+  "contextDashboard": {
+    "page": {
+      "label": "4-cü bənd",
+      "title": "Təşkilatın konteksti",
+      "description": "İdarəetmə sistemini formalaşdıran məsələləri, tərəfləri və gözləntiləri idarə edin.",
+      "breadcrumb": "Təşkilatın konteksti"
+    },
+    "actions": {
+      "newInternalIssue": "Yeni daxili amil",
+      "newExternalIssue": "Yeni xarici amil",
+      "add": "Əlavə et"
+    },
+    "empty": {
+      "noAccessTitle": "Kontekstə giriş mövcud deyil",
+      "noAccessCopy": "Cari rolunuz context.read icazəsini əhatə etmir.",
+      "loadingTitle": "Kontekst paneli yüklənir",
+      "loadingCopy": "4-cü bənd qeydləri yenilənir.",
+      "noIssuesTitle": "Hələ heç bir məsələ qeyd olunmayıb",
+      "noIssuesCopy": "Daxili və ya xarici amil əlavə etməklə başlayın."
+    },
+    "focus": {
+      "eyebrow": "Baxış fokusu",
+      "open": "Açıq",
+      "monitoring": "Monitorinq",
+      "resolved": "Həll olunub",
+      "customerFeedback": "Müştəri rəyi",
+      "headlines": {
+        "open": "Açıq kontekst məsələləri hələ də aktiv baxış tələb edir",
+        "monitoring": "Kontekst monitorinq altındadır",
+        "stable": "4-cü bənd üzrə vəziyyət hazırda sabitdir"
+      },
+      "narratives": {
+        "open": "Açıq məsələləri rəhbərlik girişləri kimi istifadə edin. Lazım olduqda görünən izləmə üçün risk qiymətləndirilməsinə və ya proses baxışına davam edin.",
+        "monitoring": "Monitorinqdə olan məsələlər baxış üçün görünən qalır və vəziyyət pisləşərsə yenə də risklərə və ya proses dəyişikliklərinə yüksəldilə bilər.",
+        "stable": "Son kontekst qeydləri ya həll olunub, ya da hazırda dərhal rəhbərlik diqqəti tələb etmir."
+      }
+    },
+    "areas": {
+      "eyebrow": "Kontekst sahələri",
+      "title": "Bir vaxtda bir iş sahəsini açın",
+      "copy": "Baxmaq istədiyiniz reyestri seçin, sonra 4-cü bənd görünüşünü itirmədən həmin sahədə işləyin.",
+      "internalIssues": {
+        "label": "Daxili amillər",
+        "copy": "Biznes daxilində əməliyyat, təşkilati və mədəniyyət faktorları."
+      },
+      "externalIssues": {
+        "label": "Xarici amillər",
+        "copy": "IMS-ə təsir edən tənzimləyici, təchizatçı, bazar və maraqlı tərəf təsirləri."
+      },
+      "interestedParties": {
+        "label": "Maraqlı tərəflər",
+        "copy": "Müştərilər, tənzimləyicilər, işçilər, təchizatçılar və digər əsas tərəflər."
+      },
+      "needs": {
+        "label": "Ehtiyaclar və gözləntilər",
+        "copy": "Planlaşdırma və baxışda görünən qalmalı olan tələblər və gözləntilər."
+      }
+    },
+    "recent": {
+      "eyebrow": "Son amillər",
+      "title": "Ən son kontekst qeydləri",
+      "copy": "Son daxili və xarici amilləri nəzərdən keçirin, sonra ehtiyac olduqda risk və ya proses izlənməsinə davam edin.",
+      "internalIssue": "Daxili amil",
+      "externalIssue": "Xarici amil",
+      "linkedFollowUp": "Əlaqəli izləmə",
+      "links": {
+        "risks": "{{count}} risk",
+        "processes": "{{count}} proses"
+      }
+    },
+    "status": {
+      "open": "Açıq",
+      "monitoring": "Monitorinq",
+      "resolved": "Həll olunub",
+      "archived": "Arxivləşdirilib"
+    },
+    "errors": {
+      "load": "Kontekst paneli yüklənə bilmədi."
+    }
+  },
+  "documents": {
+    "page": {
+      "label": "Sənədlər",
+      "titles": {
+        "list": "Nəzarətli sənəd reyestri",
+        "create": "Nəzarətli sənəd yarat",
+        "detail": "Sənəd detalları",
+        "edit": "Sənədi redaktə et"
+      },
+      "descriptions": {
+        "list": "Nəzarətli sənədləri nəzərdən keçirin və onları sadə həyat dövrü üzrə idarə edin: Qaralama, Baxış, Təsdiqlənib və Köhnəlib.",
+        "create": "Nəzarətli sənəd yaradın və onu baxış, təsdiq və gələcək reviziya nəzarəti üçün hazırlayın.",
+        "detail": "Sənəd detallarını nəzərdən keçirin, həyat dövrü statusunu təsdiqləyin və sübutlarla tapşırıqları qeyd ilə birlikdə saxlayın.",
+        "edit": "Nəzarətli həyat dövrünü və reviziya tarixçəsini itirmədən sənəd detallarını yeniləyin."
+      },
+      "breadcrumbs": {
+        "new": "Yeni sənəd",
+        "document": "Sənəd",
+        "edit": "Redaktə"
+      }
+    },
+    "actions": {
+      "backToStartHere": "Buradan başlayın səhifəsinə qayıt",
+      "new": "Yeni sənəd",
+      "edit": "Sənədi redaktə et",
+      "obsolete": "Sənədi köhnəlmiş et",
+      "deleteDraft": "Qaralamanı sil",
+      "backToRegister": "Reyestrə qayıt"
+    },
+    "list": {
+      "eyebrow": "Reyestr",
+      "title": "Nəzarətli sənəd reyestri",
+      "copy": "Nəzarətli sənədlər insanların sistemi hər gün işlətmək üçün istifadə etdiyi canlı siyasətlər, prosedurlar, formalar və təlimatlardır.",
+      "filtersTitle": "Reyestr filtrləri",
+      "filtersCopy": "Kod, başlıq və ya növ üzrə axtarın, sonra baxış və ya reviziya nəzarəti üçün qeydi açın.",
+      "stats": {
+        "total": "Cəmi",
+        "approved": "Təsdiqlənib",
+        "inReview": "Baxışda"
+      },
+      "searchLabel": "Axtarış",
+      "searchPlaceholder": "Kod, başlıq və ya növ",
+      "statusLabel": "Status",
+      "allStatuses": "Bütün statuslar",
+      "loadingTitle": "Sənədlər yüklənir",
+      "loadingCopy": "Nəzarətli sənəd reyestri yenilənir.",
+      "emptyTitle": "Cari filtrə uyğun sənəd yoxdur",
+      "emptyCopy": "Axtarışı dəyişin və ya bu tenant üçün ilk nəzarətli sənədi yaradın.",
+      "table": {
+        "document": "Sənəd",
+        "type": "Növ",
+        "status": "Status",
+        "revision": "Reviziya",
+        "reviewDue": "Baxış tarixi",
+        "updated": "Yenilənib"
+      }
+    },
+    "form": {
+      "eyebrow": "Metadata",
+      "createTitle": "Yeni nəzarətli sənəd",
+      "editTitle": "Sənədi redaktə et",
+      "copy": "Sənədin kimliyini, sahibini və həyat dövrünü burada təyin edin. Qeyd yaradıldıqdan sonra sübutlar və tapşırıqlar ayrıca panellərdə qalır.",
+      "identityTitle": "Sənəd identifikasiyası",
+      "code": "Kod",
+      "type": "Növ",
+      "selectType": "Növ seçin",
+      "title": "Başlıq",
+      "titlePlaceholder": "Sənədləşdirilmiş məlumatın idarə olunması",
+      "summary": "Xülasə",
+      "summaryPlaceholder": "Məqsəd, əhatə dairəsi və istifadə məqsədi",
+      "lifecycleTitle": "Həyat dövrü və sahiblik",
+      "owner": "Sahib",
+      "unassigned": "Təyin edilməyib",
+      "effectiveDate": "Qüvvəyə minmə tarixi",
+      "reviewDueDate": "Baxış tarixi",
+      "changeSummary": "Dəyişiklik xülasəsi",
+      "changeSummaryPlaceholder": "Bu reviziyada nə dəyişdi",
+      "save": "Sənədi yadda saxla",
+      "saving": "Yadda saxlanılır..."
+    },
+    "detail": {
+      "eyebrow": "Nəzarətli qeyd",
+      "controlState": "Nəzarət vəziyyəti",
+      "currentRevision": "Cari reviziya",
+      "reviewDue": "Baxış tarixi",
+      "lifecyclePosition": "Həyat dövrü mövqeyi",
+      "reviewLifecycle": "Həyat dövrünə bax",
+      "reviewActions": "Tapşırıqlara bax",
+      "reviewEvidence": "Sübutlara bax",
+      "revisionNote": "Reviziya qeydi",
+      "noSummary": "Xülasə daxil edilməyib.",
+      "noRevisionNote": "Reviziya qeydi daxil edilməyib.",
+      "approvedAt": "Təsdiq tarixi",
+      "notApprovedYet": "Hələ təsdiqlənməyib",
+      "obsoletedAt": "Köhnəlmə tarixi",
+      "active": "Aktivdir",
+      "lastUpdated": "Son yenilənmə",
+      "lifecycleEyebrow": "Həyat dövrü",
+      "lifecycleTitle": "Həyat dövrü",
+      "lifecycleCopy": "Redaktoru açmadan qeydi baxış, təsdiq və köhnəlmə mərhələlərindən keçirin.",
+      "evidenceEyebrow": "Sübut izi",
+      "evidenceTitle": "Sənəd sübutları",
+      "evidenceCopy": "Dəstəkləyici faylları və əlaqəli tapşırıqları nəzarətli qeyd ilə birlikdə saxlayın ki, həyat dövrü baxışı və reviziya tarixçəsi asan izlənilsin."
+    },
+    "guidance": {
+      "detailLifecycle": {
+        "draft": "Növbəti nəzarət nöqtəsi: reviziya qeydini tamamlayın, sahiblik təyin edin və qaralama hazır olduqda sənədi baxışa keçirin.",
+        "reviewWithApprove": "Növbəti nəzarət nöqtəsi: sübut izinə baxın və məzmunla metadata tam olduqda sənədi təsdiqləyin.",
+        "reviewWithoutApprove": "Növbəti nəzarət nöqtəsi: sübutları və reviziya detallarını təsdiqləyin, sonra sənədi documents.approve icazəsi olan təsdiqləyənə yönləndirin.",
+        "approved": "Növbəti nəzarət nöqtəsi: baxış tarixlərini və əlaqəli tapşırıqları aktual saxlayın, sənəd əvəz olunanda qeydi silmək əvəzinə köhnəlmiş edin.",
+        "obsolete": "Növbəti nəzarət nöqtəsi: köhnəlmiş qeydi izlənəbilərlik üçün saxlayın və əvəz edən canlı sənədin reyestrdə mövcud olduğuna əmin olun."
+      },
+      "nextSteps": {
+        "approved": "Növbəti addım: sübutlara baxın, əlaqəli tapşırıqları təsdiqləyin və baxış tarixini aktual saxlayın.",
+        "review": "Növbəti addım: həyat dövrü mərhələsinə baxın, sübutların tam olduğunu təsdiqləyin və sənədi təsdiqə yaxınlaşdırın.",
+        "default": "Növbəti addım: həyat dövrü detallarını təsdiqləyin, sübutlara baxın və əlaqəli tapşırıqları aktual saxlayın."
+      },
+      "reviewDue": {
+        "overdueTitle": "Baxış gecikib",
+        "overdueCopy": "Bu nəzarətli sənəd {{date}} tarixində baxış müddətini keçib. Məzmunu nəzərdən keçirin, aktuallığını təsdiqləyin və ya yenidən işləyin, ya da yenidən təsdiqləyin.",
+        "soonTitle": "Baxış vaxtı yaxınlaşır",
+        "soonCopy": "Bu sənədin baxış tarixi {{date}}-dir. Tarix keçməzdən əvvəl sahibi, sübutları və reviziya qeydini təsdiqləyin."
+      }
+    },
+    "messages": {
+      "noPermission": "Sənədləri yeniləmək üçün icazəniz yoxdur.",
+      "completeRequired": "Tələb olunan sənəd sahələrini tamamlayın.",
+      "saved": "Sənəd uğurla yadda saxlanıldı.",
+      "saveFailed": "Sənəd yadda saxlanmadı.",
+      "confirmDeleteDraft": "Bu qaralama sənəd silinsin? Təsdiqlənmiş və köhnəlmiş sənədlər silinə bilməz.",
+      "deletedDraft": "Qaralama sənəd silindi.",
+      "deleteFailed": "Sənəd silinmədi.",
+      "confirmObsolete": "Bu təsdiqlənmiş sənəd köhnəlmiş edilsin? Bu, qeydi silmək əvəzinə izlənəbilərliyi qoruyur.",
+      "markedObsolete": "Sənəd köhnəlmiş kimi işarələndi.",
+      "obsolescenceFailed": "Sənəd köhnəlmiş edilə bilmədi.",
+      "statusUpdated": "Sənəd statusu yeniləndi."
+    },
+    "status": {
+      "draft": "Qaralama",
+      "review": "Baxış",
+      "approved": "Təsdiqlənib",
+      "obsolete": "Köhnəlib"
+    },
+    "lifecycle": {
+      "step1": "Addım 1",
+      "step2": "Addım 2",
+      "step3": "Addım 3",
+      "step4": "Addım 4",
+      "headings": {
+        "draft": "Qaralama mərhələsi",
+        "review": "Baxış mərhələsi",
+        "approved": "Təsdiq mərhələsi",
+        "obsolete": "Köhnəlmə mərhələsi"
+      },
+      "hints": {
+        "draft": "Məzmun hazırlanarkən Qaralama istifadə edin. Bu, baxış və təsdiqdən əvvəlki iş versiyasıdır.",
+        "review": "Məzmun yoxlama və təsdiq üçün hazır olduqda Baxış istifadə edin. Təsdiqdən əvvəl reviziya qeydi və sübutlar aktual saxlanmalıdır.",
+        "approved": "Təsdiqlənib istifadə olunan nəzarətli canlı versiyadır. Dövri baxış görünən qalsın deyə qüvvəyə minmə və baxış tarixlərini aktual saxlayın.",
+        "obsolete": "Köhnəlib, canlı sənəd yeni versiya ilə əvəz edildikdən sonra köhnə versiyanı izlenebilirlik üçün əlçatan saxlayır."
+      }
+    }
+  },
+  "risks": {
+    "page": {
+      "label": "Risklər və imkanlar",
+      "titles": {
+        "list": "Risk və imkan reyestri",
+        "create": "Qeyd yarat",
+        "detail": "Qeyd detalları",
+        "edit": "Qeydi redaktə et"
+      },
+      "descriptions": {
+        "list": "Qiymətləndirilmiş risklər və imkanlar, məsuliyyət, hədəf izləmə və əlaqəli tapşırıqlar üçün daha sakit bir reyestr.",
+        "create": "Reyestrlə redaktoru qarışdırmadan ayrıca səhifədə yeni risk və ya imkan əlavə edin.",
+        "detail": "Qiymətləndirməni, cari tapşırıqları və sübutları bir fokuslu detal görünüşündə nəzərdən keçirin.",
+        "edit": "Qiymətləndirməni və tədbir planını ayrıca redaktə axınında yeniləyin."
+      },
+      "breadcrumbs": {
+        "new": "Yeni risk",
+        "record": "Risk",
+        "edit": "Redaktə"
+      }
+    },
+    "actions": {
+      "backToStartHere": "Buradan başlayın səhifəsinə qayıt",
+      "new": "Yeni qeyd",
+      "edit": "{{entity}} redaktə et",
+      "delete": "{{entity}} sil",
+      "backToSource": "{{label}} səhifəsinə qayıt",
+      "backToRegister": "Reyestrə qayıt"
+    },
+    "list": {
+      "eyebrow": "Reyestr",
+      "title": "Risk reyestri",
+      "copy": "Risklər, imkanlar, tədbir sahibliyi, əlaqəli tapşırıqlar və canlı qiymətləndirmə üçün aydın korporativ reyestr.",
+      "filtersTitle": "Risk filtrləri",
+      "filtersCopy": "Başlıq və ya kateqoriya üzrə axtarın, sonra qiymətləndirmə, tapşırıqlar və sübutlar üçün qeydi açın.",
+      "stats": {
+        "total": "Cəmi",
+        "mitigationPlanned": "Azaltma planlaşdırılıb",
+        "highPriority": "Yüksək prioritet"
+      },
+      "searchLabel": "Axtarış",
+      "searchPlaceholder": "Başlıq və ya kateqoriya",
+      "typeLabel": "Növ",
+      "allRecords": "Bütün qeydlər",
+      "statusLabel": "Status",
+      "allStatuses": "Bütün statuslar",
+      "sortLabel": "Sırala",
+      "sort": {
+        "attention": "Diqqət",
+        "score": "Bal",
+        "targetDate": "Hədəf tarix",
+        "updated": "Yenilənib"
+      },
+      "loadingTitle": "Risklər yüklənir",
+      "loadingCopy": "Cari qiymətləndirmə və tədbir məlumatları yenilənir.",
+      "emptyTitle": "Cari filtrə uyğun qeyd yoxdur",
+      "emptyCopy": "Axtarışı dəyişin və ya bu tenant üçün ilk risk və ya imkan qeydini yaradın.",
+      "table": {
+        "record": "Risk",
+        "type": "Növ",
+        "assessment": "Qiymətləndirmə",
+        "status": "Status",
+        "attention": "Diqqət",
+        "target": "Hədəf"
+      },
+      "generalCategory": "Ümumi"
+    },
+    "form": {
+      "eyebrow": "Risk qiymətləndirməsi",
+      "createTitle": "Yeni {{entity}}",
+      "editTitle": "{{entity}} redaktə et",
+      "fromContextTitle": "Kontekst amilindən yaradılır",
+      "stillLinkedTitle": "Hələ də mənbə amili ilə əlaqəlidir",
+      "reviewSourceIssue": "Mənbə amilinə bax",
+      "contextTitle": "{{entity}} konteksti",
+      "title": "Başlıq",
+      "titlePlaceholder": "Təchizatçı çatdırılmasının dayanması",
+      "starterCategory": "Başlanğıc kateqoriya",
+      "chooseCategory": "Kateqoriya seçin",
+      "customCategory": "Fərdi kateqoriya",
+      "customCategoryPlaceholder": "Fərdi kateqoriya daxil edin",
+      "starterCategoryHint": "Başlanğıc kateqoriyalar {{entity}} növünə görə dəyişir. Yenə də fərdi kateqoriya daxil edə bilərsiniz.",
+      "description": "Təsvir",
+      "descriptionPlaceholder": "Nə baş verə bilər və niyə",
+      "issueContext": "Amil konteksti",
+      "notLinked": "Əlaqələndirilməyib",
+      "internalIssue": "Daxili amil",
+      "externalIssue": "Xarici amil",
+      "issueReference": "Amil istinadı",
+      "issueReferencePlaceholder": "Strateji təchizatçı asılılığı",
+      "owner": "Sahib",
+      "unassigned": "Təyin edilməyib",
+      "dueDate": "Son tarix",
+      "residualLabel": "Qalıq {{label}}",
+      "save": "{{entity}} yadda saxla",
+      "saving": "Yadda saxlanılır..."
+    },
+    "entity": {
+      "risk": "Risk",
+      "opportunity": "İmkan",
+      "riskPlural": "Risklər",
+      "opportunityPlural": "İmkanlar"
+    },
+    "assessment": {
+      "intro": {
+        "risk": "Qiymətləndirmə real IMS risk reyestri kimi oxunsun deyə ilkin riski, azaltma planını və qalıq risk baxışını ayrı saxlayın.",
+        "opportunity": "Qeyd asan izlənilsin deyə ilkin imkanı, reallaşdırma tədbirlərini və qalıq imkan baxışını ayrı saxlayın."
+      },
+      "initialHeading": {
+        "risk": "İlkin risk",
+        "opportunity": "İlkin imkan"
+      },
+      "likelihood": {
+        "risk": "Ehtimal",
+        "opportunity": "Reallaşma ehtimalı"
+      },
+      "impact": {
+        "risk": "Təsir",
+        "opportunity": "Fayda"
+      },
+      "likelihoodHint": {
+        "risk": "1-5 şkalası: 1 aşağı ehtimal, 5 çox yüksək ehtimal.",
+        "opportunity": "1-5 şkalası: 1 reallaşması az ehtimallı, 5 reallaşması çox yüksək ehtimallı."
+      },
+      "impactHint": {
+        "risk": "1-5 şkalası: 1 kiçik təsir, 5 ciddi təsir.",
+        "opportunity": "1-5 şkalası: 1 məhdud fayda, 5 böyük fayda."
+      },
+      "initialScore": {
+        "risk": "İlkin bal",
+        "opportunity": "İmkan balı"
+      },
+      "matrixRating": {
+        "risk": "5x5 matrisa dərəcəsi",
+        "opportunity": "5x5 prioritet dərəcəsi"
+      },
+      "residualHeading": {
+        "risk": "Qalıq risk",
+        "opportunity": "Qalıq imkan"
+      },
+      "residualScore": {
+        "risk": "Qalıq bal",
+        "opportunity": "Qalıq imkan balı"
+      },
+      "residualRating": {
+        "risk": "Qalıq dərəcə",
+        "opportunity": "Qalıq prioritet dərəcəsi"
+      }
+    },
+    "detail": {
+      "eyebrow": "Risk detalı",
+      "createAction": "Tapşırıq yarat",
+      "createMitigationAction": "Azaltma tapşırığı yarat",
+      "reviewEvidence": "Sübutlara bax",
+      "reviewRisks": "Risklərə bax",
+      "responsePosition": "Reaksiya mövqeyi",
+      "managementAttention": "Rəhbərlik diqqəti",
+      "noDescription": "Təsvir daxil edilməyib.",
+      "noIssueContext": "Amil konteksti əlaqələndirilməyib.",
+      "processContext": "Proses konteksti",
+      "noExistingControls": "Mövcud nəzarətlər qeyd edilməyib.",
+      "noPlannedActions": "Planlaşdırılmış tədbirlər qeyd edilməyib.",
+      "linkedActionsEyebrow": "Əlaqəli tapşırıqlar",
+      "sourceIssue": "Mənbə amili",
+      "openSource": "{{label}} aç",
+      "noSourceIssue": "Mənbə amili əlaqələndirilməyib.",
+      "noProcessLinked": "Proses əlaqələndirilməyib.",
+      "linkedActionsLabel": "Əlaqəli tapşırıqlar",
+      "openSourceIssue": "Mənbə amilini aç",
+      "reviewLinkedActions": "Əlaqəli tapşırıqlara bax",
+      "evidenceEyebrow": "Sübut izi",
+      "evidenceTitle": "İzlənəbilərlik",
+      "evidenceCopy": "Mənbə amilini, proses kontekstini, azaltma tapşırıqlarını və dəstəkləyici sübutları bu qeyd ilə uyğun saxlayın."
+    },
+    "lifecycle": {
+      "draft": "Qaralama",
+      "assessed": "Qiymətləndirilib",
+      "mitigation_planned": "Azaltma planlaşdırılıb",
+      "monitoring": "Monitorinq",
+      "closed": "Bağlı"
+    },
+    "levels": {
+      "notAssessed": "Qiymətləndirilməyib",
+      "low": "Aşağı",
+      "medium": "Orta",
+      "high": "Yüksək",
+      "lowPotential": "Aşağı potensial",
+      "mediumPotential": "Orta potensial",
+      "highPotential": "Yüksək potensial"
+    }
+  },
+  "audits": {
+    "common": {
+      "label": "Auditlər"
+    },
+    "page": {
+      "titleList": "Audit proqramı",
+      "titleCreate": "Audit planı yaradın",
+      "titleDetail": "Audit detalı",
+      "titleEdit": "Auditi redaktə edin",
+      "descriptionList": "Daxili və təchizatçı auditlərini planlaşdırın, yoxlama siyahısını icra edin, uyğunsuzluqları qeyd edin və sonrakı addımları izləyin.",
+      "descriptionCreate": "Əvvəlcə audit planını, gündəliyi və görüş qeydlərini qurun, sonra yoxlama siyahısına keçin.",
+      "descriptionDetail": "Audit planını nəzərdən keçirin, yoxlama siyahısını tamamlayın, hər bir tapıntı üçün növbəti addımı müəyyən edin və bağlanışı yekunlaşdırın.",
+      "descriptionEdit": "İcra detalları ilə qarışdırmadan audit məlumatlarını yeniləyin."
+    },
+    "breadcrumbs": {
+      "new": "Yeni audit",
+      "audit": "Audit",
+      "edit": "Redaktə"
+    },
+    "actions": {
+      "backToStartHere": "Buradan Başla səhifəsinə qayıt",
+      "new": "+ Yeni audit",
+      "questionBank": "Yoxlama sualları bankı",
+      "preparingPdf": "PDF hazırlanır...",
+      "downloadPdf": "PDF hesabatını yüklə",
+      "edit": "Auditi redaktə et",
+      "delete": "Auditi sil",
+      "archive": "Auditi arxivlə",
+      "backToList": "Auditlərə qayıt",
+      "savingPreparingChecklist": "Yadda saxlanır və AI yoxlama siyahısı hazırlanır...",
+      "saving": "Yadda saxlanır...",
+      "saveAndPrepareChecklist": "Auditi yadda saxla və AI yoxlama siyahısı hazırla",
+      "save": "Auditi yadda saxla"
+    },
+    "list": {
+      "eyebrow": "Proqram",
+      "title": "Daxili və təchizatçı auditləri",
+      "copy": "Auditləri planlaşdırın, yoxlama siyahısı ilə işləyin, tapıntıları qeyd edin və uyğun sonrakı addımı bir yerdə idarə edin.",
+      "sortBy": "Sırala",
+      "sortOptions": {
+        "attention": "Diqqət",
+        "auditDate": "Audit tarixi",
+        "updated": "Yenilənmə",
+        "programme": "Proqram"
+      },
+      "loadingTitle": "Auditlər yüklənir",
+      "loadingCopy": "Cari audit planları, yoxlama siyahısı gedişi və tapıntılar yenilənir.",
+      "table": {
+        "audit": "Audit",
+        "programme": "Proqram",
+        "type": "Növ",
+        "auditDate": "Audit tarixi",
+        "status": "Status",
+        "checklist": "Yoxlama siyahısı",
+        "findingsFollowUp": "Tapıntılar üzrə izləmə",
+        "attention": "Diqqət"
+      },
+      "notAssigned": "Təyin edilməyib",
+      "scopeTypeNotSet": "Əhatə növü təyin edilməyib",
+      "total": "Cəmi {{count}}",
+      "auditDate": {
+        "notSet": "Təyin edilməyib",
+        "completed": "Tamamlanma tarixi",
+        "scheduled": "Planlaşdırılmış tarix",
+        "started": "Başlama tarixi",
+        "none": "Audit tarixi yoxdur"
+      },
+      "followUp": {
+        "none": "Tapıntı yoxdur",
+        "open": "{{count}} açıq",
+        "closed": "{{count}} bağlanıb",
+        "openClosed": "{{open}} açıq | {{closed}} bağlanıb"
+      },
+      "attention": {
+        "underControl": "Nəzarət altındadır",
+        "auditOverdue": "Audit gecikib",
+        "findingsStillOpen": "Tapıntılar hələ açıqdır",
+        "ownerNeeded": "Məsul şəxs lazımdır",
+        "executionStalled": "İcra dayanıb"
+      }
+    },
+    "form": {
+      "eyebrow": "Audit quruluşu",
+      "createTitle": "Audit planı yaradın",
+      "editTitle": "Audit planını redaktə edin",
+      "copy": "Əvvəlcə audit planını qurun. Daxili auditlər ISO əsaslı sualları öncədən yükləyə bilər, təchizatçı auditləri isə daha sadə və sərbəst qala bilər.",
+      "fields": {
+        "code": "Kod",
+        "auditType": "Audit növü",
+        "title": "Başlıq",
+        "isoStandard": "ISO standartı",
+        "auditProgramme": "Audit proqramı",
+        "scopeType": "Əhatə növü",
+        "scope": "Əhatə"
+      },
+      "placeholders": {
+        "title": "Satınalma prosesi auditi",
+        "programme": "2026 daxili audit proqramı",
+        "scope": "Audit olunan proses, sahə, təchizatçı və ya funksiya"
+      },
+      "selectStandard": "Standartı seçin",
+      "errors": {
+        "selectStandard": "Daxili auditlər üçün ISO standartını seçin."
+      }
+    },
+    "types": {
+      "internalAudit": "Daxili audit",
+      "supplierAudit": "Təchizatçı auditi"
+    },
+    "scopeTypes": {
+      "companyWide": "Şirkət üzrə",
+      "department": "Şöbə",
+      "process": "Proses",
+      "site": "Sahə",
+      "supplier": "Təchizatçı"
+    },
+    "status": {
+      "PLANNED": "Planlaşdırılıb",
+      "IN_PROGRESS": "İcradadır",
+      "CHECKLIST_COMPLETED": "Yoxlama siyahısı tamamlanıb",
+      "COMPLETED": "Tamamlanıb",
+      "CLOSED": "Bağlanıb"
+    },
+    "severity": {
+      "OBSERVATION": "Müşahidə",
+      "OPPORTUNITY": "Təkmilləşdirmə imkanı",
+      "MINOR": "Kiçik uyğunsuzluq",
+      "MAJOR": "Böyük uyğunsuzluq"
+    },
+    "findingStatus": {
+      "OPEN": "Açıq",
+      "CLOSED": "Bağlanıb",
+      "CAPA_CREATED": "CAPA yaradılıb"
+    },
+    "detail": {
+      "summary": { "checklist": "Yoxlama siyahısı", "findings": "Tapıntılar", "openFindings": "Açıq tapıntılar" },
+      "currentStep": "Cari addım",
+      "unresolvedNextSteps": "{{count}} növbəti addım hələ açıqdır",
+      "readyForCloseout": "Bağlanışa hazırdır",
+      "procedureChecklist": { "title": "Prosedura üzrə xüsusi yoxlama siyahısı istifadədədir", "auditArea": "Audit sahəsi", "procedure": "Prosedur", "checklist": "Yoxlama siyahısı" },
+      "actions": { "startAudit": "Auditi başlat", "continueChecklist": "Yoxlama siyahısına davam et", "reviewFindings": "Tapıntılara bax", "goToCloseout": "Bağlanışa keç" },
+      "nextSteps": {
+        "default": "Növbəti: cari iş axını addımından auditə davam edin.",
+        "completed": "Növbəti: tamamlanmış audit qeydini, tapıntılarını və formal hesabatını nəzərdən keçirin.",
+        "review": "Növbəti: tapıntılara baxın, bağlanışı tamamlayın, sonra auditin icmal addımını yekunlaşdırın.",
+        "conduct": "Növbəti: yoxlama siyahısına davam edin, lazım olduqda tapıntıları qeyd edin və siyahı tamamlandıqda icmal mərhələsinə qayıdın."
+      },
+      "steps": {
+        "ariaLabel": "Audit addımları",
+        "plan": { "title": "Auditi planlaşdır", "copy": "Əhatə və quruluş" },
+        "conduct": { "title": "Auditi icra et", "copy": "Sualları qiymətləndir" },
+        "review": { "title": "Tapıntılar və bağlanış", "copy": "Növbəti addımları müəyyən et və yekunlaşdır" }
+      },
+      "workflow": {
+        "openRecord": "Audit qeydini açın",
+        "complete": "Audit tamamlanıb",
+        "step1": "Addım 1: əhatəni və audit quruluşunu təsdiqləyin",
+        "step2": "Addım 2: yoxlama siyahısını tamamlayın",
+        "step3Findings": "Addım 3: hər tapıntı üçün növbəti addımı müəyyən edin",
+        "step3Closeout": "Addım 3: auditin bağlanışını qeyd edin",
+        "step3Move": "Addım 3: bağlanışa keçin"
+      },
+      "workflowCopy": {
+        "openRecord": "İş axınına davam etmək üçün audit seçin.",
+        "completed": "Audit qeydi artıq tamamlanıb. Siz yenə də tapıntılara, əlaqəli CAPA qeydlərinə, daha yüngül audit tapşırıqlarına və yekun PDF hesabata baxa bilərsiniz.",
+        "plan": "Əvvəlcə proqramı, əhatəni, məqsədləri, meyarları və görüş qeydlərini yoxlayın. Quruluş doğru göründükdən sonra auditi başladın və yoxlama siyahısına keçin.",
+        "conduct": "Yoxlama siyahısını sual-sual tamamlayın. Tələb yerinə yetirilmədiyi hallarda tapıntını qeyd edin, sonra auditə davam edin.",
+        "review": "Hər boşluğun aydın növbəti addımı olana qədər tapıntılar izində qalın. Kiçik və böyük tapıntılar CAPA-ya keçir, müşahidə və imkanlar isə daha yüngül audit tapşırığı ilə izlənə və ya birbaşa bağlana bilər.",
+        "closeout": "Bütün tapıntıların aydın növbəti addımı var. Yoxlama siyahısını yenidən açmadan auditi yekunlaşdırmaq üçün nəticəni, tövsiyələri, tamamlanma tarixini və auditoru qeyd edin."
+      },
+      "workflowStatus": {
+        "none": "Audit seçilməyib",
+        "completed": "Tamamlanıb",
+        "planning": "Planlaşdırma",
+        "checklist": "Yoxlama siyahısı icradadır",
+        "nextStepsOpen": "Növbəti addımlar hələ açıqdır",
+        "closeout": "Bağlanış icradadır",
+        "ready": "Bağlanışa hazırdır"
+      }
+    },
+    "plan": {
+      "eyebrow": "Audit planı",
+      "title": "Proqram, əhatə və hazırlıq",
+      "copy": "Sahə işlərinə başlamazdan əvvəl audit proqramını, əhatə növünü, meyarları, gündəliyi və görüş quruluşunu təsdiqləyin.",
+      "notScheduled": "Planlaşdırılmayıb",
+      "summary": { "programme": "Proqram", "scopeType": "Əhatə növü", "scheduledDate": "Planlaşdırılmış tarix" },
+      "fields": { "scope": "Əhatə", "objectives": "Audit məqsədləri", "criteria": "Audit meyarları", "auditeeArea": "Audit olunan sahə", "summary": "Xülasə", "agenda": "Audit gündəliyi", "openingMeeting": "Açılış görüşü", "closingMeeting": "Bağlanış görüşü" },
+      "empty": { "scope": "Əhatə qeyd olunmayıb.", "objectives": "Məqsədlər qeyd olunmayıb.", "criteria": "Meyarlar qeyd olunmayıb.", "summary": "Hələ xülasə yoxdur.", "agenda": "Hələ gündəlik hazırlanmayıb.", "openingMeeting": "Hələ açılış görüşü qeydləri hazırlanmayıb.", "closingMeeting": "Hələ bağlanış görüşü qeydləri hazırlanmayıb." },
+      "actions": { "editPlan": "Planı redaktə et" },
+      "pack": {
+        "eyebrow": "Plan paketi",
+        "internalTitle": "Daxili audit planlaşdırma tövsiyəsi",
+        "supplierTitle": "Təchizatçı auditi planlaşdırma tövsiyəsi",
+        "internalCopy": "Yoxlama siyahısına başlamazdan əvvəl auditi düzgün şəkildə yaymaq üçün proqramdan, gündəlikdən və açılış/bağlanış qeydlərindən istifadə edin.",
+        "supplierCopy": "Təchizatçı auditləri də suallar qiymətləndirilməzdən əvvəl sadə gündəlik, açılış müzakirəsi və planlaşdırılmış bağlanış xülasəsi ilə başlamalıdır.",
+        "touchpointsTitle": "Təminat toxunma nöqtələri",
+        "items": {
+          "annualProgramme": { "title": "İllik audit proqramı", "copy": "Bu audit icraya keçməzdən əvvəl onun hansı illik planın və ya audit dövrünün hissəsi olduğunu göstərmək üçün proqram sahəsindən istifadə edin." },
+          "scopePlanning": { "title": "Şöbə, proses və ya şirkət üzrə planlama", "copy": "Əhatə növü auditin şirkət üzrə, şöbə üzrə, proses üzrə, sahə üzrə və ya təchizatçı mərkəzli olduğunu aydın göstərir." },
+          "meetingStructure": { "title": "Görüş quruluşu", "copy": "Açılış və bağlanış görüşü qeydləri audit qeydində gündəliyin necə paylandığını, auditin necə açıldığını və nəticələrin necə yekunlaşdırıldığını göstərir." }
+        }
+      }
+    },
+    "conduct": {
+      "eyebrow": "Auditi icra et",
+      "internalTitle": "Bənd-bənd yoxlama siyahısı",
+      "supplierTitle": "Təchizatçı auditi yoxlama siyahısı",
+      "copy": "Hər suala sıra ilə cavab verin. Tələb yerinə yetirilmirsə, Xeyr seçin, tapıntını qeyd edin, sonra eyni sualdan auditə davam edin.",
+      "readOnlyTitle": "Yoxlama siyahısı yalnız oxunur",
+      "readOnlyCopy": "Bu audit tamamlanıb. Siz yenə də tapıntılara və sübutlara baxa bilərsiniz, lakin yoxlama siyahısı cavabları artıq dəyişdirilə bilməz.",
+      "progressQuestionsAnswered": "{{answered}}/{{total}} suala cavab verilib",
+      "progressClauses": "{{current}}/{{total}} bənd",
+      "noActiveClause": "Aktiv bənd yoxdur",
+      "clauseLabel": "Bənd {{clause}} - {{heading}}",
+      "currentClauseHelper": { "supplier": "Hər təchizatçı auditi sualına cavab verin, sübutu qeyd edin və yalnız tələb yerinə yetirilmədikdə tapıntı yaradın.", "internal": "Hər suala cavab verin. Tələb yerinə yetirilmədikdə tapıntını qeyd edin və növbəti suala davam edin." },
+      "notAnswered": "Cavab verilməyib",
+      "supplierBuilder": { "sectionOrGroup": "Bölmə və ya qrup", "subclause": "Alt bənd", "addQuestion": "Sual əlavə et", "commentPrompt": "Şərh sahəsi", "addQuestionButton": "Sual əlavə et" },
+      "emptyTitle": "Sual cavablandırmaqla auditi başladın",
+      "emptyInternalCopy": "Audit şablonu hazır olduqda yoxlama siyahısı sualları burada görünəcək.",
+      "emptySupplierCopy": "Auditi başlatmaq üçün ilk təchizatçı auditi sualını əlavə edin.",
+      "completion": { "eyebrow": "Yoxlama siyahısı tamamlandı", "title": "Növbəti addım: tapıntılara baxış", "copy": "Bütün yoxlama siyahısı sualları cavablandırılıb. İndi Tapıntılara baxışı açın, hər boşluq üçün növbəti addımı müəyyən edin, sonra auditin bağlanışını yekunlaşdırın.", "button": "Növbəti: Tapıntılara baxış" },
+      "findingIndicator": { "needed": "Tapıntı lazımdır", "closed": "Tapıntı bağlanıb", "capaLinked": "CAPA əlaqələndirilib", "capaNeeded": "CAPA lazımdır", "open": "Tapıntı açıqdır" },
+      "findingNextStep": { "needed": "Uğursuz tələbin tam audit izi olması üçün davam etməzdən əvvəl tapıntını qeyd edin.", "closed": "Bu sual üzrə tapıntı yolu artıq bağlanıb. Lazım gəlsə, ona baxın və ya növbəti suala davam edin.", "capaLinked": "Tapıntı və CAPA artıq əlaqələndirilib. Əlaqəli CAPA-ya baxın və ya növbəti suala davam edin.", "capaNeeded": "Tapıntı qeyd olunub. Yol tamamlanmadan əvvəl bu uyğunsuzluq üçün hələ CAPA yaradılmalıdır.", "lightRoute": "Tapıntı qeyd olunub. Daha yüngül izləmə yoluna baxın və ya növbəti suala davam edin." },
+      "findingPrompt": { "titleNeeded": "Tələb yerinə yetirilmədi: tapıntı lazımdır", "titleClosed": "Bu sual üzrə tapıntı yolu artıq bağlanıb", "titleCapaLinked": "Bu sual üzrə tapıntı və CAPA artıq əlaqələndirilib", "titleCapaNeeded": "Tapıntı qeyd olunub: bu sual üçün hələ CAPA lazımdır", "titleRecorded": "Bu sual üzrə tapıntı qeyd olunub", "copyNeeded": "Xeyr cavabı qeyd olunub. İndi tapıntı başlığını, boşluq təsvirini və ciddilik səviyyəsini qeyd edin ki, baxış mərhələsində tam audit izi olsun.", "copyClosed": "Bu uğursuz cavab artıq bağlanmış yolu olan tapıntıya malikdir. Davam etməzdən əvvəl bu izi yenidən açmaq lazımdırsa, Tapıntıya bax düyməsindən istifadə edin.", "copyCapaLinked": "Bu uğursuz cavab artıq əlaqəli tapıntı və CAPA-ya malikdir. Davam etməzdən əvvəl bu izə qayıtmaq lazımdırsa, Tapıntıya bax və ya CAPA-nı aç düyməsindən istifadə edin.", "copyCapaNeeded": "Bu uğursuz cavab artıq tapıntıya malikdir, lakin yol tamamlanmazdan əvvəl uyğunsuzluq hələ CAPA tələb edir. Bu qərarı davam etdirmək üçün Tapıntıya bax düyməsindən istifadə edin.", "copyLightRoute": "Bu uğursuz cavab artıq daha yüngül tapıntı yoluna malikdir. Davam etməzdən əvvəl tapşırıq və ya bağlanışa baxmaq lazımdırsa, Tapıntıya bax düyməsindən istifadə edin." }
+    },
+    "findingModal": {
+      "eyebrow": "Tapıntı",
+      "title": "Audit tapıntısını qeyd et",
+      "close": "Bağla",
+      "whatToDoNow": "İndi nə etmək lazımdır",
+      "drafting": "Hazırlanır...",
+      "draftWithAi": "AI ilə qaralama hazırla",
+      "descriptionHelper": "Əvvəlcə real vəziyyəti yazın, sonra audit dilini daha səlis etmək üçün istəsəniz AI-dan istifadə edin.",
+      "save": "Tapıntını yadda saxla",
+      "checklistCopy": "1. Qısa qeydi öz sözlərinizlə yazın. 2. Yalnız daha səlis ifadə lazımdırsa AI-dan istifadə edin. 3. Ciddilik səviyyəsini seçin. 4. Tapıntını yadda saxlayın. 5. Növbəti addımı sonra Tapıntılara baxış mərhələsində müəyyən edin.",
+      "fields": { "title": "Tapıntı başlığı", "description": "Auditor qeydi / təsviri", "severity": "Ciddilik" },
+      "paths": { "major": "Böyük tapıntı yolu", "minor": "Kiçik tapıntı yolu", "opportunity": "İmkan yolu", "observation": "Müşahidə yolu" }
+    },
+    "review": {
+      "eyebrow": "Baxış axını",
+      "title": "Tapıntı yollarını tamamlayın, sonra auditi bağlayın",
+      "copy": "Zənciri sadə saxlayın: hər tapıntıya baxın, həmin tapıntı daxilində növbəti addımı müəyyən edin, sonra auditin bağlanışını qeyd edin.",
+      "summary": { "questions": "Suallar", "findings": "Tapıntılar", "major": "Böyük", "routesOpen": "Açıq yollar" },
+      "incompleteTitle": "Yoxlama siyahısı hələ tamamlanmayıb",
+      "incompleteCopy": "Audit yekun tamamlanmaya keçməzdən əvvəl bütün tələb olunan suallara cavab verin.",
+      "actions": { "nextUnresolvedFinding": "Növbəti həll olunmamış tapıntı", "actionAlreadyLinked": "Audit tapşırığı artıq əlaqələndirilib", "actionFormReady": "Tapşırıq formu aşağıda hazırdır", "prepareAuditAction": "Burada audit tapşırığı hazırla" },
+      "focus": { "current": "Cari fokus: {{title}}", "default": "Cari fokus: tapıntılara bir-bir baxın", "copyDefault": "Tapıntını seçin, onun bağlanmalı, audit tapşırığına keçməli, yoxsa CAPA-ya keçməli olduğunu müəyyən edin, sonra növbəti tapıntıya davam edin." },
+      "routeState": { "closed": "Bağlanıb", "capaLinked": "CAPA əlaqələndirilib", "actionLinked": "Audit tapşırığı əlaqələndirilib", "actionDraftReady": "Tapşırıq qaralaması hazırdır", "createCapaNext": "Növbəti CAPA yaradın", "decideNextStep": "Növbəti addımı müəyyən edin" },
+      "badges": { "closed": "Bağlanıb", "capaActive": "CAPA aktivdir", "actionActive": "Tapşırıq aktivdir", "actionDraftOpen": "Tapşırıq qaralaması açıqdır", "createCapa": "CAPA yaradın", "actionRecommended": "Tapşırıq tövsiyə olunur", "reviewObservation": "Müşahidəyə baxın" },
+      "guidance": { "routeComplete": "Yol audit qeydində tamamlanıb.", "continueLinkedCapa": "Əlaqəli CAPA-ya davam edin, sonra yalnız bağlanışı yoxlamaq lazım olduqda bura qayıdın.", "linkedAction": "Bu tapıntı ilə artıq daha yüngül audit tapşırığı əlaqələndirilib.", "actionPrepared": "Daha yüngül izləmə bu tapıntı üçün artıq aşağıda hazırlanıb.", "capaNeeded": "Növbəti addım tamamlanmadan əvvəl bu tapıntı CAPA tələb edir.", "lightRoute": "Məmnunsunuzsa daha yüngül tapşırıq seçin və ya tapıntını birbaşa bağlayın." },
+      "traceabilityCopy": "İzi yoxlama siyahısı sübutundan tapıntıya, sonra isə {{capaText}} və {{actionText}} müstəvisinədək izləyin.",
+      "capaLinkedCount": "{{count}} əlaqəli CAPA qeydi",
+      "capaOnlyWhereNeeded": "yalnız lazım olduqda CAPA",
+      "actionLinkedCount": "{{count}} əlaqəli audit tapşırığı"
+    },
+    "closeout": {
+      "readyTitle": "Audit tamamlanmağa hazırdır",
+      "openTitle": "Bağlanış tələbləri hələ açıqdır",
+      "guidance": { "completeChecklist": "Auditin tamamlanmasından əvvəl bütün yoxlama siyahısı suallarını tamamlayın.", "unresolvedFindings": "Bu audit yekun bağlanışa keçməzdən əvvəl hər tapıntının aydın növbəti addımı olmalıdır.", "completeFields": "Auditi yekunlaşdırmazdan əvvəl nəticəni, tövsiyələri, tamamlanma tarixini və auditoru qeyd edin.", "ready": "Audit qeydi indi tamamlana bilər. Auditin özünü yenidən açmadan tapıntılar, tapşırıqlar və NCR izləməsi audit tamamlandıqdan sonra da davam edə bilər." }
+    },
+    "attention": {
+      "needsAttention": "Bu audit hazırda rəhbərliyin diqqətini tələb edir.",
+      "underControl": "Bu audit hazırda nəzarət altındadır.",
+      "loading": "Diqqət tövsiyəsi audit yükləndikdən sonra görünəcək.",
+      "controlledCopy": "Audit vaxtı, yoxlama siyahısının icrası və tapıntıların izlənməsi rutin nəzarət üçün kifayət qədər idarə olunur.",
+      "reasonCopy": "Diqqət ona görə lazımdır ki, {{reasons}}."
+    }
+  },
+  "actionTracker": {
+    "page": {
+      "label": "Təminat",
+      "title": "Tapşırıqlar",
+      "description": "İstənilən moduldan yaranan təyin olunmuş izləməni bir yerdə izləyin.",
+      "breadcrumb": "Tapşırıqlar"
+    },
+    "actions": {
+      "backToStartHere": "Buradan başlayına qayıt",
+      "backTo": "{{label}} bölməsinə qayıt",
+      "backToAll": "Bütün tapşırıqlara qayıt",
+      "openSource": "Mənbə qeydi aç",
+      "delete": "Sil"
+    },
+    "common": {
+      "status": "Status",
+      "owner": "Məsul şəxs",
+      "dueDate": "Son tarix",
+      "unassigned": "Təyin edilməyib",
+      "notSet": "Təyin edilməyib"
+    },
+    "focused": {
+      "eyebrow": "Seçilmiş tapşırıq",
+      "copy": "Yuxarıdakı tapşırıq detallarını nəzərdən keçirin, sonra statusu yeniləyin və ya mənbə qeydinə qayıdın.",
+      "description": "Təsvir",
+      "noDescription": "Təsvir verilməyib.",
+      "source": "Mənbə qeydi",
+      "updateStatus": "Statusu yenilə"
+    },
+    "register": {
+      "eyebrow": "Tapşırıq izləyicisi",
+      "title": "Təyin olunmuş izləmə",
+      "copy": "Auditlərdən, Düzəldici tədbirlərdən, hadisələrdən, risklərdən və digər modullardan gələn açıq işi, məsuliyyəti və son tarixləri izləyin."
+    },
+    "summary": {
+      "overdue": "Gecikmiş"
+    },
+    "status": {
+      "OPEN": "Açıq",
+      "IN_PROGRESS": "İcradadır",
+      "DONE": "Tamamlanıb",
+      "CANCELLED": "Ləğv edilib"
+    },
+    "filters": {
+      "source": "Mənbə",
+      "allSources": "Bütün mənbələr",
+      "allStatuses": "Bütün statuslar",
+      "allOwners": "Bütün məsul şəxslər",
+      "allDueDates": "Bütün son tarixlər",
+      "upcoming": "Yaxın son tarix",
+      "sortBy": "Sıralama",
+      "apply": "Filtrləri tətbiq et",
+      "sortOptions": {
+        "attention": "Diqqət",
+        "dueDate": "Son tarix",
+        "updated": "Yenilənmə",
+        "source": "Mənbə"
+      }
+    },
+    "sources": {
+      "risk": "Risk",
+      "capa": "Düzəldici tədbir",
+      "audit": "Audit",
+      "managementReview": "Rəhbərliyin təhlili",
+      "ncr": "Uyğunsuzluq",
+      "incident": "Hadisə",
+      "hazard": "Təhlükə",
+      "aspect": "Ekoloji aspekt",
+      "obligation": "Uyğunluq öhdəliyi",
+      "provider": "Təchizatçı və ya podratçı",
+      "changeManagement": "Dəyişikliklərin idarə edilməsi",
+      "document": "Sənəd",
+      "context": "Kontekst amili"
+    },
+    "empty": {
+      "loadingTitle": "Tapşırıqlar yüklənir",
+      "loadingCopy": "Təyin olunmuş izləmə, məsul şəxslər və son tarixlər yenilənir.",
+      "noneTitle": "Cari filtrlərə uyğun tapşırıq yoxdur",
+      "noneCopy": "Filtrləri dəyişin və ya yeni tapşırıq yaratmaq üçün mənbə qeydini açın."
+    },
+    "table": {
+      "action": "Tapşırıq",
+      "source": "Mənbə",
+      "owner": "Məsul şəxs",
+      "dueDate": "Son tarix",
+      "status": "Status",
+      "admin": "İdarəetmə",
+      "noDescription": "Təsvir verilməyib.",
+      "openedAbove": "Yuxarıda açılıb"
+    },
+    "guidance": {
+      "headlines": {
+        "overdue": "Bəzi təyin olunmuş izləmə gecikib",
+        "ownerNeeded": "Bəzi tapşırıqlara hələ məsul şəxs təyin edilməyib",
+        "active": "Sistem üzrə izləmə aktivdir",
+        "underControl": "Təyin olunmuş izləmə hazırda nəzarət altındadır"
+      },
+      "narratives": {
+        "overdue": "Əvvəlcə gecikmiş tapşırıqlardan başlayın. Bunlar artıq öhdəlik götürülmüş son tarixi keçmiş izləmə tədbirləridir.",
+        "ownerNeeded": "Bəzi tapşırıqlar açıqdır və ya icradadır, lakin məsul şəxs təyin edilməyib. Növbəti baxış dövründən əvvəl məsuliyyəti təyin edin ki, izləmə dayanmasın.",
+        "active": "Bu səhifədən istənilən moduldan yaranan təyin olunmuş izləməni izləyin ki, məsuliyyət, son tarixlər və status bir yerdə görünən qalsın.",
+        "underControl": "Cari tapşırıqlar ya tamamlanıb, ya da hələ əlavə müdaxilə tələb etmir."
+      }
+    },
+    "attention": {
+      "headlines": {
+        "needsAttention": "Bu tapşırıq hazırda rəhbərlik diqqəti tələb edir.",
+        "underControl": "Bu tapşırıq hazırda nəzarət altındadır."
+      },
+      "narratives": {
+        "needsAttention": "Diqqət tələb olunur, çünki {{reasons}}.",
+        "underControl": "Tapşırıq ya tamamlanıb, ya ləğv edilib, ya da son tarix və məsuliyyət baxımından kifayət qədər nəzarət altındadır."
+      },
+      "reasons": {
+        "overdue": "gecikib",
+        "dueSoon": "son tarix yaxındır",
+        "ownerNeeded": "məsul şəxs lazımdır"
+      },
+      "short": {
+        "ok": "OK",
+        "overdue": "Gecikib",
+        "dueSoon": "Tezliklə",
+        "owner": "Məsul"
+      }
+    },
+    "messages": {
+      "selectedOpenedAbove": "Seçilmiş tapşırıq yuxarıda açıldı.",
+      "loadFailed": "Tapşırıqları yükləmək mümkün olmadı.",
+      "noPermissionUpdate": "Tapşırıqları yeniləmək üçün icazəniz yoxdur.",
+      "statusUpdated": "Tapşırıq statusu yeniləndi.",
+      "statusUpdateFailed": "Tapşırıq statusunu yeniləmək mümkün olmadı.",
+      "deleteConfirm": "\"{{title}}\" tapşırığı silinsin? Tamamlanmış tapşırıqlar qorunur.",
+      "deleteSuccess": "Tapşırıq silindi.",
+      "deleteFailed": "Tapşırığı silmək mümkün olmadı."
+    }
+  },
+  "ncr": {
+    "common": {
+      "label": "NCR",
+      "status": "Status",
+      "owner": "Məsul şəxs",
+      "dueDate": "Son tarix",
+      "unassigned": "Təyin edilməyib",
+      "notSet": "Təyin edilməyib",
+      "uncoded": "Kodsuz"
+    },
+    "page": {
+      "titleList": "Uyğunsuzluq jurnalı",
+      "titleCreate": "NCR yaradın",
+      "titleDetail": "NCR detalı",
+      "titleEdit": "NCR redaktəsi",
+      "descriptionList": "Uyğunsuzluğu, məsul şəxsi, izləmə ehtiyacını və verifikasiyanın tamamlanıb-tamamlanmadığını NCR ilə qeyd edin.",
+      "descriptionCreate": "Əvvəlcə uyğunsuzluğu qeyd edin, sonra araşdırma və düzəldici izi qeyd üzərindən davam etdirin.",
+      "descriptionDetail": "Uyğunsuzluğu, araşdırmanı, əlaqəli tapşırıqları, verifikasiyanı, şərhləri, əlavələri və fəaliyyəti nəzərdən keçirin.",
+      "descriptionEdit": "Araşdırma və verifikasiya izini aydın saxlayaraq NCR-ni yeniləyin."
+    },
+    "breadcrumbs": {
+      "new": "Yeni NCR",
+      "edit": "Redaktə"
+    },
+    "actions": {
+      "new": "+ Yeni NCR",
+      "view": "NCR-ə bax",
+      "edit": "NCR-ni redaktə et",
+      "archive": "NCR-ni arxivləşdir",
+      "archiveUnavailable": "Arxivləşdirmə mümkün deyil",
+      "delete": "NCR-ni sil",
+      "deleteUnavailable": "Silmə mümkün deyil",
+      "backToList": "NCR jurnalına qayıt",
+      "reviewCurrent": "NCR-i nəzərdən keçir",
+      "reviewList": "NCR jurnalını nəzərdən keçir",
+      "save": "NCR-ni yadda saxla",
+      "saving": "Yadda saxlanır...",
+      "continueInvestigation": "Araşdırmanı davam etdir",
+      "reviewFollowUpActions": "İzləmə tapşırıqlarını nəzərdən keçir",
+      "openVerification": "Verifikasiyanı aç",
+      "reviewOverview": "İcmala bax"
+    },
+    "list": {
+      "eyebrow": "NCR jurnalı",
+      "title": "Uyğunsuzluq jurnalı",
+      "copy": "NCR əvvəlcə uyğunsuzluğu qeyd edir, sonra araşdırmanı, tapşırıq izləməsini və verifikasiya izini birlikdə saxlayır.",
+      "filtersTitle": "NCR filtrləri",
+      "filtersCopy": "Statusa, kateqoriyaya, mənbəyə, ciddilik dərəcəsinə və məsul şəxsə görə filtrləyin.",
+      "stats": {
+        "total": "Cəmi",
+        "open": "Açıq",
+        "overdue": "Gecikmiş"
+      },
+      "filters": {
+        "search": "Axtarış",
+        "allStatuses": "Bütün statuslar",
+        "category": "Kateqoriya",
+        "allCategories": "Bütün kateqoriyalar",
+        "source": "Mənbə",
+        "allSources": "Bütün mənbələr",
+        "severity": "Ciddilik",
+        "allSeverities": "Bütün ciddiliklər",
+        "allOwners": "Bütün məsul şəxslər"
+      },
+      "placeholders": {
+        "search": "İstinad və ya başlıq"
+      }
+    },
+    "table": {
+      "reference": "İstinad",
+      "category": "Kateqoriya",
+      "source": "Mənbə",
+      "severity": "Ciddilik",
+      "updated": "Yenilənib",
+      "attention": "Diqqət",
+      "actions": "Əməliyyatlar"
+    },
+    "empty": {
+      "noAccessTitle": "NCR girişi mövcud deyil",
+      "noAccessCopy": "Cari rolunuzda ncr.read icazəsi yoxdur.",
+      "loadingTitle": "NCR jurnalı yüklənir",
+      "loadingCopy": "Tenant üzrə uyğunsuzluq qeydləri yenilənir.",
+      "noneTitle": "Cari filtrə uyğun NCR tapılmadı",
+      "noneCopy": "Filtrləri dəyişin və ya bu tenant üçün ilk NCR qeydi yaradın."
+    },
+    "form": {
+      "fields": {
+        "referenceNo": "İstinad nömrəsi",
+        "title": "Başlıq",
+        "description": "Təsvir",
+        "priority": "Prioritet",
+        "dateReported": "Qeyd tarixi"
+      },
+      "placeholders": {
+        "referenceNo": "NCR-2026-001",
+        "title": "Təsdiqlənməmiş proses dəyişikliyi",
+        "description": "Nə baş verdiyini və hansı tələbin pozulduğunu təsvir edin"
+      }
+    },
+    "detail": {
+      "workflowEyebrow": "İş axını",
+      "workflowTitle": "NCR iş axını",
+      "workflowCopy": "Bağlanmadan əvvəl araşdırma, tapşırıq izləməsi və rəsmi verifikasiya mərhələləri ilə işləyin.",
+      "tabsAriaLabel": "NCR detal bölmələri",
+      "overview": "İcmal",
+      "investigation": "Araşdırma",
+      "followUpActions": "İzləmə tapşırıqları",
+      "verification": "Verifikasiya",
+      "comments": "Şərhlər",
+      "activityEvidence": "Fəaliyyət və sübut"
+    },
+    "guidance": {
+      "ownerFilterDefault": "NCR üçün ən uyğun məsul şəxsi proses sahibi kimi təklif etmək istəyirsinizsə, proses seçin.",
+      "ownerFilterScoped": "Məsul seçimləri {{process}} prosesi üzrə {{owner}} ilə məhdudlaşdırılıb.",
+      "ownerFilterNoOwner": "Bu proses üçün proses sahibi təyin edilməyib, buna görə bütün istifadəçilər mövcuddur."
+    },
+    "nextSteps": {
+      "create": "Növbəti: yadda saxlanmış NCR-ni açın və qeyddən araşdırma, tapşırıqlar və verifikasiyanı davam etdirin.",
+      "edit": "Növbəti: uyğun iş axını bölməsindən NCR-ni davam etdirin.",
+      "initial": "Növbəti: araşdırmanı davam etdirin, kök səbəbi qeyd edin və sonra düzəldici tədbirlərə keçin.",
+      "actioning": "Növbəti: düzəldici tədbirləri nəzərdən keçirin, şərhləri və sübutları aktual saxlayın, verifikasiyaya hazırlaşın.",
+      "verification": "Növbəti: verifikasiyanı tamamlayın və NCR-nin bağlanıb-bağlanmayacağını və ya əlavə tədbir lazım olub-olmadığını təsdiqləyin.",
+      "closed": "Növbəti: NCR qeydi çərçivəsində araşdırma izini, əlaqəli tapşırıqları və sübutları nəzərdən keçirin."
+    },
+    "stage": {
+      "raised": "Qaldırılıb",
+      "investigating": "Araşdırılır",
+      "correcting": "Düzəldilir",
+      "verifying": "Verifikasiya edilir",
+      "closed": "Bağlanıb",
+      "archived": "Arxivləşdirilib"
+    },
+    "workflow": {
+      "heading": {
+        "initial": "NCR ilkin baxış mərhələsindədir",
+        "investigation": "Kök səbəb araşdırması aktivdir",
+        "correctiveAction": "Düzəldici tədbir icra olunur",
+        "verification": "Effektivlik verifikasiyası tələb olunur",
+        "closed": "NCR bağlanıb",
+        "archived": "NCR arxivləşdirilib"
+      },
+      "guidance": {
+        "initial": "Əvvəlcə saxlayıcı tədbiri qeyd edin, sonra NCR-nin kök səbəb təhlilinə keçməsini əsaslandıracaq qədər araşdırma detalı əlavə edin.",
+        "investigation": "Araşdırma xülasəsini və kök səbəbi düzəldici tədbir məsuliyyətinə tam keçməzdən əvvəl tamamlayın.",
+        "correctiveAction": "Düzəldici tədbir xülasəsini, məsuliyyəti, şərhləri və sübutları aktual saxlayın ki, NCR verifikasiyaya hazır olsun.",
+        "verification": "Verifikasiyadan düzəldici tədbirin yalnız tamamlanmadığını, həm də effektiv olduğunu təsdiqləmək üçün istifadə edin.",
+        "closed": "NCR qeydini saxlayıcı tədbir, kök səbəb, düzəldici tədbir və verifikasiya nəticəsinin sübutu kimi saxlayın.",
+        "archived": "Arxivləşdirilmiş NCR-lər izlənə bilmək üçün saxlanılır və aktiv məsələ kimi qiymətləndirilməməlidir."
+      }
+    },
+    "verification": {
+      "heading": {
+        "verified": "Verifikasiya uğurludur",
+        "rejected": "Verifikasiya uğursuzdur",
+        "pending": "Verifikasiya hələ gözlənilir"
+      },
+      "guidance": {
+        "verified": "Düzəldici tədbirin effektiv olduğu təsdiqlənib. Verifikatoru və verifikasiya tarixini qeyddə görünən saxlayın.",
+        "rejected": "Düzəldici tədbir təkrarlanmanın qarşısını almayıbsa, rədd edilmiş statusundan istifadə edin.",
+        "pending": "Gözlənilir statusu tədbirin icra oluna biləcəyini, lakin effektivliyin hələ təsdiqlənmədiyini göstərir."
+      }
+    },
+    "followUp": {
+      "overdueHeading": "NCR üzrə izləmə gecikib",
+      "overdueCopy": "Son tarix {{dueDate}} tarixində keçib. NCR daha da gecikməzdən əvvəl düzəldici tədbirləri, verifikasiya statusunu və məsuliyyəti nəzərdən keçirin.",
+      "approachingHeading": "NCR üzrə izləmə yaxınlaşır",
+      "approachingCopy": "Son tarix {{dueDate}}-dir. Son tarix çatmadan əvvəl araşdırmanı, kök səbəbi və düzəldici tədbir izini təsdiqləyin.",
+      "verificationHeading": "Verifikasiya üçün rəsmi nəticə hələ lazımdır",
+      "verificationCopy": "Bu NCR verifikasiyanı gözləyir. Tədbiri kimin yoxladığını və nəticənin qəbul edilib-edilmədiyini qeyd edin."
+    },
+    "attention": {
+      "underControl": "Nəzarət altındadır",
+      "headlines": {
+        "needsAttention": "Bu NCR hazırda rəhbərlik diqqəti tələb edir.",
+        "underControl": "Bu NCR hazırda nəzarət altındadır."
+      },
+      "narratives": {
+        "unsaved": "Diqqət üzrə yönləndirmə NCR yadda saxlanıldıqdan sonra görünəcək.",
+        "underControl": "Məsuliyyət, son tarix, verifikasiya vəziyyəti və cari NCR mərhələsi rutin izləmə üçün kifayət qədər nəzarət altındadır.",
+        "needsAttention": "Diqqət tələb olunur, çünki {{reasons}}."
+      },
+      "reasons": {
+        "ownerNeeded": "məsul şəxs lazımdır",
+        "followUpOverdue": "izləmə gecikib",
+        "verificationOverdue": "verifikasiya gecikib",
+        "stale": "yenilənməyib"
+      }
+    },
+    "enums": {
+      "status": {
+        "OPEN": "Açıq",
+        "UNDER_REVIEW": "Baxışdadır",
+        "INVESTIGATION": "Araşdırma",
+        "ACTION_IN_PROGRESS": "Tədbir icradadır",
+        "PENDING_VERIFICATION": "Verifikasiya gözlənilir",
+        "CLOSED": "Bağlanıb",
+        "ARCHIVED": "Arxivləşdirilib"
+      },
+      "category": {
+        "PROCESS": "Proses",
+        "PRODUCT": "Məhsul",
+        "SERVICE": "Xidmət",
+        "SUPPLIER": "Təchizatçı",
+        "COMPLAINT": "Şikayət"
+      },
+      "source": {
+        "INTERNAL": "Daxili",
+        "CUSTOMER": "Müştəri",
+        "SUPPLIER": "Təchizatçı",
+        "AUDIT": "Audit"
+      },
+      "level": {
+        "LOW": "Aşağı",
+        "MEDIUM": "Orta",
+        "HIGH": "Yüksək",
+        "CRITICAL": "Kritik",
+        "URGENT": "Təcili"
+      },
+      "rca": {
+        "FIVE_WHY": "5 Niyə",
+        "FISHBONE": "Balıq sümüyü",
+        "IS_IS_NOT": "Var / Yoxdur",
+        "OTHER": "Digər"
+      },
+      "verification": {
+        "PENDING": "Gözlənilir",
+        "VERIFIED": "Təsdiqlənib",
+        "REJECTED": "Rədd edilib"
+      }
+    },
+    "messages": {
+      "created": "NCR yaradıldı.",
+      "updated": "NCR yeniləndi.",
+      "saveFailed": "NCR-ni yadda saxlamaq mümkün olmadı.",
+      "commentAdded": "Şərh əlavə edildi.",
+      "commentSaveFailed": "Şərhi yadda saxlamaq mümkün olmadı.",
+      "movedTo": "NCR {{status}} mərhələsinə keçirildi.",
+      "statusUpdateFailed": "NCR statusunu yeniləmək mümkün olmadı.",
+      "archived": "NCR arxivləşdirildi.",
+      "archiveFailed": "NCR-ni arxivləşdirmək mümkün olmadı.",
+      "deleteConfirmCurrent": "Bu NCR silinsin? Bağlanmış qeydlər əvəzinə arxivləşdirilməlidir.",
+      "deleteConfirmRow": "\"{{referenceNo}}\" NCR silinsin?",
+      "archiveConfirmRow": "\"{{referenceNo}}\" NCR arxivləşdirilsin?",
+      "deleted": "NCR silindi.",
+      "deleteFailed": "NCR-ni silmək mümkün olmadı.",
+      "loadListFailed": "NCR jurnalını yükləmək mümkün olmadı.",
+      "loadDetailFailed": "NCR detallarını yükləmək mümkün olmadı.",
+      "loadCommentsFailed": "NCR şərhlərini yükləmək mümkün olmadı.",
+      "loadActivityFailed": "NCR fəaliyyətini yükləmək mümkün olmadı."
+    }
+  },
+  "capa": {
+    "common": {
+      "label": "CAPA",
+      "status": "Status",
+      "owner": "Məsul şəxs",
+      "dueDate": "Son tarix",
+      "general": "Ümumi",
+      "na": "Yoxdur",
+      "notSet": "Təyin edilməyib",
+      "unassigned": "Təyin edilməyib",
+      "assigned": "Təyin olunub"
+    },
+    "page": {
+      "titleList": "CAPA reyestri",
+      "titleCreate": "CAPA yaradın",
+      "titleDetail": "CAPA detalı",
+      "titleEdit": "CAPA redaktəsi",
+      "descriptionList": "Formal düzəldici tədbirlər üçün CAPA-dan istifadə edin: məsələni təsvir edin, kök səbəbi təsdiqləyin, tədbiri təyin edin, effektivliyi yoxlayın və sübutla bağlayın.",
+      "descriptionCreate": "Formal düzəldici tədbir və izlənən bağlanış tələb edən məsələlər üçün CAPA qeydi yaradın.",
+      "descriptionDetail": "Məsələni, kök səbəbi, tədbirləri, verifikasiyanı və bağlanış sübutunu bir yerdə nəzərdən keçirin.",
+      "descriptionEdit": "Düzəldici tədbir izini aydın saxlayaraq CAPA qeydini yeniləyin."
+    },
+    "breadcrumbs": {
+      "new": "Yeni CAPA",
+      "edit": "Redaktə"
+    },
+    "actions": {
+      "new": "+ Yeni CAPA",
+      "edit": "CAPA-nı redaktə et",
+      "delete": "CAPA-nı sil",
+      "backTo": "{{label}} bölməsinə qayıt",
+      "backToRegister": "Reyestrə qayıt",
+      "save": "CAPA-nı yadda saxla",
+      "saving": "Yadda saxlanır..."
+    },
+    "list": {
+      "eyebrow": "Reyestr",
+      "title": "CAPA reyestri",
+      "copy": "CAPA, əhəmiyyətli məsələ qaldırıldıqdan sonra kök səbəbi, düzəldici tədbiri, verifikasiyanı və bağlanışı idarə edir.",
+      "filtersTitle": "CAPA filtrləri",
+      "filtersCopy": "Başlıq və ya mənbə üzrə axtarın, sonra səbəb təhlili, tədbir izləməsi və bağlanış sübutu üçün qeydi açın.",
+      "stats": {
+        "total": "Cəmi",
+        "inProgress": "İcradadır",
+        "closed": "Bağlanıb",
+        "overdue": "Gecikmiş"
+      },
+      "filters": {
+        "search": "Axtarış",
+        "allStatuses": "Bütün statuslar",
+        "sortBy": "Sıralama"
+      },
+      "placeholders": {
+        "search": "Başlıq və ya mənbə"
+      },
+      "sort": {
+        "attention": "Diqqət",
+        "dueDate": "Son tarix",
+        "updated": "Yenilənmə"
+      }
+    },
+    "table": {
+      "capa": "CAPA",
+      "source": "Mənbə",
+      "owner": "Məsul şəxs",
+      "attention": "Diqqət"
+    },
+    "empty": {
+      "loadingTitle": "CAPA qeydləri yüklənir",
+      "loadingCopy": "Uyğunsuzluq, düzəldici tədbir və bağlanış statusu yenilənir.",
+      "noneTitle": "Cari filtrə uyğun CAPA qeydi yoxdur",
+      "noneCopy": "Axtarışı dəyişin və ya bu tenant üçün ilk CAPA qeydini yaradın."
+    },
+    "form": {
+      "eyebrow": "CAPA iş axını",
+      "copy": "Problem bəyanatını, səbəbi, tədbirləri və bağlanış girişlərini aydın ayrılmış bölmələrdə saxlayın.",
+      "lifecycleAriaLabel": "CAPA həyat dövrü",
+      "stages": {
+        "defineTitle": "1. Təsvir et",
+        "defineCopy": "Problem və mənbə",
+        "investigateTitle": "2. Araşdır",
+        "investigateCopy": "Saxlayıcı tədbir və səbəb",
+        "actTitle": "3. Tətbiq et",
+        "actCopy": "Düzəliş və tədbir",
+        "verifyTitle": "4. Yoxla və bağla",
+        "verifyCopy": "Effektivlik və bağlanış"
+      }
+    },
+    "detail": {
+      "eyebrow": "CAPA detalı",
+      "closedAt": "Bağlanma vaxtı",
+      "lastUpdated": "Son yenilənmə",
+      "open": "Açıq"
+    },
+    "workflow": {
+      "headline": {
+        "OPEN": "Əvvəlcə məsələni aydın təsvir edin",
+        "INVESTIGATING": "Saxlayıcı tədbiri və kök səbəbi qeyd edin",
+        "ACTION_PLANNED": "Düzəldici tədbiri aydın planlaşdırın",
+        "IN_PROGRESS": "Məsuliyyəti və son tarixləri görünən saxlayın",
+        "VERIFIED": "Bağlanışdan əvvəl tədbirin işlədiyini təsdiqləyin",
+        "CLOSED": "Bağlanış aydın xülasə ilə dəstəklənməlidir"
+      },
+      "copy": {
+        "OPEN": "Problemi aydın qeyd edin ki, komanda nə baş verdiyini və niyə formal düzəldici tədbir lazım olduğunu başa düşsün.",
+        "INVESTIGATING": "CAPA tədbir planlamasına keçməzdən əvvəl saxlayıcı tədbir və kök səbəb aydın olmalıdır.",
+        "ACTION_PLANNED": "Düzəldici cavab artıq təyin etmək, izləmək və nəzərdən keçirmək üçün kifayət qədər aydın olmalıdır.",
+        "IN_PROGRESS": "Tədbirlər icrada olduqda əsas diqqət məsuliyyətə və son tarix nəzarətinə yönəlir.",
+        "VERIFIED": "Verifikasiya tədbirin yalnız tamamlandığını deyil, effektiv olduğunu təsdiqləməlidir.",
+        "CLOSED": "Bağlanmış CAPA bağlanışı və təkrarlanmanın niyə nəzarətdə olduğunu izah etməlidir."
+      },
+      "hint": {
+        "assigned": "Məsul şəxs artıq təyin olunub. Son tarixi və verifikasiya metodunu seçilmiş statusla uyğun saxlayın.",
+        "unassigned": "Məsuliyyət görünən olsun deyə CAPA ilkin təsvir mərhələsindən çıxanda məsul şəxs təyin edin."
+      }
+    },
+    "actionControl": {
+      "noOwnerNoDate": "CAPA tədbir planlamasına keçəndə məsul şəxs və son tarix təyin edin ki, izləmə görünən olsun.",
+      "noOwner": "Son tarix təyin olunub, lakin məsul şəxs yoxdur. CAPA tədbir izləməsinə söykənməzdən əvvəl məsuliyyəti təyin edin.",
+      "noDueDate": "Məsul şəxs təyin olunub, lakin son tarix yoxdur. CAPA-nın düzgün izlənməsi üçün son tarix əlavə edin.",
+      "ready": "Məsul şəxs və son tarix təyin olunub. Onları cari CAPA mərhələsi və əlaqəli tapşırıqlarla uyğun saxlayın."
+    },
+    "attention": {
+      "underControl": "Nəzarət altındadır",
+      "headline": {
+        "needsAttention": "Bu CAPA hazırda rəhbərlik diqqəti tələb edir.",
+        "underControl": "Bu CAPA hazırda nəzarət altındadır."
+      },
+      "narrative": {
+        "unsaved": "Diqqət üzrə yönləndirmə CAPA yadda saxlandıqdan sonra görünəcək.",
+        "underControl": "Məsuliyyət, son tarix, verifikasiya və cari CAPA mərhələsi rutin izləmə üçün kifayət qədər nəzarət altındadır.",
+        "needsAttention": "Diqqət tələb olunur, çünki {{reasons}}."
+      }
+    },
+    "messages": {
+      "noPermission": "CAPA qeydlərini yeniləmək üçün icazəniz yoxdur.",
+      "completeRequired": "Tələb olunan CAPA sahələrini tamamlayın.",
+      "saved": "CAPA uğurla yadda saxlandı.",
+      "saveFailed": "CAPA-nı yadda saxlamaq mümkün olmadı.",
+      "deleteConfirm": "Bu CAPA silinsin? Bağlanmış CAPA qeydləri silinə bilməz.",
+      "deleted": "CAPA silindi.",
+      "deleteFailed": "CAPA-nı silmək mümkün olmadı.",
+      "loadListFailed": "CAPA reyestrini yükləmək mümkün olmadı.",
+      "loadDetailFailed": "CAPA detallarını yükləmək mümkün olmadı."
+    },
+    "enums": {
+      "status": {
+        "OPEN": "Açıq",
+        "INVESTIGATING": "Araşdırılır",
+        "ACTION_PLANNED": "Tədbir planlaşdırılıb",
+        "IN_PROGRESS": "İcradadır",
+        "VERIFIED": "Təsdiqlənib",
+        "CLOSED": "Bağlanıb"
+      }
+    }
+  }
+}

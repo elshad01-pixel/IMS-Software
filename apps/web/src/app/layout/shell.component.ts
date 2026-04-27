@@ -1,12 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthStore } from '../core/auth.store';
+import { AppLanguage, I18nService } from '../core/i18n.service';
 
 type NavItem = {
   path: string;
-  label: string;
-  hint: string;
+  labelKey: string;
+  hintKey: string;
   icon: string;
   exact?: boolean;
   permission?: string;
@@ -14,7 +16,7 @@ type NavItem = {
 
 type NavGroup = {
   key: string;
-  label: string;
+  labelKey: string;
   items: NavItem[];
 };
 
@@ -24,7 +26,7 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
 @Component({
   selector: 'iso-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe],
   template: `
     <div
       class="shell"
@@ -47,16 +49,16 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
             <div class="brand-mark">
               <div class="brand-seal">IMS</div>
               <div class="brand-copy" *ngIf="sidebarExpanded()">
-                <div class="pill brand-pill">ISO SaaS</div>
-                <h1>Integrated Management</h1>
+                <div class="pill brand-pill">{{ 'shell.brandTag' | translate }}</div>
+                <h1>{{ 'shell.brandTitle' | translate }}</h1>
               </div>
             </div>
-            <p *ngIf="sidebarExpanded()">Operational control for documents, risks, audits, CAPA, reviews, KPIs, and training.</p>
+            <p *ngIf="sidebarExpanded()">{{ 'shell.brandDescription' | translate }}</p>
           </div>
 
           <button type="button" class="pin-toggle" (click)="togglePin()" [attr.aria-pressed]="sidebarPinned()">
-            <span class="pin-toggle__icon">{{ sidebarPinned() ? 'PIN' : 'UNP' }}</span>
-            <span *ngIf="sidebarExpanded()">{{ sidebarPinned() ? 'Pinned' : 'Pin sidebar' }}</span>
+            <span class="pin-toggle__icon">{{ sidebarPinned() ? ('shell.pinShortPinned' | translate) : ('shell.pinShortUnpinned' | translate) }}</span>
+            <span *ngIf="sidebarExpanded()">{{ sidebarPinned() ? ('shell.pinLabelPinned' | translate) : ('shell.pinLabelUnpinned' | translate) }}</span>
           </button>
         </div>
 
@@ -69,7 +71,7 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
               (click)="toggleGroup(group.key)"
               [attr.aria-expanded]="groupExpanded(group.key)"
             >
-              <span>{{ group.label }}</span>
+              <span>{{ group.labelKey | translate }}</span>
               <span class="nav-group__caret">{{ groupExpanded(group.key) ? '-' : '+' }}</span>
             </button>
             <a
@@ -78,12 +80,12 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
               [routerLink]="item.path"
               routerLinkActive="active"
               [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
-              [attr.aria-label]="item.label"
+              [attr.aria-label]="item.labelKey | translate"
             >
               <span class="nav-icon">{{ item.icon }}</span>
               <span class="nav-copy" *ngIf="sidebarExpanded()">
-                <span class="nav-label">{{ item.label }}</span>
-                <small>{{ item.hint }}</small>
+                <span class="nav-label">{{ item.labelKey | translate }}</span>
+                <small>{{ item.hintKey | translate }}</small>
               </span>
             </a>
           </section>
@@ -94,22 +96,29 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
         <header class="topbar card">
           <div class="topbar-copy">
             <div class="topbar-leading">
-              <button type="button" class="nav-toggle" (click)="toggleMobileNav()" *ngIf="isCompactViewport()">NAV</button>
-              <span class="topbar-label">Workspace</span>
+              <button type="button" class="nav-toggle" (click)="toggleMobileNav()" *ngIf="isCompactViewport()">{{ 'shell.mobileNav' | translate }}</button>
+              <span class="topbar-label">{{ 'shell.workspaceLabel' | translate }}</span>
             </div>
-            <strong>Integrated Management System</strong>
+            <strong>{{ 'shell.workspaceName' | translate }}</strong>
           </div>
 
           <div class="topbar-actions">
+            <label class="language-switcher" [attr.aria-label]="'common.language' | translate">
+              <span class="language-switcher__label">{{ 'common.language' | translate }}</span>
+              <select class="language-switcher__select" [value]="i18n.language()" (change)="changeLanguage($event)">
+                <option *ngFor="let option of i18n.languageOptions" [value]="option.code">{{ option.label }}</option>
+              </select>
+            </label>
+
             <button type="button" class="topbar-pin" (click)="togglePin()" *ngIf="!isCompactViewport()">
-              {{ sidebarPinned() ? 'Unpin sidebar' : 'Pin sidebar' }}
+              {{ sidebarPinned() ? ('shell.unpinSidebar' | translate) : ('shell.pinSidebar' | translate) }}
             </button>
 
             <div class="user-menu" [class.open]="menuOpen()">
               <button type="button" class="user-trigger" (click)="toggleMenu($event)">
                 <span class="user-trigger__copy">
                   <strong>{{ authStore.session()?.user?.email }}</strong>
-                  <small>{{ authStore.tenantSlug() || 'n/a' }}</small>
+                  <small>{{ authStore.tenantSlug() || ('common.na' | translate) }}</small>
                 </span>
                 <span class="user-trigger__caret">V</span>
               </button>
@@ -117,12 +126,12 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
               <section class="user-dropdown card" *ngIf="menuOpen()">
                 <div class="user-dropdown__identity">
                   <strong>{{ authStore.session()?.user?.email }}</strong>
-                  <small>{{ authStore.tenantSlug() || 'n/a' }}</small>
-                  <small>Role: {{ authStore.roleLabel() }}</small>
+                  <small>{{ authStore.tenantSlug() || ('common.na' | translate) }}</small>
+                  <small>{{ 'shell.rolePrefix' | translate }}: {{ authStore.roleLabel() }}</small>
                 </div>
                 <div class="user-dropdown__divider"></div>
                 <button type="button" class="user-dropdown__item" (click)="logout()">
-                  Sign out
+                  {{ 'shell.signOut' | translate }}
                 </button>
               </section>
             </div>
@@ -474,6 +483,33 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
       justify-content: flex-end;
     }
 
+    .language-switcher {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.55rem 0.8rem;
+      border-radius: 14px;
+      border: 1px solid rgba(23, 50, 37, 0.08);
+      background: rgba(244, 247, 242, 0.92);
+      color: var(--text-soft);
+    }
+
+    .language-switcher__label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .language-switcher__select {
+      min-width: 7.5rem;
+      border: 0;
+      background: transparent;
+      color: var(--text-soft);
+      font-weight: 700;
+      padding: 0;
+      outline: none;
+    }
+
     .nav-toggle,
     .topbar-pin {
       display: inline-flex;
@@ -681,6 +717,7 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
         justify-content: space-between;
       }
 
+      .language-switcher,
       .user-trigger,
       .user-dropdown {
         min-width: 100%;
@@ -691,6 +728,7 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
 })
 export class ShellComponent {
   protected readonly authStore = inject(AuthStore);
+  protected readonly i18n = inject(I18nService);
   protected readonly menuOpen = signal(false);
   protected readonly mobileNavOpen = signal(false);
   protected readonly sidebarPinned = signal(this.readPinnedPreference());
@@ -700,61 +738,60 @@ export class ShellComponent {
   protected readonly navGroups: NavGroup[] = [
     {
       key: 'start',
-      label: 'Start',
+      labelKey: 'shell.navGroups.start',
       items: [
-        { path: '/dashboard', label: 'Dashboard', hint: 'Workspace overview', icon: 'DB', exact: true, permission: 'dashboard.read' },
-        { path: '/implementation', label: 'Start Here', hint: 'Readiness and rollout path', icon: 'SH', permission: 'dashboard.read' }
+        { path: '/dashboard', labelKey: 'shell.nav.dashboard.label', hintKey: 'shell.nav.dashboard.hint', icon: 'DB', exact: true, permission: 'dashboard.read' },
+        { path: '/implementation', labelKey: 'shell.nav.startHere.label', hintKey: 'shell.nav.startHere.hint', icon: 'SH', permission: 'dashboard.read' }
       ]
     },
     {
       key: 'planning',
-      label: 'Planning',
+      labelKey: 'shell.navGroups.planning',
       items: [
-        { path: '/context', label: 'Context', hint: 'Clause 4 issues and parties', icon: 'CX', permission: 'context.read' },
-        { path: '/process-register', label: 'Process Register', hint: 'Business process links', icon: 'PR', permission: 'processes.read' },
-        { path: '/risks', label: 'Risks', hint: 'Assessment and treatment', icon: 'RK', permission: 'risks.read' },
-        { path: '/compliance-obligations', label: 'Obligations', hint: 'Legal and external requirements', icon: 'OB', permission: 'obligations.read' },
-        { path: '/compliance-obligations', label: 'Compliance Obligations', hint: 'Legal and external requirements', icon: 'OB', permission: 'obligations.read' }
+        { path: '/context', labelKey: 'shell.nav.context.label', hintKey: 'shell.nav.context.hint', icon: 'CX', permission: 'context.read' },
+        { path: '/process-register', labelKey: 'shell.nav.processRegister.label', hintKey: 'shell.nav.processRegister.hint', icon: 'PR', permission: 'processes.read' },
+        { path: '/risks', labelKey: 'shell.nav.risks.label', hintKey: 'shell.nav.risks.hint', icon: 'RK', permission: 'risks.read' },
+        { path: '/compliance-obligations', labelKey: 'shell.nav.complianceObligations.label', hintKey: 'shell.nav.complianceObligations.hint', icon: 'OB', permission: 'obligations.read' }
       ]
     },
     {
       key: 'operations',
-      label: 'Operations',
+      labelKey: 'shell.navGroups.operations',
       items: [
-        { path: '/documents', label: 'Documents', hint: 'Controlled library', icon: 'DC', permission: 'documents.read' },
-        { path: '/training', label: 'Training', hint: 'Assignments and evidence', icon: 'TR', permission: 'training.read' },
-        { path: '/external-providers', label: 'External Providers', hint: 'Supplier and service control', icon: 'EV', permission: 'providers.read' },
-        { path: '/change-management', label: 'Change Management', hint: 'Planned and reviewed changes', icon: 'CH', permission: 'change.read' },
-        { path: '/incidents', label: 'Incidents', hint: 'Incidents and near misses', icon: 'IN', permission: 'incidents.read' },
-        { path: '/environmental-aspects', label: 'Environmental Aspects', hint: 'Aspects and impacts', icon: 'EA', permission: 'aspects.read' },
-        { path: '/hazards', label: 'Hazards', hint: 'Hazards and harm review', icon: 'HZ', permission: 'hazards.read' }
+        { path: '/documents', labelKey: 'shell.nav.documents.label', hintKey: 'shell.nav.documents.hint', icon: 'DC', permission: 'documents.read' },
+        { path: '/training', labelKey: 'shell.nav.training.label', hintKey: 'shell.nav.training.hint', icon: 'TR', permission: 'training.read' },
+        { path: '/external-providers', labelKey: 'shell.nav.externalProviders.label', hintKey: 'shell.nav.externalProviders.hint', icon: 'EV', permission: 'providers.read' },
+        { path: '/change-management', labelKey: 'shell.nav.changeManagement.label', hintKey: 'shell.nav.changeManagement.hint', icon: 'CH', permission: 'change.read' },
+        { path: '/incidents', labelKey: 'shell.nav.incidents.label', hintKey: 'shell.nav.incidents.hint', icon: 'IN', permission: 'incidents.read' },
+        { path: '/environmental-aspects', labelKey: 'shell.nav.environmentalAspects.label', hintKey: 'shell.nav.environmentalAspects.hint', icon: 'EA', permission: 'aspects.read' },
+        { path: '/hazards', labelKey: 'shell.nav.hazards.label', hintKey: 'shell.nav.hazards.hint', icon: 'HZ', permission: 'hazards.read' }
       ]
     },
     {
       key: 'assurance',
-      label: 'Assurance',
+      labelKey: 'shell.navGroups.assurance',
       items: [
-        { path: '/audits', label: 'Audits', hint: 'Plans and findings', icon: 'AU', permission: 'audits.read' },
-        { path: '/ncr', label: 'NCR', hint: 'Nonconformance control', icon: 'NC', permission: 'ncr.read' },
-        { path: '/capa', label: 'CAPA', hint: 'Corrective workflows', icon: 'CP', permission: 'capa.read' },
-        { path: '/actions', label: 'Actions', hint: 'Global follow-up tracker', icon: 'AC', permission: 'action-items.read' }
+        { path: '/audits', labelKey: 'shell.nav.audits.label', hintKey: 'shell.nav.audits.hint', icon: 'AU', permission: 'audits.read' },
+        { path: '/ncr', labelKey: 'shell.nav.ncr.label', hintKey: 'shell.nav.ncr.hint', icon: 'NC', permission: 'ncr.read' },
+        { path: '/capa', labelKey: 'shell.nav.capa.label', hintKey: 'shell.nav.capa.hint', icon: 'CP', permission: 'capa.read' },
+        { path: '/actions', labelKey: 'shell.nav.actions.label', hintKey: 'shell.nav.actions.hint', icon: 'AC', permission: 'action-items.read' }
       ]
     },
     {
       key: 'leadership',
-      label: 'Leadership',
+      labelKey: 'shell.navGroups.leadership',
       items: [
-        { path: '/kpis', label: 'KPIs', hint: 'Targets and trends', icon: 'KP', permission: 'kpis.read' },
-        { path: '/management-review', label: 'Management Review', hint: 'Meetings and decisions', icon: 'MR', permission: 'management-review.read' },
-        { path: '/reports', label: 'Reports', hint: 'Exports and summaries', icon: 'RP', permission: 'reports.read' }
+        { path: '/kpis', labelKey: 'shell.nav.kpis.label', hintKey: 'shell.nav.kpis.hint', icon: 'KP', permission: 'kpis.read' },
+        { path: '/management-review', labelKey: 'shell.nav.managementReview.label', hintKey: 'shell.nav.managementReview.hint', icon: 'MR', permission: 'management-review.read' },
+        { path: '/reports', labelKey: 'shell.nav.reports.label', hintKey: 'shell.nav.reports.hint', icon: 'RP', permission: 'reports.read' }
       ]
     },
     {
       key: 'administration',
-      label: 'Administration',
+      labelKey: 'shell.navGroups.administration',
       items: [
-        { path: '/users', label: 'Users', hint: 'Access and ownership', icon: 'US', permission: 'users.read' },
-        { path: '/settings', label: 'Settings', hint: 'System configuration', icon: 'ST', permission: 'settings.read' }
+        { path: '/users', labelKey: 'shell.nav.users.label', hintKey: 'shell.nav.users.hint', icon: 'US', permission: 'users.read' },
+        { path: '/settings', labelKey: 'shell.nav.settings.label', hintKey: 'shell.nav.settings.hint', icon: 'ST', permission: 'settings.read' }
       ]
     }
   ];
@@ -821,6 +858,11 @@ export class ShellComponent {
   protected toggleMenu(event: Event) {
     event.stopPropagation();
     this.menuOpen.update((value) => !value);
+  }
+
+  protected changeLanguage(event: Event) {
+    const language = (event.target as HTMLSelectElement).value as AppLanguage;
+    this.i18n.setLanguage(language);
   }
 
   protected logout() {

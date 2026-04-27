@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { I18nService } from '../core/i18n.service';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
@@ -51,49 +52,49 @@ type CapaRow = {
   template: `
     <section class="page-grid">
       <iso-page-header
-        [label]="'CAPA'"
+        [label]="t('capa.common.label')"
         [title]="pageTitle()"
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
-        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/capa/new" class="button-link">+ New CAPA</a>
-        <a *ngIf="mode() === 'detail' && selectedCapa() && canWrite()" [routerLink]="['/capa', selectedCapa()?.id, 'edit']" [state]="returnLinkState()" class="button-link">Edit CAPA</a>
-        <button *ngIf="mode() === 'detail' && canDeleteCapa()" type="button" class="button-link danger" (click)="deleteCapa()">Delete CAPA</button>
-        <a *ngIf="mode() !== 'list' && returnNavigation()" [routerLink]="returnNavigation()!.route" [state]="returnNavigation()!.state" class="button-link secondary">Back to {{ returnNavigation()!.label }}</a>
-        <a *ngIf="mode() !== 'list'" routerLink="/capa" class="button-link secondary">Back to register</a>
+        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/capa/new" class="button-link">{{ t('capa.actions.new') }}</a>
+        <a *ngIf="mode() === 'detail' && selectedCapa() && canWrite()" [routerLink]="['/capa', selectedCapa()?.id, 'edit']" [state]="returnLinkState()" class="button-link">{{ t('capa.actions.edit') }}</a>
+        <button *ngIf="mode() === 'detail' && canDeleteCapa()" type="button" class="button-link danger" (click)="deleteCapa()">{{ t('capa.actions.delete') }}</button>
+        <a *ngIf="mode() !== 'list' && returnNavigation()" [routerLink]="returnNavigation()!.route" [state]="returnNavigation()!.state" class="button-link secondary">{{ t('capa.actions.backTo', { label: returnNavigation()!.label }) }}</a>
+        <a *ngIf="mode() !== 'list'" routerLink="/capa" class="button-link secondary">{{ t('capa.actions.backToRegister') }}</a>
       </iso-page-header>
 
       <section *ngIf="mode() === 'list'" class="page-stack">
         <div class="card list-card">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Register</span>
-              <h3>CAPA register</h3>
-              <p class="subtle">CAPA manages root cause, corrective action, verification, and closure after a significant issue is raised.</p>
+              <span class="section-eyebrow">{{ t('capa.list.eyebrow') }}</span>
+              <h3>{{ t('capa.list.title') }}</h3>
+              <p class="subtle">{{ t('capa.list.copy') }}</p>
             </div>
           </div>
 
           <div class="toolbar top-space">
             <div class="toolbar-meta">
               <div>
-                <p class="toolbar-title">CAPA filters</p>
-                <p class="toolbar-copy">Search by title or source, then open the record for cause analysis, action follow-up, and closure evidence.</p>
+                <p class="toolbar-title">{{ t('capa.list.filtersTitle') }}</p>
+                <p class="toolbar-copy">{{ t('capa.list.filtersCopy') }}</p>
               </div>
               <div class="toolbar-stats">
                 <article class="toolbar-stat">
-                  <span>Total</span>
+                  <span>{{ t('capa.list.stats.total') }}</span>
                   <strong>{{ capas().length }}</strong>
                 </article>
                 <article class="toolbar-stat">
-                  <span>In progress</span>
+                  <span>{{ t('capa.list.stats.inProgress') }}</span>
                   <strong>{{ countByStatus('IN_PROGRESS') }}</strong>
                 </article>
                 <article class="toolbar-stat">
-                  <span>Closed</span>
+                  <span>{{ t('capa.list.stats.closed') }}</span>
                   <strong>{{ countByStatus('CLOSED') }}</strong>
                 </article>
                 <article class="toolbar-stat">
-                  <span>Overdue</span>
+                  <span>{{ t('capa.list.stats.overdue') }}</span>
                   <strong>{{ overdueCount() }}</strong>
                 </article>
               </div>
@@ -101,13 +102,13 @@ type CapaRow = {
 
             <div class="filter-row standard-filter-grid">
               <label class="field compact-field search-field">
-                <span>Search</span>
-                <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Title or source">
+                <span>{{ t('capa.list.filters.search') }}</span>
+                <input [value]="search()" (input)="search.set(readInputValue($event))" [placeholder]="t('capa.list.placeholders.search')">
               </label>
               <label class="field compact-field">
-                <span>Status</span>
+                <span>{{ t('capa.common.status') }}</span>
                 <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
-                  <option value="">All statuses</option>
+                  <option value="">{{ t('capa.list.filters.allStatuses') }}</option>
                   <option>OPEN</option>
                   <option>INVESTIGATING</option>
                   <option>ACTION_PLANNED</option>
@@ -117,37 +118,37 @@ type CapaRow = {
                 </select>
               </label>
               <label class="field compact-field">
-                <span>Sort by</span>
+                <span>{{ t('capa.list.filters.sortBy') }}</span>
                 <select [value]="sortBy()" (change)="setSortBy(readSelectValue($event))">
-                  <option value="attention">Attention</option>
-                  <option value="dueDate">Due date</option>
-                  <option value="updated">Updated</option>
-                  <option value="status">Status</option>
+                  <option value="attention">{{ t('capa.list.sort.attention') }}</option>
+                  <option value="dueDate">{{ t('capa.list.sort.dueDate') }}</option>
+                  <option value="updated">{{ t('capa.list.sort.updated') }}</option>
+                  <option value="status">{{ t('capa.common.status') }}</option>
                 </select>
               </label>
             </div>
           </div>
 
           <div class="empty-state" *ngIf="loading()">
-            <strong>Loading CAPA records</strong>
-            <span>Refreshing nonconformity, corrective action, and closure status.</span>
+            <strong>{{ t('capa.empty.loadingTitle') }}</strong>
+            <span>{{ t('capa.empty.loadingCopy') }}</span>
           </div>
 
           <div class="empty-state top-space" *ngIf="!loading() && !filteredCapas().length">
-            <strong>No CAPA records match the current filter</strong>
-            <span>Adjust the search or create the first CAPA entry for this tenant.</span>
+            <strong>{{ t('capa.empty.noneTitle') }}</strong>
+            <span>{{ t('capa.empty.noneCopy') }}</span>
           </div>
 
           <div class="data-table-wrap" *ngIf="!loading() && filteredCapas().length">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>CAPA</th>
-                  <th>Source</th>
-                  <th>Owner</th>
-                  <th>Status</th>
-                  <th>Due date</th>
-                  <th>Attention</th>
+                  <th>{{ t('capa.table.capa') }}</th>
+                  <th>{{ t('capa.table.source') }}</th>
+                  <th>{{ t('capa.table.owner') }}</th>
+                  <th>{{ t('capa.common.status') }}</th>
+                  <th>{{ t('capa.common.dueDate') }}</th>
+                  <th>{{ t('capa.table.attention') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -155,13 +156,13 @@ type CapaRow = {
                   <td>
                     <div class="table-title">
                       <strong>{{ item.title }}</strong>
-                      <small>{{ item.category || 'General' }}</small>
+                      <small>{{ item.category || t('capa.common.general') }}</small>
                     </div>
                   </td>
                   <td>{{ item.source }}</td>
                   <td>{{ ownerName(item.ownerId) }}</td>
-                  <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ item.status }}</span></td>
-                  <td>{{ item.dueDate ? (item.dueDate | date:'yyyy-MM-dd') : 'N/A' }}</td>
+                  <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ labelize(item.status) }}</span></td>
+                  <td>{{ item.dueDate ? (item.dueDate | date:'yyyy-MM-dd') : t('capa.common.na') }}</td>
                   <td><span class="status-badge" [ngClass]="attentionClass(item)">{{ attentionLabel(item) }}</span></td>
                 </tr>
               </tbody>
@@ -174,9 +175,9 @@ type CapaRow = {
         <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">CAPA workflow</span>
-              <h3>{{ mode() === 'create' ? 'Raise CAPA' : 'Edit CAPA' }}</h3>
-              <p class="subtle">Keep the problem statement, cause, actions, and closure inputs in clearly separated sections.</p>
+              <span class="section-eyebrow">{{ t('capa.form.eyebrow') }}</span>
+              <h3>{{ mode() === 'create' ? t('capa.page.titleCreate') : t('capa.page.titleEdit') }}</h3>
+              <p class="subtle">{{ t('capa.form.copy') }}</p>
             </div>
           </div>
 
@@ -188,22 +189,22 @@ type CapaRow = {
             <small>{{ capaWorkflowHint() }}</small>
           </section>
 
-          <nav class="capa-stage-strip" aria-label="CAPA lifecycle">
+          <nav class="capa-stage-strip" [attr.aria-label]="t('capa.form.lifecycleAriaLabel')">
             <div class="capa-stage" [class.active]="capaLifecycleStage(form.getRawValue().status) === 'define'">
-              <strong>1. Define</strong>
-              <small>Problem and source</small>
+              <strong>{{ t('capa.form.stages.defineTitle') }}</strong>
+              <small>{{ t('capa.form.stages.defineCopy') }}</small>
             </div>
             <div class="capa-stage" [class.active]="capaLifecycleStage(form.getRawValue().status) === 'investigate'">
-              <strong>2. Investigate</strong>
-              <small>Containment and cause</small>
+              <strong>{{ t('capa.form.stages.investigateTitle') }}</strong>
+              <small>{{ t('capa.form.stages.investigateCopy') }}</small>
             </div>
             <div class="capa-stage" [class.active]="capaLifecycleStage(form.getRawValue().status) === 'act'">
-              <strong>3. Act</strong>
-              <small>Correction and action</small>
+              <strong>{{ t('capa.form.stages.actTitle') }}</strong>
+              <small>{{ t('capa.form.stages.actCopy') }}</small>
             </div>
             <div class="capa-stage" [class.active]="capaLifecycleStage(form.getRawValue().status) === 'verify'">
-              <strong>4. Verify & close</strong>
-              <small>Effectiveness and closure</small>
+              <strong>{{ t('capa.form.stages.verifyTitle') }}</strong>
+              <small>{{ t('capa.form.stages.verifyCopy') }}</small>
             </div>
           </nav>
 
@@ -322,8 +323,8 @@ type CapaRow = {
           </section>
 
           <div class="button-row">
-            <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save CAPA' }}</button>
-            <a [routerLink]="selectedId() ? ['/capa', selectedId()] : ['/capa']" [state]="returnLinkState()" class="button-link secondary">Cancel</a>
+            <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? t('capa.actions.saving') : t('capa.actions.save') }}</button>
+            <a [routerLink]="selectedId() ? ['/capa', selectedId()] : ['/capa']" [state]="returnLinkState()" class="button-link secondary">{{ t('common.cancel') }}</a>
           </div>
         </form>
 
@@ -335,28 +336,28 @@ type CapaRow = {
           <section class="card detail-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">CAPA detail</span>
+                <span class="section-eyebrow">{{ t('capa.detail.eyebrow') }}</span>
                 <h3>{{ selectedCapa()?.title }}</h3>
                 <p class="subtle">{{ selectedCapa()?.source }}{{ selectedCapa()?.category ? ' | ' + selectedCapa()?.category : '' }}</p>
               </div>
-              <span class="status-badge" [ngClass]="statusClass(selectedCapa()?.status || 'OPEN')">{{ selectedCapa()?.status }}</span>
+              <span class="status-badge" [ngClass]="statusClass(selectedCapa()?.status || 'OPEN')">{{ labelize(selectedCapa()?.status || 'OPEN') }}</span>
             </div>
 
             <div class="summary-strip top-space">
               <article class="summary-item">
-                <span>Owner</span>
+                <span>{{ t('capa.common.owner') }}</span>
                 <strong>{{ ownerName(selectedCapa()?.ownerId) }}</strong>
               </article>
               <article class="summary-item">
-                <span>Due date</span>
-                <strong>{{ selectedCapa()?.dueDate ? (selectedCapa()?.dueDate | date:'yyyy-MM-dd') : 'Not set' }}</strong>
+                <span>{{ t('capa.common.dueDate') }}</span>
+                <strong>{{ selectedCapa()?.dueDate ? (selectedCapa()?.dueDate | date:'yyyy-MM-dd') : t('capa.common.notSet') }}</strong>
               </article>
               <article class="summary-item">
-                <span>Closed at</span>
-                <strong>{{ selectedCapa()?.closedAt ? (selectedCapa()?.closedAt | date:'yyyy-MM-dd HH:mm') : 'Open' }}</strong>
+                <span>{{ t('capa.detail.closedAt') }}</span>
+                <strong>{{ selectedCapa()?.closedAt ? (selectedCapa()?.closedAt | date:'yyyy-MM-dd HH:mm') : t('capa.detail.open') }}</strong>
               </article>
               <article class="summary-item">
-                <span>Last updated</span>
+                <span>{{ t('capa.detail.lastUpdated') }}</span>
                 <strong>{{ selectedCapa()?.updatedAt | date:'yyyy-MM-dd HH:mm' }}</strong>
               </article>
             </div>
@@ -372,22 +373,22 @@ type CapaRow = {
               <p>{{ attentionNarrative() }}</p>
             </section>
 
-            <nav class="capa-stage-strip top-space" aria-label="CAPA lifecycle">
+            <nav class="capa-stage-strip top-space" [attr.aria-label]="t('capa.form.lifecycleAriaLabel')">
               <div class="capa-stage" [class.active]="capaLifecycleStage(selectedCapa()?.status || 'OPEN') === 'define'">
-                <strong>1. Define</strong>
-                <small>Problem and source</small>
+                <strong>{{ t('capa.form.stages.defineTitle') }}</strong>
+                <small>{{ t('capa.form.stages.defineCopy') }}</small>
               </div>
               <div class="capa-stage" [class.active]="capaLifecycleStage(selectedCapa()?.status || 'OPEN') === 'investigate'">
-                <strong>2. Investigate</strong>
-                <small>Containment and cause</small>
+                <strong>{{ t('capa.form.stages.investigateTitle') }}</strong>
+                <small>{{ t('capa.form.stages.investigateCopy') }}</small>
               </div>
               <div class="capa-stage" [class.active]="capaLifecycleStage(selectedCapa()?.status || 'OPEN') === 'act'">
-                <strong>3. Act</strong>
-                <small>Correction and action</small>
+                <strong>{{ t('capa.form.stages.actTitle') }}</strong>
+                <small>{{ t('capa.form.stages.actCopy') }}</small>
               </div>
               <div class="capa-stage" [class.active]="capaLifecycleStage(selectedCapa()?.status || 'OPEN') === 'verify'">
-                <strong>4. Verify & close</strong>
-                <small>Effectiveness and closure</small>
+                <strong>{{ t('capa.form.stages.verifyTitle') }}</strong>
+                <small>{{ t('capa.form.stages.verifyCopy') }}</small>
               </div>
             </nav>
 
@@ -517,6 +518,7 @@ export class CapaPageComponent implements OnInit, OnChanges {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -572,30 +574,34 @@ export class CapaPageComponent implements OnInit, OnChanges {
     }
   }
 
+  protected t(key: string, params?: Record<string, unknown>) {
+    return this.i18n.t(key, params);
+  }
+
   protected pageTitle() {
     return {
-      list: 'CAPA register',
-      create: 'Raise CAPA',
-      detail: this.selectedCapa()?.title || 'CAPA detail',
-      edit: this.selectedCapa()?.title || 'Edit CAPA'
+      list: this.t('capa.page.titleList'),
+      create: this.t('capa.page.titleCreate'),
+      detail: this.selectedCapa()?.title || this.t('capa.page.titleDetail'),
+      edit: this.selectedCapa()?.title || this.t('capa.page.titleEdit')
     }[this.mode()];
   }
 
   protected pageDescription() {
     return {
-      list: 'Use CAPA for formal corrective action: define the issue, confirm root cause, assign action, verify effectiveness, and close with evidence.',
-      create: 'Create a CAPA record for issues that need formal corrective action and tracked closure.',
-      detail: 'Review the problem, root cause, actions, verification, and closure evidence in one place.',
-      edit: 'Update the CAPA record while keeping the corrective-action trail clear.'
+      list: this.t('capa.page.descriptionList'),
+      create: this.t('capa.page.descriptionCreate'),
+      detail: this.t('capa.page.descriptionDetail'),
+      edit: this.t('capa.page.descriptionEdit')
     }[this.mode()];
   }
 
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: 'CAPA' }];
-    const base = [{ label: 'CAPA', link: '/capa' }];
-    if (this.mode() === 'create') return [...base, { label: 'New CAPA' }];
-    if (this.mode() === 'edit') return [...base, { label: this.selectedCapa()?.title || 'CAPA', link: `/capa/${this.selectedId()}` }, { label: 'Edit' }];
-    return [...base, { label: this.selectedCapa()?.title || 'CAPA' }];
+    if (this.mode() === 'list') return [{ label: this.t('capa.common.label') }];
+    const base = [{ label: this.t('capa.common.label'), link: '/capa' }];
+    if (this.mode() === 'create') return [...base, { label: this.t('capa.breadcrumbs.new') }];
+    if (this.mode() === 'edit') return [...base, { label: this.selectedCapa()?.title || this.t('capa.common.label'), link: `/capa/${this.selectedId()}` }, { label: this.t('capa.breadcrumbs.edit') }];
+    return [...base, { label: this.selectedCapa()?.title || this.t('capa.common.label') }];
   }
 
   protected filteredCapas() {
@@ -633,31 +639,31 @@ export class CapaPageComponent implements OnInit, OnChanges {
 
   protected capaWorkflowHeadline(status: CapaStatus) {
     return {
-      OPEN: 'Start by defining the issue clearly',
-      INVESTIGATING: 'Capture containment and root cause',
-      ACTION_PLANNED: 'Plan the corrective action clearly',
-      IN_PROGRESS: 'Keep ownership and due dates visible',
-      VERIFIED: 'Confirm the action worked before closure',
-      CLOSED: 'Closure should be supported by a clear summary'
+      OPEN: this.t('capa.workflow.headline.OPEN'),
+      INVESTIGATING: this.t('capa.workflow.headline.INVESTIGATING'),
+      ACTION_PLANNED: this.t('capa.workflow.headline.ACTION_PLANNED'),
+      IN_PROGRESS: this.t('capa.workflow.headline.IN_PROGRESS'),
+      VERIFIED: this.t('capa.workflow.headline.VERIFIED'),
+      CLOSED: this.t('capa.workflow.headline.CLOSED')
     }[status];
   }
 
   protected capaWorkflowNarrative(status: CapaStatus) {
     return {
-      OPEN: 'Record the problem clearly so the team understands what happened and why formal corrective action is needed.',
-      INVESTIGATING: 'Containment and root cause should be clear before the CAPA moves into action planning.',
-      ACTION_PLANNED: 'The corrective response should now be clear enough to assign, track, and review.',
-      IN_PROGRESS: 'Once actions are underway, owner accountability and due-date control become the main focus.',
-      VERIFIED: 'Verification should confirm that the action was effective, not only completed.',
-      CLOSED: 'A closed CAPA should explain what evidence supports closure and why recurrence is now controlled.'
+      OPEN: this.t('capa.workflow.copy.OPEN'),
+      INVESTIGATING: this.t('capa.workflow.copy.INVESTIGATING'),
+      ACTION_PLANNED: this.t('capa.workflow.copy.ACTION_PLANNED'),
+      IN_PROGRESS: this.t('capa.workflow.copy.IN_PROGRESS'),
+      VERIFIED: this.t('capa.workflow.copy.VERIFIED'),
+      CLOSED: this.t('capa.workflow.copy.CLOSED')
     }[status];
   }
 
   protected capaWorkflowHint() {
     const raw = this.form.getRawValue();
     return raw.ownerId
-      ? 'Owner already assigned. Keep the due date and verification method aligned with the selected status.'
-      : 'Assign an owner once the CAPA moves beyond initial definition so accountability is visible.';
+      ? this.t('capa.workflow.hint.assigned')
+      : this.t('capa.workflow.hint.unassigned');
   }
 
   protected capaLifecycleStage(status: CapaStatus) {
@@ -670,15 +676,15 @@ export class CapaPageComponent implements OnInit, OnChanges {
   protected capaActionControlCopy() {
     const raw = this.form.getRawValue();
     if (!raw.ownerId && !raw.dueDate) {
-      return 'Assign an owner and due date once the CAPA moves into action planning so follow-up is visible.';
+      return this.t('capa.actionControl.noOwnerNoDate');
     }
     if (!raw.ownerId) {
-      return 'Due date is set, but owner is still missing. Assign ownership before the CAPA relies on action follow-up.';
+      return this.t('capa.actionControl.noOwner');
     }
     if (!raw.dueDate) {
-      return 'Owner is assigned, but due date is still missing. Add a due date so the CAPA can be monitored properly.';
+      return this.t('capa.actionControl.noDueDate');
     }
-    return 'Owner and due date are set. Keep them aligned with the current CAPA stage and any linked tasks.';
+    return this.t('capa.actionControl.ready');
   }
 
   protected capaClosureBlockers() {
@@ -718,12 +724,12 @@ export class CapaPageComponent implements OnInit, OnChanges {
 
   protected save() {
     if (!this.canWrite()) {
-      this.error.set('You do not have permission to update CAPA records.');
+      this.error.set(this.t('capa.messages.noPermission'));
       return;
     }
 
     if (this.form.invalid) {
-      this.error.set('Complete the required CAPA fields.');
+      this.error.set(this.t('capa.messages.completeRequired'));
       return;
     }
 
@@ -740,14 +746,14 @@ export class CapaPageComponent implements OnInit, OnChanges {
         this.saving.set(false);
         this.router.navigate(['/capa', capa.id], {
           state: {
-            notice: 'CAPA saved successfully.',
+            notice: this.t('capa.messages.saved'),
             returnNavigation: this.returnNavigation()
           }
         });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'CAPA save failed.'));
+        this.error.set(this.readError(error, this.t('capa.messages.saveFailed')));
       }
     });
   }
@@ -812,15 +818,28 @@ export class CapaPageComponent implements OnInit, OnChanges {
 
   protected ownerName(ownerId?: string | null) {
     if (!ownerId) {
-      return 'Unassigned';
+      return this.t('capa.common.unassigned');
     }
     const user = this.users().find((item) => item.id === ownerId);
-    return user ? `${user.firstName} ${user.lastName}` : 'Assigned';
+    return user ? `${user.firstName} ${user.lastName}` : this.t('capa.common.assigned');
+  }
+
+  protected labelize(value: string) {
+    const map: Record<string, string> = {
+      OPEN: 'capa.enums.status.OPEN',
+      INVESTIGATING: 'capa.enums.status.INVESTIGATING',
+      ACTION_PLANNED: 'capa.enums.status.ACTION_PLANNED',
+      IN_PROGRESS: 'capa.enums.status.IN_PROGRESS',
+      VERIFIED: 'capa.enums.status.VERIFIED',
+      CLOSED: 'capa.enums.status.CLOSED'
+    };
+    const key = map[value];
+    return key ? this.t(key) : value.toLowerCase().split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
   }
 
   protected attentionLabel(item: CapaRow) {
     const reasons = this.capaAttentionReasons(item);
-    if (!reasons.length) return 'Under control';
+    if (!reasons.length) return this.t('capa.attention.underControl');
     return reasons.length > 1 ? `${reasons[0]} +${reasons.length - 1}` : reasons[0];
   }
 
@@ -834,18 +853,20 @@ export class CapaPageComponent implements OnInit, OnChanges {
   protected attentionHeadline() {
     const capa = this.selectedCapa();
     return capa && this.capaAttentionReasons(capa).length
-      ? 'This CAPA currently needs management attention.'
-      : 'This CAPA is currently under control.';
+      ? this.t('capa.attention.headline.needsAttention')
+      : this.t('capa.attention.headline.underControl');
   }
 
   protected attentionNarrative() {
     const capa = this.selectedCapa();
-    if (!capa) return 'Attention guidance appears after the CAPA is saved.';
+    if (!capa) return this.t('capa.attention.narrative.unsaved');
     const reasons = this.capaAttentionReasons(capa);
     if (!reasons.length) {
-      return 'Ownership, due date, verification, and current CAPA stage are controlled enough for routine follow-up.';
+      return this.t('capa.attention.narrative.underControl');
     }
-    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+    return this.t('capa.attention.narrative.needsAttention', {
+      reasons: reasons.map((reason) => reason.toLowerCase()).join(', ')
+    });
   }
 
   protected returnLinkState() {
@@ -862,7 +883,7 @@ export class CapaPageComponent implements OnInit, OnChanges {
       return;
     }
 
-    if (!window.confirm('Delete this CAPA? Closed CAPA records cannot be deleted.')) {
+    if (!window.confirm(this.t('capa.messages.deleteConfirm'))) {
       return;
     }
 
@@ -872,11 +893,11 @@ export class CapaPageComponent implements OnInit, OnChanges {
     this.api.delete(`capa/${this.selectedId()}`).subscribe({
       next: () => {
         this.saving.set(false);
-        void this.router.navigate(['/capa'], { state: { notice: 'CAPA deleted.' } });
+        void this.router.navigate(['/capa'], { state: { notice: this.t('capa.messages.deleted') } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'CAPA deletion failed.'));
+        this.error.set(this.readError(error, this.t('capa.messages.deleteFailed')));
       }
     });
   }
@@ -934,7 +955,7 @@ export class CapaPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'CAPA register could not be loaded.'));
+        this.error.set(this.readError(error, this.t('capa.messages.loadListFailed')));
       }
     });
   }
@@ -964,7 +985,7 @@ export class CapaPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'CAPA details could not be loaded.'));
+        this.error.set(this.readError(error, this.t('capa.messages.loadDetailFailed')));
       }
     });
   }

@@ -38,7 +38,7 @@ type Breadcrumb = {
   styles: [`
     .hero-copy {
       display: grid;
-      gap: 0.2rem;
+      gap: 0.15rem;
       max-width: 52rem;
     }
 
@@ -63,19 +63,32 @@ type Breadcrumb = {
     .hero-copy h2 {
       letter-spacing: -0.05em;
       font-weight: 800;
+      color: var(--text);
     }
 
     .hero-copy p {
       max-width: 44rem;
+      color: var(--muted);
     }
 
     .hero-supporting-line {
-      margin-top: 0.85rem;
+      margin-top: 0.7rem;
+      padding-inline-start: 0.8rem;
       color: var(--muted-strong);
-      font-size: 0.84rem;
+      font-size: 0.8rem;
       font-weight: 700;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
+      position: relative;
+    }
+
+    .hero-supporting-line::before {
+      content: '';
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 3px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--brand-strong), var(--accent));
     }
 
     @media (max-width: 960px) {

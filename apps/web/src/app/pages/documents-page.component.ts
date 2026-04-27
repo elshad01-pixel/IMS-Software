@@ -2,9 +2,11 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Input, OnChanges, OnInit, SimpleChanges, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { I18nService } from '../core/i18n.service';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
@@ -56,50 +58,50 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
 @Component({
   selector: 'iso-documents-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, RecordWorkItemsComponent, AttachmentPanelComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, RecordWorkItemsComponent, AttachmentPanelComponent, TranslatePipe],
   template: `
     <section class="page-grid">
       <iso-page-header
-        [label]="'Documents'"
+        [label]="t('documents.page.label')"
         [title]="pageTitle()"
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
-        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">Back to Start Here</a>
-        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/documents/new" class="button-link">+ New document</a>
-        <a *ngIf="mode() === 'detail' && selectedDocument() && canWrite()" [routerLink]="['/documents', selectedDocument()?.id, 'edit']" class="button-link">Edit document</a>
-        <button *ngIf="mode() === 'detail' && canArchiveDocument()" type="button" class="button-link secondary" (click)="archiveDocument()">Obsolete document</button>
-        <button *ngIf="mode() === 'detail' && canDeleteDocument()" type="button" class="button-link danger" (click)="deleteDocument()">Delete draft</button>
-        <a *ngIf="mode() !== 'list'" routerLink="/documents" class="button-link secondary">Back to register</a>
+        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">{{ 'documents.actions.backToStartHere' | translate }}</a>
+        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/documents/new" class="button-link">+ {{ 'documents.actions.new' | translate }}</a>
+        <a *ngIf="mode() === 'detail' && selectedDocument() && canWrite()" [routerLink]="['/documents', selectedDocument()?.id, 'edit']" class="button-link">{{ 'documents.actions.edit' | translate }}</a>
+        <button *ngIf="mode() === 'detail' && canArchiveDocument()" type="button" class="button-link secondary" (click)="archiveDocument()">{{ 'documents.actions.obsolete' | translate }}</button>
+        <button *ngIf="mode() === 'detail' && canDeleteDocument()" type="button" class="button-link danger" (click)="deleteDocument()">{{ 'documents.actions.deleteDraft' | translate }}</button>
+        <a *ngIf="mode() !== 'list'" routerLink="/documents" class="button-link secondary">{{ 'documents.actions.backToRegister' | translate }}</a>
       </iso-page-header>
 
       <section *ngIf="mode() === 'list'" class="page-stack">
         <div class="card list-card">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Register</span>
-              <h3>Controlled document register</h3>
-              <p class="subtle">Controlled documents are the live policies, procedures, forms, and instructions people use to run the system every day.</p>
+              <span class="section-eyebrow">{{ 'documents.list.eyebrow' | translate }}</span>
+              <h3>{{ 'documents.list.title' | translate }}</h3>
+              <p class="subtle">{{ 'documents.list.copy' | translate }}</p>
             </div>
           </div>
 
           <div class="toolbar filter-space">
             <div class="toolbar-meta">
               <div>
-                <p class="toolbar-title">Register filters</p>
-                <p class="toolbar-copy">Search by code, title, or type, then open a record for review or revision control.</p>
+                <p class="toolbar-title">{{ 'documents.list.filtersTitle' | translate }}</p>
+                <p class="toolbar-copy">{{ 'documents.list.filtersCopy' | translate }}</p>
               </div>
               <div class="toolbar-stats">
                 <article class="toolbar-stat">
-                  <span>Total</span>
+                  <span>{{ 'documents.list.stats.total' | translate }}</span>
                   <strong>{{ documents().length }}</strong>
                 </article>
                 <article class="toolbar-stat">
-                  <span>Approved</span>
+                  <span>{{ 'documents.list.stats.approved' | translate }}</span>
                   <strong>{{ countByStatus('APPROVED') }}</strong>
                 </article>
                 <article class="toolbar-stat">
-                  <span>In review</span>
+                  <span>{{ 'documents.list.stats.inReview' | translate }}</span>
                   <strong>{{ countByStatus('REVIEW') }}</strong>
                 </article>
               </div>
@@ -107,42 +109,42 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
 
             <div class="filter-row standard-filter-grid">
               <label class="field compact-field search-field">
-                <span>Search</span>
-                <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Code, title, or type">
+                <span>{{ 'documents.list.searchLabel' | translate }}</span>
+                <input [value]="search()" (input)="search.set(readInputValue($event))" [placeholder]="t('documents.list.searchPlaceholder')">
               </label>
               <label class="field compact-field">
-                <span>Status</span>
+                <span>{{ 'documents.list.statusLabel' | translate }}</span>
                 <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
-                  <option value="">All statuses</option>
-                  <option value="DRAFT">Draft</option>
-                  <option value="REVIEW">Review</option>
-                  <option value="APPROVED">Approved</option>
-                  <option value="OBSOLETE">Obsolete</option>
+                  <option value="">{{ 'documents.list.allStatuses' | translate }}</option>
+                  <option value="DRAFT">{{ 'documents.status.draft' | translate }}</option>
+                  <option value="REVIEW">{{ 'documents.status.review' | translate }}</option>
+                  <option value="APPROVED">{{ 'documents.status.approved' | translate }}</option>
+                  <option value="OBSOLETE">{{ 'documents.status.obsolete' | translate }}</option>
                 </select>
               </label>
             </div>
           </div>
 
           <div class="empty-state" *ngIf="loading()">
-            <strong>Loading documents</strong>
-            <span>Refreshing the controlled document register.</span>
+            <strong>{{ 'documents.list.loadingTitle' | translate }}</strong>
+            <span>{{ 'documents.list.loadingCopy' | translate }}</span>
           </div>
 
           <div class="empty-state top-space" *ngIf="!loading() && !filteredDocuments().length">
-            <strong>No documents match the current filter</strong>
-            <span>Adjust the search or create the first controlled document for this tenant.</span>
+            <strong>{{ 'documents.list.emptyTitle' | translate }}</strong>
+            <span>{{ 'documents.list.emptyCopy' | translate }}</span>
           </div>
 
           <div class="data-table-wrap" *ngIf="!loading() && filteredDocuments().length">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Document</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th>Revision</th>
-                  <th>Review due</th>
-                  <th>Updated</th>
+                  <th>{{ 'documents.list.table.document' | translate }}</th>
+                  <th>{{ 'documents.list.table.type' | translate }}</th>
+                  <th>{{ 'documents.list.table.status' | translate }}</th>
+                  <th>{{ 'documents.list.table.revision' | translate }}</th>
+                  <th>{{ 'documents.list.table.reviewDue' | translate }}</th>
+                  <th>{{ 'documents.list.table.updated' | translate }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -156,7 +158,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
                   <td>{{ item.type }}</td>
                   <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ documentStatusLabel(item.status) }}</span></td>
                   <td>V{{ item.version }}.{{ item.revision }}</td>
-                  <td>{{ item.reviewDueDate ? (item.reviewDueDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
+                  <td>{{ item.reviewDueDate ? (item.reviewDueDate | date:'yyyy-MM-dd') : t('common.notSet') }}</td>
                   <td>{{ item.updatedAt | date:'yyyy-MM-dd' }}</td>
                 </tr>
               </tbody>
@@ -169,86 +171,86 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
         <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Metadata</span>
-              <h3>{{ mode() === 'create' ? 'New controlled document' : 'Edit document' }}</h3>
-              <p class="subtle">Set the document identity, owner, and lifecycle here. Evidence and actions stay in dedicated panels once the record exists.</p>
+              <span class="section-eyebrow">{{ 'documents.form.eyebrow' | translate }}</span>
+              <h3>{{ mode() === 'create' ? t('documents.form.createTitle') : t('documents.form.editTitle') }}</h3>
+              <p class="subtle">{{ 'documents.form.copy' | translate }}</p>
             </div>
           </div>
 
           <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
           <section class="detail-section">
-            <h4>Document identity</h4>
+            <h4>{{ 'documents.form.identityTitle' | translate }}</h4>
             <div class="form-grid-2 top-space">
               <label class="field">
-                <span>Code</span>
+                <span>{{ 'documents.form.code' | translate }}</span>
                 <input formControlName="code" [placeholder]="documentCodePlaceholder()">
               </label>
               <label class="field">
-                <span>Type</span>
+                <span>{{ 'documents.form.type' | translate }}</span>
                 <select formControlName="type">
-                  <option value="">Select type</option>
+                  <option value="">{{ 'documents.form.selectType' | translate }}</option>
                   <option *ngFor="let type of documentTypes()" [value]="type">{{ type }}</option>
                 </select>
               </label>
             </div>
 
             <label class="field top-space">
-              <span>Title</span>
-              <input formControlName="title" placeholder="Control of documented information">
+              <span>{{ 'documents.form.title' | translate }}</span>
+              <input formControlName="title" [placeholder]="t('documents.form.titlePlaceholder')">
             </label>
 
             <label class="field top-space">
-              <span>Summary</span>
-              <textarea rows="4" formControlName="summary" placeholder="Purpose, scope, and intended use"></textarea>
+              <span>{{ 'documents.form.summary' | translate }}</span>
+              <textarea rows="4" formControlName="summary" [placeholder]="t('documents.form.summaryPlaceholder')"></textarea>
             </label>
           </section>
 
           <section class="detail-section">
-            <h4>Lifecycle and ownership</h4>
+            <h4>{{ 'documents.form.lifecycleTitle' | translate }}</h4>
             <section class="compliance-note top-space">
               <strong>{{ documentLifecycleHeading(form.getRawValue().status) }}</strong>
               <span>{{ documentLifecycleHint(form.getRawValue().status) }}</span>
             </section>
             <div class="form-grid-2 top-space">
               <label class="field">
-                <span>Owner</span>
+                <span>{{ 'documents.form.owner' | translate }}</span>
                 <select formControlName="ownerId">
-                  <option value="">Unassigned</option>
+                  <option value="">{{ 'documents.form.unassigned' | translate }}</option>
                   <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
                 </select>
               </label>
               <label class="field">
-                <span>Status</span>
+                <span>{{ 'documents.list.statusLabel' | translate }}</span>
                 <select formControlName="status">
-                  <option value="DRAFT">Draft</option>
-                  <option value="REVIEW">Review</option>
-                  <option value="APPROVED">Approved</option>
-                  <option value="OBSOLETE">Obsolete</option>
+                  <option value="DRAFT">{{ 'documents.status.draft' | translate }}</option>
+                  <option value="REVIEW">{{ 'documents.status.review' | translate }}</option>
+                  <option value="APPROVED">{{ 'documents.status.approved' | translate }}</option>
+                  <option value="OBSOLETE">{{ 'documents.status.obsolete' | translate }}</option>
                 </select>
               </label>
             </div>
 
             <div class="form-grid-2 top-space">
               <label class="field">
-                <span>Effective date</span>
+                <span>{{ 'documents.form.effectiveDate' | translate }}</span>
                 <input type="date" formControlName="effectiveDate">
               </label>
               <label class="field">
-                <span>Review due date</span>
+                <span>{{ 'documents.form.reviewDueDate' | translate }}</span>
                 <input type="date" formControlName="reviewDueDate">
               </label>
             </div>
 
             <label class="field top-space">
-              <span>Change summary</span>
-              <textarea rows="3" formControlName="changeSummary" placeholder="What changed in this revision"></textarea>
+              <span>{{ 'documents.form.changeSummary' | translate }}</span>
+              <textarea rows="3" formControlName="changeSummary" [placeholder]="t('documents.form.changeSummaryPlaceholder')"></textarea>
             </label>
           </section>
 
           <div class="button-row">
-            <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save document' }}</button>
-            <a [routerLink]="selectedId() ? ['/documents', selectedId()] : ['/documents']" class="button-link secondary">Cancel</a>
+            <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? t('documents.form.saving') : t('documents.form.save') }}</button>
+            <a [routerLink]="selectedId() ? ['/documents', selectedId()] : ['/documents']" class="button-link secondary">{{ 'common.cancel' | translate }}</a>
           </div>
         </form>
 
@@ -260,7 +262,7 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
           <section class="card detail-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Controlled record</span>
+                <span class="section-eyebrow">{{ 'documents.detail.eyebrow' | translate }}</span>
                 <h3>{{ selectedDocument()?.title }}</h3>
                 <p class="subtle">{{ selectedDocument()?.code }} | {{ selectedDocument()?.type }}</p>
               </div>
@@ -269,25 +271,25 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
 
             <div class="summary-strip top-space">
               <article class="summary-item">
-                <span>Control state</span>
+                <span>{{ 'documents.detail.controlState' | translate }}</span>
                 <strong>{{ documentStatusLabel(selectedDocument()?.status || 'DRAFT') }}</strong>
               </article>
               <article class="summary-item">
-                <span>Current revision</span>
+                <span>{{ 'documents.detail.currentRevision' | translate }}</span>
                 <strong>V{{ selectedDocument()?.version }}.{{ selectedDocument()?.revision }}</strong>
               </article>
               <article class="summary-item">
-                <span>Effective date</span>
-                <strong>{{ selectedDocument()?.effectiveDate ? (selectedDocument()?.effectiveDate | date:'yyyy-MM-dd') : 'Not set' }}</strong>
+                <span>{{ 'documents.form.effectiveDate' | translate }}</span>
+                <strong>{{ selectedDocument()?.effectiveDate ? (selectedDocument()?.effectiveDate | date:'yyyy-MM-dd') : t('common.notSet') }}</strong>
               </article>
               <article class="summary-item">
-                <span>Review due</span>
-                <strong>{{ selectedDocument()?.reviewDueDate ? (selectedDocument()?.reviewDueDate | date:'yyyy-MM-dd') : 'Not set' }}</strong>
+                <span>{{ 'documents.detail.reviewDue' | translate }}</span>
+                <strong>{{ selectedDocument()?.reviewDueDate ? (selectedDocument()?.reviewDueDate | date:'yyyy-MM-dd') : t('common.notSet') }}</strong>
               </article>
             </div>
 
             <section class="detail-section top-space">
-              <h4>Lifecycle position</h4>
+              <h4>{{ 'documents.detail.lifecyclePosition' | translate }}</h4>
               <div class="lifecycle-strip top-space">
                 <article *ngFor="let step of documentLifecycleSteps()" class="lifecycle-step" [ngClass]="documentLifecycleStepClass(step, selectedDocument()?.status || 'DRAFT')">
                   <span>{{ step.label }}</span>
@@ -306,29 +308,29 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
               <strong>{{ message() }}</strong>
               <span>{{ documentNextStepsCopy() }}</span>
               <div class="button-row top-space">
-                <button type="button" (click)="scrollToLifecycle()">Review lifecycle</button>
-                <button type="button" class="secondary" (click)="scrollToDocumentActions()">Review actions</button>
-                <button type="button" class="secondary" (click)="scrollToDocumentEvidence()">Review evidence</button>
+                <button type="button" (click)="scrollToLifecycle()">{{ 'documents.detail.reviewLifecycle' | translate }}</button>
+                <button type="button" class="secondary" (click)="scrollToDocumentActions()">{{ 'documents.detail.reviewActions' | translate }}</button>
+                <button type="button" class="secondary" (click)="scrollToDocumentEvidence()">{{ 'documents.detail.reviewEvidence' | translate }}</button>
               </div>
             </section>
 
             <div class="page-stack top-space">
               <section class="detail-section">
-                <h4>Summary</h4>
-                <p>{{ selectedDocument()?.summary || 'No summary provided.' }}</p>
+                <h4>{{ 'documents.form.summary' | translate }}</h4>
+                <p>{{ selectedDocument()?.summary || t('documents.detail.noSummary') }}</p>
               </section>
               <section class="detail-section">
-                <h4>Revision note</h4>
-                <p>{{ selectedDocument()?.changeSummary || 'No revision note provided.' }}</p>
+                <h4>{{ 'documents.detail.revisionNote' | translate }}</h4>
+                <p>{{ selectedDocument()?.changeSummary || t('documents.detail.noRevisionNote') }}</p>
               </section>
             </div>
 
             <dl class="key-value top-space">
-              <dt>Approved at</dt>
-              <dd>{{ selectedDocument()?.approvedAt ? (selectedDocument()?.approvedAt | date:'yyyy-MM-dd HH:mm') : 'Not approved yet' }}</dd>
-              <dt>Obsoleted at</dt>
-              <dd>{{ selectedDocument()?.obsoletedAt ? (selectedDocument()?.obsoletedAt | date:'yyyy-MM-dd HH:mm') : 'Active' }}</dd>
-              <dt>Last updated</dt>
+              <dt>{{ 'documents.detail.approvedAt' | translate }}</dt>
+              <dd>{{ selectedDocument()?.approvedAt ? (selectedDocument()?.approvedAt | date:'yyyy-MM-dd HH:mm') : t('documents.detail.notApprovedYet') }}</dd>
+              <dt>{{ 'documents.detail.obsoletedAt' | translate }}</dt>
+              <dd>{{ selectedDocument()?.obsoletedAt ? (selectedDocument()?.obsoletedAt | date:'yyyy-MM-dd HH:mm') : t('documents.detail.active') }}</dd>
+              <dt>{{ 'documents.detail.lastUpdated' | translate }}</dt>
               <dd>{{ selectedDocument()?.updatedAt | date:'yyyy-MM-dd HH:mm' }}</dd>
             </dl>
           </section>
@@ -336,9 +338,9 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
           <section id="document-lifecycle-section" class="card panel-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Lifecycle</span>
-                <h3>Lifecycle</h3>
-                <p class="subtle">Move the record through review, approval, and obsolescence without opening the editor.</p>
+                <span class="section-eyebrow">{{ 'documents.detail.lifecycleEyebrow' | translate }}</span>
+                <h3>{{ 'documents.detail.lifecycleTitle' | translate }}</h3>
+                <p class="subtle">{{ 'documents.detail.lifecycleCopy' | translate }}</p>
               </div>
             </div>
 
@@ -363,9 +365,9 @@ const NEXT_STATUS_OPTIONS: Record<DocumentStatus, DocumentStatus[]> = {
           <section class="card panel-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Evidence trail</span>
-                <h3>Document evidence</h3>
-                <p class="subtle">Keep supporting files and related actions with the controlled record so lifecycle review and revision history stay easy to follow.</p>
+                <span class="section-eyebrow">{{ 'documents.detail.evidenceEyebrow' | translate }}</span>
+                <h3>{{ 'documents.detail.evidenceTitle' | translate }}</h3>
+                <p class="subtle">{{ 'documents.detail.evidenceCopy' | translate }}</p>
               </div>
             </div>
           </section>
@@ -457,6 +459,7 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
 
   protected readonly mode = signal<PageMode>('list');
   protected readonly documents = signal<DocumentRow[]>([]);
@@ -512,38 +515,40 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
   }
 
   protected pageTitle() {
+    this.i18n.language();
     return {
-      list: 'Controlled document register',
-      create: 'Create controlled document',
-      detail: this.selectedDocument()?.title || 'Document detail',
-      edit: this.selectedDocument()?.title || 'Edit document'
+      list: this.t('documents.page.titles.list'),
+      create: this.t('documents.page.titles.create'),
+      detail: this.selectedDocument()?.title || this.t('documents.page.titles.detail'),
+      edit: this.selectedDocument()?.title || this.t('documents.page.titles.edit')
     }[this.mode()];
   }
 
   protected pageDescription() {
+    this.i18n.language();
     return {
-      list: 'Review controlled documents and move them through a simple lifecycle: Draft, Review, Approved, and Obsolete.',
-      create: 'Create a controlled document and prepare it for review, approval, and future revision control.',
-      detail: 'Review document details, confirm lifecycle status, and keep evidence and actions together with the record.',
-      edit: 'Update document details without losing the controlled lifecycle and revision history.'
+      list: this.t('documents.page.descriptions.list'),
+      create: this.t('documents.page.descriptions.create'),
+      detail: this.t('documents.page.descriptions.detail'),
+      edit: this.t('documents.page.descriptions.edit')
     }[this.mode()];
   }
 
   protected breadcrumbs() {
     if (this.mode() === 'list') {
-      return [{ label: 'Documents' }];
+      return [{ label: this.t('documents.page.label') }];
     }
 
-    const base = [{ label: 'Documents', link: '/documents' }];
+    const base = [{ label: this.t('documents.page.label'), link: '/documents' }];
     if (this.mode() === 'create') {
-      return [...base, { label: 'New document' }];
+      return [...base, { label: this.t('documents.page.breadcrumbs.new') }];
     }
 
     if (this.mode() === 'edit') {
-      return [...base, { label: this.selectedDocument()?.code || 'Document', link: `/documents/${this.selectedId()}` }, { label: 'Edit' }];
+      return [...base, { label: this.selectedDocument()?.code || this.t('documents.page.breadcrumbs.document'), link: `/documents/${this.selectedId()}` }, { label: this.t('documents.page.breadcrumbs.edit') }];
     }
 
-    return [...base, { label: this.selectedDocument()?.code || 'Document' }];
+    return [...base, { label: this.selectedDocument()?.code || this.t('documents.page.breadcrumbs.document') }];
   }
 
   protected filteredDocuments() {
@@ -593,18 +598,19 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
   }
 
   protected documentStatusLabel(status: DocumentStatus) {
-    if (status === 'DRAFT') return 'Draft';
-    if (status === 'REVIEW') return 'Review';
-    if (status === 'APPROVED') return 'Approved';
-    return 'Obsolete';
+    this.i18n.language();
+    if (status === 'DRAFT') return this.t('documents.status.draft');
+    if (status === 'REVIEW') return this.t('documents.status.review');
+    if (status === 'APPROVED') return this.t('documents.status.approved');
+    return this.t('documents.status.obsolete');
   }
 
   protected documentLifecycleSteps() {
     return [
-      { status: 'DRAFT' as DocumentStatus, label: 'Step 1', title: 'Draft' },
-      { status: 'REVIEW' as DocumentStatus, label: 'Step 2', title: 'Review' },
-      { status: 'APPROVED' as DocumentStatus, label: 'Step 3', title: 'Approved' },
-      { status: 'OBSOLETE' as DocumentStatus, label: 'Step 4', title: 'Obsolete' }
+      { status: 'DRAFT' as DocumentStatus, label: this.t('documents.lifecycle.step1'), title: this.t('documents.status.draft') },
+      { status: 'REVIEW' as DocumentStatus, label: this.t('documents.lifecycle.step2'), title: this.t('documents.status.review') },
+      { status: 'APPROVED' as DocumentStatus, label: this.t('documents.lifecycle.step3'), title: this.t('documents.status.approved') },
+      { status: 'OBSOLETE' as DocumentStatus, label: this.t('documents.lifecycle.step4'), title: this.t('documents.status.obsolete') }
     ];
   }
 
@@ -622,49 +628,51 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
   }
 
   protected documentLifecycleHeading(status: DocumentStatus) {
-    if (status === 'DRAFT') return 'Draft stage';
-    if (status === 'REVIEW') return 'Review stage';
-    if (status === 'APPROVED') return 'Approved stage';
-    return 'Obsolete stage';
+    this.i18n.language();
+    if (status === 'DRAFT') return this.t('documents.lifecycle.headings.draft');
+    if (status === 'REVIEW') return this.t('documents.lifecycle.headings.review');
+    if (status === 'APPROVED') return this.t('documents.lifecycle.headings.approved');
+    return this.t('documents.lifecycle.headings.obsolete');
   }
 
   protected documentLifecycleHint(status: DocumentStatus) {
+    this.i18n.language();
     if (status === 'DRAFT') {
-      return 'Use Draft while the content is being prepared. This is the working version before review and approval.';
+      return this.t('documents.lifecycle.hints.draft');
     }
     if (status === 'REVIEW') {
-      return 'Use Review when the content is ready to be checked and approved. Keep the revision note and supporting evidence current before approval.';
+      return this.t('documents.lifecycle.hints.review');
     }
     if (status === 'APPROVED') {
-      return 'Approved is the controlled live version in use. Keep the effective date and review due date current so periodic review stays visible.';
+      return this.t('documents.lifecycle.hints.approved');
     }
-    return 'Obsolete keeps the old version available for traceability after it has been replaced by a new live document.';
+    return this.t('documents.lifecycle.hints.obsolete');
   }
 
   protected detailLifecycleGuidance(status: DocumentStatus) {
     if (status === 'DRAFT') {
-      return 'Next control point: complete the revision note, assign ownership, and move the document into review when the draft is ready.';
+      return this.t('documents.guidance.detailLifecycle.draft');
     }
     if (status === 'REVIEW') {
       return this.authStore.hasPermission('documents.approve')
-        ? 'Next control point: review the evidence trail and approve the document when the content and metadata are complete.'
-        : 'Next control point: confirm evidence and revision details, then hand the document to an approver with documents.approve permission.';
+        ? this.t('documents.guidance.detailLifecycle.reviewWithApprove')
+        : this.t('documents.guidance.detailLifecycle.reviewWithoutApprove');
     }
     if (status === 'APPROVED') {
-      return 'Next control point: maintain review due dates and linked actions, and mark the record obsolete rather than deleting it when superseded.';
+      return this.t('documents.guidance.detailLifecycle.approved');
     }
-    return 'Next control point: keep the obsolete record for traceability and make sure the replacement live document is available in the register.';
+    return this.t('documents.guidance.detailLifecycle.obsolete');
   }
 
   protected documentNextStepsCopy() {
     const status = this.selectedDocument()?.status;
     if (status === 'APPROVED') {
-      return 'Next: review evidence, confirm linked actions, and keep the review due date current.';
+      return this.t('documents.guidance.nextSteps.approved');
     }
     if (status === 'REVIEW') {
-      return 'Next: review the lifecycle step, confirm evidence is complete, and move the document toward approval.';
+      return this.t('documents.guidance.nextSteps.review');
     }
-    return 'Next: confirm lifecycle details, review evidence, and keep linked actions up to date.';
+    return this.t('documents.guidance.nextSteps.default');
   }
 
   protected reviewDueSummary(document: DocumentRow | null) {
@@ -678,15 +686,15 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
 
     if (diffDays < 0) {
       return {
-        heading: 'Review is overdue',
-        copy: `This controlled document passed its review due date on ${document.reviewDueDate.slice(0, 10)}. Review the content, confirm relevance, and either revise or reapprove it.`
+        heading: this.t('documents.guidance.reviewDue.overdueTitle'),
+        copy: this.t('documents.guidance.reviewDue.overdueCopy', { date: document.reviewDueDate.slice(0, 10) })
       };
     }
 
     if (diffDays <= 30) {
       return {
-        heading: 'Review due soon',
-        copy: `This document is due for review on ${document.reviewDueDate.slice(0, 10)}. Confirm the owner, evidence, and revision note before the review date passes.`
+        heading: this.t('documents.guidance.reviewDue.soonTitle'),
+        copy: this.t('documents.guidance.reviewDue.soonCopy', { date: document.reviewDueDate.slice(0, 10) })
       };
     }
 
@@ -695,12 +703,12 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
 
   protected save() {
     if (!this.canWrite()) {
-      this.error.set('You do not have permission to update documents.');
+      this.error.set(this.t('documents.messages.noPermission'));
       return;
     }
 
     if (this.form.invalid) {
-      this.error.set('Complete the required document fields.');
+      this.error.set(this.t('documents.messages.completeRequired'));
       return;
     }
 
@@ -715,11 +723,11 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
     request.subscribe({
       next: (document) => {
         this.saving.set(false);
-        this.router.navigate(['/documents', document.id], { state: { notice: 'Document saved successfully.' } });
+        this.router.navigate(['/documents', document.id], { state: { notice: this.t('documents.messages.saved') } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Document save failed.'));
+        this.error.set(this.readError(error, this.t('documents.messages.saveFailed')));
       }
     });
   }
@@ -750,7 +758,7 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
       return;
     }
 
-    if (!window.confirm('Delete this draft document? Approved and obsolete documents cannot be deleted.')) {
+    if (!window.confirm(this.t('documents.messages.confirmDeleteDraft'))) {
       return;
     }
 
@@ -760,11 +768,11 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
     this.api.delete(`documents/${this.selectedId()}`).subscribe({
       next: () => {
         this.saving.set(false);
-        void this.router.navigate(['/documents'], { state: { notice: 'Draft document deleted.' } });
+        void this.router.navigate(['/documents'], { state: { notice: this.t('documents.messages.deletedDraft') } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Document deletion failed.'));
+        this.error.set(this.readError(error, this.t('documents.messages.deleteFailed')));
       }
     });
   }
@@ -774,7 +782,7 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
       return;
     }
 
-    if (!window.confirm('Mark this approved document as obsolete? This preserves traceability instead of deleting the record.')) {
+    if (!window.confirm(this.t('documents.messages.confirmObsolete'))) {
       return;
     }
 
@@ -784,13 +792,13 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
     this.api.patch<DocumentRow>(`documents/${this.selectedId()}`, { status: 'OBSOLETE' }).subscribe({
       next: () => {
         this.saving.set(false);
-        this.message.set('Document marked obsolete.');
+        this.message.set(this.t('documents.messages.markedObsolete'));
         this.fetchDocument(this.selectedId() as string);
         this.reloadDocuments();
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Document obsolescence failed.'));
+        this.error.set(this.readError(error, this.t('documents.messages.obsolescenceFailed')));
       }
     });
   }
@@ -806,7 +814,7 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
     this.api.patch<DocumentRow>(`documents/${this.selectedId()}`, { status }).subscribe({
       next: () => {
         this.saving.set(false);
-        this.message.set('Document status updated.');
+        this.message.set(this.t('documents.messages.statusUpdated'));
         this.fetchDocument(this.selectedId() as string);
         this.reloadDocuments();
       },
@@ -956,6 +964,10 @@ export class DocumentsPageComponent implements OnInit, OnChanges {
   protected documentCodePlaceholder() {
     const prefix = this.settings()?.document.numberingPrefix || 'QMS-PRO';
     return `${prefix}-001`;
+  }
+
+  protected t(key: string, params?: Record<string, unknown>) {
+    return this.i18n.t(key, params);
   }
 
   private defaultDocumentCode() {

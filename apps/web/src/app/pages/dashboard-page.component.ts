@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
+import { I18nService } from '../core/i18n.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
 type DashboardResponse = {
@@ -68,29 +70,36 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
 
 @Component({
   standalone: true,
-  imports: [CommonModule, RouterLink, PageHeaderComponent],
+  imports: [CommonModule, RouterLink, PageHeaderComponent, TranslatePipe],
   template: `
-    <section class="page-grid">
+    <section class="page-grid dashboard-page">
       <iso-page-header
-        [label]="'Dashboard'"
-        [title]="'Integrated Management System'"
-        [description]="'A structured operational workspace for quality, environmental, and health and safety management.'"
-        [supportingLine]="'ISO 9001 &bull; ISO 14001 &bull; ISO 45001'"
-        [breadcrumbs]="[{ label: 'Dashboard' }]"
+        [label]="t('dashboard.page.label')"
+        [title]="t('dashboard.page.title')"
+        [description]="t('dashboard.page.description')"
+        [supportingLine]="t('dashboard.page.supportingLine')"
+        [breadcrumbs]="[{ label: t('dashboard.page.breadcrumb') }]"
       />
 
       <section class="dashboard-section dashboard-strip">
         <div class="section-head compact">
           <div>
-            <span class="section-eyebrow">Summary</span>
-            <h3>KPI summary</h3>
-            <p class="subtle">Key metrics</p>
+            <span class="section-eyebrow">{{ summaryEyebrow() }}</span>
+            <h3>{{ summaryTitle() }}</h3>
+            <p class="subtle">{{ 'dashboard.summary.copy' | translate }}</p>
           </div>
         </div>
 
         <div class="kpi-strip top-space">
-          <a class="kpi-item" *ngFor="let item of summaryCards()" [ngClass]="item.tone" [routerLink]="item.link">
+          <a
+            class="kpi-item"
+            *ngFor="let item of summaryCards()"
+            [routerLink]="item.link"
+            [style.--kpi-accent]="item.accent"
+            [style.--kpi-surface]="item.surface"
+          >
             <div class="kpi-item__head">
+              <span class="kpi-item__dot" aria-hidden="true"></span>
               <span>{{ item.label }}</span>
             </div>
             <strong>{{ item.value }}</strong>
@@ -100,58 +109,42 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
       </section>
 
       <section class="dashboard-section dashboard-control-shell">
-        <div class="section-head compact">
-          <div>
-            <span class="section-eyebrow">Controls</span>
-            <h3>Dashboard view</h3>
-          </div>
-        </div>
-
-        <div class="dashboard-controls top-space">
+        <div class="dashboard-controls">
           <label class="control-field">
-            <span class="sr-only">Module</span>
+            <span>{{ filterModuleLabel() }}</span>
             <select aria-label="Module" [value]="selectedModule()" (change)="setModule($any($event.target).value)">
-              <option value="risks">Risks</option>
-              <option value="capa">CAPA</option>
-              <option value="actions">Actions</option>
-              <option value="audits">Audits</option>
-              <option value="context">Context</option>
-              <option value="feedback">Customer Feedback</option>
+              <option value="risks">{{ 'dashboard.modules.risks' | translate }}</option>
+              <option value="capa">{{ 'dashboard.modules.capa' | translate }}</option>
+              <option value="actions">{{ 'dashboard.modules.actions' | translate }}</option>
+              <option value="audits">{{ 'dashboard.modules.audits' | translate }}</option>
+              <option value="context">{{ 'dashboard.modules.context' | translate }}</option>
+              <option value="feedback">{{ 'dashboard.modules.feedback' | translate }}</option>
             </select>
           </label>
 
           <label class="control-field">
-            <span class="sr-only">Time range</span>
+            <span>{{ filterPeriodLabel() }}</span>
             <select aria-label="Time range" [value]="selectedTimeRange()" (change)="setTimeRange($any($event.target).value)">
-              <option value="month">Month</option>
-              <option value="quarter">Quarter</option>
-              <option value="year">Year</option>
+              <option value="month">{{ 'dashboard.ranges.monthOption' | translate }}</option>
+              <option value="quarter">{{ 'dashboard.ranges.quarterOption' | translate }}</option>
+              <option value="year">{{ 'dashboard.ranges.yearOption' | translate }}</option>
             </select>
           </label>
 
           <label class="control-field">
-            <span class="sr-only">Chart type</span>
+            <span>{{ filterChartTypeLabel() }}</span>
             <select aria-label="Chart type" [value]="selectedChartType()" (change)="setChartType($any($event.target).value)">
-              <option value="bar">Bar</option>
-              <option value="line">Line</option>
-              <option value="pie">Pie</option>
-              <option value="donut">Donut</option>
+              <option value="bar">{{ 'dashboard.chartTypes.barOption' | translate }}</option>
+              <option value="line">{{ 'dashboard.chartTypes.lineOption' | translate }}</option>
+              <option value="pie">{{ 'dashboard.chartTypes.pieOption' | translate }}</option>
+              <option value="donut">{{ 'dashboard.chartTypes.donutOption' | translate }}</option>
             </select>
           </label>
         </div>
       </section>
 
       <section class="dashboard-section dashboard-main-chart">
-        <div class="section-head dashboard-chart-head">
-          <div class="dashboard-chart-copy">
-            <span class="section-eyebrow">{{ currentRangeLabel() }}</span>
-            <h3>{{ mainChartTitle() }}</h3>
-            <p class="subtle">{{ mainChartDescription() }}</p>
-            <a [routerLink]="mainChartLink()" class="mini-link dashboard-chart-inline-link">Open {{ currentModuleLabel() }}</a>
-          </div>
-        </div>
-
-        <div class="main-chart-surface top-space">
+        <div class="main-chart-surface">
           <ng-container [ngSwitch]="selectedChartType()">
             <div *ngSwitchCase="'bar'" class="bar-chart">
               <a class="bar-row bar-row--interactive" *ngFor="let item of mainChartPoints()" [routerLink]="item.link">
@@ -181,8 +174,7 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
             <div *ngSwitchDefault class="donut-layout donut-layout--main">
               <div class="secondary-chart-panel secondary-chart-panel--primary">
                 <div class="secondary-chart-head secondary-chart-head--centered">
-                  <strong>{{ currentModuleLabel() }} overview</strong>
-                  <small>{{ mainChartMetricLabel() }}</small>
+                  <strong>{{ t('dashboard.chart.moduleOverview', { module: currentModuleLabel() }) }}</strong>
                 </div>
 
                 <div class="donut-chart-shell">
@@ -198,7 +190,6 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
               <div class="secondary-chart-panel secondary-chart-panel--compact">
                 <div class="secondary-chart-head">
                   <strong>{{ breakdownTitle() }}</strong>
-                  <small>{{ breakdownNarrative() }}</small>
                 </div>
                 <div class="mini-bar-chart">
                   <a class="mini-bar-row" *ngFor="let item of mainChartPoints()" [routerLink]="item.link">
@@ -216,7 +207,6 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
               <div class="secondary-chart-panel">
                 <div class="secondary-chart-head">
                   <strong>{{ watchlistTitle() }}</strong>
-                  <small>{{ watchlistNarrative() }}</small>
                 </div>
                 <div class="mini-bar-chart">
                   <a class="mini-bar-row" *ngFor="let item of watchlistPoints()" [routerLink]="item.link">
@@ -237,7 +227,6 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
             <div class="secondary-chart-panel secondary-chart-panel--stacked">
               <div class="secondary-chart-head">
                 <strong>{{ breakdownTitle() }}</strong>
-                <small>{{ breakdownNarrative() }}</small>
               </div>
               <div class="mini-bar-chart">
                 <a class="mini-bar-row" *ngFor="let item of mainChartPoints()" [routerLink]="item.link">
@@ -255,7 +244,6 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
             <div class="secondary-chart-panel secondary-chart-panel--stacked">
               <div class="secondary-chart-head">
                 <strong>{{ watchlistTitle() }}</strong>
-                <small>{{ watchlistNarrative() }}</small>
               </div>
               <div class="mini-bar-chart">
                 <a class="mini-bar-row" *ngFor="let item of watchlistPoints()" [routerLink]="item.link">
@@ -276,13 +264,46 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
     </section>
   `,
   styles: [`
+    :host ::ng-deep .dashboard-page > iso-page-header .page-hero {
+      padding: 1.18rem 1.4rem;
+    }
+
+    :host ::ng-deep .dashboard-page > iso-page-header .page-hero__body {
+      gap: 0.9rem;
+    }
+
+    :host ::ng-deep .dashboard-page > iso-page-header .hero-copy {
+      gap: 0.08rem;
+    }
+
+    :host ::ng-deep .dashboard-page > iso-page-header .page-hero h2 {
+      margin: 0.7rem 0 0.28rem;
+      font-size: clamp(1.7rem, 2.5vw, 2.15rem);
+    }
+
+    :host ::ng-deep .dashboard-page > iso-page-header .page-hero p {
+      line-height: 1.48;
+    }
+
+    :host ::ng-deep .dashboard-page > iso-page-header .hero-supporting-line {
+      margin-top: 0.55rem;
+    }
+
+    .dashboard-page {
+      gap: 1rem;
+    }
+
     .dashboard-section {
       display: grid;
-      gap: 0.75rem;
+      gap: 0.45rem;
     }
 
     .dashboard-strip {
-      gap: 0.45rem;
+      gap: 0.28rem;
+    }
+
+    .dashboard-strip .top-space {
+      margin-top: 0.75rem;
     }
 
     .sr-only {
@@ -300,35 +321,43 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
     .kpi-strip {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 0.45rem;
-      padding-top: 0.15rem;
+      gap: 0.75rem;
+      padding-top: 0.2rem;
     }
 
     .kpi-item {
       display: grid;
-      gap: 0.2rem;
-      padding: 0.85rem 0.9rem 0.7rem;
-      border-left: 1px solid rgba(23, 50, 37, 0.08);
-      background: transparent;
+      gap: 0.3rem;
+      padding: 1rem 1rem 0.9rem;
+      border-left: 6px solid var(--kpi-accent, rgba(23, 50, 37, 0.12));
+      border-radius: 20px;
+      background: var(--kpi-surface, rgba(255, 255, 255, 0.92));
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.72);
       text-decoration: none;
-      color: inherit;
+      color: #17251f;
+      transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
     }
 
-    .kpi-item.warning {
-      border-left-color: rgba(195, 149, 69, 0.38);
-      background: linear-gradient(90deg, rgba(195, 149, 69, 0.06), transparent 72%);
-    }
-
-    .kpi-item.critical {
-      border-left-color: rgba(180, 90, 71, 0.42);
-      background: linear-gradient(90deg, rgba(180, 90, 71, 0.07), transparent 74%);
+    .kpi-item:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.82);
     }
 
     .kpi-item__head {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 0.75rem;
+      justify-content: flex-start;
+      gap: 0.55rem;
+    }
+
+    .kpi-item__dot {
+      width: 0.68rem;
+      height: 0.68rem;
+      border-radius: 999px;
+      background: var(--kpi-accent, rgba(23, 50, 37, 0.2));
+      box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.88);
+      flex: 0 0 auto;
     }
 
     .kpi-item__head span {
@@ -341,14 +370,15 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
 
     .kpi-item strong {
       display: block;
-      margin-top: 0.45rem;
+      margin-top: 0.55rem;
       font-size: 2.7rem;
       line-height: 0.95;
       letter-spacing: -0.07em;
+      color: #111827;
     }
 
     .kpi-item p {
-      margin: 0.08rem 0 0;
+      margin: 0.16rem 0 0;
       color: var(--muted);
       line-height: 1.35;
     }
@@ -374,7 +404,16 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
 
     .control-field {
       display: grid;
-      gap: 0;
+      gap: 0.35rem;
+    }
+
+    .control-field span {
+      color: var(--muted-strong);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding-inline: 0.95rem 0.25rem;
     }
 
     .control-field select {
@@ -388,30 +427,16 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
     }
 
     .main-chart-surface {
-      padding: 1rem 1rem 0.95rem;
-      border-radius: 22px;
+      padding: 0.75rem 0.8rem 0.8rem;
+      border-radius: 20px;
       background: rgba(255, 255, 255, 0.52);
       border: 1px solid rgba(23, 50, 37, 0.05);
-      box-shadow: 0 12px 26px rgba(29, 42, 33, 0.035);
-    }
-
-    .dashboard-chart-head {
-      padding-inline-end: 0.3rem;
-    }
-
-    .dashboard-chart-copy {
-      display: grid;
-      gap: 0.12rem;
-    }
-
-    .dashboard-chart-inline-link {
-      justify-self: start;
-      margin-top: 0.15rem;
+      box-shadow: 0 10px 22px rgba(29, 42, 33, 0.03);
     }
 
     .bar-chart {
       display: grid;
-      gap: 0.95rem;
+      gap: 0.75rem;
     }
 
     .bar-row {
@@ -422,7 +447,7 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
     }
 
     .bar-row--interactive {
-      padding: 0.35rem 0;
+      padding: 0.2rem 0;
     }
 
     .bar-row__label {
@@ -456,12 +481,12 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
 
     .line-chart-shell {
       display: grid;
-      gap: 0.75rem;
+      gap: 0.55rem;
     }
 
     .line-chart {
       width: 100%;
-      height: 220px;
+      height: 170px;
       overflow: visible;
     }
 
@@ -476,7 +501,7 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
     .line-chart__labels {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 0.55rem;
+      gap: 0.45rem;
     }
 
     .line-chart__item {
@@ -499,18 +524,18 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
     .donut-layout {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0.8rem;
+      gap: 0.65rem;
       align-items: stretch;
     }
 
     .donut-layout--main {
-      min-height: 232px;
+      min-height: 188px;
     }
 
     .donut-chart {
       position: relative;
-      width: 190px;
-      height: 190px;
+      width: 158px;
+      height: 158px;
       border-radius: 50%;
       display: grid;
       place-items: center;
@@ -520,13 +545,13 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
       display: grid;
       min-height: 100%;
       place-items: center;
-      padding: 0.2rem 0;
+      padding: 0.05rem 0;
     }
 
     .donut-chart::after {
       content: '';
       position: absolute;
-      inset: 22px;
+      inset: 19px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.95);
       box-shadow: inset 0 0 0 1px rgba(23, 50, 37, 0.06);
@@ -545,29 +570,29 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
     }
 
     .donut-center strong {
-      font-size: 2rem;
+      font-size: 1.7rem;
       line-height: 1;
       letter-spacing: -0.04em;
     }
 
     .donut-center span {
-      margin-top: 0.35rem;
+      margin-top: 0.2rem;
       color: var(--muted);
-      font-size: 0.9rem;
+      font-size: 0.82rem;
     }
 
     .secondary-chart-panel {
       display: grid;
-      gap: 0.8rem;
+      gap: 0.55rem;
       align-self: stretch;
-      padding: 0.8rem 0.85rem;
-      border-radius: 18px;
+      padding: 0.62rem 0.7rem;
+      border-radius: 16px;
       background: rgba(248, 250, 246, 0.88);
       border: 1px solid rgba(23, 50, 37, 0.05);
     }
 
     .secondary-chart-panel--compact {
-      padding-top: 0.72rem;
+      padding-top: 0.62rem;
     }
 
     .secondary-chart-panel--primary {
@@ -582,21 +607,16 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
     .secondary-chart-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.75rem;
+      gap: 0.6rem;
     }
 
     .secondary-chart-head {
       display: grid;
-      gap: 0.2rem;
+      gap: 0.08rem;
     }
 
     .secondary-chart-head strong {
-      font-size: 0.96rem;
-    }
-
-    .secondary-chart-head small {
-      color: var(--muted);
-      line-height: 1.45;
+      font-size: 0.92rem;
     }
 
     .secondary-chart-head--centered {
@@ -606,12 +626,12 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
 
     .mini-bar-chart {
       display: grid;
-      gap: 0.65rem;
+      gap: 0.5rem;
     }
 
     .mini-bar-row {
       display: grid;
-      gap: 0.32rem;
+      gap: 0.24rem;
       text-decoration: none;
       color: inherit;
     }
@@ -625,15 +645,15 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
 
     .mini-bar-row__head span {
       color: var(--muted-strong);
-      font-size: 0.88rem;
+      font-size: 0.84rem;
     }
 
     .mini-bar-row__head strong {
-      font-size: 0.94rem;
+      font-size: 0.9rem;
     }
 
     .mini-bar-track {
-      height: 0.55rem;
+      height: 0.46rem;
       border-radius: 999px;
       background: rgba(23, 50, 37, 0.08);
       overflow: hidden;
@@ -653,18 +673,17 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
     }
 
     @media (max-width: 760px) {
+      .dashboard-page {
+        gap: 0.95rem;
+      }
+
       .kpi-strip {
         grid-template-columns: 1fr;
       }
 
       .kpi-item {
         border-left: none;
-        border-top: 1px solid rgba(23, 50, 37, 0.08);
-        padding-left: 0;
-      }
-
-      .dashboard-chart-head {
-        padding-inline-end: 0;
+        border-top: 6px solid var(--kpi-accent, rgba(23, 50, 37, 0.12));
       }
 
       .donut-layout {
@@ -681,12 +700,12 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
       }
 
       .donut-chart {
-        width: 180px;
-        height: 180px;
+        width: 150px;
+        height: 150px;
       }
 
       .donut-chart::after {
-        inset: 22px;
+        inset: 18px;
       }
 
       .kpi-item strong {
@@ -697,6 +716,7 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
 })
 export class DashboardPageComponent {
   private readonly api = inject(ApiService);
+  private readonly i18n = inject(I18nService);
 
   protected readonly data = signal<DashboardResponse>({
     metrics: {},
@@ -776,83 +796,98 @@ export class DashboardPageComponent {
     const metrics = this.data().metrics;
     return [
       {
-        label: 'Open risks',
+        label: this.t('dashboard.metrics.openRisks.label'),
         value: this.data().riskSummary.open + this.data().riskSummary.inTreatment,
-        copy: 'Open',
+        copy: this.t('dashboard.metrics.openRisks.copy'),
         link: '/risks',
-        tone: 'focus'
+        accent: '#B8872B',
+        surface: '#F7EFE0'
       },
       {
-        label: 'Open CAPA',
+        label: this.t('dashboard.metrics.openCapa.label'),
         value: metrics['openCapas'] ?? 0,
-        copy: 'In progress',
+        copy: this.t('dashboard.metrics.openCapa.copy'),
         link: '/capa',
-        tone: (metrics['openCapas'] ?? 0) > 0 ? 'warning' : 'focus'
+        accent: '#2563EB',
+        surface: '#EAF1FF'
       },
       {
-        label: 'Active audits',
+        label: this.t('dashboard.metrics.activeAudits.label'),
         value: metrics['openAudits'] ?? 0,
-        copy: 'In progress',
+        copy: this.t('dashboard.metrics.activeAudits.copy'),
         link: '/audits',
-        tone: 'focus'
+        accent: '#334155',
+        surface: '#EEF2F6'
       },
       {
-        label: 'Overdue actions',
+        label: this.t('dashboard.metrics.overdueActions.label'),
         value: metrics['overdueActions'] ?? 0,
-        copy: 'Overdue',
+        copy: this.t('dashboard.metrics.overdueActions.copy'),
         link: '/actions',
-        tone: (metrics['overdueActions'] ?? 0) > 0 ? 'critical' : 'focus'
+        accent: '#C2410C',
+        surface: '#FDEEE8'
       },
       {
-        label: 'KPI breaches',
-        value: this.data().kpiSummaryCounts.breach,
-        copy: 'Breaches',
+        label: this.t('dashboard.metrics.kpiBreaches.label'),
+        value: this.data().kpiSummary.length,
+        copy: this.t('dashboard.metrics.kpiBreaches.copy'),
         link: '/kpis',
-        tone: this.data().kpiSummaryCounts.breach > 0 ? 'critical' : 'focus'
+        accent: '#047857',
+        surface: '#E7F6EF'
       },
       {
-        label: 'Customer feedback',
-        value: this.data().feedbackSummary.averageScore != null ? `${this.data().feedbackSummary.averageScore}/10` : 'No data',
+        label: this.t('dashboard.metrics.customerFeedback.label'),
+        value: this.data().feedbackSummary.averageScore != null ? `${this.data().feedbackSummary.averageScore}/10` : this.t('dashboard.metrics.customerFeedback.noData'),
         copy:
           this.data().feedbackSummary.responseCount > 0
-            ? `${this.data().feedbackSummary.responseCount} responses`
-            : 'Awaiting responses',
+            ? this.t('dashboard.metrics.customerFeedback.responses', { count: this.data().feedbackSummary.responseCount })
+            : this.t('dashboard.metrics.customerFeedback.awaiting'),
         link: '/context/interested-parties',
-        tone:
-          this.data().feedbackSummary.health === 'ATTENTION'
-            ? 'critical'
-            : this.data().feedbackSummary.health === 'WATCH'
-              ? 'warning'
-              : 'focus'
+        accent: '#5B5FC7',
+        surface: '#EFEFFE'
       }
     ];
   }
 
   protected currentModuleLabel() {
+    this.i18n.language();
     return {
-      risks: 'Risks',
-      capa: 'CAPA',
-      actions: 'Actions',
-      audits: 'Audits',
-      context: 'Context',
-      feedback: 'Customer Feedback'
+      risks: this.t('dashboard.modules.risks'),
+      capa: this.t('dashboard.modules.capa'),
+      actions: this.t('dashboard.modules.actions'),
+      audits: this.t('dashboard.modules.audits'),
+      context: this.t('dashboard.modules.context'),
+      feedback: this.t('dashboard.modules.feedback')
     }[this.selectedModule()];
   }
 
   protected currentRangeLabel() {
+    this.i18n.language();
     return {
-      month: 'This month',
-      quarter: 'This quarter',
-      year: 'This year'
+      month: this.t('dashboard.ranges.month'),
+      quarter: this.t('dashboard.ranges.quarter'),
+      year: this.t('dashboard.ranges.year')
     }[this.selectedTimeRange()];
   }
 
-  protected mainChartTitle() {
-    return `${this.currentModuleLabel()} — ${this.mainChartMetricLabel()}`;
+  protected summaryEyebrow() {
+    return this.dashboardCopy().summaryEyebrow;
   }
 
-  protected mainChartDescription() {
-    return `${this.currentRangeLabel()} • ${this.currentChartTypeLabel()}`;
+  protected summaryTitle() {
+    return this.dashboardCopy().summaryTitle;
+  }
+
+  protected filterModuleLabel() {
+    return this.dashboardCopy().filterModuleLabel;
+  }
+
+  protected filterPeriodLabel() {
+    return this.dashboardCopy().filterPeriodLabel;
+  }
+
+  protected filterChartTypeLabel() {
+    return this.dashboardCopy().filterChartTypeLabel;
   }
 
   protected mainChartLink() {
@@ -880,11 +915,12 @@ export class DashboardPageComponent {
   }
 
   protected currentChartTypeLabel() {
+    this.i18n.language();
     return {
-      bar: 'Bar chart',
-      line: 'Line chart',
-      pie: 'Pie chart',
-      donut: 'Donut chart'
+      bar: this.t('dashboard.chartTypes.bar'),
+      line: this.t('dashboard.chartTypes.line'),
+      pie: this.t('dashboard.chartTypes.pie'),
+      donut: this.t('dashboard.chartTypes.donut')
     }[this.selectedChartType()];
   }
 
@@ -917,41 +953,41 @@ export class DashboardPageComponent {
   }
 
   protected watchlistTitle() {
-    return 'Cross-module watchlist';
+    return this.dashboardCopy().watchlistTitle;
   }
 
   protected watchlistNarrative() {
-    return 'A quick view of the new ISO/QHSE modules that currently need attention.';
+    return this.dashboardCopy().watchlistCopy;
   }
 
   protected watchlistPoints(): DashboardPoint[] {
     const raw = [
       {
-        label: 'Incidents',
+        label: this.t('dashboard.watchlist.items.incidents'),
         value: this.incidents().filter((item) => item.status !== 'CLOSED' && item.status !== 'ARCHIVED').length,
         color: '#b45a47',
         link: '/incidents'
       },
       {
-        label: 'Provider review',
+        label: this.t('dashboard.watchlist.items.providers'),
         value: this.providers().filter((item) => item.status === 'UNDER_REVIEW' || item.evaluationOutcome === 'ESCALATED' || item.evaluationOutcome === 'DISQUALIFIED' || (!!item.supplierAuditRequired && !item.supplierAuditLinked)).length,
         color: '#9a6e2d',
         link: '/external-providers'
       },
       {
-        label: 'Obligations',
+        label: this.t('dashboard.watchlist.items.obligations'),
         value: this.obligations().filter((item) => item.status === 'UNDER_REVIEW' || this.isOverdue(item.nextReviewDate ?? undefined)).length,
         color: '#446d8e',
         link: '/compliance-obligations'
       },
       {
-        label: 'High hazards',
+        label: this.t('dashboard.watchlist.items.hazards'),
         value: this.hazards().filter((item) => item.status !== 'OBSOLETE' && item.severity === 'HIGH').length,
         color: '#8c3f36',
         link: '/hazards'
       },
       {
-        label: 'High aspects',
+        label: this.t('dashboard.watchlist.items.aspects'),
         value: this.aspects().filter((item) => item.status !== 'OBSOLETE' && item.significance === 'HIGH').length,
         color: '#3f6f59',
         link: '/environmental-aspects'
@@ -962,22 +998,95 @@ export class DashboardPageComponent {
   }
 
   protected breakdownTitle() {
-    return `${this.currentModuleLabel()} breakdown`;
+    return this.t('dashboard.breakdown.title', { module: this.currentModuleLabel() });
   }
 
   protected breakdownNarrative() {
-    return `A compact view of the ${this.mainChartMetricLabel().toLowerCase()} behind the main ${this.selectedChartType()} chart.`;
+    return this.t('dashboard.breakdown.copy', {
+      metric: this.mainChartMetricLabel().toLowerCase(),
+      chart: this.currentChartTypeLabel().toLowerCase()
+    });
   }
 
   protected mainChartMetricLabel() {
+    this.i18n.language();
     return {
-      risks: 'Risk distribution',
-      capa: 'Status distribution',
-      actions: 'Status distribution',
-      audits: 'Program status',
-      context: 'Issue distribution',
-      feedback: 'Score distribution'
+      risks: this.t('dashboard.mainMetrics.risks'),
+      capa: this.t('dashboard.mainMetrics.capa'),
+      actions: this.t('dashboard.mainMetrics.actions'),
+      audits: this.t('dashboard.mainMetrics.audits'),
+      context: this.t('dashboard.mainMetrics.context'),
+      feedback: this.t('dashboard.mainMetrics.feedback')
     }[this.selectedModule()];
+  }
+
+  protected mainChartSummaryLabel() {
+    const count = this.mainChartTotal();
+    return this.dashboardCopy().chartSummary(this.selectedModule(), count);
+  }
+
+  private dashboardCopy() {
+    const language = this.i18n.language();
+    if (language === 'az') {
+      return {
+        summaryEyebrow: 'Baxış',
+        summaryTitle: 'Rəhbərlik icmalı',
+        filterModuleLabel: 'Modul',
+        filterPeriodLabel: 'Dövr',
+        filterChartTypeLabel: 'Qrafik növü',
+        watchlistTitle: 'Diqqət tələb edən sahələr',
+        watchlistCopy: 'Hazırda baxış tələb edən modullara qısa baxış.',
+        chartSummary: (module: DashboardModule, count: number) =>
+          ({
+            risks: `${count} açıq risk`,
+            capa: `${count} CAPA qeydi`,
+            actions: `${count} tapşırıq`,
+            audits: `${count} aktiv audit`,
+            context: `${count} kontekst qeydi`,
+            feedback: `${count} rəy cavabı`
+          } satisfies Record<DashboardModule, string>)[module]
+      };
+    }
+
+    if (language === 'ru') {
+      return {
+        summaryEyebrow: 'Обзор',
+        summaryTitle: 'Обзор для руководства',
+        filterModuleLabel: 'Модуль',
+        filterPeriodLabel: 'Период',
+        filterChartTypeLabel: 'Тип графика',
+        watchlistTitle: 'Области, требующие внимания',
+        watchlistCopy: 'Краткий обзор модулей, которые сейчас требуют проверки.',
+        chartSummary: (module: DashboardModule, count: number) =>
+          ({
+            risks: `${count} открытых рисков`,
+            capa: `${count} записей CAPA`,
+            actions: `${count} задач`,
+            audits: `${count} активных аудитов`,
+            context: `${count} записей контекста`,
+            feedback: `${count} ответов`
+          } satisfies Record<DashboardModule, string>)[module]
+      };
+    }
+
+    return {
+      summaryEyebrow: 'Overview',
+      summaryTitle: 'Management overview',
+      filterModuleLabel: 'Module',
+      filterPeriodLabel: 'Period',
+      filterChartTypeLabel: 'Chart type',
+      watchlistTitle: 'Areas needing attention',
+      watchlistCopy: 'A quick view of the modules that currently need review.',
+      chartSummary: (module: DashboardModule, count: number) =>
+        ({
+          risks: `${count} open risks`,
+          capa: `${count} CAPA items`,
+          actions: `${count} action items`,
+          audits: `${count} active audits`,
+          context: `${count} context items`,
+          feedback: `${count} feedback responses`
+        } satisfies Record<DashboardModule, string>)[module]
+    };
   }
 
   private baseChartPoints(): Omit<DashboardPoint, 'width'>[] {
@@ -987,9 +1096,9 @@ export class DashboardPageComponent {
         const inProgress = this.data().capaSummary.inProgress;
         const closed = Math.max((this.data().metrics['capas'] ?? 0) - (this.data().metrics['openCapas'] ?? 0), 0);
         return [
-          { label: 'Open', value: open, color: '#9a6e2d', link: '/capa' },
-          { label: 'In progress', value: inProgress, color: '#3f6f59', link: '/capa' },
-          { label: 'Closed', value: closed, color: '#244f3d', link: '/capa' }
+          { label: this.t('dashboard.status.open'), value: open, color: '#9a6e2d', link: '/capa' },
+          { label: this.t('dashboard.status.inProgress'), value: inProgress, color: '#3f6f59', link: '/capa' },
+          { label: this.t('dashboard.status.closed'), value: closed, color: '#244f3d', link: '/capa' }
         ];
       }
       case 'actions': {
@@ -999,42 +1108,46 @@ export class DashboardPageComponent {
         const done = actionItems.filter((item) => item.status === 'DONE').length;
         const overdue = actionItems.filter((item) => this.isOverdue(item.dueDate)).length;
         return [
-          { label: 'Open', value: open, color: '#446d8e', link: '/actions' },
-          { label: 'In progress', value: inProgress, color: '#3f6f59', link: '/actions' },
-          { label: 'Done', value: done, color: '#6f9d7f', link: '/actions' },
-          { label: 'Overdue', value: overdue, color: '#b45a47', link: '/actions' }
+          { label: this.t('dashboard.status.open'), value: open, color: '#446d8e', link: '/actions' },
+          { label: this.t('dashboard.status.inProgress'), value: inProgress, color: '#3f6f59', link: '/actions' },
+          { label: this.t('dashboard.status.done'), value: done, color: '#6f9d7f', link: '/actions' },
+          { label: this.t('dashboard.status.overdue'), value: overdue, color: '#b45a47', link: '/actions' }
         ];
       }
       case 'audits':
         return [
-          { label: 'Planned', value: this.data().auditSummary.planned, color: '#446d8e', link: '/audits' },
-          { label: 'In progress', value: this.data().auditSummary.inProgress, color: '#c39545', link: '/audits' },
-          { label: 'Completed', value: this.data().auditSummary.completed, color: '#244f3d', link: '/audits' }
+          { label: this.t('dashboard.status.planned'), value: this.data().auditSummary.planned, color: '#446d8e', link: '/audits' },
+          { label: this.t('dashboard.status.inProgress'), value: this.data().auditSummary.inProgress, color: '#c39545', link: '/audits' },
+          { label: this.t('dashboard.status.completed'), value: this.data().auditSummary.completed, color: '#244f3d', link: '/audits' }
         ];
       case 'context': {
         const summary = this.contextSummary()?.summary;
         return [
-          { label: 'Internal issues', value: summary?.internalIssues ?? 0, color: '#3f6f59', link: '/context/internal-issues' },
-          { label: 'External issues', value: summary?.externalIssues ?? 0, color: '#9a6e2d', link: '/context/external-issues' },
-          { label: 'Interested parties', value: summary?.interestedParties ?? 0, color: '#446d8e', link: '/context/interested-parties' },
-          { label: 'Needs', value: summary?.needsExpectations ?? 0, color: '#6f9d7f', link: '/context/needs-expectations' }
+          { label: this.t('dashboard.context.internalIssues'), value: summary?.internalIssues ?? 0, color: '#3f6f59', link: '/context/internal-issues' },
+          { label: this.t('dashboard.context.externalIssues'), value: summary?.externalIssues ?? 0, color: '#9a6e2d', link: '/context/external-issues' },
+          { label: this.t('dashboard.context.interestedParties'), value: summary?.interestedParties ?? 0, color: '#446d8e', link: '/context/interested-parties' },
+          { label: this.t('dashboard.context.needs'), value: summary?.needsExpectations ?? 0, color: '#6f9d7f', link: '/context/needs-expectations' }
         ];
       }
       case 'feedback':
         return [
-          { label: 'Needs attention (0-6)', value: this.data().feedbackSummary.lowScoreCount, color: '#b45a47', link: '/context/interested-parties' },
-          { label: 'Acceptable (7-8)', value: this.data().feedbackSummary.mediumScoreCount, color: '#c39545', link: '/context/interested-parties' },
-          { label: 'Strong (9-10)', value: this.data().feedbackSummary.highScoreCount, color: '#3f6f59', link: '/context/interested-parties' },
-          { label: 'Open links', value: this.data().feedbackSummary.openRequestCount, color: '#446d8e', link: '/context/interested-parties' }
+          { label: this.t('dashboard.feedback.low'), value: this.data().feedbackSummary.lowScoreCount, color: '#b45a47', link: '/context/interested-parties' },
+          { label: this.t('dashboard.feedback.medium'), value: this.data().feedbackSummary.mediumScoreCount, color: '#c39545', link: '/context/interested-parties' },
+          { label: this.t('dashboard.feedback.high'), value: this.data().feedbackSummary.highScoreCount, color: '#3f6f59', link: '/context/interested-parties' },
+          { label: this.t('dashboard.feedback.openLinks'), value: this.data().feedbackSummary.openRequestCount, color: '#446d8e', link: '/context/interested-parties' }
         ];
       case 'risks':
       default:
         return [
-          { label: 'Low', value: this.data().riskDistribution.low, color: '#6f9d7f', link: '/risks' },
-          { label: 'Medium', value: this.data().riskDistribution.medium, color: '#c39545', link: '/risks' },
-          { label: 'High', value: this.data().riskDistribution.high, color: '#b45a47', link: '/risks' }
+          { label: this.t('dashboard.riskLevels.low'), value: this.data().riskDistribution.low, color: '#6f9d7f', link: '/risks' },
+          { label: this.t('dashboard.riskLevels.medium'), value: this.data().riskDistribution.medium, color: '#c39545', link: '/risks' },
+          { label: this.t('dashboard.riskLevels.high'), value: this.data().riskDistribution.high, color: '#b45a47', link: '/risks' }
         ];
     }
+  }
+
+  protected t(key: string, params?: Record<string, unknown>) {
+    return this.i18n.t(key, params);
   }
 
   private actionPlannedCount() {

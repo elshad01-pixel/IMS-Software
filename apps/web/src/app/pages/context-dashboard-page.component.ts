@@ -1,32 +1,34 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { RouterLink } from '@angular/router';
 import { AuthStore } from '../core/auth.store';
 import { ContextApiService } from '../core/context-api.service';
 import { ContextDashboardResponse } from '../core/context.models';
+import { I18nService } from '../core/i18n.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
 @Component({
   selector: 'iso-context-dashboard-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, PageHeaderComponent],
+  imports: [CommonModule, RouterLink, PageHeaderComponent, TranslatePipe],
   template: `
     <section class="page-grid">
       <iso-page-header
-        [label]="'Clause 4'"
-        [title]="'Context of Organization'"
-        [description]="'Manage the issues, parties, and expectations that shape the management system.'"
-        [breadcrumbs]="[{ label: 'Context of Organization' }]"
+        [label]="t('contextDashboard.page.label')"
+        [title]="t('contextDashboard.page.title')"
+        [description]="t('contextDashboard.page.description')"
+        [breadcrumbs]="[{ label: t('contextDashboard.page.breadcrumb') }]"
       >
-        <a *ngIf="canWrite()" routerLink="/context/internal-issues/new" class="button-link">+ New internal issue</a>
-        <a *ngIf="canWrite()" routerLink="/context/external-issues/new" class="button-link secondary">+ New external issue</a>
+        <a *ngIf="canWrite()" routerLink="/context/internal-issues/new" class="button-link">+ {{ 'contextDashboard.actions.newInternalIssue' | translate }}</a>
+        <a *ngIf="canWrite()" routerLink="/context/external-issues/new" class="button-link secondary">+ {{ 'contextDashboard.actions.newExternalIssue' | translate }}</a>
       </iso-page-header>
 
       <section *ngIf="!canRead()" class="card list-card">
         <div class="empty-state">
-          <strong>Context access is not available</strong>
-          <span>Your current role does not include context.read.</span>
+          <strong>{{ 'contextDashboard.empty.noAccessTitle' | translate }}</strong>
+          <span>{{ 'contextDashboard.empty.noAccessCopy' | translate }}</span>
         </div>
       </section>
 
@@ -34,26 +36,26 @@ import { PageHeaderComponent } from '../shared/page-header.component';
         <section class="card focus-card">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Review focus</span>
+              <span class="section-eyebrow">{{ 'contextDashboard.focus.eyebrow' | translate }}</span>
               <h3>{{ reviewHeadline() }}</h3>
               <p class="subtle">{{ reviewNarrative() }}</p>
             </div>
           </div>
           <div class="summary-strip compact-summary-strip top-space">
             <article class="summary-item">
-              <span>Open</span>
+              <span>{{ 'contextDashboard.focus.open' | translate }}</span>
               <strong>{{ recentIssueCount('OPEN') }}</strong>
             </article>
             <article class="summary-item">
-              <span>Monitoring</span>
+              <span>{{ 'contextDashboard.focus.monitoring' | translate }}</span>
               <strong>{{ recentIssueCount('MONITORING') }}</strong>
             </article>
             <article class="summary-item">
-              <span>Resolved</span>
+              <span>{{ 'contextDashboard.focus.resolved' | translate }}</span>
               <strong>{{ recentIssueCount('RESOLVED') }}</strong>
             </article>
             <article class="summary-item">
-              <span>Customer feedback</span>
+              <span>{{ 'contextDashboard.focus.customerFeedback' | translate }}</span>
               <strong>{{ customerFeedbackHeadline() }}</strong>
             </article>
           </div>
@@ -62,58 +64,58 @@ import { PageHeaderComponent } from '../shared/page-header.component';
         <section class="card areas-card">
           <div class="section-head compact-head">
             <div>
-              <span class="section-eyebrow">Context areas</span>
-              <h3>Open one working area at a time</h3>
-              <p class="subtle">Choose the register you want to review, then work inside that area without losing the Clause 4 view.</p>
+              <span class="section-eyebrow">{{ 'contextDashboard.areas.eyebrow' | translate }}</span>
+              <h3>{{ 'contextDashboard.areas.title' | translate }}</h3>
+              <p class="subtle">{{ 'contextDashboard.areas.copy' | translate }}</p>
             </div>
           </div>
 
           <div class="areas-grid top-space">
             <article class="area-card">
               <div class="area-copy">
-                <span>Internal issues</span>
-                <p>Operational, organizational, and culture factors inside the business.</p>
+                <span>{{ 'contextDashboard.areas.internalIssues.label' | translate }}</span>
+                <p>{{ 'contextDashboard.areas.internalIssues.copy' | translate }}</p>
               </div>
               <strong>{{ dashboard()?.summary?.internalIssues ?? 0 }}</strong>
               <div class="area-actions">
-                <a routerLink="/context/internal-issues" class="button-link secondary compact">Open</a>
-                <a *ngIf="canWrite()" routerLink="/context/internal-issues/new" class="button-link tertiary compact">Add</a>
+                <a routerLink="/context/internal-issues" class="button-link secondary compact">{{ 'common.open' | translate }}</a>
+                <a *ngIf="canWrite()" routerLink="/context/internal-issues/new" class="button-link tertiary compact">{{ 'contextDashboard.actions.add' | translate }}</a>
               </div>
             </article>
 
             <article class="area-card">
               <div class="area-copy">
-                <span>External issues</span>
-                <p>Regulatory, supplier, market, and stakeholder influences on the IMS.</p>
+                <span>{{ 'contextDashboard.areas.externalIssues.label' | translate }}</span>
+                <p>{{ 'contextDashboard.areas.externalIssues.copy' | translate }}</p>
               </div>
               <strong>{{ dashboard()?.summary?.externalIssues ?? 0 }}</strong>
               <div class="area-actions">
-                <a routerLink="/context/external-issues" class="button-link secondary compact">Open</a>
-                <a *ngIf="canWrite()" routerLink="/context/external-issues/new" class="button-link tertiary compact">Add</a>
+                <a routerLink="/context/external-issues" class="button-link secondary compact">{{ 'common.open' | translate }}</a>
+                <a *ngIf="canWrite()" routerLink="/context/external-issues/new" class="button-link tertiary compact">{{ 'contextDashboard.actions.add' | translate }}</a>
               </div>
             </article>
 
             <article class="area-card">
               <div class="area-copy">
-                <span>Interested parties</span>
-                <p>Customers, regulators, employees, suppliers, and other key stakeholders.</p>
+                <span>{{ 'contextDashboard.areas.interestedParties.label' | translate }}</span>
+                <p>{{ 'contextDashboard.areas.interestedParties.copy' | translate }}</p>
               </div>
               <strong>{{ dashboard()?.summary?.interestedParties ?? 0 }}</strong>
               <div class="area-actions">
-                <a routerLink="/context/interested-parties" class="button-link secondary compact">Open</a>
-                <a *ngIf="canWrite()" routerLink="/context/interested-parties/new" class="button-link tertiary compact">Add</a>
+                <a routerLink="/context/interested-parties" class="button-link secondary compact">{{ 'common.open' | translate }}</a>
+                <a *ngIf="canWrite()" routerLink="/context/interested-parties/new" class="button-link tertiary compact">{{ 'contextDashboard.actions.add' | translate }}</a>
               </div>
             </article>
 
             <article class="area-card">
               <div class="area-copy">
-                <span>Needs & expectations</span>
-                <p>The requirements and expectations that should stay visible in planning and review.</p>
+                <span>{{ 'contextDashboard.areas.needs.label' | translate }}</span>
+                <p>{{ 'contextDashboard.areas.needs.copy' | translate }}</p>
               </div>
               <strong>{{ dashboard()?.summary?.needsExpectations ?? 0 }}</strong>
               <div class="area-actions">
-                <a routerLink="/context/needs-expectations" class="button-link secondary compact">Open</a>
-                <a *ngIf="canWrite()" routerLink="/context/needs-expectations/new" class="button-link tertiary compact">Add</a>
+                <a routerLink="/context/needs-expectations" class="button-link secondary compact">{{ 'common.open' | translate }}</a>
+                <a *ngIf="canWrite()" routerLink="/context/needs-expectations/new" class="button-link tertiary compact">{{ 'contextDashboard.actions.add' | translate }}</a>
               </div>
             </article>
           </div>
@@ -122,22 +124,22 @@ import { PageHeaderComponent } from '../shared/page-header.component';
         <section class="card detail-card">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Recent issues</span>
-              <h3>Latest context records</h3>
-              <p class="subtle">Review the latest internal and external issues, then continue into risk or process follow-up where needed.</p>
+              <span class="section-eyebrow">{{ 'contextDashboard.recent.eyebrow' | translate }}</span>
+              <h3>{{ 'contextDashboard.recent.title' | translate }}</h3>
+              <p class="subtle">{{ 'contextDashboard.recent.copy' | translate }}</p>
             </div>
           </div>
 
           <p class="feedback" [class.is-empty]="!error()" [class.error]="!!error()">{{ error() || '' }}</p>
 
           <div class="empty-state top-space" *ngIf="loading()">
-            <strong>Loading context dashboard</strong>
-            <span>Refreshing Clause 4 records.</span>
+            <strong>{{ 'contextDashboard.empty.loadingTitle' | translate }}</strong>
+            <span>{{ 'contextDashboard.empty.loadingCopy' | translate }}</span>
           </div>
 
           <div class="empty-state top-space" *ngIf="!loading() && !(dashboard()?.recentIssues?.length)">
-            <strong>No issues recorded yet</strong>
-            <span>Start by adding internal or external issues.</span>
+            <strong>{{ 'contextDashboard.empty.noIssuesTitle' | translate }}</strong>
+            <span>{{ 'contextDashboard.empty.noIssuesCopy' | translate }}</span>
           </div>
 
           <div class="entity-list top-space" *ngIf="!loading() && dashboard()?.recentIssues?.length">
@@ -145,12 +147,12 @@ import { PageHeaderComponent } from '../shared/page-header.component';
               <div class="link-row">
                 <div>
                   <strong>{{ item.title }}</strong>
-                  <small>{{ item.type === 'INTERNAL' ? 'Internal issue' : 'External issue' }}<span *ngIf="item.category"> • {{ item.category }}</span></small>
-                  <small *ngIf="item.linkedRiskCount || item.linkedProcesses?.length">Linked follow-up: {{ issueLinkSummary(item) }}</small>
+                  <small>{{ item.type === 'INTERNAL' ? t('contextDashboard.recent.internalIssue') : t('contextDashboard.recent.externalIssue') }}<span *ngIf="item.category"> • {{ item.category }}</span></small>
+                  <small *ngIf="item.linkedRiskCount || item.linkedProcesses?.length">{{ t('contextDashboard.recent.linkedFollowUp') }}: {{ issueLinkSummary(item) }}</small>
                 </div>
                 <div class="route-context">
                   <span class="status-badge" [ngClass]="item.status === 'RESOLVED' ? 'success' : item.status === 'ARCHIVED' ? 'neutral' : 'warn'">{{ labelize(item.status) }}</span>
-                  <a [routerLink]="issueEditPath(item)" class="button-link secondary compact">Open</a>
+                  <a [routerLink]="issueEditPath(item)" class="button-link secondary compact">{{ 'common.open' | translate }}</a>
                 </div>
               </div>
             </div>
@@ -271,6 +273,7 @@ import { PageHeaderComponent } from '../shared/page-header.component';
 export class ContextDashboardPageComponent implements OnInit {
   private readonly authStore = inject(AuthStore);
   private readonly contextApi = inject(ContextApiService);
+  private readonly i18n = inject(I18nService);
 
   protected readonly dashboard = signal<ContextDashboardResponse | null>(null);
   protected readonly loading = signal(false);
@@ -289,7 +292,7 @@ export class ContextDashboardPageComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Context dashboard could not be loaded.'));
+        this.error.set(this.readError(error, this.t('contextDashboard.errors.load')));
       }
     });
   }
@@ -302,8 +305,19 @@ export class ContextDashboardPageComponent implements OnInit {
     return this.authStore.hasPermission('context.write');
   }
 
+  protected t(key: string, params?: Record<string, unknown>) {
+    return this.i18n.t(key, params);
+  }
+
   protected labelize(value: string) {
-    return value.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (part) => part.toUpperCase());
+    this.i18n.language();
+    const map: Record<string, string> = {
+      OPEN: this.t('contextDashboard.status.open'),
+      MONITORING: this.t('contextDashboard.status.monitoring'),
+      RESOLVED: this.t('contextDashboard.status.resolved'),
+      ARCHIVED: this.t('contextDashboard.status.archived')
+    };
+    return map[value] ?? value;
   }
 
   protected issueEditPath(item: { type: 'INTERNAL' | 'EXTERNAL'; id: string }) {
@@ -317,32 +331,34 @@ export class ContextDashboardPageComponent implements OnInit {
   }
 
   protected reviewHeadline() {
+    this.i18n.language();
     if (this.recentIssueCount('OPEN') > 0) {
-      return 'Open context issues still need active review';
+      return this.t('contextDashboard.focus.headlines.open');
     }
     if (this.recentIssueCount('MONITORING') > 0) {
-      return 'Context is under monitoring';
+      return this.t('contextDashboard.focus.headlines.monitoring');
     }
-    return 'Clause 4 position is currently stable';
+    return this.t('contextDashboard.focus.headlines.stable');
   }
 
   protected reviewNarrative() {
+    this.i18n.language();
     if (this.recentIssueCount('OPEN') > 0) {
-      return 'Use the open issues as management inputs. Where needed, continue into risk assessment or process review so the issue has visible follow-up.';
+      return this.t('contextDashboard.focus.narratives.open');
     }
     if (this.recentIssueCount('MONITORING') > 0) {
-      return 'Monitoring issues remain visible for review and can still be escalated into risks or process changes if the situation worsens.';
+      return this.t('contextDashboard.focus.narratives.monitoring');
     }
-    return 'Recent context records are either resolved or not currently driving immediate management attention.';
+    return this.t('contextDashboard.focus.narratives.stable');
   }
 
   protected issueLinkSummary(item: ContextDashboardResponse['recentIssues'][number]) {
     const parts: string[] = [];
     if (item.linkedRiskCount) {
-      parts.push(`${item.linkedRiskCount} risk${item.linkedRiskCount === 1 ? '' : 's'}`);
+      parts.push(this.t('contextDashboard.recent.links.risks', { count: item.linkedRiskCount }));
     }
     if (item.linkedProcesses?.length) {
-      parts.push(`${item.linkedProcesses.length} process${item.linkedProcesses.length === 1 ? '' : 'es'}`);
+      parts.push(this.t('contextDashboard.recent.links.processes', { count: item.linkedProcesses.length }));
     }
     return parts.join(' | ');
   }
@@ -350,7 +366,7 @@ export class ContextDashboardPageComponent implements OnInit {
   protected customerFeedbackHeadline() {
     const summary = this.dashboard()?.summary;
     if (!summary || !summary.customerSurveyResponses) {
-      return 'No data';
+      return this.t('dashboard.metrics.customerFeedback.noData');
     }
     return `${summary.customerSurveyAverage ?? 0}/10`;
   }

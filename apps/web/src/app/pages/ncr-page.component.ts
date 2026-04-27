@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { I18nService } from '../core/i18n.service';
 import { NcrApiService } from '../core/ncr-api.service';
 import {
   NcrActivityItem,
@@ -53,18 +54,18 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
   imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, AttachmentPanelComponent, RecordWorkItemsComponent, IconActionButtonComponent],
   template: `
     <section class="page-grid">
-      <iso-page-header [label]="'NCR'" [title]="pageTitle()" [description]="pageDescription()" [breadcrumbs]="breadcrumbs()">
-        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/ncr/new" class="button-link">+ New NCR</a>
-        <a *ngIf="mode() === 'detail' && selectedNcr() && canWrite()" [routerLink]="['/ncr', selectedNcr()?.id, 'edit']" class="button-link">Edit NCR</a>
-        <button *ngIf="mode() === 'detail' && canArchiveNcr()" type="button" class="button-link secondary" (click)="archiveCurrent()">Archive NCR</button>
-        <button *ngIf="mode() === 'detail' && canDeleteNcr()" type="button" class="button-link danger" (click)="deleteCurrent()">Delete NCR</button>
-        <a *ngIf="mode() !== 'list'" routerLink="/ncr" class="button-link secondary">Back to NCR log</a>
+      <iso-page-header [label]="t('ncr.common.label')" [title]="pageTitle()" [description]="pageDescription()" [breadcrumbs]="breadcrumbs()">
+        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/ncr/new" class="button-link">{{ t('ncr.actions.new') }}</a>
+        <a *ngIf="mode() === 'detail' && selectedNcr() && canWrite()" [routerLink]="['/ncr', selectedNcr()?.id, 'edit']" class="button-link">{{ t('ncr.actions.edit') }}</a>
+        <button *ngIf="mode() === 'detail' && canArchiveNcr()" type="button" class="button-link secondary" (click)="archiveCurrent()">{{ t('ncr.actions.archive') }}</button>
+        <button *ngIf="mode() === 'detail' && canDeleteNcr()" type="button" class="button-link danger" (click)="deleteCurrent()">{{ t('ncr.actions.delete') }}</button>
+        <a *ngIf="mode() !== 'list'" routerLink="/ncr" class="button-link secondary">{{ t('ncr.actions.backToList') }}</a>
       </iso-page-header>
 
       <section *ngIf="!canRead()" class="card list-card">
         <div class="empty-state">
-          <strong>NCR access is not available</strong>
-          <span>Your current role does not include ncr.read.</span>
+          <strong>{{ t('ncr.empty.noAccessTitle') }}</strong>
+          <span>{{ t('ncr.empty.noAccessCopy') }}</span>
         </div>
       </section>
 
@@ -72,63 +73,63 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
         <div class="card list-card">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">NCR log</span>
-              <h3>Nonconformance log</h3>
-              <p class="subtle">NCR records the nonconformance first, then keeps the investigation, action follow-up, and verification trail together.</p>
+              <span class="section-eyebrow">{{ t('ncr.list.eyebrow') }}</span>
+              <h3>{{ t('ncr.list.title') }}</h3>
+              <p class="subtle">{{ t('ncr.list.copy') }}</p>
             </div>
           </div>
 
           <div class="toolbar top-space">
             <div class="toolbar-meta">
               <div>
-                <p class="toolbar-title">Filter NCRs</p>
-                <p class="toolbar-copy">Filter by status, category, source, severity, or owner.</p>
+                <p class="toolbar-title">{{ t('ncr.list.filtersTitle') }}</p>
+                <p class="toolbar-copy">{{ t('ncr.list.filtersCopy') }}</p>
               </div>
               <div class="toolbar-stats">
-                <article class="toolbar-stat"><span>Total</span><strong>{{ ncrs().length }}</strong></article>
-                <article class="toolbar-stat"><span>Open</span><strong>{{ countByStatus('OPEN') }}</strong></article>
-                <article class="toolbar-stat"><span>Overdue</span><strong>{{ overdueCount() }}</strong></article>
+                <article class="toolbar-stat"><span>{{ t('ncr.list.stats.total') }}</span><strong>{{ ncrs().length }}</strong></article>
+                <article class="toolbar-stat"><span>{{ t('ncr.list.stats.open') }}</span><strong>{{ countByStatus('OPEN') }}</strong></article>
+                <article class="toolbar-stat"><span>{{ t('ncr.list.stats.overdue') }}</span><strong>{{ overdueCount() }}</strong></article>
               </div>
             </div>
 
             <div class="filter-grid ncr-filter-grid">
               <label class="field compact-field search-field">
-                <span>Search</span>
-                <input [value]="search()" (input)="search.set(readInput($event))" placeholder="Reference or title">
+                <span>{{ t('ncr.list.filters.search') }}</span>
+                <input [value]="search()" (input)="search.set(readInput($event))" [placeholder]="t('ncr.list.placeholders.search')">
               </label>
               <label class="field compact-field">
-                <span>Status</span>
+                <span>{{ t('ncr.common.status') }}</span>
                 <select [value]="statusFilter()" (change)="statusFilter.set(readSelect($event))">
-                  <option value="">All statuses</option>
-                  <option value="OVERDUE">Overdue</option>
+                  <option value="">{{ t('ncr.list.filters.allStatuses') }}</option>
+                  <option value="OVERDUE">{{ t('ncr.list.stats.overdue') }}</option>
                   <option *ngFor="let item of statusOptions" [value]="item">{{ labelize(item) }}</option>
                 </select>
               </label>
               <label class="field compact-field">
-                <span>Category</span>
+                <span>{{ t('ncr.list.filters.category') }}</span>
                 <select [value]="categoryFilter()" (change)="categoryFilter.set(readSelect($event))">
-                  <option value="">All categories</option>
+                  <option value="">{{ t('ncr.list.filters.allCategories') }}</option>
                   <option *ngFor="let item of categoryOptions" [value]="item">{{ labelize(item) }}</option>
                 </select>
               </label>
               <label class="field compact-field">
-                <span>Source</span>
+                <span>{{ t('ncr.list.filters.source') }}</span>
                 <select [value]="sourceFilter()" (change)="sourceFilter.set(readSelect($event))">
-                  <option value="">All sources</option>
+                  <option value="">{{ t('ncr.list.filters.allSources') }}</option>
                   <option *ngFor="let item of sourceOptions" [value]="item">{{ labelize(item) }}</option>
                 </select>
               </label>
               <label class="field compact-field">
-                <span>Severity</span>
+                <span>{{ t('ncr.list.filters.severity') }}</span>
                 <select [value]="severityFilter()" (change)="severityFilter.set(readSelect($event))">
-                  <option value="">All severities</option>
+                  <option value="">{{ t('ncr.list.filters.allSeverities') }}</option>
                   <option *ngFor="let item of severityOptions" [value]="item">{{ labelize(item) }}</option>
                 </select>
               </label>
               <label class="field compact-field">
-                <span>Owner</span>
+                <span>{{ t('ncr.common.owner') }}</span>
                 <select [value]="ownerFilter()" (change)="ownerFilter.set(readSelect($event))">
-                  <option value="">All owners</option>
+                  <option value="">{{ t('ncr.list.filters.allOwners') }}</option>
                   <option *ngFor="let item of users()" [value]="item.id">{{ fullName(item) }}</option>
                 </select>
               </label>
@@ -138,29 +139,29 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
           <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
           <div class="empty-state" *ngIf="loading()">
-            <strong>Loading NCR log</strong>
-            <span>Refreshing tenant nonconformance records.</span>
+            <strong>{{ t('ncr.empty.loadingTitle') }}</strong>
+            <span>{{ t('ncr.empty.loadingCopy') }}</span>
           </div>
 
           <div class="empty-state top-space" *ngIf="!loading() && !filteredNcrs().length">
-            <strong>No NCR records match the current filter</strong>
-            <span>Adjust the filters or create the first NCR entry for this tenant.</span>
+            <strong>{{ t('ncr.empty.noneTitle') }}</strong>
+            <span>{{ t('ncr.empty.noneCopy') }}</span>
           </div>
 
           <div class="data-table-wrap" *ngIf="!loading() && filteredNcrs().length">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Reference</th>
-                  <th>Category</th>
-                  <th>Source</th>
-                  <th>Severity</th>
-                  <th>Status</th>
-                  <th>Owner</th>
-                  <th>Due date</th>
-                  <th>Updated</th>
-                  <th>Attention</th>
-                  <th>Actions</th>
+                  <th>{{ t('ncr.table.reference') }}</th>
+                  <th>{{ t('ncr.table.category') }}</th>
+                  <th>{{ t('ncr.table.source') }}</th>
+                  <th>{{ t('ncr.table.severity') }}</th>
+                  <th>{{ t('ncr.common.status') }}</th>
+                  <th>{{ t('ncr.common.owner') }}</th>
+                  <th>{{ t('ncr.common.dueDate') }}</th>
+                  <th>{{ t('ncr.table.updated') }}</th>
+                  <th>{{ t('ncr.table.attention') }}</th>
+                  <th>{{ t('ncr.table.actions') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -170,25 +171,25 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
                   <td>{{ labelize(item.source) }}</td>
                   <td><span class="status-badge" [ngClass]="severityClass(item.severity)">{{ labelize(item.severity) }}</span></td>
                   <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ labelize(item.status) }}</span></td>
-                  <td>{{ item.owner ? fullName(item.owner) : 'Unassigned' }}</td>
-                  <td>{{ item.dueDate ? (item.dueDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
+                  <td>{{ item.owner ? fullName(item.owner) : t('ncr.common.unassigned') }}</td>
+                  <td>{{ item.dueDate ? (item.dueDate | date:'yyyy-MM-dd') : t('ncr.common.notSet') }}</td>
                   <td>{{ item.updatedAt | date:'yyyy-MM-dd' }}</td>
                   <td><span class="status-badge" [ngClass]="attentionClass(item)">{{ attentionLabel(item) }}</span></td>
                   <td>
                     <div class="inline-actions" (click)="$event.stopPropagation()">
-                      <iso-icon-action-button [icon]="'view'" [label]="'View NCR'" [routerLink]="['/ncr', item.id]" />
-                      <iso-icon-action-button *ngIf="canWrite()" [icon]="'edit'" [label]="'Edit NCR'" [routerLink]="['/ncr', item.id, 'edit']" />
+                      <iso-icon-action-button [icon]="'view'" [label]="t('ncr.actions.view')" [routerLink]="['/ncr', item.id]" />
+                      <iso-icon-action-button *ngIf="canWrite()" [icon]="'edit'" [label]="t('ncr.actions.edit')" [routerLink]="['/ncr', item.id, 'edit']" />
                       <iso-icon-action-button
                         *ngIf="showAdminRowActions()"
                         [icon]="'archive'"
-                        [label]="canArchiveRow(item) ? 'Archive NCR' : 'Archive unavailable'"
+                        [label]="canArchiveRow(item) ? t('ncr.actions.archive') : t('ncr.actions.archiveUnavailable')"
                         [disabled]="!canArchiveRow(item)"
                         (pressed)="archiveRow(item)"
                       />
                       <iso-icon-action-button
                         *ngIf="showAdminRowActions()"
                         [icon]="'delete'"
-                        [label]="canDeleteRow(item) ? 'Delete NCR' : 'Delete unavailable'"
+                        [label]="canDeleteRow(item) ? t('ncr.actions.delete') : t('ncr.actions.deleteUnavailable')"
                         [variant]="'danger'"
                         [disabled]="!canDeleteRow(item)"
                         (pressed)="deleteRow(item)"
@@ -217,27 +218,27 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
             <strong>{{ message() }}</strong>
             <span>{{ ncrNextStepsCopy() }}</span>
             <div class="button-row top-space">
-              <a *ngIf="selectedId()" [routerLink]="['/ncr', selectedId()]" class="button-link secondary">Review NCR</a>
-              <a routerLink="/ncr" class="button-link tertiary">Review NCR log</a>
+              <a *ngIf="selectedId()" [routerLink]="['/ncr', selectedId()]" class="button-link secondary">{{ t('ncr.actions.reviewCurrent') }}</a>
+              <a routerLink="/ncr" class="button-link tertiary">{{ t('ncr.actions.reviewList') }}</a>
             </div>
           </section>
 
           <section class="detail-section">
-            <h4>Overview</h4>
+            <h4>{{ t('ncr.detail.overview') }}</h4>
             <div class="form-grid-2 top-space">
-              <label class="field"><span>Reference no.</span><input formControlName="referenceNo" placeholder="NCR-2026-001"></label>
-              <label class="field"><span>Title</span><input formControlName="title" placeholder="Unapproved process change"></label>
+              <label class="field"><span>{{ t('ncr.form.fields.referenceNo') }}</span><input formControlName="referenceNo" [placeholder]="t('ncr.form.placeholders.referenceNo')"></label>
+              <label class="field"><span>{{ t('ncr.form.fields.title') }}</span><input formControlName="title" [placeholder]="t('ncr.form.placeholders.title')"></label>
             </div>
             <div class="form-grid-3 top-space">
-              <label class="field"><span>Category</span><select formControlName="category"><option *ngFor="let item of categoryOptions" [value]="item">{{ labelize(item) }}</option></select></label>
-              <label class="field"><span>Source</span><select formControlName="source"><option *ngFor="let item of sourceOptions" [value]="item">{{ labelize(item) }}</option></select></label>
-              <label class="field"><span>Status</span><select formControlName="status"><option *ngFor="let item of editableStatusOptions()" [value]="item">{{ labelize(item) }}</option></select></label>
+              <label class="field"><span>{{ t('ncr.list.filters.category') }}</span><select formControlName="category"><option *ngFor="let item of categoryOptions" [value]="item">{{ labelize(item) }}</option></select></label>
+              <label class="field"><span>{{ t('ncr.list.filters.source') }}</span><select formControlName="source"><option *ngFor="let item of sourceOptions" [value]="item">{{ labelize(item) }}</option></select></label>
+              <label class="field"><span>{{ t('ncr.common.status') }}</span><select formControlName="status"><option *ngFor="let item of editableStatusOptions()" [value]="item">{{ labelize(item) }}</option></select></label>
             </div>
-            <label class="field top-space"><span>Description</span><textarea rows="4" formControlName="description" placeholder="Describe what happened and what requirement was missed"></textarea></label>
+            <label class="field top-space"><span>{{ t('ncr.form.fields.description') }}</span><textarea rows="4" formControlName="description" [placeholder]="t('ncr.form.placeholders.description')"></textarea></label>
             <div class="form-grid-3 top-space">
-              <label class="field"><span>Severity</span><select formControlName="severity"><option *ngFor="let item of severityOptions" [value]="item">{{ labelize(item) }}</option></select></label>
-              <label class="field"><span>Priority</span><select formControlName="priority"><option *ngFor="let item of priorityOptions" [value]="item">{{ labelize(item) }}</option></select></label>
-              <label class="field"><span>Date reported</span><input type="date" formControlName="dateReported"></label>
+              <label class="field"><span>{{ t('ncr.list.filters.severity') }}</span><select formControlName="severity"><option *ngFor="let item of severityOptions" [value]="item">{{ labelize(item) }}</option></select></label>
+              <label class="field"><span>{{ t('ncr.form.fields.priority') }}</span><select formControlName="priority"><option *ngFor="let item of priorityOptions" [value]="item">{{ labelize(item) }}</option></select></label>
+              <label class="field"><span>{{ t('ncr.form.fields.dateReported') }}</span><input type="date" formControlName="dateReported"></label>
             </div>
           </section>
 
@@ -323,9 +324,9 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
             </div>
           </section>
 
-          <div class="button-row">
-            <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save NCR' }}</button>
-            <a [routerLink]="selectedId() ? ['/ncr', selectedId()] : ['/ncr']" class="button-link secondary">Cancel</a>
+            <div class="button-row">
+            <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? t('ncr.actions.saving') : t('ncr.actions.save') }}</button>
+            <a [routerLink]="selectedId() ? ['/ncr', selectedId()] : ['/ncr']" class="button-link secondary">{{ t('common.cancel') }}</a>
           </div>
         </form>
 
@@ -377,19 +378,19 @@ const NEXT_STATUS_OPTIONS: Record<NcrStatus, NcrStatus[]> = {
           <section class="card panel-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Workflow</span>
-                <h3>NCR workflow</h3>
-                <p class="subtle">Work from investigation to task follow-up and then formal verification before closure.</p>
+                <span class="section-eyebrow">{{ t('ncr.detail.workflowEyebrow') }}</span>
+                <h3>{{ t('ncr.detail.workflowTitle') }}</h3>
+                <p class="subtle">{{ t('ncr.detail.workflowCopy') }}</p>
               </div>
             </div>
 
-            <nav class="detail-tabs top-space" aria-label="NCR detail sections">
-              <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'overview'" (click)="setDetailTab('overview')">Overview</button>
-              <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'investigation'" (click)="setDetailTab('investigation')">Investigation</button>
-              <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'actions'" (click)="setDetailTab('actions')">Follow-up actions</button>
-              <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'verification'" (click)="setDetailTab('verification')">Verification</button>
-              <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'comments'" (click)="setDetailTab('comments')">Comments</button>
-              <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'activity'" (click)="setDetailTab('activity')">Activity & evidence</button>
+            <nav class="detail-tabs top-space" [attr.aria-label]="t('ncr.detail.tabsAriaLabel')">
+              <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'overview'" (click)="setDetailTab('overview')">{{ t('ncr.detail.overview') }}</button>
+              <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'investigation'" (click)="setDetailTab('investigation')">{{ t('ncr.detail.investigation') }}</button>
+              <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'actions'" (click)="setDetailTab('actions')">{{ t('ncr.detail.followUpActions') }}</button>
+              <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'verification'" (click)="setDetailTab('verification')">{{ t('ncr.detail.verification') }}</button>
+              <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'comments'" (click)="setDetailTab('comments')">{{ t('ncr.detail.comments') }}</button>
+              <button type="button" class="detail-tab" [class.active]="activeDetailTab() === 'activity'" (click)="setDetailTab('activity')">{{ t('ncr.detail.activityEvidence') }}</button>
             </nav>
           </section>
 
@@ -625,6 +626,7 @@ export class NcrPageComponent implements OnInit, OnChanges {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -740,14 +742,14 @@ export class NcrPageComponent implements OnInit, OnChanges {
 
   protected canRead() { return this.authStore.hasPermission('ncr.read'); }
   protected canWrite() { return this.authStore.hasPermission('ncr.write'); }
-  protected pageTitle() { return { list: 'Nonconformance log', create: 'Raise NCR', detail: this.selectedNcr()?.referenceNo || 'NCR detail', edit: this.selectedNcr()?.referenceNo || 'Edit NCR' }[this.mode()]; }
-  protected pageDescription() { return { list: 'Use NCR to record the nonconformance, who owns it, what follow-up is needed, and whether verification is complete.', create: 'Capture the nonconformance first, then continue the investigation and corrective trail from the record.', detail: 'Review the nonconformance, investigation, follow-up actions, verification, comments, attachments, and activity.', edit: 'Update the NCR while keeping the investigation and verification trail clear.' }[this.mode()]; }
+  protected pageTitle() { return { list: this.t('ncr.page.titleList'), create: this.t('ncr.page.titleCreate'), detail: this.selectedNcr()?.referenceNo || this.t('ncr.page.titleDetail'), edit: this.selectedNcr()?.referenceNo || this.t('ncr.page.titleEdit') }[this.mode()]; }
+  protected pageDescription() { return { list: this.t('ncr.page.descriptionList'), create: this.t('ncr.page.descriptionCreate'), detail: this.t('ncr.page.descriptionDetail'), edit: this.t('ncr.page.descriptionEdit') }[this.mode()]; }
   protected breadcrumbs() {
-    const crumbs: Array<{ label: string; link?: string }> = [{ label: 'NCR', link: '/ncr' }];
-    if (this.mode() === 'create') crumbs.push({ label: 'New NCR' });
+    const crumbs: Array<{ label: string; link?: string }> = [{ label: this.t('ncr.common.label'), link: '/ncr' }];
+    if (this.mode() === 'create') crumbs.push({ label: this.t('ncr.breadcrumbs.new') });
     if ((this.mode() === 'detail' || this.mode() === 'edit') && this.selectedNcr()) {
       crumbs.push({ label: this.selectedNcr()!.referenceNo, link: `/ncr/${this.selectedNcr()!.id}` });
-      if (this.mode() === 'edit') crumbs.push({ label: 'Edit' });
+      if (this.mode() === 'edit') crumbs.push({ label: this.t('ncr.breadcrumbs.edit') });
     }
     return crumbs;
   }
@@ -756,8 +758,9 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected overdueCount() { const now = new Date(); return this.ncrs().filter((item) => item.dueDate && new Date(item.dueDate) < now && item.status !== 'CLOSED' && item.status !== 'ARCHIVED').length; }
   protected attentionLabel(item: NcrRecord) {
     const reasons = this.ncrAttentionReasons(item);
-    if (!reasons.length) return 'Under control';
-    return reasons.length > 1 ? `${reasons[0]} +${reasons.length - 1}` : reasons[0];
+    if (!reasons.length) return this.t('ncr.attention.underControl');
+    const first = this.attentionReasonLabel(reasons[0]);
+    return reasons.length > 1 ? `${first} +${reasons.length - 1}` : first;
   }
   protected attentionClass(item: NcrRecord) {
     const reasons = this.ncrAttentionReasons(item);
@@ -767,16 +770,18 @@ export class NcrPageComponent implements OnInit, OnChanges {
   }
   protected attentionHeadline(record: NcrRecord | null) {
     return record && this.ncrAttentionReasons(record).length
-      ? 'This NCR currently needs management attention.'
-      : 'This NCR is currently under control.';
+      ? this.t('ncr.attention.headlines.needsAttention')
+      : this.t('ncr.attention.headlines.underControl');
   }
   protected attentionNarrative(record: NcrRecord | null) {
-    if (!record) return 'Attention guidance appears after the NCR is saved.';
+    if (!record) return this.t('ncr.attention.narratives.unsaved');
     const reasons = this.ncrAttentionReasons(record);
     if (!reasons.length) {
-      return 'Ownership, due date, verification state, and current NCR stage are controlled enough for routine follow-up.';
+      return this.t('ncr.attention.narratives.underControl');
     }
-    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+    return this.t('ncr.attention.narratives.needsAttention', {
+      reasons: reasons.map((reason) => this.attentionReasonLabel(reason).toLowerCase()).join(', ')
+    });
   }
   protected availableTransitions() { const current = this.selectedNcr()?.status; return current ? NEXT_STATUS_OPTIONS[current] : []; }
   protected canDeleteNcr() { const item = this.selectedNcr(); return this.authStore.hasPermission('admin.delete') && !!item && item.status !== 'CLOSED' && item.status !== 'ARCHIVED'; }
@@ -784,9 +789,42 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected canDeleteRow(item: NcrRecord) { return this.authStore.hasPermission('admin.delete') && item.status !== 'CLOSED' && item.status !== 'ARCHIVED'; }
   protected canArchiveRow(item: NcrRecord) { return this.authStore.hasPermission('admin.delete') && item.status !== 'ARCHIVED' && item.status !== 'OPEN'; }
   protected showAdminRowActions() { return this.authStore.hasPermission('admin.delete'); }
+  protected t(key: string, params?: Record<string, unknown>) { return this.i18n.t(key, params); }
   protected fullName(user: NcrUserSummary) { return `${user.firstName} ${user.lastName}`.trim(); }
-  protected processLabel(process: ProcessOption) { return `${process.referenceNo || 'Uncoded'} - ${process.name}`; }
-  protected labelize(value: string) { return value.toLowerCase().split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' '); }
+  protected processLabel(process: ProcessOption) { return `${process.referenceNo || this.t('ncr.common.uncoded')} - ${process.name}`; }
+  protected labelize(value: string) {
+    const map: Record<string, string> = {
+      OPEN: 'ncr.enums.status.OPEN',
+      UNDER_REVIEW: 'ncr.enums.status.UNDER_REVIEW',
+      INVESTIGATION: 'ncr.enums.status.INVESTIGATION',
+      ACTION_IN_PROGRESS: 'ncr.enums.status.ACTION_IN_PROGRESS',
+      PENDING_VERIFICATION: 'ncr.enums.status.PENDING_VERIFICATION',
+      CLOSED: 'ncr.enums.status.CLOSED',
+      ARCHIVED: 'ncr.enums.status.ARCHIVED',
+      PROCESS: 'ncr.enums.category.PROCESS',
+      PRODUCT: 'ncr.enums.category.PRODUCT',
+      SERVICE: 'ncr.enums.category.SERVICE',
+      SUPPLIER: 'ncr.enums.category.SUPPLIER',
+      COMPLAINT: 'ncr.enums.category.COMPLAINT',
+      INTERNAL: 'ncr.enums.source.INTERNAL',
+      CUSTOMER: 'ncr.enums.source.CUSTOMER',
+      AUDIT: 'ncr.enums.source.AUDIT',
+      LOW: 'ncr.enums.level.LOW',
+      MEDIUM: 'ncr.enums.level.MEDIUM',
+      HIGH: 'ncr.enums.level.HIGH',
+      CRITICAL: 'ncr.enums.level.CRITICAL',
+      URGENT: 'ncr.enums.level.URGENT',
+      FIVE_WHY: 'ncr.enums.rca.FIVE_WHY',
+      FISHBONE: 'ncr.enums.rca.FISHBONE',
+      IS_IS_NOT: 'ncr.enums.rca.IS_IS_NOT',
+      OTHER: 'ncr.enums.rca.OTHER',
+      PENDING: 'ncr.enums.verification.PENDING',
+      VERIFIED: 'ncr.enums.verification.VERIFIED',
+      REJECTED: 'ncr.enums.verification.REJECTED'
+    };
+    const key = map[value];
+    return key ? this.t(key) : value.toLowerCase().split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+  }
   protected statusClass(status: NcrStatus) { if (status === 'CLOSED') return 'success'; if (status === 'ARCHIVED') return 'neutral'; if (status === 'PENDING_VERIFICATION' || status === 'UNDER_REVIEW') return 'warn'; return 'attention'; }
   protected severityClass(severity: NcrSeverity) { if (severity === 'CRITICAL') return 'danger'; if (severity === 'HIGH') return 'warn'; if (severity === 'LOW') return 'neutral'; return 'attention'; }
   protected activityLabel(action: string) { return action.replace(/^ncr\./, '').split('.').map((part) => this.labelize(part)).join(' '); }
@@ -809,10 +847,10 @@ export class NcrPageComponent implements OnInit, OnChanges {
   }
   protected primaryWorkflowButtonLabel() {
     const tab = this.primaryWorkflowTab();
-    if (tab === 'investigation') return 'Continue investigation';
-    if (tab === 'actions') return 'Review follow-up actions';
-    if (tab === 'verification') return 'Open verification';
-    return 'Review overview';
+    if (tab === 'investigation') return this.t('ncr.actions.continueInvestigation');
+    if (tab === 'actions') return this.t('ncr.actions.reviewFollowUpActions');
+    if (tab === 'verification') return this.t('ncr.actions.openVerification');
+    return this.t('ncr.actions.reviewOverview');
   }
   protected selectedRcaMethod() { return this.form.getRawValue().rcaMethod as NcrRcaMethod | ''; }
   protected ownerOptions() {
@@ -829,78 +867,78 @@ export class NcrPageComponent implements OnInit, OnChanges {
   protected ownerFilterCopy() {
     const processId = this.ownerProcessFilterId();
     if (!processId) {
-      return 'Select a process if you want to suggest the process owner as the most likely NCR owner.';
+      return this.t('ncr.guidance.ownerFilterDefault');
     }
     const process = this.processOptions().find((item) => item.id === processId);
     return process?.owner
-      ? `Owner options are narrowed to ${this.fullName(process.owner)} from ${process.name}.`
-      : 'This process does not have an assigned process owner yet, so all users remain available.';
+      ? this.t('ncr.guidance.ownerFilterScoped', { owner: this.fullName(process.owner), process: process.name })
+      : this.t('ncr.guidance.ownerFilterNoOwner');
   }
   protected ncrNextStepsCopy() {
     const record = this.selectedNcr();
     if (!record) {
       return this.mode() === 'create'
-        ? 'Next: open the saved NCR and continue with investigation, actions, and verification from the record.'
-        : 'Next: continue the NCR from the relevant workflow tab.';
+        ? this.t('ncr.nextSteps.create')
+        : this.t('ncr.nextSteps.edit');
     }
     if (record.status === 'OPEN' || record.status === 'UNDER_REVIEW') {
-      return 'Next: continue the investigation, capture root cause, and then move into corrective actions.';
+      return this.t('ncr.nextSteps.initial');
     }
     if (record.status === 'INVESTIGATION' || record.status === 'ACTION_IN_PROGRESS') {
-      return 'Next: review corrective actions, keep comments and evidence current, and prepare for verification.';
+      return this.t('ncr.nextSteps.actioning');
     }
     if (record.status === 'PENDING_VERIFICATION') {
-      return 'Next: complete verification and confirm whether the NCR can be closed or needs more action.';
+      return this.t('ncr.nextSteps.verification');
     }
-    return 'Next: review the investigation trail, linked actions, and evidence as part of the NCR record.';
+    return this.t('ncr.nextSteps.closed');
   }
   protected ncrStageLabel(status: NcrStatus) {
-    if (status === 'OPEN' || status === 'UNDER_REVIEW') return 'Raised';
-    if (status === 'INVESTIGATION') return 'Investigating';
-    if (status === 'ACTION_IN_PROGRESS') return 'Correcting';
-    if (status === 'PENDING_VERIFICATION') return 'Verifying';
-    if (status === 'CLOSED') return 'Closed';
-    return 'Archived';
+    if (status === 'OPEN' || status === 'UNDER_REVIEW') return this.t('ncr.stage.raised');
+    if (status === 'INVESTIGATION') return this.t('ncr.stage.investigating');
+    if (status === 'ACTION_IN_PROGRESS') return this.t('ncr.stage.correcting');
+    if (status === 'PENDING_VERIFICATION') return this.t('ncr.stage.verifying');
+    if (status === 'CLOSED') return this.t('ncr.stage.closed');
+    return this.t('ncr.stage.archived');
   }
   protected ncrWorkflowHeading(status: NcrStatus) {
-    if (status === 'OPEN' || status === 'UNDER_REVIEW') return 'NCR is in initial review';
-    if (status === 'INVESTIGATION') return 'Root cause investigation is active';
-    if (status === 'ACTION_IN_PROGRESS') return 'Corrective action is being implemented';
-    if (status === 'PENDING_VERIFICATION') return 'Effectiveness verification is due';
-    if (status === 'CLOSED') return 'NCR has been closed';
-    return 'NCR is archived';
+    if (status === 'OPEN' || status === 'UNDER_REVIEW') return this.t('ncr.workflow.heading.initial');
+    if (status === 'INVESTIGATION') return this.t('ncr.workflow.heading.investigation');
+    if (status === 'ACTION_IN_PROGRESS') return this.t('ncr.workflow.heading.correctiveAction');
+    if (status === 'PENDING_VERIFICATION') return this.t('ncr.workflow.heading.verification');
+    if (status === 'CLOSED') return this.t('ncr.workflow.heading.closed');
+    return this.t('ncr.workflow.heading.archived');
   }
   protected ncrWorkflowGuidance(status: NcrStatus) {
     if (status === 'OPEN' || status === 'UNDER_REVIEW') {
-      return 'Capture containment first, then record enough investigation detail to justify why the NCR is moving into root cause analysis.';
+      return this.t('ncr.workflow.guidance.initial');
     }
     if (status === 'INVESTIGATION') {
-      return 'Complete the investigation summary and root cause before moving fully into corrective action ownership.';
+      return this.t('ncr.workflow.guidance.investigation');
     }
     if (status === 'ACTION_IN_PROGRESS') {
-      return 'Keep corrective action summary, ownership, comments, and evidence current so the NCR is ready for verification.';
+      return this.t('ncr.workflow.guidance.correctiveAction');
     }
     if (status === 'PENDING_VERIFICATION') {
-      return 'Use verification to confirm the corrective action was effective, not just completed. Reject verification if the issue can still recur.';
+      return this.t('ncr.workflow.guidance.verification');
     }
     if (status === 'CLOSED') {
-      return 'Keep the NCR record available as evidence of containment, root cause, corrective action, and verification outcome.';
+      return this.t('ncr.workflow.guidance.closed');
     }
-    return 'Archived NCRs remain available for traceability and should not be treated as active issues.';
+    return this.t('ncr.workflow.guidance.archived');
   }
   protected verificationHeading(status: NcrVerificationStatus) {
-    if (status === 'VERIFIED') return 'Verification has passed';
-    if (status === 'REJECTED') return 'Verification failed';
-    return 'Verification is still pending';
+    if (status === 'VERIFIED') return this.t('ncr.verification.heading.verified');
+    if (status === 'REJECTED') return this.t('ncr.verification.heading.rejected');
+    return this.t('ncr.verification.heading.pending');
   }
   protected verificationGuidance(status: NcrVerificationStatus) {
     if (status === 'VERIFIED') {
-      return 'The corrective action has been confirmed as effective. Keep the verifier and verification date visible in the record.';
+      return this.t('ncr.verification.guidance.verified');
     }
     if (status === 'REJECTED') {
-      return 'Use rejected when the corrective action did not prevent recurrence. Return to investigation or action in progress with updated evidence.';
+      return this.t('ncr.verification.guidance.rejected');
     }
-    return 'Pending means the action may be implemented, but effectiveness has not yet been confirmed.';
+    return this.t('ncr.verification.guidance.pending');
   }
   protected ncrFollowUpSummary(record: NcrRecord | null) {
     if (!record || !record.dueDate || record.status === 'CLOSED' || record.status === 'ARCHIVED') {
@@ -913,22 +951,22 @@ export class NcrPageComponent implements OnInit, OnChanges {
 
     if (diffDays < 0) {
       return {
-        heading: 'NCR follow-up is overdue',
-        copy: `The due date passed on ${record.dueDate.slice(0, 10)}. Review corrective actions, verification status, and owner accountability before the NCR drifts further.`
+        heading: this.t('ncr.followUp.overdueHeading'),
+        copy: this.t('ncr.followUp.overdueCopy', { dueDate: record.dueDate.slice(0, 10) })
       };
     }
 
     if (diffDays <= 14) {
       return {
-        heading: 'NCR follow-up is approaching',
-        copy: `The due date is ${record.dueDate.slice(0, 10)}. Confirm the investigation, root cause, and corrective action trail before the due date arrives.`
+        heading: this.t('ncr.followUp.approachingHeading'),
+        copy: this.t('ncr.followUp.approachingCopy', { dueDate: record.dueDate.slice(0, 10) })
       };
     }
 
     if (record.status === 'PENDING_VERIFICATION' && record.verificationStatus === 'PENDING') {
       return {
-        heading: 'Verification still needs a formal result',
-        copy: 'This NCR is pending verification. Record who verified the action and whether the result was accepted or rejected.'
+        heading: this.t('ncr.followUp.verificationHeading'),
+        copy: this.t('ncr.followUp.verificationCopy')
       };
     }
 
@@ -984,11 +1022,11 @@ export class NcrPageComponent implements OnInit, OnChanges {
     request.subscribe({
       next: (record) => {
         this.saving.set(false);
-        void this.router.navigate(['/ncr', record.id], { state: { notice: this.mode() === 'edit' ? 'NCR updated.' : 'NCR created.' } });
+        void this.router.navigate(['/ncr', record.id], { state: { notice: this.mode() === 'edit' ? this.t('ncr.messages.updated') : this.t('ncr.messages.created') } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'NCR could not be saved.'));
+        this.error.set(this.readError(error, this.t('ncr.messages.saveFailed')));
       }
     });
   }
@@ -1005,53 +1043,53 @@ export class NcrPageComponent implements OnInit, OnChanges {
         this.commentSaving.set(false);
         this.commentForm.reset({ message: '' });
         this.comments.set([...this.comments(), comment]);
-        this.message.set('Comment added.');
+        this.message.set(this.t('ncr.messages.commentAdded'));
         this.fetchActivity(this.selectedId() as string);
         this.fetchNcr(this.selectedId() as string);
       },
       error: (error: HttpErrorResponse) => {
         this.commentSaving.set(false);
-        this.error.set(this.readError(error, 'Comment could not be saved.'));
+        this.error.set(this.readError(error, this.t('ncr.messages.commentSaveFailed')));
       }
     });
   }
 
-  protected changeStatus(status: NcrStatus) { this.patchCurrent({ status }, `NCR moved to ${this.labelize(status)}.`, 'NCR status update failed.'); }
-  protected archiveCurrent() { this.patchCurrent({ status: 'ARCHIVED' }, 'NCR archived.', 'NCR archival failed.'); }
+  protected changeStatus(status: NcrStatus) { this.patchCurrent({ status }, this.t('ncr.messages.movedTo', { status: this.labelize(status) }), this.t('ncr.messages.statusUpdateFailed')); }
+  protected archiveCurrent() { this.patchCurrent({ status: 'ARCHIVED' }, this.t('ncr.messages.archived'), this.t('ncr.messages.archiveFailed')); }
 
   protected deleteCurrent() {
-    if (!this.selectedId() || !this.canDeleteNcr() || !window.confirm('Delete this NCR? Closed records should be archived instead.')) {
+    if (!this.selectedId() || !this.canDeleteNcr() || !window.confirm(this.t('ncr.messages.deleteConfirmCurrent'))) {
       return;
     }
     this.ncrApi.remove(this.selectedId() as string).subscribe({
-      next: () => void this.router.navigate(['/ncr'], { state: { notice: 'NCR deleted.' } }),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'NCR deletion failed.'))
+      next: () => void this.router.navigate(['/ncr'], { state: { notice: this.t('ncr.messages.deleted') } }),
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('ncr.messages.deleteFailed')))
     });
   }
 
   protected archiveRow(item: NcrRecord) {
-    if (!this.canArchiveRow(item) || !window.confirm(`Archive NCR "${item.referenceNo}"?`)) {
+    if (!this.canArchiveRow(item) || !window.confirm(this.t('ncr.messages.archiveConfirmRow', { referenceNo: item.referenceNo }))) {
       return;
     }
     this.ncrApi.update(item.id, { status: 'ARCHIVED' }).subscribe({
       next: () => {
-        this.message.set('NCR archived.');
+        this.message.set(this.t('ncr.messages.archived'));
         this.reloadNcrs();
       },
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'NCR archival failed.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('ncr.messages.archiveFailed')))
     });
   }
 
   protected deleteRow(item: NcrRecord) {
-    if (!this.canDeleteRow(item) || !window.confirm(`Delete NCR "${item.referenceNo}"?`)) {
+    if (!this.canDeleteRow(item) || !window.confirm(this.t('ncr.messages.deleteConfirmRow', { referenceNo: item.referenceNo }))) {
       return;
     }
     this.ncrApi.remove(item.id).subscribe({
       next: () => {
-        this.message.set('NCR deleted.');
+        this.message.set(this.t('ncr.messages.deleted'));
         this.reloadNcrs();
       },
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'NCR deletion failed.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('ncr.messages.deleteFailed')))
     });
   }
 
@@ -1091,7 +1129,7 @@ export class NcrPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'NCR log could not be loaded.'));
+        this.error.set(this.readError(error, this.t('ncr.messages.loadListFailed')));
       }
     });
   }
@@ -1109,7 +1147,7 @@ export class NcrPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'NCR details could not be loaded.'));
+        this.error.set(this.readError(error, this.t('ncr.messages.loadDetailFailed')));
       }
     });
   }
@@ -1117,14 +1155,14 @@ export class NcrPageComponent implements OnInit, OnChanges {
   private fetchComments(id: string) {
     this.ncrApi.listComments(id).subscribe({
       next: (comments) => this.comments.set(comments),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'NCR comments could not be loaded.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('ncr.messages.loadCommentsFailed')))
     });
   }
 
   private fetchActivity(id: string) {
     this.ncrApi.activity(id).subscribe({
       next: (items) => this.activity.set(items),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'NCR activity could not be loaded.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('ncr.messages.loadActivityFailed')))
     });
   }
 
@@ -1276,6 +1314,16 @@ export class NcrPageComponent implements OnInit, OnChanges {
     if (record.status !== 'CLOSED' && record.status !== 'ARCHIVED') return 4;
     if (record.status === 'CLOSED') return 5;
     return 6;
+  }
+
+  private attentionReasonLabel(reason: string) {
+    const map: Record<string, string> = {
+      'Owner needed': 'ncr.attention.reasons.ownerNeeded',
+      'Follow-up overdue': 'ncr.attention.reasons.followUpOverdue',
+      'Verification overdue': 'ncr.attention.reasons.verificationOverdue',
+      Stale: 'ncr.attention.reasons.stale'
+    };
+    return map[reason] ? this.t(map[reason]) : reason;
   }
 
   private compareOptionalDateAsc(left?: string | null, right?: string | null) {

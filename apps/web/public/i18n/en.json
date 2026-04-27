@@ -1,0 +1,1853 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "open": "Open",
+    "save": "Save",
+    "cancel": "Cancel",
+    "enabled": "Enabled",
+    "hidden": "Hidden",
+    "notLoaded": "Not loaded",
+    "notSet": "Not set",
+    "notRecordedYet": "Not recorded yet",
+    "inProgress": "In progress",
+    "language": "Language",
+    "needsAccess": "Needs access",
+    "na": "n/a"
+  },
+  "shell": {
+    "brandTag": "ISO SaaS",
+    "brandTitle": "Integrated Management",
+    "brandDescription": "Operational control for documents, risks, audits, CAPA, reviews, KPIs, and training.",
+    "pinShortPinned": "PIN",
+    "pinShortUnpinned": "UNP",
+    "pinLabelPinned": "Pinned",
+    "pinLabelUnpinned": "Pin sidebar",
+    "workspaceLabel": "Workspace",
+    "workspaceName": "Integrated Management System",
+    "unpinSidebar": "Unpin sidebar",
+    "pinSidebar": "Pin sidebar",
+    "rolePrefix": "Role",
+    "signOut": "Sign out",
+    "mobileNav": "NAV",
+    "navGroups": {
+      "start": "Start",
+      "planning": "Planning",
+      "operations": "Operations",
+      "assurance": "Assurance",
+      "leadership": "Leadership",
+      "administration": "Administration"
+    },
+    "nav": {
+      "dashboard": {
+        "label": "Dashboard",
+        "hint": "Workspace overview"
+      },
+      "startHere": {
+        "label": "Start Here",
+        "hint": "Readiness and rollout path"
+      },
+      "context": {
+        "label": "Context",
+        "hint": "Clause 4 issues and parties"
+      },
+      "processRegister": {
+        "label": "Process Register",
+        "hint": "Business process links"
+      },
+      "risks": {
+        "label": "Risks",
+        "hint": "Assessment and treatment"
+      },
+      "obligations": {
+        "label": "Obligations",
+        "hint": "Legal and external requirements"
+      },
+      "complianceObligations": {
+        "label": "Compliance Obligations",
+        "hint": "Legal and external requirements"
+      },
+      "documents": {
+        "label": "Documents",
+        "hint": "Controlled library"
+      },
+      "training": {
+        "label": "Training",
+        "hint": "Assignments and evidence"
+      },
+      "externalProviders": {
+        "label": "External Providers",
+        "hint": "Supplier and service control"
+      },
+      "changeManagement": {
+        "label": "Change Management",
+        "hint": "Planned and reviewed changes"
+      },
+      "incidents": {
+        "label": "Incidents",
+        "hint": "Incidents and near misses"
+      },
+      "environmentalAspects": {
+        "label": "Environmental Aspects",
+        "hint": "Aspects and impacts"
+      },
+      "hazards": {
+        "label": "Hazards",
+        "hint": "Hazards and harm review"
+      },
+      "audits": {
+        "label": "Audits",
+        "hint": "Plans and findings"
+      },
+      "ncr": {
+        "label": "NCR",
+        "hint": "Nonconformance control"
+      },
+      "capa": {
+        "label": "CAPA",
+        "hint": "Corrective workflows"
+      },
+      "actions": {
+        "label": "Actions",
+        "hint": "Global follow-up tracker"
+      },
+      "kpis": {
+        "label": "KPIs",
+        "hint": "Targets and trends"
+      },
+      "managementReview": {
+        "label": "Management Review",
+        "hint": "Meetings and decisions"
+      },
+      "reports": {
+        "label": "Reports",
+        "hint": "Exports and summaries"
+      },
+      "users": {
+        "label": "Users",
+        "hint": "Access and ownership"
+      },
+      "settings": {
+        "label": "Settings",
+        "hint": "System configuration"
+      }
+    }
+  },
+  "implementation": {
+    "page": {
+      "label": "Start Here",
+      "title": "Implementation and readiness path",
+      "description": "Use this page as the first stop for tenant setup: review the core readiness checklist, then use the optional implementation workspace when guided rollout is needed.",
+      "breadcrumb": "Start Here"
+    },
+    "feedback": {
+      "loadingTitle": "Loading implementation workspace",
+      "loadingCopy": "Bringing in tenant rollout settings and objective guidance.",
+      "noWriteWorkspace": "You do not have permission to update the implementation workspace.",
+      "noWriteChecklist": "You do not have permission to update the rollout checklist.",
+      "updated": "Implementation workspace updated.",
+      "loadError": "Implementation workspace could not be loaded.",
+      "saveError": "Implementation workspace could not be saved."
+    },
+    "intro": {
+      "eyebrow": "Launch point",
+      "title": "Start here",
+      "copy": "Use this page to orient a new tenant quickly. The readiness checklist stays available for everyone with workspace access, and the implementation workspace can remain optional for mature companies."
+    },
+    "summary": {
+      "workspace": "Workspace",
+      "startingPoint": "Starting point",
+      "checklistProgress": "Checklist progress",
+      "objectiveStarter": "Objective starter",
+      "readyToDeploy": "Ready to deploy",
+      "needsSetup": "Needs setup"
+    },
+    "readiness": {
+      "eyebrow": "Readiness",
+      "title": "Core setup checklist",
+      "copy": "Walk through these essentials in order so the tenant has a clear first-use path before deeper rollout work begins.",
+      "setupPill": "Setup",
+      "items": {
+        "companyProfile": {
+          "label": "Company profile",
+          "hint": "Confirm tenant identity, numbering defaults, and system setup."
+        },
+        "usersRoles": {
+          "label": "Users and roles",
+          "hint": "Set access, ownership, and who will operate each module."
+        },
+        "processMap": {
+          "label": "Process map",
+          "hint": "Define the main processes and how they connect across the system."
+        },
+        "controlledDocuments": {
+          "label": "Controlled documents",
+          "hint": "Load the policies, procedures, forms, and work instructions needed for operation."
+        },
+        "risks": {
+          "label": "Risks",
+          "hint": "Capture key business, compliance, QHSE, and operational risks early."
+        },
+        "audits": {
+          "label": "Audits",
+          "hint": "Set the audit programme and prepare how effectiveness will be checked."
+        },
+        "ncrCapaActions": {
+          "label": "NCR/CAPA/actions",
+          "hint": "Make sure nonconformities, corrective action, and follow-up ownership are ready."
+        },
+        "kpis": {
+          "label": "KPIs",
+          "hint": "Define the measures and thresholds that show whether the system is working."
+        },
+        "managementReview": {
+          "label": "Management review",
+          "hint": "Prepare the leadership review path for decisions, resources, and improvement."
+        }
+      }
+    },
+    "guidance": {
+      "flowTitle": "Recommended first-use flow",
+      "flowCopy": "Company profile -> Users -> Processes -> Documents -> Risks -> Audits -> NCR/CAPA -> KPIs -> Management Review.",
+      "hiddenTitle": "The implementation workspace is currently hidden for this tenant.",
+      "hiddenCopy": "That is useful for companies that already have ISO implemented and only need the operational modules. This Start Here page still stays available for orientation, and you can turn the deeper rollout workspace back on later in",
+      "settingsLink": "Settings"
+    },
+    "profile": {
+      "eyebrow": "Profile",
+      "title": "Rollout profile",
+      "copy": "Keep the setup context short and visible so the tenant knows how this workspace is being used.",
+      "enable": "Enable implementation workspace",
+      "startingPoint": "Starting point",
+      "rolloutOwner": "Rollout owner",
+      "targetStandards": "Target standards",
+      "rolloutGoal": "Rollout goal",
+      "startingPoints": {
+        "NEW_IMPLEMENTATION": "New implementation",
+        "DIGITISING_EXISTING": "Digitising an existing system",
+        "MATURING_EXISTING": "Maturing an already digital system"
+      },
+      "placeholders": {
+        "rolloutOwner": "Quality Manager",
+        "targetStandards": "ISO 9001, ISO 14001, ISO 45001",
+        "rolloutGoal": "External certification in Q4 2026"
+      },
+      "save": "Save rollout profile",
+      "saving": "Saving...",
+      "goalLabel": "Goal"
+    },
+    "checklist": {
+      "eyebrow": "Checklist",
+      "title": "Rollout checkpoints",
+      "copy": "High-level setup only. This should stay lighter than a project plan and simply show whether the basics are in place.",
+      "items": {
+        "scopeContext": "Define scope, context, and interested parties",
+        "policyDocuments": "Approve policies and controlled document structure",
+        "objectivesKpis": "Set objectives, targets, and KPI review ownership",
+        "processRisk": "Map processes and assess key risks, hazards, and aspects",
+        "operationsTraining": "Deploy operational controls, training, and provider controls",
+        "auditReview": "Run internal audit and hold management review"
+      }
+    },
+    "objective": {
+      "eyebrow": "Objectives",
+      "title": "Objective establishment starter",
+      "copy": "Keep one practical starter objective here, then move the live measure and readings into KPIs.",
+      "focus": "Business focus",
+      "owner": "Objective owner",
+      "statement": "Objective statement",
+      "target": "Target / measure",
+      "reviewFrequency": "Review frequency",
+      "linkedModule": "Linked module",
+      "frequencies": {
+        "Monthly": "Monthly",
+        "Quarterly": "Quarterly",
+        "Biannual": "Biannual",
+        "Annual": "Annual"
+      },
+      "modules": {
+        "KPIs": "KPIs",
+        "Risks": "Risks",
+        "Management Review": "Management Review",
+        "Process Register": "Process Register",
+        "Context": "Context",
+        "Obligations": "Obligations",
+        "Documents": "Documents",
+        "Training": "Training",
+        "External Providers": "External Providers",
+        "Audits": "Audits",
+        "Incidents": "Incidents",
+        "Hazards": "Hazards",
+        "Environmental Aspects": "Environmental Aspects",
+        "NCR": "NCR",
+        "CAPA": "CAPA",
+        "Actions": "Actions"
+      },
+      "placeholders": {
+        "focus": "Supplier performance and traceability",
+        "owner": "Operations Manager",
+        "statement": "Improve on-time supplier approval and reduce traceability gaps by year end.",
+        "target": "95% approved supplier score by Q4"
+      },
+      "save": "Save objective starter",
+      "saving": "Saving...",
+      "openKpis": "Open KPIs",
+      "reviewCadence": "Review cadence"
+    },
+    "pdca": {
+      "eyebrow": "PDCA",
+      "title": "Recommended module sequence",
+      "copy": "Use PDCA as a suggested rollout order, not as another register to keep updating.",
+      "phases": {
+        "Plan": {
+          "label": "Plan",
+          "summary": "Define the management system direction before pushing records into daily use."
+        },
+        "Do": {
+          "label": "Do",
+          "summary": "Deploy controls, competence, and supplier management into daily operations."
+        },
+        "Check": {
+          "label": "Check",
+          "summary": "Use evidence, incidents, and audits to test whether the system is performing as intended."
+        },
+        "Act": {
+          "label": "Act",
+          "summary": "Drive improvement from findings, failures, changes, and management decisions."
+        }
+      },
+      "modules": {
+        "Context": "Scope, issues, interested parties, and needs",
+        "Obligations": "External and compliance requirements",
+        "Risks": "Risk and opportunity assessment",
+        "KPIs": "Objectives, measures, and thresholds",
+        "Documents": "Policies, procedures, forms, and instructions",
+        "Process Register": "Process ownership and interfaces",
+        "Training": "Competence and assignment follow-up",
+        "External Providers": "Supplier and service control",
+        "Audits": "Programme, execution, findings, and reports",
+        "Incidents": "Incidents, near misses, and investigation",
+        "Hazards": "OH&S hazard review",
+        "Environmental Aspects": "Aspect and impact review",
+        "NCR": "Nonconformity control and investigation",
+        "CAPA": "Corrective action workflow",
+        "Actions": "Cross-module follow-up tracker",
+        "Management Review": "Decisions, resources, and system effectiveness"
+      }
+    }
+  },
+  "dashboard": {
+    "page": {
+      "label": "Dashboard",
+      "title": "Integrated Management System",
+      "description": "A structured operational workspace for quality, environmental, and health and safety management.",
+      "supportingLine": "ISO 9001 • ISO 14001 • ISO 45001",
+      "breadcrumb": "Dashboard"
+    },
+    "summary": {
+      "eyebrow": "Overview",
+      "title": "Management overview",
+      "copy": "Key metrics"
+    },
+    "controls": {
+      "eyebrow": "Dashboard filters",
+      "title": "Choose the dashboard view",
+      "module": "Module",
+      "timeRange": "Time range",
+      "chartType": "Chart type"
+    },
+    "modules": {
+      "risks": "Risks",
+      "capa": "CAPA",
+      "actions": "Actions",
+      "audits": "Audits",
+      "context": "Context",
+      "feedback": "Customer Feedback"
+    },
+    "ranges": {
+      "month": "This month",
+      "quarter": "This quarter",
+      "year": "This year",
+      "monthOption": "Month",
+      "quarterOption": "Quarter",
+      "yearOption": "Year"
+    },
+    "chartTypes": {
+      "bar": "Bar chart",
+      "line": "Line chart",
+      "pie": "Pie chart",
+      "donut": "Donut chart",
+      "barOption": "Bar",
+      "lineOption": "Line",
+      "pieOption": "Pie",
+      "donutOption": "Donut"
+    },
+    "chart": {
+      "openModule": "Open {{module}}",
+      "moduleOverview": "{{module}} overview",
+      "section": {
+        "risks": "Risk overview",
+        "capa": "CAPA overview",
+        "actions": "Action overview",
+        "audits": "Audit overview",
+        "context": "Context overview",
+        "feedback": "Feedback overview"
+      },
+      "summary": {
+        "risks": "{{count}} open risks",
+        "capa": "{{count}} CAPA items",
+        "actions": "{{count}} action items",
+        "audits": "{{count}} active audits",
+        "context": "{{count}} context items",
+        "feedback": "{{count}} feedback responses"
+      }
+    },
+    "metrics": {
+      "openRisks": { "label": "Open risks", "copy": "Open" },
+      "openCapa": { "label": "Open CAPA", "copy": "In progress" },
+      "activeAudits": { "label": "Active audits", "copy": "In progress" },
+      "overdueActions": { "label": "Overdue actions", "copy": "Overdue" },
+      "kpiBreaches": { "label": "KPIs", "copy": "Tracked" },
+      "customerFeedback": {
+        "label": "Customer feedback",
+        "noData": "No data",
+        "awaiting": "Awaiting responses",
+        "responses": "{{count}} responses"
+      }
+    },
+    "mainMetrics": {
+      "risks": "Risk distribution",
+      "capa": "Status distribution",
+      "actions": "Status distribution",
+      "audits": "Program status",
+      "context": "Issue distribution",
+      "feedback": "Score distribution"
+    },
+    "status": {
+      "open": "Open",
+      "inProgress": "In progress",
+      "closed": "Closed",
+      "done": "Done",
+      "overdue": "Overdue",
+      "planned": "Planned",
+      "completed": "Completed"
+    },
+    "watchlist": {
+      "title": "Areas needing attention",
+      "copy": "A quick view of the modules that currently need review.",
+      "items": {
+        "incidents": "Incidents",
+        "providers": "Provider review",
+        "obligations": "Obligations",
+        "hazards": "High hazards",
+        "aspects": "High aspects"
+      }
+    },
+    "breakdown": {
+      "title": "{{module}} breakdown",
+      "copy": "A compact view of the {{metric}} behind the main {{chart}}."
+    },
+    "context": {
+      "internalIssues": "Internal issues",
+      "externalIssues": "External issues",
+      "interestedParties": "Interested parties",
+      "needs": "Needs"
+    },
+    "feedback": {
+      "low": "Needs attention (0-6)",
+      "medium": "Acceptable (7-8)",
+      "high": "Strong (9-10)",
+      "openLinks": "Open links"
+    },
+    "riskLevels": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    }
+  },
+  "contextDashboard": {
+    "page": {
+      "label": "Clause 4",
+      "title": "Context of Organization",
+      "description": "Manage the issues, parties, and expectations that shape the management system.",
+      "breadcrumb": "Context of Organization"
+    },
+    "actions": {
+      "newInternalIssue": "New internal issue",
+      "newExternalIssue": "New external issue",
+      "add": "Add"
+    },
+    "empty": {
+      "noAccessTitle": "Context access is not available",
+      "noAccessCopy": "Your current role does not include context.read.",
+      "loadingTitle": "Loading context dashboard",
+      "loadingCopy": "Refreshing Clause 4 records.",
+      "noIssuesTitle": "No issues recorded yet",
+      "noIssuesCopy": "Start by adding internal or external issues."
+    },
+    "focus": {
+      "eyebrow": "Review focus",
+      "open": "Open",
+      "monitoring": "Monitoring",
+      "resolved": "Resolved",
+      "customerFeedback": "Customer feedback",
+      "headlines": {
+        "open": "Open context issues still need active review",
+        "monitoring": "Context is under monitoring",
+        "stable": "Clause 4 position is currently stable"
+      },
+      "narratives": {
+        "open": "Use the open issues as management inputs. Where needed, continue into risk assessment or process review so the issue has visible follow-up.",
+        "monitoring": "Monitoring issues remain visible for review and can still be escalated into risks or process changes if the situation worsens.",
+        "stable": "Recent context records are either resolved or not currently driving immediate management attention."
+      }
+    },
+    "areas": {
+      "eyebrow": "Context areas",
+      "title": "Open one working area at a time",
+      "copy": "Choose the register you want to review, then work inside that area without losing the Clause 4 view.",
+      "internalIssues": {
+        "label": "Internal issues",
+        "copy": "Operational, organizational, and culture factors inside the business."
+      },
+      "externalIssues": {
+        "label": "External issues",
+        "copy": "Regulatory, supplier, market, and stakeholder influences on the IMS."
+      },
+      "interestedParties": {
+        "label": "Interested parties",
+        "copy": "Customers, regulators, employees, suppliers, and other key stakeholders."
+      },
+      "needs": {
+        "label": "Needs & expectations",
+        "copy": "The requirements and expectations that should stay visible in planning and review."
+      }
+    },
+    "recent": {
+      "eyebrow": "Recent issues",
+      "title": "Latest context records",
+      "copy": "Review the latest internal and external issues, then continue into risk or process follow-up where needed.",
+      "internalIssue": "Internal issue",
+      "externalIssue": "External issue",
+      "linkedFollowUp": "Linked follow-up",
+      "links": {
+        "risks": "{{count}} risk",
+        "processes": "{{count}} process"
+      }
+    },
+    "status": {
+      "open": "Open",
+      "monitoring": "Monitoring",
+      "resolved": "Resolved",
+      "archived": "Archived"
+    },
+    "errors": {
+      "load": "Context dashboard could not be loaded."
+    }
+  },
+  "documents": {
+    "page": {
+      "label": "Documents",
+      "titles": {
+        "list": "Controlled document register",
+        "create": "Create controlled document",
+        "detail": "Document detail",
+        "edit": "Edit document"
+      },
+      "descriptions": {
+        "list": "Review controlled documents and move them through a simple lifecycle: Draft, Review, Approved, and Obsolete.",
+        "create": "Create a controlled document and prepare it for review, approval, and future revision control.",
+        "detail": "Review document details, confirm lifecycle status, and keep evidence and actions together with the record.",
+        "edit": "Update document details without losing the controlled lifecycle and revision history."
+      },
+      "breadcrumbs": {
+        "new": "New document",
+        "document": "Document",
+        "edit": "Edit"
+      }
+    },
+    "actions": {
+      "backToStartHere": "Back to Start Here",
+      "new": "New document",
+      "edit": "Edit document",
+      "obsolete": "Obsolete document",
+      "deleteDraft": "Delete draft",
+      "backToRegister": "Back to register"
+    },
+    "list": {
+      "eyebrow": "Register",
+      "title": "Controlled document register",
+      "copy": "Controlled documents are the live policies, procedures, forms, and instructions people use to run the system every day.",
+      "filtersTitle": "Register filters",
+      "filtersCopy": "Search by code, title, or type, then open a record for review or revision control.",
+      "stats": {
+        "total": "Total",
+        "approved": "Approved",
+        "inReview": "In review"
+      },
+      "searchLabel": "Search",
+      "searchPlaceholder": "Code, title, or type",
+      "statusLabel": "Status",
+      "allStatuses": "All statuses",
+      "loadingTitle": "Loading documents",
+      "loadingCopy": "Refreshing the controlled document register.",
+      "emptyTitle": "No documents match the current filter",
+      "emptyCopy": "Adjust the search or create the first controlled document for this tenant.",
+      "table": {
+        "document": "Document",
+        "type": "Type",
+        "status": "Status",
+        "revision": "Revision",
+        "reviewDue": "Review due",
+        "updated": "Updated"
+      }
+    },
+    "form": {
+      "eyebrow": "Metadata",
+      "createTitle": "New controlled document",
+      "editTitle": "Edit document",
+      "copy": "Set the document identity, owner, and lifecycle here. Evidence and actions stay in dedicated panels once the record exists.",
+      "identityTitle": "Document identity",
+      "code": "Code",
+      "type": "Type",
+      "selectType": "Select type",
+      "title": "Title",
+      "titlePlaceholder": "Control of documented information",
+      "summary": "Summary",
+      "summaryPlaceholder": "Purpose, scope, and intended use",
+      "lifecycleTitle": "Lifecycle and ownership",
+      "owner": "Owner",
+      "unassigned": "Unassigned",
+      "effectiveDate": "Effective date",
+      "reviewDueDate": "Review due date",
+      "changeSummary": "Change summary",
+      "changeSummaryPlaceholder": "What changed in this revision",
+      "save": "Save document",
+      "saving": "Saving..."
+    },
+    "detail": {
+      "eyebrow": "Controlled record",
+      "controlState": "Control state",
+      "currentRevision": "Current revision",
+      "reviewDue": "Review due",
+      "lifecyclePosition": "Lifecycle position",
+      "reviewLifecycle": "Review lifecycle",
+      "reviewActions": "Review actions",
+      "reviewEvidence": "Review evidence",
+      "revisionNote": "Revision note",
+      "noSummary": "No summary provided.",
+      "noRevisionNote": "No revision note provided.",
+      "approvedAt": "Approved at",
+      "notApprovedYet": "Not approved yet",
+      "obsoletedAt": "Obsoleted at",
+      "active": "Active",
+      "lastUpdated": "Last updated",
+      "lifecycleEyebrow": "Lifecycle",
+      "lifecycleTitle": "Lifecycle",
+      "lifecycleCopy": "Move the record through review, approval, and obsolescence without opening the editor.",
+      "evidenceEyebrow": "Evidence trail",
+      "evidenceTitle": "Document evidence",
+      "evidenceCopy": "Keep supporting files and related actions with the controlled record so lifecycle review and revision history stay easy to follow."
+    },
+    "guidance": {
+      "detailLifecycle": {
+        "draft": "Next control point: complete the revision note, assign ownership, and move the document into review when the draft is ready.",
+        "reviewWithApprove": "Next control point: review the evidence trail and approve the document when the content and metadata are complete.",
+        "reviewWithoutApprove": "Next control point: confirm evidence and revision details, then hand the document to an approver with documents.approve permission.",
+        "approved": "Next control point: maintain review due dates and linked actions, and mark the record obsolete rather than deleting it when superseded.",
+        "obsolete": "Next control point: keep the obsolete record for traceability and make sure the replacement live document is available in the register."
+      },
+      "nextSteps": {
+        "approved": "Next: review evidence, confirm linked actions, and keep the review due date current.",
+        "review": "Next: review the lifecycle step, confirm evidence is complete, and move the document toward approval.",
+        "default": "Next: confirm lifecycle details, review evidence, and keep linked actions up to date."
+      },
+      "reviewDue": {
+        "overdueTitle": "Review is overdue",
+        "overdueCopy": "This controlled document passed its review due date on {{date}}. Review the content, confirm relevance, and either revise or reapprove it.",
+        "soonTitle": "Review due soon",
+        "soonCopy": "This document is due for review on {{date}}. Confirm the owner, evidence, and revision note before the review date passes."
+      }
+    },
+    "messages": {
+      "noPermission": "You do not have permission to update documents.",
+      "completeRequired": "Complete the required document fields.",
+      "saved": "Document saved successfully.",
+      "saveFailed": "Document save failed.",
+      "confirmDeleteDraft": "Delete this draft document? Approved and obsolete documents cannot be deleted.",
+      "deletedDraft": "Draft document deleted.",
+      "deleteFailed": "Document deletion failed.",
+      "confirmObsolete": "Mark this approved document as obsolete? This preserves traceability instead of deleting the record.",
+      "markedObsolete": "Document marked obsolete.",
+      "obsolescenceFailed": "Document obsolescence failed.",
+      "statusUpdated": "Document status updated."
+    },
+    "status": {
+      "draft": "Draft",
+      "review": "Review",
+      "approved": "Approved",
+      "obsolete": "Obsolete"
+    },
+    "lifecycle": {
+      "step1": "Step 1",
+      "step2": "Step 2",
+      "step3": "Step 3",
+      "step4": "Step 4",
+      "headings": {
+        "draft": "Draft stage",
+        "review": "Review stage",
+        "approved": "Approved stage",
+        "obsolete": "Obsolete stage"
+      },
+      "hints": {
+        "draft": "Use Draft while the content is being prepared. This is the working version before review and approval.",
+        "review": "Use Review when the content is ready to be checked and approved. Keep the revision note and supporting evidence current before approval.",
+        "approved": "Approved is the controlled live version in use. Keep the effective date and review due date current so periodic review stays visible.",
+        "obsolete": "Obsolete keeps the old version available for traceability after it has been replaced by a new live document."
+      }
+    }
+  },
+  "risks": {
+    "page": {
+      "label": "Risks",
+      "titles": {
+        "list": "Risk & opportunity register",
+        "create": "Create record",
+        "detail": "Record detail",
+        "edit": "Edit record"
+      },
+      "descriptions": {
+        "list": "A calmer register for assessed risks and opportunities, ownership, target follow-up, and linked actions.",
+        "create": "Capture a new risk or opportunity in a dedicated page without mixing the register and editor.",
+        "detail": "Review the assessment, current actions, and evidence in one focused detail view.",
+        "edit": "Update the assessment and action plan in a dedicated edit workflow."
+      },
+      "breadcrumbs": {
+        "new": "New risk",
+        "record": "Risk",
+        "edit": "Edit"
+      }
+    },
+    "actions": {
+      "backToStartHere": "Back to Start Here",
+      "new": "New record",
+      "edit": "Edit {{entity}}",
+      "delete": "Delete {{entity}}",
+      "backToSource": "Back to {{label}}",
+      "backToRegister": "Back to register"
+    },
+    "list": {
+      "eyebrow": "Register",
+      "title": "Risk register",
+      "copy": "A clear enterprise register for risks, opportunities, treatment ownership, linked actions, and live scoring.",
+      "filtersTitle": "Risk filters",
+      "filtersCopy": "Search by title or category, then open the record for assessment, actions, and evidence.",
+      "stats": {
+        "total": "Total",
+        "mitigationPlanned": "Mitigation planned",
+        "highPriority": "High priority"
+      },
+      "searchLabel": "Search",
+      "searchPlaceholder": "Title or category",
+      "typeLabel": "Type",
+      "allRecords": "All records",
+      "statusLabel": "Status",
+      "allStatuses": "All statuses",
+      "sortLabel": "Sort by",
+      "sort": {
+        "attention": "Attention",
+        "score": "Score",
+        "targetDate": "Target date",
+        "updated": "Updated"
+      },
+      "loadingTitle": "Loading risks",
+      "loadingCopy": "Refreshing current assessment and treatment data.",
+      "emptyTitle": "No records match the current filter",
+      "emptyCopy": "Adjust the search or create the first risk or opportunity entry for this tenant.",
+      "table": {
+        "record": "Risk",
+        "type": "Type",
+        "assessment": "Assessment",
+        "status": "Status",
+        "attention": "Attention",
+        "target": "Target"
+      },
+      "generalCategory": "General"
+    },
+    "form": {
+      "eyebrow": "Risk assessment",
+      "createTitle": "New {{entity}}",
+      "editTitle": "Edit {{entity}}",
+      "fromContextTitle": "Creating from a context issue",
+      "stillLinkedTitle": "Still linked to the source issue",
+      "reviewSourceIssue": "Review source issue",
+      "contextTitle": "{{entity}} context",
+      "title": "Title",
+      "titlePlaceholder": "Supplier delivery interruption",
+      "starterCategory": "Starter category",
+      "chooseCategory": "Choose a category",
+      "customCategory": "Custom category",
+      "customCategoryPlaceholder": "Enter a custom category",
+      "starterCategoryHint": "Starter categories switch with {{entity}} type. You can still enter a custom category.",
+      "description": "Description",
+      "descriptionPlaceholder": "What could happen and why",
+      "issueContext": "Issue context",
+      "notLinked": "Not linked",
+      "internalIssue": "Internal issue",
+      "externalIssue": "External issue",
+      "issueReference": "Issue reference",
+      "issueReferencePlaceholder": "Strategic supplier dependency",
+      "owner": "Owner",
+      "unassigned": "Unassigned",
+      "dueDate": "Due date",
+      "residualLabel": "Residual {{label}}",
+      "save": "Save {{entity}}",
+      "saving": "Saving..."
+    },
+    "entity": {
+      "risk": "Risk",
+      "opportunity": "Opportunity",
+      "riskPlural": "Risks",
+      "opportunityPlural": "Opportunities"
+    },
+    "assessment": {
+      "intro": {
+        "risk": "Separate the initial risk, mitigation planning, and residual risk review so the assessment reads like a real IMS risk register.",
+        "opportunity": "Separate the initial opportunity, realization actions, and residual opportunity review so the record is easy to follow."
+      },
+      "initialHeading": {
+        "risk": "Initial risk",
+        "opportunity": "Initial opportunity"
+      },
+      "likelihood": {
+        "risk": "Likelihood",
+        "opportunity": "Realization likelihood"
+      },
+      "impact": {
+        "risk": "Impact",
+        "opportunity": "Benefit"
+      },
+      "likelihoodHint": {
+        "risk": "Scale 1-5: 1 unlikely, 5 very likely.",
+        "opportunity": "Scale 1-5: 1 unlikely to realize, 5 very likely to realize."
+      },
+      "impactHint": {
+        "risk": "Scale 1-5: 1 minor impact, 5 severe impact.",
+        "opportunity": "Scale 1-5: 1 limited benefit, 5 major benefit."
+      },
+      "initialScore": {
+        "risk": "Initial score",
+        "opportunity": "Opportunity score"
+      },
+      "matrixRating": {
+        "risk": "5x5 matrix rating",
+        "opportunity": "5x5 priority rating"
+      },
+      "residualHeading": {
+        "risk": "Residual risk",
+        "opportunity": "Residual opportunity"
+      },
+      "residualScore": {
+        "risk": "Residual score",
+        "opportunity": "Residual opportunity score"
+      },
+      "residualRating": {
+        "risk": "Residual rating",
+        "opportunity": "Residual priority rating"
+      }
+    },
+    "detail": {
+      "eyebrow": "Risk detail",
+      "createAction": "Create action",
+      "createMitigationAction": "Create mitigation action",
+      "reviewEvidence": "Review evidence",
+      "reviewRisks": "Review risks",
+      "responsePosition": "Response position",
+      "managementAttention": "Management attention",
+      "noDescription": "No description provided.",
+      "noIssueContext": "No issue context linked.",
+      "processContext": "Process context",
+      "noExistingControls": "No existing controls recorded.",
+      "noPlannedActions": "No planned mitigation actions recorded.",
+      "linkedActionsEyebrow": "Linked actions",
+      "sourceIssue": "Source issue",
+      "openSource": "Open {{label}}",
+      "noSourceIssue": "No source issue linked.",
+      "noProcessLinked": "No process linked.",
+      "linkedActionsLabel": "Linked actions",
+      "openSourceIssue": "Open source issue",
+      "reviewLinkedActions": "Review linked actions",
+      "evidenceEyebrow": "Evidence trail",
+      "evidenceTitle": "Traceability",
+      "evidenceCopy": "Keep the source issue, process context, mitigation actions, and supporting evidence aligned to this record."
+    },
+    "lifecycle": {
+      "draft": "Draft",
+      "assessed": "Assessed",
+      "mitigation_planned": "Mitigation planned",
+      "monitoring": "Monitoring",
+      "closed": "Closed"
+    },
+    "levels": {
+      "notAssessed": "Not assessed",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "lowPotential": "Low potential",
+      "mediumPotential": "Medium potential",
+      "highPotential": "High potential"
+    }
+  },
+  "audits": {
+    "common": {
+      "label": "Audits"
+    },
+    "page": {
+      "titleList": "Audit programme",
+      "titleCreate": "Create audit plan",
+      "titleDetail": "Audit detail",
+      "titleEdit": "Edit audit",
+      "descriptionList": "Manage internal and supplier audits with clear planning, checklist execution, findings, and follow-up.",
+      "descriptionCreate": "Set up the audit plan, agenda, and meeting notes first, then move into the checklist.",
+      "descriptionDetail": "Review the audit plan, complete the checklist, decide the next step for each finding, and finish the close-out.",
+      "descriptionEdit": "Update audit metadata without mixing it with execution details."
+    },
+    "breadcrumbs": {
+      "new": "New audit",
+      "audit": "Audit",
+      "edit": "Edit"
+    },
+    "actions": {
+      "backToStartHere": "Back to Start Here",
+      "new": "+ New audit",
+      "questionBank": "Checklist question bank",
+      "preparingPdf": "Preparing PDF...",
+      "downloadPdf": "Download PDF report",
+      "edit": "Edit audit",
+      "delete": "Delete audit",
+      "archive": "Archive audit",
+      "backToList": "Back to audits",
+      "savingPreparingChecklist": "Saving and preparing AI checklist...",
+      "saving": "Saving...",
+      "saveAndPrepareChecklist": "Save audit and prepare AI checklist",
+      "save": "Save audit"
+    },
+    "list": {
+      "eyebrow": "Program",
+      "title": "Internal and supplier audits",
+      "copy": "Plan audits, work through the checklist, record findings, and decide the right follow-up in one place.",
+      "sortBy": "Sort by",
+      "sortOptions": {
+        "attention": "Attention",
+        "auditDate": "Audit date",
+        "updated": "Updated",
+        "programme": "Programme"
+      },
+      "loadingTitle": "Loading audits",
+      "loadingCopy": "Refreshing current audit plans, checklist progress, and findings.",
+      "table": {
+        "audit": "Audit",
+        "programme": "Programme",
+        "type": "Type",
+        "auditDate": "Audit date",
+        "status": "Status",
+        "checklist": "Checklist",
+        "findingsFollowUp": "Findings follow-up",
+        "attention": "Attention"
+      },
+      "notAssigned": "Not assigned",
+      "scopeTypeNotSet": "Scope type not set",
+      "total": "{{count}} total",
+      "auditDate": {
+        "notSet": "Not set",
+        "completed": "Completed date",
+        "scheduled": "Scheduled date",
+        "started": "Started date",
+        "none": "No audit date"
+      },
+      "followUp": {
+        "none": "No findings raised",
+        "open": "{{count}} open",
+        "closed": "{{count}} closed",
+        "openClosed": "{{open}} open | {{closed}} closed"
+      },
+      "attention": {
+        "underControl": "Under control",
+        "auditOverdue": "Audit overdue",
+        "findingsStillOpen": "Findings still open",
+        "ownerNeeded": "Owner needed",
+        "executionStalled": "Execution stalled"
+      }
+    },
+    "form": {
+      "eyebrow": "Audit setup",
+      "createTitle": "Create audit plan",
+      "editTitle": "Edit audit plan",
+      "copy": "Set the audit plan first. Internal audits can preload ISO-based questions, while supplier audits can stay simple and custom.",
+      "fields": {
+        "code": "Code",
+        "auditType": "Audit type",
+        "title": "Title",
+        "isoStandard": "ISO standard",
+        "auditProgramme": "Audit programme",
+        "scopeType": "Scope type",
+        "scope": "Scope"
+      },
+      "placeholders": {
+        "title": "Purchasing process audit",
+        "programme": "2026 internal audit programme",
+        "scope": "Process, site, supplier, or function under audit"
+      },
+      "selectStandard": "Select standard",
+      "errors": {
+        "selectStandard": "Select an ISO standard for internal audits."
+      }
+    },
+    "types": {
+      "internalAudit": "Internal Audit",
+      "supplierAudit": "Supplier Audit"
+    },
+    "scopeTypes": {
+      "companyWide": "Company-wide",
+      "department": "Department",
+      "process": "Process",
+      "site": "Site",
+      "supplier": "Supplier"
+    },
+    "status": {
+      "PLANNED": "Planned",
+      "IN_PROGRESS": "In progress",
+      "CHECKLIST_COMPLETED": "Checklist completed",
+      "COMPLETED": "Completed",
+      "CLOSED": "Closed"
+    },
+    "severity": {
+      "OBSERVATION": "Observation",
+      "OPPORTUNITY": "Opportunity for improvement",
+      "MINOR": "Minor nonconformity",
+      "MAJOR": "Major nonconformity"
+    },
+    "findingStatus": {
+      "OPEN": "Open",
+      "CLOSED": "Closed",
+      "CAPA_CREATED": "CAPA raised"
+    },
+    "detail": {
+      "summary": {
+        "checklist": "Checklist",
+        "findings": "Findings",
+        "openFindings": "Open findings"
+      },
+      "currentStep": "Current step",
+      "unresolvedNextSteps": "{{count}} next step still open",
+      "readyForCloseout": "Ready for close-out",
+      "procedureChecklist": {
+        "title": "Procedure-specific checklist in use",
+        "auditArea": "Audit area",
+        "procedure": "Procedure",
+        "checklist": "Checklist"
+      },
+      "actions": {
+        "startAudit": "Start audit",
+        "continueChecklist": "Continue checklist",
+        "reviewFindings": "Review findings",
+        "goToCloseout": "Go to close-out"
+      },
+      "nextSteps": {
+        "default": "Next: continue the audit from the current workflow step.",
+        "completed": "Next: review the completed audit record, its findings, and the formal report output.",
+        "review": "Next: review findings, complete the close-out, and then finish the audit from the review step.",
+        "conduct": "Next: continue the checklist, record findings where needed, and return to the review step when the checklist is complete."
+      },
+      "steps": {
+        "ariaLabel": "Audit steps",
+        "plan": {
+          "title": "Plan audit",
+          "copy": "Scope and setup"
+        },
+        "conduct": {
+          "title": "Conduct audit",
+          "copy": "Assess questions"
+        },
+        "review": {
+          "title": "Findings and close-out",
+          "copy": "Decide next steps and finish"
+        }
+      },
+      "workflow": {
+        "openRecord": "Open an audit record",
+        "complete": "Audit complete",
+        "step1": "Step 1: confirm scope and audit setup",
+        "step2": "Step 2: complete the checklist",
+        "step3Findings": "Step 3: decide the next step for each finding",
+        "step3Closeout": "Step 3: record the audit close-out",
+        "step3Move": "Step 3: move into close-out"
+      },
+      "workflowCopy": {
+        "openRecord": "Select an audit to continue the workflow.",
+        "completed": "The audit record is already complete. You can still review findings, linked CAPA, lighter audit actions, and the final PDF report.",
+        "plan": "Check the programme, scope, objectives, criteria, and meeting notes first. Once the setup reads correctly, start the audit and move into the checklist.",
+        "conduct": "Work through the checklist question by question. Record findings only where the requirement is not met, then keep moving through the audit.",
+        "review": "Stay in the findings trail until every gap has a clear next step. Minor and major findings move into CAPA; observations and opportunities can use a lighter audit action or close directly.",
+        "closeout": "All findings have a clear next step. Record the conclusion, recommendations, completion date, and auditor to finish the audit without reopening the checklist."
+      },
+      "workflowStatus": {
+        "none": "No audit selected",
+        "completed": "Completed",
+        "planning": "Planning",
+        "checklist": "Checklist in progress",
+        "nextStepsOpen": "Next steps still open",
+        "closeout": "Close-out in progress",
+        "ready": "Ready for close-out"
+      }
+    },
+    "plan": {
+      "eyebrow": "Audit plan",
+      "title": "Programme, scope, and readiness",
+      "copy": "Confirm the audit programme, scope type, criteria, agenda, and meeting structure before starting fieldwork.",
+      "notScheduled": "Not scheduled",
+      "summary": {
+        "programme": "Programme",
+        "scopeType": "Scope type",
+        "scheduledDate": "Scheduled date"
+      },
+      "fields": {
+        "scope": "Scope",
+        "objectives": "Audit objectives",
+        "criteria": "Audit criteria",
+        "auditeeArea": "Auditee area",
+        "summary": "Summary",
+        "agenda": "Audit agenda",
+        "openingMeeting": "Opening meeting",
+        "closingMeeting": "Closing meeting"
+      },
+      "empty": {
+        "scope": "No scope recorded.",
+        "objectives": "No objectives recorded.",
+        "criteria": "No criteria recorded.",
+        "summary": "No summary yet.",
+        "agenda": "No agenda prepared yet.",
+        "openingMeeting": "No opening meeting notes prepared yet.",
+        "closingMeeting": "No closing meeting notes prepared yet."
+      },
+      "actions": {
+        "editPlan": "Edit plan"
+      },
+      "pack": {
+        "eyebrow": "Planning pack",
+        "internalTitle": "Internal audit planning guidance",
+        "supplierTitle": "Supplier audit planning guidance",
+        "internalCopy": "Use the programme, agenda, and opening or closing notes to issue the audit properly before the checklist starts.",
+        "supplierCopy": "Supplier audits should still start with a simple agenda, opening discussion, and planned close-out summary before questions are assessed.",
+        "touchpointsTitle": "Assurance touchpoints",
+        "items": {
+          "annualProgramme": {
+            "title": "Annual audit programme",
+            "copy": "Use the programme field to show which annual plan or audit cycle this audit belongs to before it moves into execution."
+          },
+          "scopePlanning": {
+            "title": "Department, process, or whole-company planning",
+            "copy": "The scope type makes it explicit whether the audit is company-wide, department-based, process-based, site-based, or supplier-focused."
+          },
+          "meetingStructure": {
+            "title": "Meeting structure",
+            "copy": "Opening and closing meeting notes let the audit record show how the agenda was issued, how the audit was opened, and how the results were closed out."
+          }
+        }
+      }
+    },
+    "conduct": {
+      "eyebrow": "Conduct audit",
+      "internalTitle": "Clause-by-clause checklist",
+      "supplierTitle": "Supplier audit checklist",
+      "copy": "Answer each question in order. If a requirement is not met, choose No, record the finding, then continue the audit from the same question.",
+      "readOnlyTitle": "Checklist is read-only",
+      "readOnlyCopy": "This audit has been completed. You can still review findings and evidence, but checklist responses can no longer be changed.",
+      "progressQuestionsAnswered": "{{answered}}/{{total}} questions answered",
+      "progressClauses": "{{current}}/{{total}} clauses",
+      "noActiveClause": "No active clause",
+      "clauseLabel": "Clause {{clause}} - {{heading}}",
+      "currentClauseHelper": {
+        "supplier": "Answer each supplier audit question, record evidence, and add a finding only when a requirement is not met.",
+        "internal": "Answer each question. If a requirement is not met, record a finding and continue to the next question."
+      },
+      "notAnswered": "Not answered",
+      "supplierBuilder": {
+        "sectionOrGroup": "Section or group",
+        "subclause": "Subclause",
+        "addQuestion": "Add question",
+        "commentPrompt": "Comment prompt",
+        "addQuestionButton": "Add question"
+      },
+      "emptyTitle": "Start audit by answering questions",
+      "emptyInternalCopy": "Checklist questions will appear here once the audit template is available.",
+      "emptySupplierCopy": "Add the first supplier audit question to begin the audit.",
+      "completion": {
+        "eyebrow": "Checklist complete",
+        "title": "Next step: review findings",
+        "copy": "All checklist questions are answered. Open Review findings now, decide the next step for each gap, then complete the audit close-out last.",
+        "button": "Next: Review findings"
+      },
+      "findingIndicator": {
+        "needed": "Finding needed",
+        "closed": "Finding closed",
+        "capaLinked": "CAPA linked",
+        "capaNeeded": "CAPA needed",
+        "open": "Finding open"
+      },
+      "findingNextStep": {
+        "needed": "Record the finding before moving on so the failed requirement has a complete audit trail.",
+        "closed": "This finding route is already closed for the question. Review it if needed, or continue with the next question.",
+        "capaLinked": "Finding and CAPA are already linked. Review the linked CAPA or continue with the next question.",
+        "capaNeeded": "Finding recorded. CAPA still needs to be raised for this nonconformity before the route is complete.",
+        "lightRoute": "Finding recorded. Review the lighter follow-up route or continue with the next question."
+      },
+      "findingPrompt": {
+        "titleNeeded": "Requirement not met: finding required",
+        "titleClosed": "Finding route is already closed for this question",
+        "titleCapaLinked": "Finding and CAPA already linked for this question",
+        "titleCapaNeeded": "Finding recorded: CAPA still needed for this question",
+        "titleRecorded": "Finding recorded for this question",
+        "copyNeeded": "The No answer has been recorded. Now capture the finding title, gap description, and severity so the review step has a complete audit trail.",
+        "copyClosed": "This failed answer already has a finding with a closed route. Use Review Finding if you need to reopen that trail before continuing.",
+        "copyCapaLinked": "This failed answer already has a linked finding and CAPA. Use Review Finding or Open CAPA if you need to return to that trail before continuing.",
+        "copyCapaNeeded": "This failed answer already has a finding, but the nonconformity still needs CAPA before the route is complete. Use Review Finding to continue that decision.",
+        "copyLightRoute": "This failed answer already has a lighter finding route. Use Review Finding if you need to review action or closure before continuing."
+      }
+    },
+    "findingModal": {
+      "eyebrow": "Finding",
+      "title": "Record audit finding",
+      "close": "Close",
+      "whatToDoNow": "What to do now",
+      "drafting": "Drafting...",
+      "draftWithAi": "Draft with AI",
+      "descriptionHelper": "Write the real situation first, then use AI only if you want help turning it into cleaner audit wording.",
+      "save": "Save finding",
+      "checklistCopy": "1. Write a short note in your own words. 2. Use AI only if you want cleaner wording. 3. Choose severity. 4. Save the finding. 5. Decide the next step later in Review findings.",
+      "fields": {
+        "title": "Finding title",
+        "description": "Auditor note / description",
+        "severity": "Severity"
+      },
+      "paths": {
+        "major": "Major finding path",
+        "minor": "Minor finding path",
+        "opportunity": "Opportunity path",
+        "observation": "Observation path"
+      }
+    },
+    "review": {
+      "eyebrow": "Review flow",
+      "title": "Finish finding routes, then close the audit",
+      "copy": "Keep the chain simple: review each finding, decide the next step inside that finding, then record the audit close-out last.",
+      "summary": {
+        "questions": "Questions",
+        "findings": "Findings",
+        "major": "Major",
+        "routesOpen": "Routes open"
+      },
+      "incompleteTitle": "Checklist is not complete yet",
+      "incompleteCopy": "Answer all required checklist questions before the audit can move into final completion.",
+      "actions": {
+        "nextUnresolvedFinding": "Next unresolved finding",
+        "actionAlreadyLinked": "Audit action already linked",
+        "actionFormReady": "Action form ready below",
+        "prepareAuditAction": "Prepare audit action here"
+      },
+      "focus": {
+        "current": "Current focus: {{title}}",
+        "default": "Current focus: review each finding one at a time",
+        "copyDefault": "Select a finding, decide whether it should close, move into an audit action, or move into CAPA, then continue to the next finding."
+      },
+      "routeState": {
+        "closed": "Closed",
+        "capaLinked": "CAPA linked",
+        "actionLinked": "Audit action linked",
+        "actionDraftReady": "Action draft ready",
+        "createCapaNext": "Create CAPA next",
+        "decideNextStep": "Decide next step"
+      },
+      "badges": {
+        "closed": "Closed",
+        "capaActive": "CAPA active",
+        "actionActive": "Action active",
+        "actionDraftOpen": "Action draft open",
+        "createCapa": "Create CAPA",
+        "actionRecommended": "Action recommended",
+        "reviewObservation": "Review observation"
+      },
+      "guidance": {
+        "routeComplete": "Route is complete in the audit record.",
+        "continueLinkedCapa": "Continue the linked CAPA, then return here only when you need to review closure.",
+        "linkedAction": "A lighter audit action is already linked to this finding.",
+        "actionPrepared": "Lighter follow-up is already prepared for this finding below.",
+        "capaNeeded": "This finding needs CAPA before the next step is complete.",
+        "lightRoute": "Choose a lighter action or close the finding directly when satisfied."
+      },
+      "traceabilityCopy": "Follow the chain from checklist evidence to finding, then into {{capaText}} and {{actionText}}.",
+      "capaLinkedCount": "{{count}} linked CAPA record",
+      "capaOnlyWhereNeeded": "CAPA only where needed",
+      "actionLinkedCount": "{{count}} linked audit action"
+    },
+    "closeout": {
+      "readyTitle": "Audit is ready for completion",
+      "openTitle": "Close-out requirements are still open",
+      "guidance": {
+        "completeChecklist": "Complete all checklist questions before the audit can be finished.",
+        "unresolvedFindings": "Each finding still needs a clear next step before this audit should move into final close-out.",
+        "completeFields": "Record the conclusion, recommendations, completion date, and auditor before finishing the audit.",
+        "ready": "The audit record can be completed now. Findings, actions, and NCR follow-up can continue after audit completion without reopening the audit itself."
+      }
+    },
+    "attention": {
+      "needsAttention": "This audit currently needs management attention.",
+      "underControl": "This audit is currently under control.",
+      "loading": "Attention guidance appears after the audit is loaded.",
+      "controlledCopy": "Audit timing, checklist execution, and findings follow-up are controlled enough for routine oversight.",
+      "reasonCopy": "Attention is needed because {{reasons}}."
+    }
+  },
+  "actionTracker": {
+    "page": {
+      "label": "Assurance",
+      "title": "Actions",
+      "description": "Track assigned follow-up from any module in one place.",
+      "breadcrumb": "Actions"
+    },
+    "actions": {
+      "backToStartHere": "Back to Start Here",
+      "backTo": "Back to {{label}}",
+      "backToAll": "Back to all actions",
+      "openSource": "Open source record",
+      "delete": "Delete"
+    },
+    "common": {
+      "status": "Status",
+      "owner": "Owner",
+      "dueDate": "Due date",
+      "unassigned": "Unassigned",
+      "notSet": "Not set"
+    },
+    "focused": {
+      "eyebrow": "Selected action",
+      "copy": "Review the action details above, then update status or return to the source record.",
+      "description": "Description",
+      "noDescription": "No description provided.",
+      "source": "Source record",
+      "updateStatus": "Update status"
+    },
+    "register": {
+      "eyebrow": "Action tracker",
+      "title": "Assigned follow-up",
+      "copy": "Track open work, ownership, and due dates from audits, CAPA, incidents, risks, and other modules."
+    },
+    "summary": {
+      "overdue": "Overdue"
+    },
+    "status": {
+      "OPEN": "Open",
+      "IN_PROGRESS": "In progress",
+      "DONE": "Done",
+      "CANCELLED": "Cancelled"
+    },
+    "filters": {
+      "source": "Source",
+      "allSources": "All sources",
+      "allStatuses": "All statuses",
+      "allOwners": "All owners",
+      "allDueDates": "All due dates",
+      "upcoming": "Due soon",
+      "sortBy": "Sort by",
+      "apply": "Apply filters",
+      "sortOptions": {
+        "attention": "Attention",
+        "dueDate": "Due date",
+        "updated": "Updated",
+        "source": "Source"
+      }
+    },
+    "sources": {
+      "risk": "Risk",
+      "capa": "CAPA",
+      "audit": "Audit",
+      "managementReview": "Management Review",
+      "ncr": "NCR",
+      "incident": "Incident",
+      "hazard": "Hazard",
+      "aspect": "Environmental Aspect",
+      "obligation": "Compliance Obligation",
+      "provider": "External Provider",
+      "changeManagement": "Change Management",
+      "document": "Document",
+      "context": "Context issue"
+    },
+    "empty": {
+      "loadingTitle": "Loading actions",
+      "loadingCopy": "Refreshing assigned follow-up, owners, and due dates.",
+      "noneTitle": "No actions match the current filters",
+      "noneCopy": "Adjust the filters or open a source record to create a new action."
+    },
+    "table": {
+      "action": "Action",
+      "source": "Source",
+      "owner": "Owner",
+      "dueDate": "Due date",
+      "status": "Status",
+      "admin": "Admin",
+      "noDescription": "No description provided.",
+      "openedAbove": "Opened above"
+    },
+    "guidance": {
+      "headlines": {
+        "overdue": "Some assigned follow-up is overdue",
+        "ownerNeeded": "Some actions still need an owner",
+        "active": "Follow-up is active across the system",
+        "underControl": "Assigned follow-up is currently under control"
+      },
+      "narratives": {
+        "overdue": "Start with overdue actions first. They represent assigned follow-up that has already missed the committed due date.",
+        "ownerNeeded": "Some actions are still open or in progress without a named owner. Assign responsibility before the next review cycle so follow-up does not stall.",
+        "active": "Use this page to track assigned follow-up from any module so ownership, due dates, and status stay visible in one place.",
+        "underControl": "Current action records are either complete or not yet needing extra intervention."
+      }
+    },
+    "attention": {
+      "headlines": {
+        "needsAttention": "This action currently needs management attention.",
+        "underControl": "This action is currently under control."
+      },
+      "narratives": {
+        "needsAttention": "Attention is needed because {{reasons}}.",
+        "underControl": "The action has either been completed, cancelled, or still has enough control around due date and ownership."
+      },
+      "reasons": {
+        "overdue": "Overdue",
+        "dueSoon": "Due soon",
+        "ownerNeeded": "Owner needed"
+      },
+      "short": {
+        "ok": "OK",
+        "overdue": "Overdue",
+        "dueSoon": "Soon",
+        "owner": "Owner"
+      }
+    },
+    "messages": {
+      "selectedOpenedAbove": "Selected action opened above.",
+      "loadFailed": "Actions could not be loaded.",
+      "noPermissionUpdate": "You do not have permission to update actions.",
+      "statusUpdated": "Action status updated.",
+      "statusUpdateFailed": "Action status update failed.",
+      "deleteConfirm": "Delete action \"{{title}}\"? Completed actions are protected.",
+      "deleteSuccess": "Action deleted.",
+      "deleteFailed": "Action deletion failed."
+    }
+  },
+  "ncr": {
+    "common": {
+      "label": "NCR",
+      "status": "Status",
+      "owner": "Owner",
+      "dueDate": "Due date",
+      "unassigned": "Unassigned",
+      "notSet": "Not set",
+      "uncoded": "Uncoded"
+    },
+    "page": {
+      "titleList": "Nonconformance log",
+      "titleCreate": "Raise NCR",
+      "titleDetail": "NCR detail",
+      "titleEdit": "Edit NCR",
+      "descriptionList": "Use NCR to record the nonconformance, who owns it, what follow-up is needed, and whether verification is complete.",
+      "descriptionCreate": "Capture the nonconformance first, then continue the investigation and corrective trail from the record.",
+      "descriptionDetail": "Review the nonconformance, investigation, follow-up actions, verification, comments, attachments, and activity.",
+      "descriptionEdit": "Update the NCR while keeping the investigation and verification trail clear."
+    },
+    "breadcrumbs": {
+      "new": "New NCR",
+      "edit": "Edit"
+    },
+    "actions": {
+      "new": "+ New NCR",
+      "view": "View NCR",
+      "edit": "Edit NCR",
+      "archive": "Archive NCR",
+      "archiveUnavailable": "Archive unavailable",
+      "delete": "Delete NCR",
+      "deleteUnavailable": "Delete unavailable",
+      "backToList": "Back to NCR log",
+      "reviewCurrent": "Review NCR",
+      "reviewList": "Review NCR log",
+      "save": "Save NCR",
+      "saving": "Saving...",
+      "continueInvestigation": "Continue investigation",
+      "reviewFollowUpActions": "Review follow-up actions",
+      "openVerification": "Open verification",
+      "reviewOverview": "Review overview"
+    },
+    "list": {
+      "eyebrow": "NCR log",
+      "title": "Nonconformance log",
+      "copy": "NCR records the nonconformance first, then keeps the investigation, action follow-up, and verification trail together.",
+      "filtersTitle": "Filter NCRs",
+      "filtersCopy": "Filter by status, category, source, severity, or owner.",
+      "stats": {
+        "total": "Total",
+        "open": "Open",
+        "overdue": "Overdue"
+      },
+      "filters": {
+        "search": "Search",
+        "allStatuses": "All statuses",
+        "category": "Category",
+        "allCategories": "All categories",
+        "source": "Source",
+        "allSources": "All sources",
+        "severity": "Severity",
+        "allSeverities": "All severities",
+        "allOwners": "All owners"
+      },
+      "placeholders": {
+        "search": "Reference or title"
+      }
+    },
+    "table": {
+      "reference": "Reference",
+      "category": "Category",
+      "source": "Source",
+      "severity": "Severity",
+      "updated": "Updated",
+      "attention": "Attention",
+      "actions": "Actions"
+    },
+    "empty": {
+      "noAccessTitle": "NCR access is not available",
+      "noAccessCopy": "Your current role does not include ncr.read.",
+      "loadingTitle": "Loading NCR log",
+      "loadingCopy": "Refreshing tenant nonconformance records.",
+      "noneTitle": "No NCR records match the current filter",
+      "noneCopy": "Adjust the filters or create the first NCR entry for this tenant."
+    },
+    "form": {
+      "fields": {
+        "referenceNo": "Reference no.",
+        "title": "Title",
+        "description": "Description",
+        "priority": "Priority",
+        "dateReported": "Date reported"
+      },
+      "placeholders": {
+        "referenceNo": "NCR-2026-001",
+        "title": "Unapproved process change",
+        "description": "Describe what happened and what requirement was missed"
+      }
+    },
+    "detail": {
+      "workflowEyebrow": "Workflow",
+      "workflowTitle": "NCR workflow",
+      "workflowCopy": "Work from investigation to task follow-up and then formal verification before closure.",
+      "tabsAriaLabel": "NCR detail sections",
+      "overview": "Overview",
+      "investigation": "Investigation",
+      "followUpActions": "Follow-up actions",
+      "verification": "Verification",
+      "comments": "Comments",
+      "activityEvidence": "Activity & evidence"
+    },
+    "guidance": {
+      "ownerFilterDefault": "Select a process if you want to suggest the process owner as the most likely NCR owner.",
+      "ownerFilterScoped": "Owner options are narrowed to {{owner}} from {{process}}.",
+      "ownerFilterNoOwner": "This process does not have an assigned process owner yet, so all users remain available."
+    },
+    "nextSteps": {
+      "create": "Next: open the saved NCR and continue with investigation, actions, and verification from the record.",
+      "edit": "Next: continue the NCR from the relevant workflow tab.",
+      "initial": "Next: continue the investigation, capture root cause, and then move into corrective actions.",
+      "actioning": "Next: review corrective actions, keep comments and evidence current, and prepare for verification.",
+      "verification": "Next: complete verification and confirm whether the NCR can be closed or needs more action.",
+      "closed": "Next: review the investigation trail, linked actions, and evidence as part of the NCR record."
+    },
+    "stage": {
+      "raised": "Raised",
+      "investigating": "Investigating",
+      "correcting": "Correcting",
+      "verifying": "Verifying",
+      "closed": "Closed",
+      "archived": "Archived"
+    },
+    "workflow": {
+      "heading": {
+        "initial": "NCR is in initial review",
+        "investigation": "Root cause investigation is active",
+        "correctiveAction": "Corrective action is being implemented",
+        "verification": "Effectiveness verification is due",
+        "closed": "NCR has been closed",
+        "archived": "NCR is archived"
+      },
+      "guidance": {
+        "initial": "Capture containment first, then record enough investigation detail to justify why the NCR is moving into root cause analysis.",
+        "investigation": "Complete the investigation summary and root cause before moving fully into corrective action ownership.",
+        "correctiveAction": "Keep corrective action summary, ownership, comments, and evidence current so the NCR is ready for verification.",
+        "verification": "Use verification to confirm the corrective action was effective, not just completed. Reject verification if the issue can still recur.",
+        "closed": "Keep the NCR record available as evidence of containment, root cause, corrective action, and verification outcome.",
+        "archived": "Archived NCRs remain available for traceability and should not be treated as active issues."
+      }
+    },
+    "verification": {
+      "heading": {
+        "verified": "Verification has passed",
+        "rejected": "Verification failed",
+        "pending": "Verification is still pending"
+      },
+      "guidance": {
+        "verified": "The corrective action has been confirmed as effective. Keep the verifier and verification date visible in the record.",
+        "rejected": "Use rejected when the corrective action did not prevent recurrence. Return to investigation or action in progress with updated evidence.",
+        "pending": "Pending means the action may be implemented, but effectiveness has not yet been confirmed."
+      }
+    },
+    "followUp": {
+      "overdueHeading": "NCR follow-up is overdue",
+      "overdueCopy": "The due date passed on {{dueDate}}. Review corrective actions, verification status, and owner accountability before the NCR drifts further.",
+      "approachingHeading": "NCR follow-up is approaching",
+      "approachingCopy": "The due date is {{dueDate}}. Confirm the investigation, root cause, and corrective action trail before the due date arrives.",
+      "verificationHeading": "Verification still needs a formal result",
+      "verificationCopy": "This NCR is pending verification. Record who verified the action and whether the result was accepted or rejected."
+    },
+    "attention": {
+      "underControl": "Under control",
+      "headlines": {
+        "needsAttention": "This NCR currently needs management attention.",
+        "underControl": "This NCR is currently under control."
+      },
+      "narratives": {
+        "unsaved": "Attention guidance appears after the NCR is saved.",
+        "underControl": "Ownership, due date, verification state, and current NCR stage are controlled enough for routine follow-up.",
+        "needsAttention": "Attention is needed because {{reasons}}."
+      },
+      "reasons": {
+        "ownerNeeded": "Owner needed",
+        "followUpOverdue": "Follow-up overdue",
+        "verificationOverdue": "Verification overdue",
+        "stale": "Stale"
+      }
+    },
+    "enums": {
+      "status": {
+        "OPEN": "Open",
+        "UNDER_REVIEW": "Under review",
+        "INVESTIGATION": "Investigation",
+        "ACTION_IN_PROGRESS": "Action in progress",
+        "PENDING_VERIFICATION": "Pending verification",
+        "CLOSED": "Closed",
+        "ARCHIVED": "Archived"
+      },
+      "category": {
+        "PROCESS": "Process",
+        "PRODUCT": "Product",
+        "SERVICE": "Service",
+        "SUPPLIER": "Supplier",
+        "COMPLAINT": "Complaint"
+      },
+      "source": {
+        "INTERNAL": "Internal",
+        "CUSTOMER": "Customer",
+        "SUPPLIER": "Supplier",
+        "AUDIT": "Audit"
+      },
+      "level": {
+        "LOW": "Low",
+        "MEDIUM": "Medium",
+        "HIGH": "High",
+        "CRITICAL": "Critical",
+        "URGENT": "Urgent"
+      },
+      "rca": {
+        "FIVE_WHY": "5 Why",
+        "FISHBONE": "Fishbone",
+        "IS_IS_NOT": "Is / Is not",
+        "OTHER": "Other"
+      },
+      "verification": {
+        "PENDING": "Pending",
+        "VERIFIED": "Verified",
+        "REJECTED": "Rejected"
+      }
+    },
+    "messages": {
+      "created": "NCR created.",
+      "updated": "NCR updated.",
+      "saveFailed": "NCR could not be saved.",
+      "commentAdded": "Comment added.",
+      "commentSaveFailed": "Comment could not be saved.",
+      "movedTo": "NCR moved to {{status}}.",
+      "statusUpdateFailed": "NCR status update failed.",
+      "archived": "NCR archived.",
+      "archiveFailed": "NCR archival failed.",
+      "deleteConfirmCurrent": "Delete this NCR? Closed records should be archived instead.",
+      "deleteConfirmRow": "Delete NCR \"{{referenceNo}}\"?",
+      "archiveConfirmRow": "Archive NCR \"{{referenceNo}}\"?",
+      "deleted": "NCR deleted.",
+      "deleteFailed": "NCR deletion failed.",
+      "loadListFailed": "NCR log could not be loaded.",
+      "loadDetailFailed": "NCR details could not be loaded.",
+      "loadCommentsFailed": "NCR comments could not be loaded.",
+      "loadActivityFailed": "NCR activity could not be loaded."
+    }
+  },
+  "capa": {
+    "common": {
+      "label": "CAPA",
+      "status": "Status",
+      "owner": "Owner",
+      "dueDate": "Due date",
+      "general": "General",
+      "na": "N/A",
+      "notSet": "Not set",
+      "unassigned": "Unassigned",
+      "assigned": "Assigned"
+    },
+    "page": {
+      "titleList": "CAPA register",
+      "titleCreate": "Raise CAPA",
+      "titleDetail": "CAPA detail",
+      "titleEdit": "Edit CAPA",
+      "descriptionList": "Use CAPA for formal corrective action: define the issue, confirm root cause, assign action, verify effectiveness, and close with evidence.",
+      "descriptionCreate": "Create a CAPA record for issues that need formal corrective action and tracked closure.",
+      "descriptionDetail": "Review the problem, root cause, actions, verification, and closure evidence in one place.",
+      "descriptionEdit": "Update the CAPA record while keeping the corrective-action trail clear."
+    },
+    "breadcrumbs": {
+      "new": "New CAPA",
+      "edit": "Edit"
+    },
+    "actions": {
+      "new": "+ New CAPA",
+      "edit": "Edit CAPA",
+      "delete": "Delete CAPA",
+      "backTo": "Back to {{label}}",
+      "backToRegister": "Back to register",
+      "save": "Save CAPA",
+      "saving": "Saving..."
+    },
+    "list": {
+      "eyebrow": "Register",
+      "title": "CAPA register",
+      "copy": "CAPA manages root cause, corrective action, verification, and closure after a significant issue is raised.",
+      "filtersTitle": "CAPA filters",
+      "filtersCopy": "Search by title or source, then open the record for cause analysis, action follow-up, and closure evidence.",
+      "stats": {
+        "total": "Total",
+        "inProgress": "In progress",
+        "closed": "Closed",
+        "overdue": "Overdue"
+      },
+      "filters": {
+        "search": "Search",
+        "allStatuses": "All statuses",
+        "sortBy": "Sort by"
+      },
+      "placeholders": {
+        "search": "Title or source"
+      },
+      "sort": {
+        "attention": "Attention",
+        "dueDate": "Due date",
+        "updated": "Updated"
+      }
+    },
+    "table": {
+      "capa": "CAPA",
+      "source": "Source",
+      "owner": "Owner",
+      "attention": "Attention"
+    },
+    "empty": {
+      "loadingTitle": "Loading CAPA records",
+      "loadingCopy": "Refreshing nonconformity, corrective action, and closure status.",
+      "noneTitle": "No CAPA records match the current filter",
+      "noneCopy": "Adjust the search or create the first CAPA entry for this tenant."
+    },
+    "form": {
+      "eyebrow": "CAPA workflow",
+      "copy": "Keep the problem statement, cause, actions, and closure inputs in clearly separated sections.",
+      "lifecycleAriaLabel": "CAPA lifecycle",
+      "stages": {
+        "defineTitle": "1. Define",
+        "defineCopy": "Problem and source",
+        "investigateTitle": "2. Investigate",
+        "investigateCopy": "Containment and cause",
+        "actTitle": "3. Act",
+        "actCopy": "Correction and action",
+        "verifyTitle": "4. Verify & close",
+        "verifyCopy": "Effectiveness and closure"
+      }
+    },
+    "detail": {
+      "eyebrow": "CAPA detail",
+      "closedAt": "Closed at",
+      "lastUpdated": "Last updated",
+      "open": "Open"
+    },
+    "workflow": {
+      "headline": {
+        "OPEN": "Start by defining the issue clearly",
+        "INVESTIGATING": "Capture containment and root cause",
+        "ACTION_PLANNED": "Plan the corrective action clearly",
+        "IN_PROGRESS": "Keep ownership and due dates visible",
+        "VERIFIED": "Confirm the action worked before closure",
+        "CLOSED": "Closure should be supported by a clear summary"
+      },
+      "copy": {
+        "OPEN": "Record the problem clearly so the team understands what happened and why formal corrective action is needed.",
+        "INVESTIGATING": "Containment and root cause should be clear before the CAPA moves into action planning.",
+        "ACTION_PLANNED": "The corrective response should now be clear enough to assign, track, and review.",
+        "IN_PROGRESS": "Once actions are underway, owner accountability and due-date control become the main focus.",
+        "VERIFIED": "Verification should confirm that the action was effective, not only completed.",
+        "CLOSED": "A closed CAPA should explain what evidence supports closure and why recurrence is now controlled."
+      },
+      "hint": {
+        "assigned": "Owner already assigned. Keep the due date and verification method aligned with the selected status.",
+        "unassigned": "Assign an owner once the CAPA moves beyond initial definition so accountability is visible."
+      }
+    },
+    "actionControl": {
+      "noOwnerNoDate": "Assign an owner and due date once the CAPA moves into action planning so follow-up is visible.",
+      "noOwner": "Due date is set, but owner is still missing. Assign ownership before the CAPA relies on action follow-up.",
+      "noDueDate": "Owner is assigned, but due date is still missing. Add a due date so the CAPA can be monitored properly.",
+      "ready": "Owner and due date are set. Keep them aligned with the current CAPA stage and any linked tasks."
+    },
+    "attention": {
+      "underControl": "Under control",
+      "headline": {
+        "needsAttention": "This CAPA currently needs management attention.",
+        "underControl": "This CAPA is currently under control."
+      },
+      "narrative": {
+        "unsaved": "Attention guidance appears after the CAPA is saved.",
+        "underControl": "Ownership, due date, verification, and current CAPA stage are controlled enough for routine follow-up.",
+        "needsAttention": "Attention is needed because {{reasons}}."
+      }
+    },
+    "messages": {
+      "noPermission": "You do not have permission to update CAPA records.",
+      "completeRequired": "Complete the required CAPA fields.",
+      "saved": "CAPA saved successfully.",
+      "saveFailed": "CAPA save failed.",
+      "deleteConfirm": "Delete this CAPA? Closed CAPA records cannot be deleted.",
+      "deleted": "CAPA deleted.",
+      "deleteFailed": "CAPA deletion failed.",
+      "loadListFailed": "CAPA register could not be loaded.",
+      "loadDetailFailed": "CAPA details could not be loaded."
+    },
+    "enums": {
+      "status": {
+        "OPEN": "Open",
+        "INVESTIGATING": "Investigating",
+        "ACTION_PLANNED": "Action planned",
+        "IN_PROGRESS": "In progress",
+        "VERIFIED": "Verified",
+        "CLOSED": "Closed"
+      }
+    }
+  }
+}

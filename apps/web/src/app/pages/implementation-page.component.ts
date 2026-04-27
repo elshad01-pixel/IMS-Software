@@ -2,9 +2,11 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { I18nService } from '../core/i18n.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
 type ImplementationChecklistItem = {
@@ -34,27 +36,37 @@ type ImplementationConfig = {
 
 type PdcaCard = {
   phase: 'Plan' | 'Do' | 'Check' | 'Act';
-  summary: string;
-  modules: Array<{ label: string; route: string; hint: string }>;
+  summaryKey: string;
+  modules: Array<{ label: string; route: string; hintKey: string }>;
 };
 
 type ReadinessChecklistCard = {
-  label: string;
-  hint: string;
+  id: string;
+  labelKey: string;
+  hintKey: string;
   route: string;
   permission: string;
 };
 
+const CHECKLIST_LABEL_KEYS: Record<string, string> = {
+  'scope-context': 'implementation.checklist.items.scopeContext',
+  'policy-documents': 'implementation.checklist.items.policyDocuments',
+  'objectives-kpis': 'implementation.checklist.items.objectivesKpis',
+  'process-risk': 'implementation.checklist.items.processRisk',
+  'operations-training': 'implementation.checklist.items.operationsTraining',
+  'audit-review': 'implementation.checklist.items.auditReview'
+};
+
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, TranslatePipe],
   template: `
-      <section class="page-grid">
-        <iso-page-header
-        [label]="'Start Here'"
-        [title]="'Implementation and readiness path'"
-        [description]="'Use this page as the first stop for tenant setup: review the core readiness checklist, then use the optional implementation workspace when guided rollout is needed.'"
-        [breadcrumbs]="[{ label: 'Start Here' }]"
+    <section class="page-grid">
+      <iso-page-header
+        [label]="pageHeader().label"
+        [title]="pageHeader().title"
+        [description]="pageHeader().description"
+        [breadcrumbs]="[{ label: pageHeader().breadcrumb }]"
       />
 
       <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">
@@ -62,35 +74,35 @@ type ReadinessChecklistCard = {
       </p>
 
       <div class="empty-state" *ngIf="loading()">
-        <strong>Loading implementation workspace</strong>
-        <span>Bringing in tenant rollout settings and objective guidance.</span>
+        <strong>{{ 'implementation.feedback.loadingTitle' | translate }}</strong>
+        <span>{{ 'implementation.feedback.loadingCopy' | translate }}</span>
       </div>
 
       <ng-container *ngIf="!loading() && config() as current">
         <section class="card implementation-intro implementation-card">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Launch point</span>
-              <h3>Start here</h3>
-              <p class="subtle">Use this page to orient a new tenant quickly. The readiness checklist stays available for everyone with workspace access, and the implementation workspace can remain optional for mature companies.</p>
+              <span class="section-eyebrow">{{ 'implementation.intro.eyebrow' | translate }}</span>
+              <h3>{{ 'implementation.intro.title' | translate }}</h3>
+              <p class="subtle">{{ 'implementation.intro.copy' | translate }}</p>
             </div>
           </div>
 
           <div class="summary-strip implementation-summary">
             <article class="summary-item">
-              <span>Workspace</span>
-              <strong>{{ current.enabled ? 'Enabled' : 'Hidden' }}</strong>
+              <span>{{ 'implementation.summary.workspace' | translate }}</span>
+              <strong>{{ current.enabled ? ('common.enabled' | translate) : ('common.hidden' | translate) }}</strong>
             </article>
             <article class="summary-item">
-              <span>Starting point</span>
+              <span>{{ 'implementation.summary.startingPoint' | translate }}</span>
               <strong>{{ startingPointLabel(current.startingPoint) }}</strong>
             </article>
             <article class="summary-item">
-              <span>Checklist progress</span>
+              <span>{{ 'implementation.summary.checklistProgress' | translate }}</span>
               <strong>{{ completedChecklistCount() }}/{{ current.checklist.length }}</strong>
             </article>
             <article class="summary-item">
-              <span>Objective starter</span>
+              <span>{{ 'implementation.summary.objectiveStarter' | translate }}</span>
               <strong>{{ objectiveReadinessLabel() }}</strong>
             </article>
           </div>
@@ -99,232 +111,232 @@ type ReadinessChecklistCard = {
         <section class="card page-stack implementation-card">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Readiness</span>
-              <h3>Core setup checklist</h3>
-              <p class="subtle">Walk through these essentials in order so the tenant has a clear first-use path before deeper rollout work begins.</p>
+              <span class="section-eyebrow">{{ 'implementation.readiness.eyebrow' | translate }}</span>
+              <h3>{{ 'implementation.readiness.title' | translate }}</h3>
+              <p class="subtle">{{ 'implementation.readiness.copy' | translate }}</p>
             </div>
           </div>
 
           <div class="readiness-grid">
             <article class="readiness-card" *ngFor="let item of readinessChecklist()">
               <div class="readiness-card__top">
-                <span class="phase-pill readiness-pill">Setup</span>
-                <strong>{{ item.label }}</strong>
+                <span class="phase-pill readiness-pill">{{ 'implementation.readiness.setupPill' | translate }}</span>
+                <strong>{{ item.labelKey | translate }}</strong>
               </div>
-              <p>{{ item.hint }}</p>
-              <a *ngIf="item.accessible; else lockedReadiness" class="readiness-link" [routerLink]="[item.route]" [queryParams]="{ from: 'start-here' }">Open</a>
+              <p>{{ item.hintKey | translate }}</p>
+              <a *ngIf="item.accessible; else lockedReadiness" class="readiness-link" [routerLink]="[item.route]" [queryParams]="{ from: 'start-here' }">{{ 'common.open' | translate }}</a>
               <ng-template #lockedReadiness>
-                <span class="readiness-state">Needs access</span>
+                <span class="readiness-state">{{ 'common.needsAccess' | translate }}</span>
               </ng-template>
             </article>
           </div>
         </section>
 
         <section class="card guidance-card implementation-card">
-          <strong>Recommended first-use flow</strong>
-          <p>Company profile -> Users -> Processes -> Documents -> Risks -> Audits -> NCR/CAPA -> KPIs -> Management Review.</p>
+          <strong>{{ 'implementation.guidance.flowTitle' | translate }}</strong>
+          <p>{{ 'implementation.guidance.flowCopy' | translate }}</p>
         </section>
 
         <section class="card guidance-card implementation-card" *ngIf="!current.enabled">
-          <strong>The implementation workspace is currently hidden for this tenant.</strong>
+          <strong>{{ 'implementation.guidance.hiddenTitle' | translate }}</strong>
           <p>
-            That is useful for companies that already have ISO implemented and only need the operational modules. This Start Here page still stays available for orientation, and you can turn the deeper rollout workspace back on later in
-            <a [routerLink]="['/settings']">Settings</a>.
+            {{ 'implementation.guidance.hiddenCopy' | translate }}
+            <a [routerLink]="['/settings']">{{ 'implementation.guidance.settingsLink' | translate }}</a>.
           </p>
         </section>
 
         <section class="page-stack" *ngIf="current.enabled">
           <section class="card page-stack implementation-card">
-                <div class="section-head">
-                  <div>
-                    <span class="section-eyebrow">Profile</span>
-                    <h3>Rollout profile</h3>
-                    <p class="subtle">Keep the setup context short and visible so the tenant knows how this workspace is being used.</p>
-                  </div>
-                </div>
+            <div class="section-head">
+              <div>
+                <span class="section-eyebrow">{{ 'implementation.profile.eyebrow' | translate }}</span>
+                <h3>{{ 'implementation.profile.title' | translate }}</h3>
+                <p class="subtle">{{ 'implementation.profile.copy' | translate }}</p>
+              </div>
+            </div>
 
-                <form class="page-stack" [formGroup]="profileForm" (ngSubmit)="saveProfile()" *ngIf="canWrite(); else readOnlyProfile">
-                  <label class="toggle-row">
-                    <input type="checkbox" formControlName="enabled">
-                    <span>Enable implementation workspace</span>
-                  </label>
+            <form class="page-stack" [formGroup]="profileForm" (ngSubmit)="saveProfile()" *ngIf="canWrite(); else readOnlyProfile">
+              <label class="toggle-row">
+                <input type="checkbox" formControlName="enabled">
+                <span>{{ 'implementation.profile.enable' | translate }}</span>
+              </label>
 
-                  <div class="form-grid-2">
-                    <label class="field">
-                      <span>Starting point</span>
-                      <select formControlName="startingPoint">
-                        <option value="NEW_IMPLEMENTATION">New implementation</option>
-                        <option value="DIGITISING_EXISTING">Digitising an existing system</option>
-                        <option value="MATURING_EXISTING">Maturing an already digital system</option>
-                      </select>
-                    </label>
-                    <label class="field">
-                      <span>Rollout owner</span>
-                      <input formControlName="rolloutOwner" placeholder="Quality Manager">
-                    </label>
-                  </div>
-
-                  <div class="form-grid-2">
-                    <label class="field">
-                      <span>Target standards</span>
-                      <input formControlName="targetStandards" placeholder="ISO 9001, ISO 14001, ISO 45001">
-                    </label>
-                    <label class="field">
-                      <span>Rollout goal</span>
-                      <input formControlName="certificationGoal" placeholder="External certification in Q4 2026">
-                    </label>
-                  </div>
-
-                  <div class="button-row">
-                    <button type="submit" [disabled]="profileForm.invalid || savingSection() === 'profile'">
-                      {{ savingSection() === 'profile' ? 'Saving...' : 'Save rollout profile' }}
-                    </button>
-                  </div>
-                </form>
-
-                <ng-template #readOnlyProfile>
-                  <div class="entity-list compact-entity-list">
-                    <div class="entity-item">
-                      <strong>Starting point</strong>
-                      <small>{{ startingPointLabel(current.startingPoint) }}</small>
-                    </div>
-                    <div class="entity-item">
-                      <strong>Target standards</strong>
-                      <small>{{ current.targetStandards.join(', ') }}</small>
-                    </div>
-                    <div class="entity-item">
-                      <strong>Rollout owner</strong>
-                      <small>{{ current.rolloutOwner || 'Not set' }}</small>
-                    </div>
-                    <div class="entity-item">
-                      <strong>Goal</strong>
-                      <small>{{ current.certificationGoal || 'Not recorded yet' }}</small>
-                    </div>
-                  </div>
-                </ng-template>
-          </section>
-
-          <section class="card page-stack implementation-card">
-                <div class="section-head">
-                  <div>
-                    <span class="section-eyebrow">Checklist</span>
-                    <h3>Rollout checkpoints</h3>
-                    <p class="subtle">High-level setup only. This should stay lighter than a project plan and simply show whether the basics are in place.</p>
-                  </div>
-                </div>
-
-                <div class="checklist-grid">
-                  <label class="checklist-item" *ngFor="let item of current.checklist">
-                    <input type="checkbox" [checked]="item.done" [disabled]="!canWrite() || savingSection() === 'checklist'" (change)="toggleChecklist(item.id, readCheckbox($event))">
-                    <span>{{ item.label }}</span>
-                  </label>
-                </div>
-          </section>
-
-          <section class="card page-stack implementation-card">
-              <div class="section-head">
-                <div>
-                  <span class="section-eyebrow">Objectives</span>
-                  <h3>Objective establishment starter</h3>
-                  <p class="subtle">Keep one practical starter objective here, then move the live measure and readings into KPIs.</p>
-                </div>
+              <div class="form-grid-2">
+                <label class="field">
+                  <span>{{ 'implementation.profile.startingPoint' | translate }}</span>
+                  <select formControlName="startingPoint">
+                    <option value="NEW_IMPLEMENTATION">{{ 'implementation.profile.startingPoints.NEW_IMPLEMENTATION' | translate }}</option>
+                    <option value="DIGITISING_EXISTING">{{ 'implementation.profile.startingPoints.DIGITISING_EXISTING' | translate }}</option>
+                    <option value="MATURING_EXISTING">{{ 'implementation.profile.startingPoints.MATURING_EXISTING' | translate }}</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>{{ 'implementation.profile.rolloutOwner' | translate }}</span>
+                  <input formControlName="rolloutOwner" [placeholder]="'implementation.profile.placeholders.rolloutOwner' | translate">
+                </label>
               </div>
 
-              <form class="page-stack" [formGroup]="objectiveForm" (ngSubmit)="saveObjectivePlan()" *ngIf="canWrite(); else readOnlyObjective">
-                <div class="form-grid-2">
-                  <label class="field">
-                    <span>Business focus</span>
-                    <input formControlName="focus" placeholder="Supplier performance and traceability">
-                  </label>
-                  <label class="field">
-                    <span>Objective owner</span>
-                    <input formControlName="owner" placeholder="Operations Manager">
-                  </label>
-                </div>
-
+              <div class="form-grid-2">
                 <label class="field">
-                  <span>Objective statement</span>
-                  <textarea rows="3" formControlName="objective" placeholder="Improve on-time supplier approval and reduce traceability gaps by year end."></textarea>
+                  <span>{{ 'implementation.profile.targetStandards' | translate }}</span>
+                  <input formControlName="targetStandards" [placeholder]="'implementation.profile.placeholders.targetStandards' | translate">
                 </label>
+                <label class="field">
+                  <span>{{ 'implementation.profile.rolloutGoal' | translate }}</span>
+                  <input formControlName="certificationGoal" [placeholder]="'implementation.profile.placeholders.rolloutGoal' | translate">
+                </label>
+              </div>
 
-                <div class="form-grid-3">
-                  <label class="field">
-                    <span>Target / measure</span>
-                    <input formControlName="target" placeholder="95% approved supplier score by Q4">
-                  </label>
-                  <label class="field">
-                    <span>Review frequency</span>
-                    <select formControlName="reviewFrequency">
-                      <option>Monthly</option>
-                      <option>Quarterly</option>
-                      <option>Biannual</option>
-                      <option>Annual</option>
-                    </select>
-                  </label>
-                  <label class="field">
-                    <span>Linked module</span>
-                    <select formControlName="linkedModule">
-                      <option>KPIs</option>
-                      <option>Risks</option>
-                      <option>Management Review</option>
-                      <option>Process Register</option>
-                    </select>
-                  </label>
-                </div>
+              <div class="button-row">
+                <button type="submit" [disabled]="profileForm.invalid || savingSection() === 'profile'">
+                  {{ savingSection() === 'profile' ? ('implementation.profile.saving' | translate) : ('implementation.profile.save' | translate) }}
+                </button>
+              </div>
+            </form>
 
-                <div class="button-row">
-                  <button type="submit" [disabled]="objectiveForm.invalid || savingSection() === 'objective'">
-                    {{ savingSection() === 'objective' ? 'Saving...' : 'Save objective starter' }}
-                  </button>
-                  <a [routerLink]="['/kpis']" class="button-link secondary">Open KPIs</a>
+            <ng-template #readOnlyProfile>
+              <div class="entity-list compact-entity-list">
+                <div class="entity-item">
+                  <strong>{{ 'implementation.profile.startingPoint' | translate }}</strong>
+                  <small>{{ startingPointLabel(current.startingPoint) }}</small>
                 </div>
-              </form>
-
-              <ng-template #readOnlyObjective>
-                <div class="entity-list compact-entity-list">
-                  <div class="entity-item">
-                    <strong>Business focus</strong>
-                    <small>{{ current.objectivePlan.focus || 'Not recorded yet' }}</small>
-                  </div>
-                  <div class="entity-item">
-                    <strong>Objective</strong>
-                    <small>{{ current.objectivePlan.objective || 'Not recorded yet' }}</small>
-                  </div>
-                  <div class="entity-item">
-                    <strong>Target / measure</strong>
-                    <small>{{ current.objectivePlan.target || 'Not recorded yet' }}</small>
-                  </div>
-                  <div class="entity-item">
-                    <strong>Review cadence</strong>
-                    <small>{{ current.objectivePlan.reviewFrequency }}</small>
-                  </div>
+                <div class="entity-item">
+                  <strong>{{ 'implementation.profile.targetStandards' | translate }}</strong>
+                  <small>{{ current.targetStandards.join(', ') }}</small>
                 </div>
-              </ng-template>
+                <div class="entity-item">
+                  <strong>{{ 'implementation.profile.rolloutOwner' | translate }}</strong>
+                  <small>{{ current.rolloutOwner || ('common.notSet' | translate) }}</small>
+                </div>
+                <div class="entity-item">
+                  <strong>{{ 'implementation.profile.goalLabel' | translate }}</strong>
+                  <small>{{ current.certificationGoal || ('common.notRecordedYet' | translate) }}</small>
+                </div>
+              </div>
+            </ng-template>
           </section>
 
           <section class="card page-stack implementation-card">
-                <div class="section-head">
-                  <div>
-                    <span class="section-eyebrow">PDCA</span>
-                    <h3>Recommended module sequence</h3>
-                    <p class="subtle">Use PDCA as a suggested rollout order, not as another register to keep updating.</p>
-                  </div>
-                </div>
+            <div class="section-head">
+              <div>
+                <span class="section-eyebrow">{{ 'implementation.checklist.eyebrow' | translate }}</span>
+                <h3>{{ 'implementation.checklist.title' | translate }}</h3>
+                <p class="subtle">{{ 'implementation.checklist.copy' | translate }}</p>
+              </div>
+            </div>
 
-                <div class="pdca-grid">
-                  <article class="detail-section pdca-card" *ngFor="let card of pdcaCards">
-                    <div class="pdca-card__header">
-                      <span class="phase-pill">{{ card.phase }}</span>
-                      <h4>{{ card.summary }}</h4>
-                    </div>
-                    <div class="module-chip-grid top-space">
-                      <a class="module-chip" *ngFor="let module of card.modules" [routerLink]="[module.route]">
-                        <strong>{{ module.label }}</strong>
-                        <small>{{ module.hint }}</small>
-                      </a>
-                    </div>
-                  </article>
+            <div class="checklist-grid">
+              <label class="checklist-item" *ngFor="let item of current.checklist">
+                <input type="checkbox" [checked]="item.done" [disabled]="!canWrite() || savingSection() === 'checklist'" (change)="toggleChecklist(item.id, readCheckbox($event))">
+                <span>{{ checklistLabel(item) }}</span>
+              </label>
+            </div>
+          </section>
+
+          <section class="card page-stack implementation-card">
+            <div class="section-head">
+              <div>
+                <span class="section-eyebrow">{{ 'implementation.objective.eyebrow' | translate }}</span>
+                <h3>{{ 'implementation.objective.title' | translate }}</h3>
+                <p class="subtle">{{ 'implementation.objective.copy' | translate }}</p>
+              </div>
+            </div>
+
+            <form class="page-stack" [formGroup]="objectiveForm" (ngSubmit)="saveObjectivePlan()" *ngIf="canWrite(); else readOnlyObjective">
+              <div class="form-grid-2">
+                <label class="field">
+                  <span>{{ 'implementation.objective.focus' | translate }}</span>
+                  <input formControlName="focus" [placeholder]="'implementation.objective.placeholders.focus' | translate">
+                </label>
+                <label class="field">
+                  <span>{{ 'implementation.objective.owner' | translate }}</span>
+                  <input formControlName="owner" [placeholder]="'implementation.objective.placeholders.owner' | translate">
+                </label>
+              </div>
+
+              <label class="field">
+                <span>{{ 'implementation.objective.statement' | translate }}</span>
+                <textarea rows="3" formControlName="objective" [placeholder]="'implementation.objective.placeholders.statement' | translate"></textarea>
+              </label>
+
+              <div class="form-grid-3">
+                <label class="field">
+                  <span>{{ 'implementation.objective.target' | translate }}</span>
+                  <input formControlName="target" [placeholder]="'implementation.objective.placeholders.target' | translate">
+                </label>
+                <label class="field">
+                  <span>{{ 'implementation.objective.reviewFrequency' | translate }}</span>
+                  <select formControlName="reviewFrequency">
+                    <option value="Monthly">{{ 'implementation.objective.frequencies.Monthly' | translate }}</option>
+                    <option value="Quarterly">{{ 'implementation.objective.frequencies.Quarterly' | translate }}</option>
+                    <option value="Biannual">{{ 'implementation.objective.frequencies.Biannual' | translate }}</option>
+                    <option value="Annual">{{ 'implementation.objective.frequencies.Annual' | translate }}</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>{{ 'implementation.objective.linkedModule' | translate }}</span>
+                  <select formControlName="linkedModule">
+                    <option value="KPIs">{{ 'implementation.objective.modules.KPIs' | translate }}</option>
+                    <option value="Risks">{{ 'implementation.objective.modules.Risks' | translate }}</option>
+                    <option value="Management Review">{{ 'implementation.objective.modules.Management Review' | translate }}</option>
+                    <option value="Process Register">{{ 'implementation.objective.modules.Process Register' | translate }}</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="button-row">
+                <button type="submit" [disabled]="objectiveForm.invalid || savingSection() === 'objective'">
+                  {{ savingSection() === 'objective' ? ('implementation.objective.saving' | translate) : ('implementation.objective.save' | translate) }}
+                </button>
+                <a [routerLink]="['/kpis']" class="button-link secondary">{{ 'implementation.objective.openKpis' | translate }}</a>
+              </div>
+            </form>
+
+            <ng-template #readOnlyObjective>
+              <div class="entity-list compact-entity-list">
+                <div class="entity-item">
+                  <strong>{{ 'implementation.objective.focus' | translate }}</strong>
+                  <small>{{ current.objectivePlan.focus || ('common.notRecordedYet' | translate) }}</small>
                 </div>
+                <div class="entity-item">
+                  <strong>{{ 'implementation.objective.statement' | translate }}</strong>
+                  <small>{{ current.objectivePlan.objective || ('common.notRecordedYet' | translate) }}</small>
+                </div>
+                <div class="entity-item">
+                  <strong>{{ 'implementation.objective.target' | translate }}</strong>
+                  <small>{{ current.objectivePlan.target || ('common.notRecordedYet' | translate) }}</small>
+                </div>
+                <div class="entity-item">
+                  <strong>{{ 'implementation.objective.reviewCadence' | translate }}</strong>
+                  <small>{{ objectiveFrequencyLabel(current.objectivePlan.reviewFrequency) }}</small>
+                </div>
+              </div>
+            </ng-template>
+          </section>
+
+          <section class="card page-stack implementation-card">
+            <div class="section-head">
+              <div>
+                <span class="section-eyebrow">{{ 'implementation.pdca.eyebrow' | translate }}</span>
+                <h3>{{ 'implementation.pdca.title' | translate }}</h3>
+                <p class="subtle">{{ 'implementation.pdca.copy' | translate }}</p>
+              </div>
+            </div>
+
+            <div class="pdca-grid">
+              <article class="detail-section pdca-card" *ngFor="let card of pdcaCards">
+                <div class="pdca-card__header">
+                  <span class="phase-pill">{{ ('implementation.pdca.phases.' + card.phase + '.label') | translate }}</span>
+                  <h4>{{ card.summaryKey | translate }}</h4>
+                </div>
+                <div class="module-chip-grid top-space">
+                  <a class="module-chip" *ngFor="let module of card.modules" [routerLink]="[module.route]">
+                    <strong>{{ ('implementation.objective.modules.' + module.label) | translate }}</strong>
+                    <small>{{ module.hintKey | translate }}</small>
+                  </a>
+                </div>
+              </article>
+            </div>
           </section>
         </section>
       </ng-container>
@@ -535,6 +547,7 @@ export class ImplementationPageComponent {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
 
   protected readonly loading = signal(true);
   protected readonly message = signal('');
@@ -559,6 +572,15 @@ export class ImplementationPageComponent {
     linkedModule: ['KPIs', Validators.required]
   });
 
+  protected readonly pageHeader = computed(() => {
+    this.i18n.language();
+    return {
+      label: this.i18n.t('implementation.page.label'),
+      title: this.i18n.t('implementation.page.title'),
+      description: this.i18n.t('implementation.page.description'),
+      breadcrumb: this.i18n.t('implementation.page.breadcrumb')
+    };
+  });
   protected readonly completedChecklistCount = computed(() => this.config()?.checklist.filter((item) => item.done).length ?? 0);
   protected readonly readinessChecklist = computed(() =>
     this.readinessCards.map((item) => ({
@@ -567,73 +589,74 @@ export class ImplementationPageComponent {
     }))
   );
   protected readonly objectiveReadinessLabel = computed(() => {
+    this.i18n.language();
     const current = this.config()?.objectivePlan;
     if (!current) {
-      return 'Not loaded';
+      return this.i18n.t('common.notLoaded');
     }
 
     const completed = [current.focus, current.objective, current.target, current.owner].filter((value) => value.trim()).length;
     if (completed >= 4) {
-      return 'Ready to deploy';
+      return this.i18n.t('implementation.summary.readyToDeploy');
     }
     if (completed >= 2) {
-      return 'In progress';
+      return this.i18n.t('common.inProgress');
     }
-    return 'Needs setup';
+    return this.i18n.t('implementation.summary.needsSetup');
   });
 
   protected readonly pdcaCards: PdcaCard[] = [
     {
       phase: 'Plan',
-      summary: 'Define the management system direction before pushing records into daily use.',
+      summaryKey: 'implementation.pdca.phases.Plan.summary',
       modules: [
-        { label: 'Context', route: '/context', hint: 'Scope, issues, interested parties, and needs' },
-        { label: 'Obligations', route: '/compliance-obligations', hint: 'External and compliance requirements' },
-        { label: 'Risks', route: '/risks', hint: 'Risk and opportunity assessment' },
-        { label: 'KPIs', route: '/kpis', hint: 'Objectives, measures, and thresholds' }
+        { label: 'Context', route: '/context', hintKey: 'implementation.pdca.modules.Context' },
+        { label: 'Obligations', route: '/compliance-obligations', hintKey: 'implementation.pdca.modules.Obligations' },
+        { label: 'Risks', route: '/risks', hintKey: 'implementation.pdca.modules.Risks' },
+        { label: 'KPIs', route: '/kpis', hintKey: 'implementation.pdca.modules.KPIs' }
       ]
     },
     {
       phase: 'Do',
-      summary: 'Deploy controls, competence, and supplier management into daily operations.',
+      summaryKey: 'implementation.pdca.phases.Do.summary',
       modules: [
-        { label: 'Documents', route: '/documents', hint: 'Policies, procedures, forms, and instructions' },
-        { label: 'Process Register', route: '/process-register', hint: 'Process ownership and interfaces' },
-        { label: 'Training', route: '/training', hint: 'Competence and assignment follow-up' },
-        { label: 'External Providers', route: '/external-providers', hint: 'Supplier and service control' }
+        { label: 'Documents', route: '/documents', hintKey: 'implementation.pdca.modules.Documents' },
+        { label: 'Process Register', route: '/process-register', hintKey: 'implementation.pdca.modules.Process Register' },
+        { label: 'Training', route: '/training', hintKey: 'implementation.pdca.modules.Training' },
+        { label: 'External Providers', route: '/external-providers', hintKey: 'implementation.pdca.modules.External Providers' }
       ]
     },
     {
       phase: 'Check',
-      summary: 'Use evidence, incidents, and audits to test whether the system is performing as intended.',
+      summaryKey: 'implementation.pdca.phases.Check.summary',
       modules: [
-        { label: 'Audits', route: '/audits', hint: 'Programme, execution, findings, and reports' },
-        { label: 'Incidents', route: '/incidents', hint: 'Incidents, near misses, and investigation' },
-        { label: 'Hazards', route: '/hazards', hint: 'OH&S hazard review' },
-        { label: 'Environmental Aspects', route: '/environmental-aspects', hint: 'Aspect and impact review' }
+        { label: 'Audits', route: '/audits', hintKey: 'implementation.pdca.modules.Audits' },
+        { label: 'Incidents', route: '/incidents', hintKey: 'implementation.pdca.modules.Incidents' },
+        { label: 'Hazards', route: '/hazards', hintKey: 'implementation.pdca.modules.Hazards' },
+        { label: 'Environmental Aspects', route: '/environmental-aspects', hintKey: 'implementation.pdca.modules.Environmental Aspects' }
       ]
     },
     {
       phase: 'Act',
-      summary: 'Drive improvement from findings, failures, changes, and management decisions.',
+      summaryKey: 'implementation.pdca.phases.Act.summary',
       modules: [
-        { label: 'NCR', route: '/ncr', hint: 'Nonconformity control and investigation' },
-        { label: 'CAPA', route: '/capa', hint: 'Corrective action workflow' },
-        { label: 'Actions', route: '/actions', hint: 'Cross-module follow-up tracker' },
-        { label: 'Management Review', route: '/management-review', hint: 'Decisions, resources, and system effectiveness' }
+        { label: 'NCR', route: '/ncr', hintKey: 'implementation.pdca.modules.NCR' },
+        { label: 'CAPA', route: '/capa', hintKey: 'implementation.pdca.modules.CAPA' },
+        { label: 'Actions', route: '/actions', hintKey: 'implementation.pdca.modules.Actions' },
+        { label: 'Management Review', route: '/management-review', hintKey: 'implementation.pdca.modules.Management Review' }
       ]
     }
   ];
   private readonly readinessCards: ReadinessChecklistCard[] = [
-    { label: 'Company profile', hint: 'Confirm tenant identity, numbering defaults, and system setup.', route: '/settings', permission: 'settings.read' },
-    { label: 'Users and roles', hint: 'Set access, ownership, and who will operate each module.', route: '/users', permission: 'users.read' },
-    { label: 'Process map', hint: 'Define the main processes and how they connect across the system.', route: '/process-register', permission: 'processes.read' },
-    { label: 'Controlled documents', hint: 'Load the policies, procedures, forms, and work instructions needed for operation.', route: '/documents', permission: 'documents.read' },
-    { label: 'Risks', hint: 'Capture key business, compliance, QHSE, and operational risks early.', route: '/risks', permission: 'risks.read' },
-    { label: 'Audits', hint: 'Set the audit programme and prepare how effectiveness will be checked.', route: '/audits', permission: 'audits.read' },
-    { label: 'NCR/CAPA/actions', hint: 'Make sure nonconformities, corrective action, and follow-up ownership are ready.', route: '/actions', permission: 'action-items.read' },
-    { label: 'KPIs', hint: 'Define the measures and thresholds that show whether the system is working.', route: '/kpis', permission: 'kpis.read' },
-    { label: 'Management review', hint: 'Prepare the leadership review path for decisions, resources, and improvement.', route: '/management-review', permission: 'management-review.read' }
+    { id: 'companyProfile', labelKey: 'implementation.readiness.items.companyProfile.label', hintKey: 'implementation.readiness.items.companyProfile.hint', route: '/settings', permission: 'settings.read' },
+    { id: 'usersRoles', labelKey: 'implementation.readiness.items.usersRoles.label', hintKey: 'implementation.readiness.items.usersRoles.hint', route: '/users', permission: 'users.read' },
+    { id: 'processMap', labelKey: 'implementation.readiness.items.processMap.label', hintKey: 'implementation.readiness.items.processMap.hint', route: '/process-register', permission: 'processes.read' },
+    { id: 'controlledDocuments', labelKey: 'implementation.readiness.items.controlledDocuments.label', hintKey: 'implementation.readiness.items.controlledDocuments.hint', route: '/documents', permission: 'documents.read' },
+    { id: 'risks', labelKey: 'implementation.readiness.items.risks.label', hintKey: 'implementation.readiness.items.risks.hint', route: '/risks', permission: 'risks.read' },
+    { id: 'audits', labelKey: 'implementation.readiness.items.audits.label', hintKey: 'implementation.readiness.items.audits.hint', route: '/audits', permission: 'audits.read' },
+    { id: 'ncrCapaActions', labelKey: 'implementation.readiness.items.ncrCapaActions.label', hintKey: 'implementation.readiness.items.ncrCapaActions.hint', route: '/actions', permission: 'action-items.read' },
+    { id: 'kpis', labelKey: 'implementation.readiness.items.kpis.label', hintKey: 'implementation.readiness.items.kpis.hint', route: '/kpis', permission: 'kpis.read' },
+    { id: 'managementReview', labelKey: 'implementation.readiness.items.managementReview.label', hintKey: 'implementation.readiness.items.managementReview.hint', route: '/management-review', permission: 'management-review.read' }
   ];
 
   constructor() {
@@ -645,13 +668,19 @@ export class ImplementationPageComponent {
   }
 
   protected startingPointLabel(value: string) {
-    const labels: Record<string, string> = {
-      NEW_IMPLEMENTATION: 'New implementation',
-      DIGITISING_EXISTING: 'Digitising an existing system',
-      MATURING_EXISTING: 'Maturing an already digital system'
-    };
+    this.i18n.language();
+    return this.i18n.t(`implementation.profile.startingPoints.${value}`);
+  }
 
-    return labels[value] ?? value;
+  protected objectiveFrequencyLabel(value: string) {
+    this.i18n.language();
+    return this.i18n.t(`implementation.objective.frequencies.${value}`);
+  }
+
+  protected checklistLabel(item: ImplementationChecklistItem) {
+    this.i18n.language();
+    const key = CHECKLIST_LABEL_KEYS[item.id];
+    return key ? this.i18n.t(key) : item.label;
   }
 
   protected readCheckbox(event: Event) {
@@ -660,7 +689,7 @@ export class ImplementationPageComponent {
 
   protected saveProfile() {
     if (!this.canWrite()) {
-      this.error.set('You do not have permission to update the implementation workspace.');
+      this.error.set(this.i18n.t('implementation.feedback.noWriteWorkspace'));
       return;
     }
 
@@ -675,7 +704,7 @@ export class ImplementationPageComponent {
 
   protected saveObjectivePlan() {
     if (!this.canWrite()) {
-      this.error.set('You do not have permission to update the implementation workspace.');
+      this.error.set(this.i18n.t('implementation.feedback.noWriteWorkspace'));
       return;
     }
 
@@ -688,7 +717,7 @@ export class ImplementationPageComponent {
 
   protected toggleChecklist(itemId: string, checked: boolean) {
     if (!this.canWrite()) {
-      this.error.set('You do not have permission to update the rollout checklist.');
+      this.error.set(this.i18n.t('implementation.feedback.noWriteChecklist'));
       return;
     }
 
@@ -710,7 +739,7 @@ export class ImplementationPageComponent {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Implementation workspace could not be loaded.'));
+        this.error.set(this.readError(error, this.i18n.t('implementation.feedback.loadError')));
       }
     });
   }
@@ -723,12 +752,12 @@ export class ImplementationPageComponent {
     this.api.put<unknown>('settings/section/implementation', { values }).subscribe({
       next: (config) => {
         this.savingSection.set(null);
-        this.message.set('Implementation workspace updated.');
+        this.message.set(this.i18n.t('implementation.feedback.updated'));
         this.applyConfig((config as { implementation?: ImplementationConfig }).implementation ?? (config as ImplementationConfig));
       },
       error: (error: HttpErrorResponse) => {
         this.savingSection.set(null);
-        this.error.set(this.readError(error, 'Implementation workspace could not be saved.'));
+        this.error.set(this.readError(error, this.i18n.t('implementation.feedback.saveError')));
       }
     });
   }

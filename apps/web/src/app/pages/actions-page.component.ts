@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { I18nService } from '../core/i18n.service';
 import { IconActionButtonComponent } from '../shared/icon-action-button.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
@@ -17,6 +18,7 @@ type UserOption = {
 
 type ActionStatus = 'OPEN' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED';
 type ActionSortOption = 'attention' | 'dueDate' | 'updated' | 'source';
+type AttentionReason = 'OVERDUE' | 'DUE_SOON' | 'OWNER_NEEDED';
 
 type ActionRecord = {
   id: string;
@@ -45,41 +47,41 @@ type ReturnNavigation = {
   template: `
     <section class="page-grid">
       <iso-page-header
-        [label]="'Actions'"
-        [title]="'Global action tracker'"
-        [description]="'Actions track assigned follow-up from any module so owners, due dates, and status stay visible in one place.'"
-        [breadcrumbs]="[{ label: 'Actions' }]"
+        [label]="t('actionTracker.page.label')"
+        [title]="t('actionTracker.page.title')"
+        [description]="t('actionTracker.page.description')"
+        [breadcrumbs]="[{ label: t('actionTracker.page.breadcrumb') }]"
       >
-        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">Back to Start Here</a>
-        <a *ngIf="returnNavigation()" [routerLink]="returnNavigation()!.route" class="button-link secondary">Back to {{ returnNavigation()!.label }}</a>
+        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">{{ t('actionTracker.actions.backToStartHere') }}</a>
+        <a *ngIf="returnNavigation()" [routerLink]="returnNavigation()!.route" class="button-link secondary">{{ t('actionTracker.actions.backTo', { label: returnNavigation()!.label }) }}</a>
       </iso-page-header>
 
       <section class="page-stack">
         <section class="card detail-card" *ngIf="focusedAction() as focused" #focusedActionPanel>
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Focused action</span>
+              <span class="section-eyebrow">{{ t('actionTracker.focused.eyebrow') }}</span>
               <h3>{{ focused.title }}</h3>
-              <p class="subtle">Review this linked action directly, then continue in the full tracker if needed.</p>
+              <p class="subtle">{{ t('actionTracker.focused.copy') }}</p>
             </div>
             <div class="button-row">
-              <a *ngIf="returnNavigation()" [routerLink]="returnNavigation()!.route" class="button-link secondary">Back to {{ returnNavigation()!.label }}</a>
-              <button type="button" class="secondary" (click)="clearFocusedAction()">Back to all actions</button>
+              <a *ngIf="returnNavigation()" [routerLink]="returnNavigation()!.route" class="button-link secondary">{{ t('actionTracker.actions.backTo', { label: returnNavigation()!.label }) }}</a>
+              <button type="button" class="secondary" (click)="clearFocusedAction()">{{ t('actionTracker.actions.backToAll') }}</button>
             </div>
           </div>
 
           <div class="summary-strip top-space">
             <article class="summary-item">
-              <span>Status</span>
-              <strong>{{ focused.status }}</strong>
+              <span>{{ t('actionTracker.common.status') }}</span>
+              <strong>{{ statusLabel(focused.status) }}</strong>
             </article>
             <article class="summary-item">
-              <span>Owner</span>
-              <strong>{{ focused.owner ? focused.owner.firstName + ' ' + focused.owner.lastName : 'Unassigned' }}</strong>
+              <span>{{ t('actionTracker.common.owner') }}</span>
+              <strong>{{ focused.owner ? focused.owner.firstName + ' ' + focused.owner.lastName : t('actionTracker.common.unassigned') }}</strong>
             </article>
             <article class="summary-item">
-              <span>Due date</span>
-              <strong>{{ focused.dueDate ? (focused.dueDate | date:'yyyy-MM-dd') : 'Not set' }}</strong>
+              <span>{{ t('actionTracker.common.dueDate') }}</span>
+              <strong>{{ focused.dueDate ? (focused.dueDate | date:'yyyy-MM-dd') : t('actionTracker.common.notSet') }}</strong>
             </article>
           </div>
 
@@ -90,26 +92,26 @@ type ReturnNavigation = {
 
           <div class="section-grid-2 top-space">
             <section class="detail-section">
-              <h4>Description</h4>
-              <p>{{ focused.description || 'No description provided.' }}</p>
+              <h4>{{ t('actionTracker.focused.description') }}</h4>
+              <p>{{ focused.description || t('actionTracker.focused.noDescription') }}</p>
             </section>
             <section class="detail-section">
-              <h4>Source</h4>
-              <p>{{ focused.sourceLabel }} | {{ focused.sourceTitle }}</p>
+              <h4>{{ t('actionTracker.focused.source') }}</h4>
+              <p>{{ sourceTypeLabel(focused.sourceType) }} | {{ focused.sourceTitle }}</p>
               <div class="button-row top-space" *ngIf="sourceRoute(focused) as route">
-                <a [routerLink]="route" class="button-link secondary">Open source record</a>
+                <a [routerLink]="route" class="button-link secondary">{{ t('actionTracker.actions.openSource') }}</a>
               </div>
             </section>
           </div>
 
           <div class="detail-section top-space">
-            <h4>Update status</h4>
+            <h4>{{ t('actionTracker.focused.updateStatus') }}</h4>
             <div class="button-row top-space">
               <select [value]="focused.status" [disabled]="!canWriteActions()" (change)="updateStatus(focused, readStatus($event))">
-                <option>OPEN</option>
-                <option>IN_PROGRESS</option>
-                <option>DONE</option>
-                <option>CANCELLED</option>
+                <option value="OPEN">{{ t('actionTracker.status.OPEN') }}</option>
+                <option value="IN_PROGRESS">{{ t('actionTracker.status.IN_PROGRESS') }}</option>
+                <option value="DONE">{{ t('actionTracker.status.DONE') }}</option>
+                <option value="CANCELLED">{{ t('actionTracker.status.CANCELLED') }}</option>
               </select>
             </div>
           </div>
@@ -118,27 +120,27 @@ type ReturnNavigation = {
         <div class="card list-card">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Register</span>
-              <h3>Cross-module follow-up</h3>
-              <p class="subtle">Actions track assigned follow-up from audits, CAPA, risks, incidents, management review, and other modules.</p>
+              <span class="section-eyebrow">{{ t('actionTracker.register.eyebrow') }}</span>
+              <h3>{{ t('actionTracker.register.title') }}</h3>
+              <p class="subtle">{{ t('actionTracker.register.copy') }}</p>
             </div>
           </div>
 
           <section class="summary-strip top-space actions-summary-strip">
             <article class="summary-item">
-              <span>Open</span>
+              <span>{{ t('actionTracker.status.OPEN') }}</span>
               <strong>{{ countByStatus('OPEN') }}</strong>
             </article>
             <article class="summary-item">
-              <span>In progress</span>
+              <span>{{ t('actionTracker.status.IN_PROGRESS') }}</span>
               <strong>{{ countByStatus('IN_PROGRESS') }}</strong>
             </article>
             <article class="summary-item">
-              <span>Overdue</span>
+              <span>{{ t('actionTracker.summary.overdue') }}</span>
               <strong>{{ overdueCount() }}</strong>
             </article>
             <article class="summary-item">
-              <span>Done</span>
+              <span>{{ t('actionTracker.status.DONE') }}</span>
               <strong>{{ countByStatus('DONE') }}</strong>
             </article>
           </section>
@@ -151,84 +153,84 @@ type ReturnNavigation = {
           <form class="toolbar top-space" [formGroup]="filtersForm" (ngSubmit)="reload()">
             <div class="filter-row standard-filter-grid">
               <label class="field compact-field">
-                <span>Source</span>
+                <span>{{ t('actionTracker.filters.source') }}</span>
                 <select formControlName="sourceType">
-                  <option value="">All sources</option>
-                  <option value="risk">Risk</option>
-                  <option value="capa">CAPA</option>
-                  <option value="audit">Audit</option>
-                  <option value="management-review">Management Review</option>
-                  <option value="incident">Incident / Near miss</option>
-                  <option value="hazard">Hazard</option>
-                  <option value="aspect">Environmental aspect</option>
-                  <option value="obligation">Compliance obligation</option>
-                  <option value="provider">External provider</option>
-                  <option value="change-management">Change management</option>
+                  <option value="">{{ t('actionTracker.filters.allSources') }}</option>
+                  <option value="risk">{{ t('actionTracker.sources.risk') }}</option>
+                  <option value="capa">{{ t('actionTracker.sources.capa') }}</option>
+                  <option value="audit">{{ t('actionTracker.sources.audit') }}</option>
+                  <option value="management-review">{{ t('actionTracker.sources.managementReview') }}</option>
+                  <option value="incident">{{ t('actionTracker.sources.incident') }}</option>
+                  <option value="hazard">{{ t('actionTracker.sources.hazard') }}</option>
+                  <option value="aspect">{{ t('actionTracker.sources.aspect') }}</option>
+                  <option value="obligation">{{ t('actionTracker.sources.obligation') }}</option>
+                  <option value="provider">{{ t('actionTracker.sources.provider') }}</option>
+                  <option value="change-management">{{ t('actionTracker.sources.changeManagement') }}</option>
                 </select>
               </label>
               <label class="field compact-field">
-                <span>Status</span>
+                <span>{{ t('actionTracker.common.status') }}</span>
                 <select formControlName="status">
-                  <option value="">All statuses</option>
-                  <option>OPEN</option>
-                  <option>IN_PROGRESS</option>
-                  <option>DONE</option>
-                  <option>CANCELLED</option>
+                  <option value="">{{ t('actionTracker.filters.allStatuses') }}</option>
+                  <option value="OPEN">{{ t('actionTracker.status.OPEN') }}</option>
+                  <option value="IN_PROGRESS">{{ t('actionTracker.status.IN_PROGRESS') }}</option>
+                  <option value="DONE">{{ t('actionTracker.status.DONE') }}</option>
+                  <option value="CANCELLED">{{ t('actionTracker.status.CANCELLED') }}</option>
                 </select>
               </label>
               <label class="field compact-field">
-                <span>Owner</span>
+                <span>{{ t('actionTracker.common.owner') }}</span>
                 <select formControlName="ownerId">
-                  <option value="">All owners</option>
+                  <option value="">{{ t('actionTracker.filters.allOwners') }}</option>
                   <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
                 </select>
               </label>
               <label class="field">
-                <span>Due date</span>
+                <span>{{ t('actionTracker.common.dueDate') }}</span>
                 <select formControlName="dueState">
-                  <option value="">All due dates</option>
-                  <option value="overdue">Overdue</option>
-                  <option value="upcoming">Upcoming</option>
+                  <option value="">{{ t('actionTracker.filters.allDueDates') }}</option>
+                  <option value="overdue">{{ t('actionTracker.summary.overdue') }}</option>
+                  <option value="upcoming">{{ t('actionTracker.filters.upcoming') }}</option>
                 </select>
               </label>
               <label class="field compact-field">
-                <span>Sort by</span>
+                <span>{{ t('actionTracker.filters.sortBy') }}</span>
                 <select [value]="sortBy()" (change)="sortBy.set(readSortValue($event))">
-                  <option value="attention">Attention</option>
-                  <option value="dueDate">Due date</option>
-                  <option value="updated">Updated</option>
-                  <option value="source">Source</option>
+                  <option value="attention">{{ t('actionTracker.filters.sortOptions.attention') }}</option>
+                  <option value="dueDate">{{ t('actionTracker.filters.sortOptions.dueDate') }}</option>
+                  <option value="updated">{{ t('actionTracker.filters.sortOptions.updated') }}</option>
+                  <option value="source">{{ t('actionTracker.filters.sortOptions.source') }}</option>
                 </select>
               </label>
             </div>
 
             <div class="button-row">
-              <button type="submit" [disabled]="loading()">Apply filters</button>
+              <button type="submit" [disabled]="loading()">{{ t('actionTracker.filters.apply') }}</button>
             </div>
           </form>
 
           <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
           <div class="empty-state" *ngIf="loading()">
-            <strong>Loading actions</strong>
-            <span>Refreshing follow-up across the tenant.</span>
+            <strong>{{ t('actionTracker.empty.loadingTitle') }}</strong>
+            <span>{{ t('actionTracker.empty.loadingCopy') }}</span>
           </div>
 
           <div class="empty-state top-space" *ngIf="!loading() && !sortedActions().length">
-            <strong>No actions match the current filter</strong>
-            <span>Create actions from CAPA, audits, management review, or risks to populate this tracker.</span>
+            <strong>{{ t('actionTracker.empty.noneTitle') }}</strong>
+            <span>{{ t('actionTracker.empty.noneCopy') }}</span>
           </div>
 
           <div class="data-table-wrap" *ngIf="!loading() && sortedActions().length">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Action</th>
-                  <th>Source</th>
-                  <th>Owner</th>
-                  <th>Due date</th>
-                  <th>Status</th>
-                  <th *ngIf="canDeleteActions()">Admin</th>
+                  <th>{{ t('actionTracker.table.action') }}</th>
+                  <th>{{ t('actionTracker.table.source') }}</th>
+                  <th>{{ t('actionTracker.table.owner') }}</th>
+                  <th>{{ t('actionTracker.table.dueDate') }}</th>
+                  <th>{{ t('actionTracker.table.status') }}</th>
+                  <th *ngIf="canDeleteActions()">{{ t('actionTracker.table.admin') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -244,34 +246,34 @@ type ReturnNavigation = {
                   <td>
                     <div class="table-title">
                       <strong>{{ action.title }}</strong>
-                      <small>{{ action.description || 'No description' }}</small>
-                      <small class="opened-indicator" *ngIf="focusedActionId() === action.id">Opened above</small>
+                      <small>{{ action.description || t('actionTracker.table.noDescription') }}</small>
+                      <small class="opened-indicator" *ngIf="focusedActionId() === action.id">{{ t('actionTracker.table.openedAbove') }}</small>
                     </div>
                   </td>
                   <td>
                     <div class="table-title">
-                      <strong>{{ action.sourceLabel }}</strong>
+                      <strong>{{ sourceTypeLabel(action.sourceType) }}</strong>
                       <small>{{ action.sourceTitle }}</small>
                       <small *ngIf="sourceRoute(action) as route">
-                        <a [routerLink]="route" class="table-link" (click)="$event.stopPropagation()">Open source record</a>
+                        <a [routerLink]="route" class="table-link" (click)="$event.stopPropagation()">{{ t('actionTracker.actions.openSource') }}</a>
                       </small>
                     </div>
                   </td>
-                  <td>{{ action.owner ? action.owner.firstName + ' ' + action.owner.lastName : 'Unassigned' }}</td>
-                  <td>{{ action.dueDate ? (action.dueDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
+                  <td>{{ action.owner ? action.owner.firstName + ' ' + action.owner.lastName : t('actionTracker.common.unassigned') }}</td>
+                  <td>{{ action.dueDate ? (action.dueDate | date:'yyyy-MM-dd') : t('actionTracker.common.notSet') }}</td>
                   <td>
                     <select [value]="action.status" [disabled]="!canWriteActions()" (click)="$event.stopPropagation()" (change)="updateStatus(action, readStatus($event))">
-                      <option>OPEN</option>
-                      <option>IN_PROGRESS</option>
-                      <option>DONE</option>
-                      <option>CANCELLED</option>
+                      <option value="OPEN">{{ t('actionTracker.status.OPEN') }}</option>
+                      <option value="IN_PROGRESS">{{ t('actionTracker.status.IN_PROGRESS') }}</option>
+                      <option value="DONE">{{ t('actionTracker.status.DONE') }}</option>
+                      <option value="CANCELLED">{{ t('actionTracker.status.CANCELLED') }}</option>
                     </select>
                   </td>
                   <td *ngIf="canDeleteActions()">
                     <span (click)="$event.stopPropagation()">
                       <iso-icon-action-button
                         [icon]="'delete'"
-                        [label]="'Delete action'"
+                        [label]="t('actionTracker.actions.delete')"
                         [variant]="'danger'"
                         [disabled]="action.status === 'DONE'"
                         (pressed)="deleteAction(action)"
@@ -380,6 +382,7 @@ export class ActionsPageComponent {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   @ViewChild('focusedActionPanel') private focusedActionPanel?: ElementRef<HTMLElement>;
@@ -393,21 +396,6 @@ export class ActionsPageComponent {
   protected readonly sortBy = signal<ActionSortOption>('attention');
   protected readonly focusedAction = computed(() => this.actions().find((action) => action.id === this.focusedActionId()) ?? null);
   protected readonly returnNavigation = signal<ReturnNavigation | null>(null);
-  protected readonly sourceTypeLabels = computed(() => ({
-    risk: 'Risk',
-    capa: 'CAPA',
-    audit: 'Audit',
-    'management-review': 'Management Review',
-    ncr: 'NCR',
-    incident: 'Incident',
-    hazard: 'Hazard',
-    aspect: 'Environmental Aspect',
-    obligation: 'Compliance Obligation',
-    provider: 'External Provider',
-    'change-management': 'Change Management',
-    document: 'Document',
-    context: 'Context issue'
-  }));
 
   protected showStartHereBackLink() {
     return this.route.snapshot.queryParamMap.get('from') === 'start-here';
@@ -428,11 +416,15 @@ export class ActionsPageComponent {
       this.focusedActionId.set(nextFocusedActionId);
       this.returnNavigation.set((history.state?.returnNavigation as ReturnNavigation | undefined) ?? null);
       if (nextFocusedActionId && focusChanged) {
-        this.message.set('Selected action opened above.');
+        this.message.set(this.t('actionTracker.messages.selectedOpenedAbove'));
         setTimeout(() => this.scrollToFocusedAction(), 0);
       }
     });
     this.reload();
+  }
+
+  protected t(key: string, params?: Record<string, unknown>) {
+    return this.i18n.t(key, params);
   }
 
   protected reload() {
@@ -452,14 +444,14 @@ export class ActionsPageComponent {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Actions could not be loaded.'));
+        this.error.set(this.readError(error, this.t('actionTracker.messages.loadFailed')));
       }
     });
   }
 
   protected updateStatus(action: ActionRecord, status: ActionStatus) {
     if (!this.canWriteActions()) {
-      this.error.set('You do not have permission to update actions.');
+      this.error.set(this.t('actionTracker.messages.noPermissionUpdate'));
       return;
     }
 
@@ -469,11 +461,11 @@ export class ActionsPageComponent {
 
     this.api.patch<ActionRecord>(`action-items/${action.id}`, { status }).subscribe({
       next: () => {
-        this.message.set('Action status updated.');
+        this.message.set(this.t('actionTracker.messages.statusUpdated'));
         this.reload();
       },
       error: (error: HttpErrorResponse) => {
-        this.error.set(this.readError(error, 'Action status update failed.'));
+        this.error.set(this.readError(error, this.t('actionTracker.messages.statusUpdateFailed')));
       }
     });
   }
@@ -498,57 +490,89 @@ export class ActionsPageComponent {
     return this.actions().filter((action) => this.actionAttentionReasons(action).length > 0).length;
   }
 
+  protected statusLabel(status?: ActionStatus | string | null) {
+    if (!status) {
+      return this.t('actionTracker.common.notSet');
+    }
+    return this.t(`actionTracker.status.${status}`);
+  }
+
+  protected sourceTypeLabel(sourceType?: string | null) {
+    if (!sourceType) {
+      return this.t('actionTracker.common.notSet');
+    }
+    const sourceKeyMap: Record<string, string> = {
+      risk: 'risk',
+      capa: 'capa',
+      audit: 'audit',
+      'management-review': 'managementReview',
+      ncr: 'ncr',
+      incident: 'incident',
+      hazard: 'hazard',
+      aspect: 'aspect',
+      obligation: 'obligation',
+      provider: 'provider',
+      'change-management': 'changeManagement',
+      document: 'document',
+      context: 'context'
+    };
+    const key = sourceKeyMap[sourceType];
+    return key ? this.t(`actionTracker.sources.${key}`) : sourceType;
+  }
+
   protected followUpHeadline() {
     if (this.overdueCount() > 0) {
-      return 'Some assigned follow-up is overdue';
+      return this.t('actionTracker.guidance.headlines.overdue');
     }
     if (this.ownerNeededCount() > 0) {
-      return 'Some actions still need an owner';
+      return this.t('actionTracker.guidance.headlines.ownerNeeded');
     }
     if (this.countByStatus('OPEN') > 0 || this.countByStatus('IN_PROGRESS') > 0) {
-      return 'Follow-up is active across the system';
+      return this.t('actionTracker.guidance.headlines.active');
     }
-    return 'Assigned follow-up is currently under control';
+    return this.t('actionTracker.guidance.headlines.underControl');
   }
 
   protected followUpNarrative() {
     if (this.overdueCount() > 0) {
-      return 'Start with overdue actions first. They represent assigned follow-up that has already missed the committed due date.';
+      return this.t('actionTracker.guidance.narratives.overdue');
     }
     if (this.ownerNeededCount() > 0) {
-      return 'Some actions are still open or in progress without a named owner. Assign responsibility before the next review cycle so follow-up does not stall.';
+      return this.t('actionTracker.guidance.narratives.ownerNeeded');
     }
     if (this.countByStatus('OPEN') > 0 || this.countByStatus('IN_PROGRESS') > 0) {
-      return 'Use this page to track assigned follow-up from any module so ownership, due dates, and status stay visible in one place.';
+      return this.t('actionTracker.guidance.narratives.active');
     }
-    return 'Current action records are either complete or not yet needing extra intervention.';
+    return this.t('actionTracker.guidance.narratives.underControl');
   }
 
   protected attentionHeadline(action: ActionRecord) {
     return this.actionAttentionReasons(action).length
-      ? 'This action currently needs management attention.'
-      : 'This action is currently under control.';
+      ? this.t('actionTracker.attention.headlines.needsAttention')
+      : this.t('actionTracker.attention.headlines.underControl');
   }
 
   protected attentionNarrative(action: ActionRecord) {
     const reasons = this.actionAttentionReasons(action);
     if (!reasons.length) {
-      return 'The action has either been completed, cancelled, or still has enough control around due date and ownership.';
+      return this.t('actionTracker.attention.narratives.underControl');
     }
-    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+    return this.t('actionTracker.attention.narratives.needsAttention', {
+      reasons: reasons.map((reason) => this.attentionReasonLabel(reason, true).toLowerCase()).join(', ')
+    });
   }
 
   protected actionAttentionSummary(action: ActionRecord) {
     const reasons = this.actionAttentionReasons(action);
-    return reasons.length ? reasons.join(' | ') : '';
+    return reasons.length ? reasons.map((reason) => this.attentionReasonLabel(reason)).join(' | ') : '';
   }
 
   protected attentionLabel(action: ActionRecord) {
     const reasons = this.actionAttentionReasons(action);
     if (!reasons.length) {
-      return 'OK';
+      return this.t('actionTracker.attention.short.ok');
     }
-    const short = reasons.map((reason) => this.shortAttentionReason(reason));
+    const short = reasons.map((reason) => this.attentionReasonLabel(reason, false, true));
     return short.length > 1 ? `${short[0]} +${short.length - 1}` : short[0];
   }
 
@@ -557,7 +581,7 @@ export class ActionsPageComponent {
     if (!reasons.length) {
       return 'success';
     }
-    if (reasons.includes('Overdue')) {
+    if (reasons.includes('OVERDUE')) {
       return 'danger';
     }
     return 'warn';
@@ -576,17 +600,17 @@ export class ActionsPageComponent {
       return;
     }
 
-    if (!window.confirm(`Delete action "${action.title}"? Completed actions are protected.`)) {
+    if (!window.confirm(this.t('actionTracker.messages.deleteConfirm', { title: action.title }))) {
       return;
     }
 
     this.api.delete(`action-items/${action.id}`).subscribe({
       next: () => {
-        this.message.set('Action deleted.');
+        this.message.set(this.t('actionTracker.messages.deleteSuccess'));
         this.reload();
       },
       error: (error: HttpErrorResponse) => {
-        this.error.set(this.readError(error, 'Action deletion failed.'));
+        this.error.set(this.readError(error, this.t('actionTracker.messages.deleteFailed')));
       }
     });
   }
@@ -678,30 +702,30 @@ export class ActionsPageComponent {
     return days >= 0 && days <= 7;
   }
 
-  private actionAttentionReasons(action: ActionRecord) {
+  private actionAttentionReasons(action: ActionRecord): AttentionReason[] {
     if (!this.isActiveAction(action)) {
       return [];
     }
-    const reasons: string[] = [];
+    const reasons: AttentionReason[] = [];
     if (this.isOverdueRecord(action)) {
-      reasons.push('Overdue');
+      reasons.push('OVERDUE');
     } else if (this.isDueSoon(action)) {
-      reasons.push('Due soon');
+      reasons.push('DUE_SOON');
     }
     if (!action.ownerId) {
-      reasons.push('Owner needed');
+      reasons.push('OWNER_NEEDED');
     }
     return reasons;
   }
 
-  private shortAttentionReason(reason: string) {
-    if (reason === 'Owner needed') {
-      return 'Owner';
-    }
-    if (reason === 'Due soon') {
-      return 'Soon';
-    }
-    return reason;
+  private attentionReasonLabel(reason: AttentionReason, lowercase = false, short = false) {
+    const reasonKeyMap: Record<AttentionReason, string> = {
+      OVERDUE: short ? 'overdue' : 'overdue',
+      DUE_SOON: short ? 'dueSoon' : 'dueSoon',
+      OWNER_NEEDED: short ? 'owner' : 'ownerNeeded'
+    };
+    const label = this.t(`actionTracker.attention.${short ? 'short' : 'reasons'}.${reasonKeyMap[reason]}`);
+    return lowercase ? label.toLowerCase() : label;
   }
 
   private compareActions(left: ActionRecord, right: ActionRecord) {
@@ -732,9 +756,9 @@ export class ActionsPageComponent {
 
   private actionAttentionRank(action: ActionRecord) {
     const reasons = this.actionAttentionReasons(action);
-    if (reasons.includes('Overdue')) return 0;
-    if (reasons.includes('Owner needed')) return 1;
-    if (reasons.includes('Due soon')) return 2;
+    if (reasons.includes('OVERDUE')) return 0;
+    if (reasons.includes('OWNER_NEEDED')) return 1;
+    if (reasons.includes('DUE_SOON')) return 2;
     if (action.status === 'OPEN' || action.status === 'IN_PROGRESS') return 3;
     if (action.status === 'DONE') return 4;
     return 5;

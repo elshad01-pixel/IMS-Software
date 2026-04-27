@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { I18nService } from '../core/i18n.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
@@ -195,62 +196,62 @@ type AuditFormValue = {
   template: `
     <section class="page-grid">
       <iso-page-header
-        [label]="'Audits'"
+        [label]="t('audits.common.label')"
         [title]="pageTitle()"
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
-        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">Back to Start Here</a>
-        <a *ngIf="mode() === 'list' && canWriteAudit()" routerLink="/audits/new" class="button-link">+ New audit</a>
-        <a *ngIf="mode() === 'list' && canManageQuestionBank()" routerLink="/audits/checklist-question-bank" class="button-link secondary">Checklist question bank</a>
+        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">{{ t('audits.actions.backToStartHere') }}</a>
+        <a *ngIf="mode() === 'list' && canWriteAudit()" routerLink="/audits/new" class="button-link">{{ t('audits.actions.new') }}</a>
+        <a *ngIf="mode() === 'list' && canManageQuestionBank()" routerLink="/audits/checklist-question-bank" class="button-link secondary">{{ t('audits.actions.questionBank') }}</a>
         <button *ngIf="mode() === 'detail' && selectedAudit()" type="button" class="button-link secondary" [disabled]="generatingReport()" (click)="generateReport()">
-          {{ generatingReport() ? 'Preparing PDF...' : 'Download PDF report' }}
+          {{ generatingReport() ? t('audits.actions.preparingPdf') : t('audits.actions.downloadPdf') }}
         </button>
-        <a *ngIf="mode() === 'detail' && selectedAudit() && canWriteAudit()" [routerLink]="['/audits', selectedAudit()?.id, 'edit']" class="button-link">Edit audit</a>
-        <button *ngIf="mode() === 'detail' && canDeleteAudit()" type="button" class="button-link danger" (click)="deleteAudit()">Delete audit</button>
-        <button *ngIf="mode() === 'detail' && canArchiveAudit()" type="button" class="button-link secondary" (click)="archiveAudit()">Archive audit</button>
-        <a *ngIf="mode() !== 'list'" routerLink="/audits" class="button-link secondary">Back to audits</a>
+        <a *ngIf="mode() === 'detail' && selectedAudit() && canWriteAudit()" [routerLink]="['/audits', selectedAudit()?.id, 'edit']" class="button-link">{{ t('audits.actions.edit') }}</a>
+        <button *ngIf="mode() === 'detail' && canDeleteAudit()" type="button" class="button-link danger" (click)="deleteAudit()">{{ t('audits.actions.delete') }}</button>
+        <button *ngIf="mode() === 'detail' && canArchiveAudit()" type="button" class="button-link secondary" (click)="archiveAudit()">{{ t('audits.actions.archive') }}</button>
+        <a *ngIf="mode() !== 'list'" routerLink="/audits" class="button-link secondary">{{ t('audits.actions.backToList') }}</a>
       </iso-page-header>
 
       <section *ngIf="mode() === 'list'" class="page-stack">
         <div class="card list-card">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Program</span>
-              <h3>Internal and supplier audits</h3>
-              <p class="subtle">Plan audits, work through the checklist, record findings, and decide the right follow-up in one place.</p>
+              <span class="section-eyebrow">{{ t('audits.list.eyebrow') }}</span>
+              <h3>{{ t('audits.list.title') }}</h3>
+              <p class="subtle">{{ t('audits.list.copy') }}</p>
             </div>
           </div>
 
           <div class="filter-row standard-filter-grid top-space" *ngIf="!loading() && audits().length">
             <label class="field compact-field">
-              <span>Sort by</span>
+              <span>{{ t('audits.list.sortBy') }}</span>
               <select [value]="sortBy()" (change)="setSortBy(readSelectValue($event))">
-                <option value="attention">Attention</option>
-                <option value="auditDate">Audit date</option>
-                <option value="updated">Updated</option>
-                <option value="programme">Programme</option>
+                <option value="attention">{{ t('audits.list.sortOptions.attention') }}</option>
+                <option value="auditDate">{{ t('audits.list.sortOptions.auditDate') }}</option>
+                <option value="updated">{{ t('audits.list.sortOptions.updated') }}</option>
+                <option value="programme">{{ t('audits.list.sortOptions.programme') }}</option>
               </select>
             </label>
           </div>
 
           <div class="empty-state" *ngIf="loading()">
-            <strong>Loading audits</strong>
-            <span>Refreshing current audit plans, checklist progress, and findings.</span>
+            <strong>{{ t('audits.list.loadingTitle') }}</strong>
+            <span>{{ t('audits.list.loadingCopy') }}</span>
           </div>
 
           <div class="data-table-wrap" *ngIf="!loading() && audits().length">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Audit</th>
-                  <th>Programme</th>
-                  <th>Type</th>
-                  <th>Audit date</th>
-                  <th>Status</th>
-                  <th>Checklist</th>
-                  <th>Findings follow-up</th>
-                  <th>Attention</th>
+                  <th>{{ t('audits.list.table.audit') }}</th>
+                  <th>{{ t('audits.list.table.programme') }}</th>
+                  <th>{{ t('audits.list.table.type') }}</th>
+                  <th>{{ t('audits.list.table.auditDate') }}</th>
+                  <th>{{ t('audits.list.table.status') }}</th>
+                  <th>{{ t('audits.list.table.checklist') }}</th>
+                  <th>{{ t('audits.list.table.findingsFollowUp') }}</th>
+                  <th>{{ t('audits.list.table.attention') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -263,22 +264,22 @@ type AuditFormValue = {
                   </td>
                   <td>
                     <div class="table-title">
-                      <strong>{{ item.programme || 'Not assigned' }}</strong>
-                      <small>{{ item.scopeType || 'Scope type not set' }}</small>
+                      <strong>{{ item.programme || t('audits.list.notAssigned') }}</strong>
+                      <small>{{ item.scopeType ? scopeTypeLabel(item.scopeType) : t('audits.list.scopeTypeNotSet') }}</small>
                     </div>
                   </td>
-                  <td>{{ item.type }}<span *ngIf="item.standard"> | {{ item.standard }}</span></td>
+                  <td>{{ auditTypeLabel(item.type) }}<span *ngIf="item.standard"> | {{ item.standard }}</span></td>
                   <td>
                     <div class="table-title">
                       <strong>{{ auditDateValue(item) }}</strong>
                       <small>{{ auditDateLabel(item) }}</small>
                     </div>
                   </td>
-                  <td><span class="status-badge" [class.warn]="item.status === 'IN_PROGRESS' || item.status === 'CHECKLIST_COMPLETED'" [class.success]="item.status === 'COMPLETED'" [class.neutral]="item.status === 'CLOSED'">{{ item.status }}</span></td>
+                  <td><span class="status-badge" [class.warn]="item.status === 'IN_PROGRESS' || item.status === 'CHECKLIST_COMPLETED'" [class.success]="item.status === 'COMPLETED'" [class.neutral]="item.status === 'CLOSED'">{{ auditStatusLabel(item.status) }}</span></td>
                   <td>{{ item.completedChecklistCount || 0 }}/{{ item.checklistCount || 0 }}</td>
                   <td>
                     <div class="table-title">
-                      <strong>{{ item.findingCount || 0 }} total</strong>
+                      <strong>{{ t('audits.list.total', { count: item.findingCount || 0 }) }}</strong>
                       <small [ngClass]="findingsFollowUpClass(item)">{{ findingsFollowUpCopy(item) }}</small>
                     </div>
                   </td>
@@ -294,31 +295,31 @@ type AuditFormValue = {
         <form class="card form-card page-stack" [formGroup]="auditForm" (ngSubmit)="saveAudit()">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Audit setup</span>
-              <h3>{{ mode() === 'create' ? 'Create audit plan' : 'Edit audit plan' }}</h3>
-              <p class="subtle">Set the audit plan first. Internal audits can preload ISO-based questions, while supplier audits can stay simple and custom.</p>
+              <span class="section-eyebrow">{{ t('audits.form.eyebrow') }}</span>
+              <h3>{{ mode() === 'create' ? t('audits.form.createTitle') : t('audits.form.editTitle') }}</h3>
+              <p class="subtle">{{ t('audits.form.copy') }}</p>
             </div>
           </div>
 
           <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
           <div class="form-grid-2">
-            <label class="field"><span>Code</span><input formControlName="code" placeholder="IA-2026-001"></label>
+            <label class="field"><span>{{ t('audits.form.fields.code') }}</span><input formControlName="code" placeholder="IA-2026-001"></label>
             <label class="field">
-              <span>Audit type</span>
+              <span>{{ t('audits.form.fields.auditType') }}</span>
               <select formControlName="type" (change)="onAuditTypeChange(readSelectValue($event))">
-                <option>Internal Audit</option>
-                <option>Supplier Audit</option>
+                <option [value]="'Internal Audit'">{{ t('audits.types.internalAudit') }}</option>
+                <option [value]="'Supplier Audit'">{{ t('audits.types.supplierAudit') }}</option>
               </select>
             </label>
           </div>
 
           <div class="form-grid-2">
-            <label class="field"><span>Title</span><input formControlName="title" placeholder="Purchasing process audit"></label>
+            <label class="field"><span>{{ t('audits.form.fields.title') }}</span><input formControlName="title" [placeholder]="t('audits.form.placeholders.title')"></label>
             <label class="field" *ngIf="auditForm.getRawValue().type === 'Internal Audit' && !isProcedureAuditMode()">
-              <span>ISO standard</span>
+              <span>{{ t('audits.form.fields.isoStandard') }}</span>
               <select formControlName="standard">
-                <option value="">Select standard</option>
+                <option value="">{{ t('audits.form.selectStandard') }}</option>
                 <option>ISO 9001</option>
                 <option>ISO 45001</option>
                 <option>ISO 14001</option>
@@ -328,73 +329,73 @@ type AuditFormValue = {
 
           <div class="form-grid-2">
             <label class="field">
-              <span>Audit programme</span>
-              <input formControlName="programme" placeholder="2026 internal audit programme">
+              <span>{{ t('audits.form.fields.auditProgramme') }}</span>
+              <input formControlName="programme" [placeholder]="t('audits.form.placeholders.programme')">
             </label>
             <label class="field">
-              <span>Scope type</span>
+              <span>{{ t('audits.form.fields.scopeType') }}</span>
               <select formControlName="scopeType" (change)="onScopeTypeChange(readSelectValue($event))">
-                <option>Company-wide</option>
-                <option>Department</option>
-                <option>Process</option>
-                <option>Site</option>
-                <option>Supplier</option>
+                <option [value]="'Company-wide'">{{ t('audits.scopeTypes.companyWide') }}</option>
+                <option [value]="'Department'">{{ t('audits.scopeTypes.department') }}</option>
+                <option [value]="'Process'">{{ t('audits.scopeTypes.process') }}</option>
+                <option [value]="'Site'">{{ t('audits.scopeTypes.site') }}</option>
+                <option [value]="'Supplier'">{{ t('audits.scopeTypes.supplier') }}</option>
               </select>
             </label>
           </div>
 
-          <label class="field"><span>Scope</span><textarea rows="3" formControlName="scope" placeholder="Process, site, supplier, or function under audit"></textarea></label>
+          <label class="field"><span>{{ t('audits.form.fields.scope') }}</span><textarea rows="3" formControlName="scope" [placeholder]="t('audits.form.placeholders.scope')"></textarea></label>
 
           <section class="guidance-card" *ngIf="auditForm.getRawValue().type === 'Internal Audit' && auditForm.getRawValue().scopeType === 'Process'">
-            <strong>AI checklist from a procedure</strong>
-            <p>Select the audit area first, then choose one linked controlled procedure. When you save the audit, the app will reuse an existing checklist for that procedure when available, or ask AI to prepare it once and save it for future audits.</p>
+            <strong>{{ t('audits.form.procedureGuidance.title') }}</strong>
+            <p>{{ t('audits.form.procedureGuidance.copy') }}</p>
             <div class="form-grid-2 top-space">
               <label class="field">
-                <span>Audit area</span>
+                <span>{{ t('audits.form.procedureGuidance.auditArea') }}</span>
                 <select formControlName="procedureProcessId" (change)="onProcedureProcessChange(readSelectValue($event))">
-                  <option value="">Select process</option>
+                  <option value="">{{ t('audits.form.procedureGuidance.selectProcess') }}</option>
                   <option *ngFor="let item of processOptions()" [value]="item.id">{{ processOptionLabel(item) }}</option>
                 </select>
               </label>
               <label class="field">
-                <span>Specific procedure</span>
+                <span>{{ t('audits.form.procedureGuidance.specificProcedure') }}</span>
                 <select formControlName="procedureDocumentId" [disabled]="!auditForm.getRawValue().procedureProcessId">
-                  <option value="">Select linked procedure</option>
+                  <option value="">{{ t('audits.form.procedureGuidance.selectLinkedProcedure') }}</option>
                   <option *ngFor="let item of procedureDocuments()" [value]="item.id">{{ item.label }}</option>
                 </select>
               </label>
             </div>
             <small class="top-space" *ngIf="auditForm.getRawValue().procedureProcessId && !procedureDocuments().length">
-              No controlled procedures are linked to this process yet. Link the procedure in Process Register first, then return here.
+              {{ t('audits.form.procedureGuidance.noProcedures') }}
             </small>
             <small class="top-space" *ngIf="auditForm.getRawValue().procedureProcessId && !auditForm.getRawValue().procedureDocumentId && procedureDocuments().length">
-              Select one linked procedure to activate AI checklist generation for this audit.
+              {{ t('audits.form.procedureGuidance.selectOne') }}
             </small>
             <small class="top-space" *ngIf="auditForm.getRawValue().procedureDocumentId">
-              AI checklist ready. Saving this audit will prepare a reusable checklist from the selected procedure and continue with the normal audit flow.
+              {{ t('audits.form.procedureGuidance.ready') }}
             </small>
           </section>
 
           <div class="form-grid-2">
-            <label class="field"><span>Audit objectives</span><textarea rows="3" formControlName="objectives" placeholder="Confirm process conformity, evaluate control effectiveness, and verify previous action closure."></textarea></label>
-            <label class="field"><span>Audit criteria</span><textarea rows="3" formControlName="criteria" placeholder="Applicable ISO clauses, internal procedures, customer or supplier requirements, and legal obligations."></textarea></label>
+            <label class="field"><span>{{ t('audits.form.fields.objectives') }}</span><textarea rows="3" formControlName="objectives" [placeholder]="t('audits.form.placeholders.objectives')"></textarea></label>
+            <label class="field"><span>{{ t('audits.form.fields.criteria') }}</span><textarea rows="3" formControlName="criteria" [placeholder]="t('audits.form.placeholders.criteria')"></textarea></label>
           </div>
 
           <div class="form-grid-2">
             <label class="field">
-              <span>Lead auditor</span>
+              <span>{{ t('audits.form.fields.leadAuditor') }}</span>
               <select formControlName="leadAuditorId">
-                <option value="">Unassigned</option>
+                <option value="">{{ t('audits.form.unassigned') }}</option>
                 <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
               </select>
             </label>
-            <label class="field"><span>Auditee area</span><input formControlName="auditeeArea" placeholder="Operations or supplier name"></label>
+            <label class="field"><span>{{ t('audits.form.fields.auditeeArea') }}</span><input formControlName="auditeeArea" [placeholder]="t('audits.form.placeholders.auditeeArea')"></label>
           </div>
 
           <div class="form-grid-2">
-            <label class="field"><span>Scheduled date</span><input type="date" formControlName="scheduledAt"></label>
+            <label class="field"><span>{{ t('audits.form.fields.scheduledDate') }}</span><input type="date" formControlName="scheduledAt"></label>
             <label class="field">
-              <span>Status</span>
+              <span>{{ t('audits.form.fields.status') }}</span>
               <select formControlName="status">
                 <option>PLANNED</option>
                 <option>IN_PROGRESS</option>
@@ -406,49 +407,49 @@ type AuditFormValue = {
           </div>
 
           <div class="button-row" *ngIf="!isProcedureAuditMode()">
-            <button type="button" class="secondary" (click)="applyAuditPlanTemplate()">Fill agenda template</button>
-            <button type="button" class="secondary" (click)="applyMeetingTemplate()">Fill opening / closing notes</button>
+            <button type="button" class="secondary" (click)="applyAuditPlanTemplate()">{{ t('audits.form.actions.fillAgendaTemplate') }}</button>
+            <button type="button" class="secondary" (click)="applyMeetingTemplate()">{{ t('audits.form.actions.fillMeetingTemplate') }}</button>
           </div>
 
-          <label class="field" *ngIf="!isProcedureAuditMode()"><span>Audit agenda</span><textarea rows="5" formControlName="agenda" placeholder="Opening meeting, scope confirmation, process walk-through, evidence review, interviews, close-out."></textarea></label>
+          <label class="field" *ngIf="!isProcedureAuditMode()"><span>{{ t('audits.form.fields.agenda') }}</span><textarea rows="5" formControlName="agenda" [placeholder]="t('audits.form.placeholders.agenda')"></textarea></label>
 
           <div class="form-grid-2" *ngIf="!isProcedureAuditMode()">
-            <label class="field"><span>Opening meeting notes</span><textarea rows="4" formControlName="openingMeetingNotes" placeholder="Attendance, scope confirmation, timing, health and safety rules, and communication expectations."></textarea></label>
-            <label class="field"><span>Closing meeting notes</span><textarea rows="4" formControlName="closingMeetingNotes" placeholder="Summary of findings, agreed follow-up, next steps, and expected report timing."></textarea></label>
+            <label class="field"><span>{{ t('audits.form.fields.openingMeetingNotes') }}</span><textarea rows="4" formControlName="openingMeetingNotes" [placeholder]="t('audits.form.placeholders.openingMeetingNotes')"></textarea></label>
+            <label class="field"><span>{{ t('audits.form.fields.closingMeetingNotes') }}</span><textarea rows="4" formControlName="closingMeetingNotes" [placeholder]="t('audits.form.placeholders.closingMeetingNotes')"></textarea></label>
           </div>
 
-          <label class="field"><span>Summary</span><textarea rows="3" formControlName="summary" placeholder="Audit objective, site, and expected outputs"></textarea></label>
+          <label class="field"><span>{{ t('audits.form.fields.summary') }}</span><textarea rows="3" formControlName="summary" [placeholder]="t('audits.form.placeholders.summary')"></textarea></label>
 
           <div class="button-row">
             <button type="submit" [disabled]="auditForm.invalid || saving() || !canWriteAudit()">{{ auditSaveButtonLabel() }}</button>
-            <a [routerLink]="selectedId() ? ['/audits', selectedId()] : ['/audits']" class="button-link secondary">Cancel</a>
+            <a [routerLink]="selectedId() ? ['/audits', selectedId()] : ['/audits']" class="button-link secondary">{{ t('common.cancel') }}</a>
           </div>
         </form>
 
         <section class="card panel-card">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Execution model</span>
-              <h3>Audit behavior</h3>
-              <p class="subtle">Internal audits seed clause-based ISO checklists. Supplier audits rely on your own checklist questions.</p>
+              <span class="section-eyebrow">{{ t('audits.form.model.eyebrow') }}</span>
+              <h3>{{ t('audits.form.model.title') }}</h3>
+              <p class="subtle">{{ t('audits.form.model.copy') }}</p>
             </div>
           </div>
           <div class="entity-list top-space">
             <div class="entity-item">
-              <strong>Programme planning</strong>
-              <small>Set the programme, scope type, objectives, criteria, and agenda before the audit is issued to the auditee.</small>
+              <strong>{{ t('audits.form.model.items.programmePlanning.title') }}</strong>
+              <small>{{ t('audits.form.model.items.programmePlanning.copy') }}</small>
             </div>
             <div class="entity-item">
-              <strong>Department, process, or supplier audits</strong>
-              <small>Use the scope type to show whether this is a process audit, department audit, company-wide review, site audit, or supplier audit.</small>
+              <strong>{{ t('audits.form.model.items.scopePlanning.title') }}</strong>
+              <small>{{ t('audits.form.model.items.scopePlanning.copy') }}</small>
             </div>
             <div class="entity-item">
-              <strong>AI checklist from a controlled procedure</strong>
-              <small>For a process audit, select one linked procedure and save the plan to prepare or reuse a cached AI checklist from the uploaded document.</small>
+              <strong>{{ t('audits.form.model.items.aiChecklist.title') }}</strong>
+              <small>{{ t('audits.form.model.items.aiChecklist.copy') }}</small>
             </div>
             <div class="entity-item">
-              <strong>Meeting templates</strong>
-              <small>Use the starter buttons to prepare the agenda, opening meeting notes, and close-out notes before the final report.</small>
+              <strong>{{ t('audits.form.model.items.meetingTemplates.title') }}</strong>
+              <small>{{ t('audits.form.model.items.meetingTemplates.copy') }}</small>
             </div>
           </div>
         </section>
@@ -467,46 +468,46 @@ type AuditFormValue = {
 
           <div class="summary-strip top-space">
             <article class="summary-item">
-              <span>Checklist</span>
+              <span>{{ t('audits.detail.summary.checklist') }}</span>
               <strong>{{ selectedAudit()?.completedChecklistCount || 0 }}/{{ selectedAudit()?.checklistCount || 0 }}</strong>
             </article>
             <article class="summary-item">
-              <span>Findings</span>
+              <span>{{ t('audits.detail.summary.findings') }}</span>
               <strong>{{ selectedAudit()?.findingCount || 0 }}</strong>
             </article>
             <article class="summary-item">
-              <span>Open findings</span>
+              <span>{{ t('audits.detail.summary.openFindings') }}</span>
               <strong>{{ selectedAudit()?.openFindingCount || 0 }}</strong>
             </article>
           </div>
 
           <section class="workflow-position-card top-space">
             <div class="workflow-position-card__copy">
-              <span class="section-eyebrow">Current step</span>
+              <span class="section-eyebrow">{{ t('audits.detail.currentStep') }}</span>
               <h4>{{ auditWorkflowHeading() }}</h4>
               <p>{{ auditWorkflowCopy() }}</p>
             </div>
             <div class="workflow-position-card__meta">
               <span class="review-mini-chip">{{ auditWorkflowStatusLabel() }}</span>
               <span class="review-mini-chip requires-capa" *ngIf="unresolvedFindingCount()">
-                {{ unresolvedFindingCount() }} next step{{ unresolvedFindingCount() === 1 ? '' : 's' }} still open
+                {{ t('audits.detail.unresolvedNextSteps', { count: unresolvedFindingCount() }) }}
               </span>
               <span class="review-mini-chip ready" *ngIf="isChecklistComplete() && !unresolvedFindingCount()">
-                Ready for close-out
+                {{ t('audits.detail.readyForCloseout') }}
               </span>
             </div>
             <div class="button-row compact-row">
               <button *ngIf="selectedAudit()?.status !== 'COMPLETED' && selectedAudit()?.status !== 'CLOSED' && !selectedAudit()?.isChecklistCompleted" type="button" (click)="setActiveStep('conduct')">
-                {{ activeStep() === 'plan' ? 'Start audit' : 'Continue checklist' }}
+                {{ activeStep() === 'plan' ? t('audits.detail.actions.startAudit') : t('audits.detail.actions.continueChecklist') }}
               </button>
               <button *ngIf="selectedAudit()?.status !== 'COMPLETED' && selectedAudit()?.status !== 'CLOSED' && selectedAudit()?.isChecklistCompleted && unresolvedFindingCount()" type="button" (click)="openReviewFindings()">
-                Review findings
+                {{ t('audits.detail.actions.reviewFindings') }}
               </button>
               <button *ngIf="selectedAudit()?.status !== 'COMPLETED' && selectedAudit()?.status !== 'CLOSED' && selectedAudit()?.isChecklistCompleted && !unresolvedFindingCount()" type="button" (click)="setActiveStep('review'); setReviewStage('closeout')">
-                Go to close-out
+                {{ t('audits.detail.actions.goToCloseout') }}
               </button>
               <button *ngIf="selectedAudit()?.status === 'COMPLETED' || selectedAudit()?.status === 'CLOSED'" type="button" class="secondary" [disabled]="generatingReport()" (click)="generateReport()">
-                {{ generatingReport() ? 'Preparing PDF...' : 'Download PDF report' }}
+                {{ generatingReport() ? t('audits.actions.preparingPdf') : t('audits.actions.downloadPdf') }}
               </button>
             </div>
           </section>
@@ -517,11 +518,11 @@ type AuditFormValue = {
           </section>
 
           <section class="guidance-card top-space" *ngIf="selectedAudit()?.procedureSelection">
-            <strong>Procedure-specific checklist in use</strong>
+            <strong>{{ t('audits.detail.procedureChecklist.title') }}</strong>
             <p>
-              Audit area: {{ selectedAudit()?.procedureSelection?.processName }}.
-              Procedure: {{ selectedAudit()?.procedureSelection?.procedureLabel }}.
-              Checklist: {{ selectedAudit()?.procedureSelection?.checklistTitle }}.
+              {{ t('audits.detail.procedureChecklist.auditArea') }}: {{ selectedAudit()?.procedureSelection?.processName }}.
+              {{ t('audits.detail.procedureChecklist.procedure') }}: {{ selectedAudit()?.procedureSelection?.procedureLabel }}.
+              {{ t('audits.detail.procedureChecklist.checklist') }}: {{ selectedAudit()?.procedureSelection?.checklistTitle }}.
             </p>
           </section>
 
@@ -529,36 +530,36 @@ type AuditFormValue = {
             <strong>{{ message() }}</strong>
             <span>{{ auditNextStepsCopy() }}</span>
             <div class="button-row top-space">
-              <button *ngIf="selectedAudit()?.status !== 'COMPLETED' && selectedAudit()?.status !== 'CLOSED'" type="button" (click)="setActiveStep(selectedAudit()?.isChecklistCompleted ? 'review' : 'conduct')">
-                {{ selectedAudit()?.isChecklistCompleted ? 'Review findings' : 'Continue checklist' }}
+                <button *ngIf="selectedAudit()?.status !== 'COMPLETED' && selectedAudit()?.status !== 'CLOSED'" type="button" (click)="setActiveStep(selectedAudit()?.isChecklistCompleted ? 'review' : 'conduct')">
+                {{ selectedAudit()?.isChecklistCompleted ? t('audits.detail.actions.reviewFindings') : t('audits.detail.actions.continueChecklist') }}
               </button>
               <button *ngIf="selectedAudit()?.status === 'COMPLETED' || selectedAudit()?.status === 'CLOSED'" type="button" class="secondary" [disabled]="generatingReport()" (click)="generateReport()">
-                {{ generatingReport() ? 'Preparing PDF...' : 'Download PDF report' }}
+                {{ generatingReport() ? t('audits.actions.preparingPdf') : t('audits.actions.downloadPdf') }}
               </button>
-              <button *ngIf="selectedAudit()?.findingCount" type="button" class="secondary" (click)="setActiveStep('review')">Review findings</button>
+              <button *ngIf="selectedAudit()?.findingCount" type="button" class="secondary" (click)="setActiveStep('review')">{{ t('audits.detail.actions.reviewFindings') }}</button>
             </div>
           </section>
 
-          <nav class="audit-steps top-space" aria-label="Audit steps">
+          <nav class="audit-steps top-space" [attr.aria-label]="t('audits.detail.steps.ariaLabel')">
             <button type="button" class="audit-step" [class.active]="activeStep() === 'plan'" (click)="setActiveStep('plan')">
               <span>1</span>
               <div>
-                <strong>Plan audit</strong>
-                <small>Scope and setup</small>
+                <strong>{{ t('audits.detail.steps.plan.title') }}</strong>
+                <small>{{ t('audits.detail.steps.plan.copy') }}</small>
               </div>
             </button>
             <button type="button" class="audit-step" [class.active]="activeStep() === 'conduct'" (click)="setActiveStep('conduct')">
               <span>2</span>
               <div>
-                <strong>Conduct audit</strong>
-                <small>Assess questions</small>
+                <strong>{{ t('audits.detail.steps.conduct.title') }}</strong>
+                <small>{{ t('audits.detail.steps.conduct.copy') }}</small>
               </div>
             </button>
             <button type="button" class="audit-step" [class.active]="activeStep() === 'review'" (click)="setActiveStep('review')">
               <span>3</span>
               <div>
-                <strong>Findings and close-out</strong>
-                <small>Decide next steps and finish</small>
+                <strong>{{ t('audits.detail.steps.review.title') }}</strong>
+                <small>{{ t('audits.detail.steps.review.copy') }}</small>
               </div>
             </button>
           </nav>
@@ -568,90 +569,90 @@ type AuditFormValue = {
           <section class="card panel-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Audit plan</span>
-                <h3>Programme, scope, and readiness</h3>
-                <p class="subtle">Confirm the audit programme, scope type, criteria, agenda, and meeting structure before starting fieldwork.</p>
+                <span class="section-eyebrow">{{ t('audits.plan.eyebrow') }}</span>
+                <h3>{{ t('audits.plan.title') }}</h3>
+                <p class="subtle">{{ t('audits.plan.copy') }}</p>
               </div>
             </div>
 
             <div class="summary-strip top-space">
               <article class="summary-item">
-                <span>Programme</span>
-                <strong>{{ selectedAudit()?.programme || 'Not set' }}</strong>
+                <span>{{ t('audits.plan.summary.programme') }}</span>
+                <strong>{{ selectedAudit()?.programme || t('common.notSet') }}</strong>
               </article>
               <article class="summary-item">
-                <span>Scope type</span>
-                <strong>{{ selectedAudit()?.scopeType || 'Not set' }}</strong>
+                <span>{{ t('audits.plan.summary.scopeType') }}</span>
+                <strong>{{ selectedAudit()?.scopeType || t('common.notSet') }}</strong>
               </article>
               <article class="summary-item">
-                <span>Scheduled date</span>
-                <strong>{{ selectedAudit()?.scheduledAt ? selectedAudit()?.scheduledAt?.slice(0, 10) : 'Not scheduled' }}</strong>
+                <span>{{ t('audits.plan.summary.scheduledDate') }}</span>
+                <strong>{{ selectedAudit()?.scheduledAt ? selectedAudit()?.scheduledAt?.slice(0, 10) : t('audits.plan.notScheduled') }}</strong>
               </article>
             </div>
 
             <dl class="key-value top-space">
-              <dt>Scope</dt>
-              <dd>{{ selectedAudit()?.scope || 'No scope recorded.' }}</dd>
-              <dt>Audit objectives</dt>
-              <dd>{{ selectedAudit()?.objectives || 'No objectives recorded.' }}</dd>
-              <dt>Audit criteria</dt>
-              <dd>{{ selectedAudit()?.criteria || 'No criteria recorded.' }}</dd>
-              <dt>Auditee area</dt>
-              <dd>{{ selectedAudit()?.auditeeArea || 'Not set' }}</dd>
-              <dt>Summary</dt>
-              <dd>{{ selectedAudit()?.summary || 'No summary yet.' }}</dd>
+              <dt>{{ t('audits.plan.fields.scope') }}</dt>
+              <dd>{{ selectedAudit()?.scope || t('audits.plan.empty.scope') }}</dd>
+              <dt>{{ t('audits.plan.fields.objectives') }}</dt>
+              <dd>{{ selectedAudit()?.objectives || t('audits.plan.empty.objectives') }}</dd>
+              <dt>{{ t('audits.plan.fields.criteria') }}</dt>
+              <dd>{{ selectedAudit()?.criteria || t('audits.plan.empty.criteria') }}</dd>
+              <dt>{{ t('audits.plan.fields.auditeeArea') }}</dt>
+              <dd>{{ selectedAudit()?.auditeeArea || t('common.notSet') }}</dd>
+              <dt>{{ t('audits.plan.fields.summary') }}</dt>
+              <dd>{{ selectedAudit()?.summary || t('audits.plan.empty.summary') }}</dd>
             </dl>
 
             <section class="detail-section top-space">
-              <h4>Audit agenda</h4>
-              <p>{{ selectedAudit()?.agenda || 'No agenda prepared yet.' }}</p>
+              <h4>{{ t('audits.plan.fields.agenda') }}</h4>
+              <p>{{ selectedAudit()?.agenda || t('audits.plan.empty.agenda') }}</p>
             </section>
 
             <div class="detail-grid top-space">
               <section class="detail-section">
-                <h4>Opening meeting</h4>
-                <p>{{ selectedAudit()?.openingMeetingNotes || 'No opening meeting notes prepared yet.' }}</p>
+                <h4>{{ t('audits.plan.fields.openingMeeting') }}</h4>
+                <p>{{ selectedAudit()?.openingMeetingNotes || t('audits.plan.empty.openingMeeting') }}</p>
               </section>
               <section class="detail-section">
-                <h4>Closing meeting</h4>
-                <p>{{ selectedAudit()?.closingMeetingNotes || 'No closing meeting notes prepared yet.' }}</p>
+                <h4>{{ t('audits.plan.fields.closingMeeting') }}</h4>
+                <p>{{ selectedAudit()?.closingMeetingNotes || t('audits.plan.empty.closingMeeting') }}</p>
               </section>
             </div>
 
             <div class="button-row top-space">
-              <button type="button" (click)="setActiveStep('conduct')">Start audit</button>
-              <a [routerLink]="['/audits', selectedId(), 'edit']" class="button-link secondary">Edit plan</a>
+              <button type="button" (click)="setActiveStep('conduct')">{{ t('audits.detail.actions.startAudit') }}</button>
+              <a [routerLink]="['/audits', selectedId(), 'edit']" class="button-link secondary">{{ t('audits.plan.actions.editPlan') }}</a>
             </div>
           </section>
 
           <section class="card panel-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Planning pack</span>
-                <h3>{{ selectedAudit()?.type === 'Internal Audit' ? 'Internal audit planning guidance' : 'Supplier audit planning guidance' }}</h3>
+                <span class="section-eyebrow">{{ t('audits.plan.pack.eyebrow') }}</span>
+                <h3>{{ selectedAudit()?.type === 'Internal Audit' ? t('audits.plan.pack.internalTitle') : t('audits.plan.pack.supplierTitle') }}</h3>
                 <p class="subtle">{{ selectedAudit()?.type === 'Internal Audit'
-                  ? 'Use the programme, agenda, and opening or closing notes to issue the audit properly before the checklist starts.'
-                  : 'Supplier audits should still start with a simple agenda, opening discussion, and planned close-out summary before questions are assessed.' }}</p>
+                  ? t('audits.plan.pack.internalCopy')
+                  : t('audits.plan.pack.supplierCopy') }}</p>
               </div>
             </div>
 
             <div class="entity-list top-space">
               <div class="entity-item">
-                <strong>Annual audit programme</strong>
-                <small>Use the programme field to show which annual plan or audit cycle this audit belongs to before it moves into execution.</small>
+                <strong>{{ t('audits.plan.pack.items.annualProgramme.title') }}</strong>
+                <small>{{ t('audits.plan.pack.items.annualProgramme.copy') }}</small>
               </div>
               <div class="entity-item">
-                <strong>Department, process, or whole-company planning</strong>
-                <small>The scope type makes it explicit whether the audit is company-wide, department-based, process-based, site-based, or supplier-focused.</small>
+                <strong>{{ t('audits.plan.pack.items.scopePlanning.title') }}</strong>
+                <small>{{ t('audits.plan.pack.items.scopePlanning.copy') }}</small>
               </div>
               <div class="entity-item">
-                <strong>Meeting structure</strong>
-                <small>Opening and closing meeting notes let the audit record show how the agenda was issued, how the audit was opened, and how the results were closed out.</small>
+                <strong>{{ t('audits.plan.pack.items.meetingStructure.title') }}</strong>
+                <small>{{ t('audits.plan.pack.items.meetingStructure.copy') }}</small>
               </div>
             </div>
 
             <section class="detail-section top-space" *ngIf="auditTouchpoints().length">
-              <h4>Assurance touchpoints</h4>
+              <h4>{{ t('audits.plan.pack.touchpointsTitle') }}</h4>
               <p>{{ auditTouchpointIntro() }}</p>
               <div class="touchpoint-grid top-space">
                 <a class="touchpoint-card" *ngFor="let item of auditTouchpoints()" [routerLink]="item.link">
@@ -668,24 +669,24 @@ type AuditFormValue = {
           <section class="card panel-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Conduct audit</span>
-                <h3>{{ selectedAudit()?.type === 'Internal Audit' ? 'Clause-by-clause checklist' : 'Supplier audit checklist' }}</h3>
-                <p class="subtle">Answer each question in order. If a requirement is not met, choose No, record the finding, then continue the audit from the same question.</p>
+                <span class="section-eyebrow">{{ t('audits.conduct.eyebrow') }}</span>
+                <h3>{{ selectedAudit()?.type === 'Internal Audit' ? t('audits.conduct.internalTitle') : t('audits.conduct.supplierTitle') }}</h3>
+                <p class="subtle">{{ t('audits.conduct.copy') }}</p>
               </div>
             </div>
 
             <div class="empty-state top-space" *ngIf="isChecklistReadOnly()">
-              <strong>Checklist is read-only</strong>
-              <span>This audit has been completed. You can still review findings and evidence, but checklist responses can no longer be changed.</span>
+              <strong>{{ t('audits.conduct.readOnlyTitle') }}</strong>
+              <span>{{ t('audits.conduct.readOnlyCopy') }}</span>
             </div>
 
             <div class="conduct-progress top-space" *ngIf="checklistGroups().length">
               <div class="conduct-progress__meta">
                 <div>
                   <strong>{{ currentClauseLabel() }}</strong>
-                  <small>{{ answeredChecklistCount() }}/{{ totalChecklistCount() }} questions answered</small>
+                  <small>{{ t('audits.conduct.progressQuestionsAnswered', { answered: answeredChecklistCount(), total: totalChecklistCount() }) }}</small>
                 </div>
-                <span>{{ currentClauseIndex() + 1 }}/{{ checklistGroups().length }} clauses</span>
+                <span>{{ t('audits.conduct.progressClauses', { current: currentClauseIndex() + 1, total: checklistGroups().length }) }}</span>
               </div>
               <div class="conduct-progress__bar">
                 <span [style.width.%]="progressPercent()"></span>
@@ -695,32 +696,32 @@ type AuditFormValue = {
             <form *ngIf="selectedAudit()?.type === 'Supplier Audit' && !isChecklistReadOnly()" class="supplier-builder top-space" [formGroup]="checklistForm" (ngSubmit)="addChecklistItem()">
               <div class="form-grid-2">
                 <label class="field">
-                  <span>Section or group</span>
+                  <span>{{ t('audits.conduct.supplierBuilder.sectionOrGroup') }}</span>
                   <input formControlName="clause" placeholder="Delivery">
                 </label>
                 <label class="field">
-                  <span>Subclause</span>
+                  <span>{{ t('audits.conduct.supplierBuilder.subclause') }}</span>
                   <input formControlName="subclause" placeholder="8.4">
                 </label>
               </div>
               <div class="form-grid-2">
                 <label class="field">
-                  <span>Add question</span>
+                  <span>{{ t('audits.conduct.supplierBuilder.addQuestion') }}</span>
                   <input formControlName="title" placeholder="Supplier communicates delivery delays in advance">
                 </label>
               </div>
               <label class="field">
-                <span>Comment prompt</span>
+                <span>{{ t('audits.conduct.supplierBuilder.commentPrompt') }}</span>
                 <textarea rows="2" formControlName="notes" placeholder="Optional context or evidence to review"></textarea>
               </label>
               <div class="button-row">
-                <button type="submit" [disabled]="checklistForm.invalid || saving()">{{ saving() ? 'Saving...' : 'Add question' }}</button>
+                <button type="submit" [disabled]="checklistForm.invalid || saving()">{{ saving() ? t('audits.actions.saving') : t('audits.conduct.supplierBuilder.addQuestionButton') }}</button>
               </div>
             </form>
 
             <div class="empty-state top-space" *ngIf="!checklistGroups().length">
-              <strong>Start audit by answering questions</strong>
-              <span>{{ selectedAudit()?.type === 'Internal Audit' ? 'Checklist questions will appear here once the audit template is available.' : 'Add the first supplier audit question to begin the audit.' }}</span>
+              <strong>{{ t('audits.conduct.emptyTitle') }}</strong>
+              <span>{{ selectedAudit()?.type === 'Internal Audit' ? t('audits.conduct.emptyInternalCopy') : t('audits.conduct.emptySupplierCopy') }}</span>
             </div>
 
             <ng-container *ngIf="checklistGroups().length">
@@ -852,12 +853,12 @@ type AuditFormValue = {
 
               <section class="completion-callout top-space" *ngIf="isChecklistComplete()">
                 <div>
-                  <span class="section-eyebrow">Checklist complete</span>
-                  <h4>Next step: review findings</h4>
-                  <p class="subtle">All checklist questions are answered. Open Review findings now, decide the next step for each gap, then complete the audit close-out last.</p>
+                  <span class="section-eyebrow">{{ t('audits.conduct.completion.eyebrow') }}</span>
+                  <h4>{{ t('audits.conduct.completion.title') }}</h4>
+                  <p class="subtle">{{ t('audits.conduct.completion.copy') }}</p>
                 </div>
                 <div class="button-row compact-row">
-                  <button type="button" (click)="openReviewFindings()">Next: Review findings</button>
+                  <button type="button" (click)="openReviewFindings()">{{ t('audits.conduct.completion.button') }}</button>
                 </div>
               </section>
             </ng-container>
@@ -867,20 +868,20 @@ type AuditFormValue = {
           <section class="finding-modal card" *ngIf="pendingFindingItem() as pendingItem">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Finding</span>
-                <h3>Record audit finding</h3>
+                <span class="section-eyebrow">{{ t('audits.findingModal.eyebrow') }}</span>
+                <h3>{{ t('audits.findingModal.title') }}</h3>
                 <p class="subtle">{{ questionNumber(pendingItem.clause || currentChecklistGroup()!.clause || 'Q', pendingQuestionIndex(pendingItem)) }} | {{ pendingItem.title }}</p>
               </div>
-              <button type="button" class="button-link secondary compact" (click)="cancelFindingComposer()">Close</button>
+              <button type="button" class="button-link secondary compact" (click)="cancelFindingComposer()">{{ t('audits.findingModal.close') }}</button>
             </div>
 
             <form [formGroup]="findingForm" class="page-stack top-space" (ngSubmit)="addFindingFromChecklist(pendingItem)">
               <section class="detail-section">
-                <h4>What to do now</h4>
+                <h4>{{ t('audits.findingModal.whatToDoNow') }}</h4>
                 <p>{{ findingModalChecklistCopy() }}</p>
                 <div class="button-row compact-row top-space">
                   <button type="button" class="secondary" (click)="draftFindingWithAi(pendingItem)" [disabled]="saving() || draftingFindingWithAi()">
-                    {{ draftingFindingWithAi() ? 'Drafting...' : 'Draft with AI' }}
+                    {{ draftingFindingWithAi() ? t('audits.findingModal.drafting') : t('audits.findingModal.draftWithAi') }}
                   </button>
                 </div>
                 <p class="field-helper top-space" *ngIf="findingAiNotice()" [class.error]="findingAiNoticeIsError()">{{ findingAiNotice() }}</p>
@@ -890,27 +891,27 @@ type AuditFormValue = {
                 <span>{{ findingDraftGuidance() }}</span>
               </section>
               <label class="field">
-                <span>Finding title</span>
+                <span>{{ t('audits.findingModal.fields.title') }}</span>
                 <input formControlName="title" placeholder="Clause 4.1 gap">
               </label>
               <label class="field">
-                <span>Auditor note / description</span>
+                <span>{{ t('audits.findingModal.fields.description') }}</span>
                 <textarea rows="4" formControlName="description" placeholder="Write a few words in your own way first. Example: Process owners are named on paper, but team interviews showed decision authority is not understood consistently."></textarea>
               </label>
-              <small class="field-helper">Write the real situation first, then use AI only if you want help turning it into cleaner audit wording.</small>
+              <small class="field-helper">{{ t('audits.findingModal.descriptionHelper') }}</small>
               <label class="field">
-                <span>Severity</span>
+                <span>{{ t('audits.findingModal.fields.severity') }}</span>
                 <select formControlName="severity">
-                  <option value="OBSERVATION">Observation</option>
-                  <option value="OPPORTUNITY">Opportunity for improvement</option>
-                  <option value="MINOR">Minor nonconformity</option>
-                  <option value="MAJOR">Major nonconformity</option>
+                  <option value="OBSERVATION">{{ t('audits.severity.OBSERVATION') }}</option>
+                  <option value="OPPORTUNITY">{{ t('audits.severity.OPPORTUNITY') }}</option>
+                  <option value="MINOR">{{ t('audits.severity.MINOR') }}</option>
+                  <option value="MAJOR">{{ t('audits.severity.MAJOR') }}</option>
                 </select>
               </label>
               <small class="field-helper">{{ findingSeverityHelperCopy() }}</small>
               <div class="button-row">
-                <button type="submit" [disabled]="findingForm.invalid || saving()">Save finding</button>
-                <button type="button" class="secondary" [disabled]="saving()" (click)="cancelFindingComposer()">Cancel</button>
+                <button type="submit" [disabled]="findingForm.invalid || saving()">{{ t('audits.findingModal.save') }}</button>
+                <button type="button" class="secondary" [disabled]="saving()" (click)="cancelFindingComposer()">{{ t('common.cancel') }}</button>
               </div>
             </form>
           </section>
@@ -920,27 +921,27 @@ type AuditFormValue = {
           <section class="card panel-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Review flow</span>
-                <h3>Finish finding routes, then close the audit</h3>
-                <p class="subtle">Keep the chain simple: review each finding, decide the next step inside that finding, then record the audit close-out last.</p>
+                <span class="section-eyebrow">{{ t('audits.review.eyebrow') }}</span>
+                <h3>{{ t('audits.review.title') }}</h3>
+                <p class="subtle">{{ t('audits.review.copy') }}</p>
               </div>
             </div>
 
             <div class="summary-grid review-summary-grid top-space">
               <article class="summary-item review-summary-item">
-                <span>Questions</span>
+                <span>{{ t('audits.review.summary.questions') }}</span>
                 <strong>{{ selectedAudit()?.checklistCount || 0 }}</strong>
               </article>
               <article class="summary-item review-summary-item">
-                <span>Findings</span>
+                <span>{{ t('audits.review.summary.findings') }}</span>
                 <strong>{{ selectedAudit()?.findingCount || 0 }}</strong>
               </article>
               <article class="summary-item review-summary-item">
-                <span>Major</span>
+                <span>{{ t('audits.review.summary.major') }}</span>
                 <strong>{{ majorFindingCount() }}</strong>
               </article>
               <article class="summary-item review-summary-item">
-                <span>Routes open</span>
+                <span>{{ t('audits.review.summary.routesOpen') }}</span>
                 <strong>{{ openFindingFollowUpCount() }}</strong>
               </article>
             </div>
@@ -951,14 +952,14 @@ type AuditFormValue = {
                 <span>{{ reviewFocusCopy() }}</span>
               </div>
               <div class="button-row compact-row review-focus-banner__actions">
-                <button type="button" class="secondary" *ngIf="nextUnresolvedFindingId()" (click)="goToNextUnresolvedFinding()">Next unresolved finding</button>
-                <button type="button" class="secondary" *ngIf="!unresolvedFindingCount() && isChecklistComplete()" (click)="setReviewStage('closeout')">Go to close-out</button>
+                <button type="button" class="secondary" *ngIf="nextUnresolvedFindingId()" (click)="goToNextUnresolvedFinding()">{{ t('audits.review.actions.nextUnresolvedFinding') }}</button>
+                <button type="button" class="secondary" *ngIf="!unresolvedFindingCount() && isChecklistComplete()" (click)="setReviewStage('closeout')">{{ t('audits.detail.actions.goToCloseout') }}</button>
               </div>
             </section>
 
             <div class="empty-state top-space" *ngIf="!isChecklistComplete()">
-              <strong>Checklist is not complete yet</strong>
-              <span>Answer all required checklist questions before the audit can move into final completion.</span>
+              <strong>{{ t('audits.review.incompleteTitle') }}</strong>
+              <span>{{ t('audits.review.incompleteCopy') }}</span>
             </div>
           </section>
 
@@ -2045,6 +2046,7 @@ export class AuditsPageComponent {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -2081,6 +2083,10 @@ export class AuditsPageComponent {
   protected readonly sortBy = signal<AuditSortOption>('attention');
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
+
+  protected t(key: string, params?: Record<string, unknown>) {
+    return this.i18n.t(key, params);
+  }
   protected readonly draftingFindingWithAi = signal(false);
   protected readonly findingAiNotice = signal('');
   protected readonly findingAiNoticeIsError = signal(false);
@@ -2172,28 +2178,28 @@ export class AuditsPageComponent {
 
   protected pageTitle() {
     return {
-      list: 'Audit programme',
-      create: 'Create audit plan',
-      detail: this.selectedAudit()?.title || 'Audit detail',
-      edit: this.selectedAudit()?.title || 'Edit audit'
+      list: this.t('audits.page.titleList'),
+      create: this.t('audits.page.titleCreate'),
+      detail: this.selectedAudit()?.title || this.t('audits.page.titleDetail'),
+      edit: this.selectedAudit()?.title || this.t('audits.page.titleEdit')
     }[this.mode()];
   }
 
   protected pageDescription() {
     return {
-      list: 'Manage internal and supplier audits with clear planning, checklist execution, findings, and follow-up.',
-      create: 'Set up the audit plan, agenda, and meeting notes first, then move into the checklist.',
-      detail: 'Review the audit plan, complete the checklist, decide the next step for each finding, and finish the close-out.',
-      edit: 'Update audit metadata without mixing it with execution details.'
+      list: this.t('audits.page.descriptionList'),
+      create: this.t('audits.page.descriptionCreate'),
+      detail: this.t('audits.page.descriptionDetail'),
+      edit: this.t('audits.page.descriptionEdit')
     }[this.mode()];
   }
 
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: 'Audits' }];
-    const base = [{ label: 'Audits', link: '/audits' }];
-    if (this.mode() === 'create') return [...base, { label: 'New audit' }];
-    if (this.mode() === 'edit') return [...base, { label: this.selectedAudit()?.code || 'Audit', link: `/audits/${this.selectedId()}` }, { label: 'Edit' }];
-    return [...base, { label: this.selectedAudit()?.code || 'Audit' }];
+    if (this.mode() === 'list') return [{ label: this.t('audits.common.label') }];
+    const base = [{ label: this.t('audits.common.label'), link: '/audits' }];
+    if (this.mode() === 'create') return [...base, { label: this.t('audits.breadcrumbs.new') }];
+    if (this.mode() === 'edit') return [...base, { label: this.selectedAudit()?.code || this.t('audits.breadcrumbs.audit'), link: `/audits/${this.selectedId()}` }, { label: this.t('audits.breadcrumbs.edit') }];
+    return [...base, { label: this.selectedAudit()?.code || this.t('audits.breadcrumbs.audit') }];
   }
 
   protected applyAuditPlanTemplate() {
@@ -2302,7 +2308,7 @@ export class AuditsPageComponent {
 
     const raw = this.auditForm.getRawValue();
     if (raw.type === 'Internal Audit' && !raw.standard && !this.isProcedureAuditMode()) {
-      this.error.set('Select an ISO standard for internal audits.');
+      this.error.set(this.t('audits.form.errors.selectStandard'));
       return;
     }
 
@@ -2775,16 +2781,16 @@ export class AuditsPageComponent {
   protected currentClauseLabel() {
     const group = this.currentChecklistGroup();
     if (!group) {
-      return 'No active clause';
+      return this.t('audits.conduct.noActiveClause');
     }
-    return `Clause ${group.clause} - ${this.clauseHeading(group.clause)}`;
+    return this.t('audits.conduct.clauseLabel', { clause: group.clause, heading: this.clauseHeading(group.clause) });
   }
 
   protected currentClauseHelperText() {
     if (this.selectedAudit()?.type === 'Supplier Audit') {
-      return 'Answer each supplier audit question, record evidence, and add a finding only when a requirement is not met.';
+      return this.t('audits.conduct.currentClauseHelper.supplier');
     }
-    return 'Answer each question. If a requirement is not met, record a finding and continue to the next question.';
+    return this.t('audits.conduct.currentClauseHelper.internal');
   }
 
   protected answeredChecklistCount() {
@@ -2806,9 +2812,9 @@ export class AuditsPageComponent {
 
   protected responseLabel(response?: ChecklistResponse | null) {
     if (response === 'PARTIAL') {
-      return 'N/A';
+      return this.t('common.na');
     }
-    return response || 'Not answered';
+    return response || this.t('audits.conduct.notAnswered');
   }
 
   protected questionNumber(clause: string, index: number) {
@@ -2852,69 +2858,69 @@ export class AuditsPageComponent {
   protected checklistFindingIndicatorLabel(item: AuditChecklistItem) {
     const finding = this.findingForChecklist(item);
     if (!finding) {
-      return 'Finding needed';
+      return this.t('audits.conduct.findingIndicator.needed');
     }
     if (finding.status === 'CLOSED') {
-      return 'Finding closed';
+      return this.t('audits.conduct.findingIndicator.closed');
     }
     if (finding.linkedCapaId) {
-      return 'CAPA linked';
+      return this.t('audits.conduct.findingIndicator.capaLinked');
     }
     if (this.requiresCapaRoute(finding)) {
-      return 'CAPA needed';
+      return this.t('audits.conduct.findingIndicator.capaNeeded');
     }
-    return 'Finding open';
+    return this.t('audits.conduct.findingIndicator.open');
   }
 
   protected checklistFindingNextStep(item: AuditChecklistItem) {
     const finding = this.findingForChecklist(item);
     if (!finding) {
-      return 'Record the finding before moving on so the failed requirement has a complete audit trail.';
+      return this.t('audits.conduct.findingNextStep.needed');
     }
     if (finding.status === 'CLOSED') {
-      return 'This finding route is already closed for the question. Review it if needed, or continue with the next question.';
+      return this.t('audits.conduct.findingNextStep.closed');
     }
     if (finding.linkedCapaId) {
-      return 'Finding and CAPA are already linked. Review the linked CAPA or continue with the next question.';
+      return this.t('audits.conduct.findingNextStep.capaLinked');
     }
     if (this.requiresCapaRoute(finding)) {
-      return 'Finding recorded. CAPA still needs to be raised for this nonconformity before the route is complete.';
+      return this.t('audits.conduct.findingNextStep.capaNeeded');
     }
-    return 'Finding recorded. Review the lighter follow-up route or continue with the next question.';
+    return this.t('audits.conduct.findingNextStep.lightRoute');
   }
 
   protected checklistFindingPromptHeading(item: AuditChecklistItem) {
     const finding = this.findingForChecklist(item);
     if (!finding) {
-      return 'Requirement not met: finding required';
+      return this.t('audits.conduct.findingPrompt.titleNeeded');
     }
     if (finding.status === 'CLOSED') {
-      return 'Finding route is already closed for this question';
+      return this.t('audits.conduct.findingPrompt.titleClosed');
     }
     if (finding.linkedCapaId) {
-      return 'Finding and CAPA already linked for this question';
+      return this.t('audits.conduct.findingPrompt.titleCapaLinked');
     }
     if (this.requiresCapaRoute(finding)) {
-      return 'Finding recorded: CAPA still needed for this question';
+      return this.t('audits.conduct.findingPrompt.titleCapaNeeded');
     }
-    return 'Finding recorded for this question';
+    return this.t('audits.conduct.findingPrompt.titleRecorded');
   }
 
   protected checklistFindingPromptCopy(item: AuditChecklistItem) {
     const finding = this.findingForChecklist(item);
     if (!finding) {
-      return 'The No answer has been recorded. Now capture the finding title, gap description, and severity so the review step has a complete audit trail.';
+      return this.t('audits.conduct.findingPrompt.copyNeeded');
     }
     if (finding.status === 'CLOSED') {
-      return 'This failed answer already has a finding with a closed route. Use Review Finding if you need to reopen that trail before continuing.';
+      return this.t('audits.conduct.findingPrompt.copyClosed');
     }
     if (finding.linkedCapaId) {
-      return 'This failed answer already has a linked finding and CAPA. Use Review Finding or Open CAPA if you need to return to that trail before continuing.';
+      return this.t('audits.conduct.findingPrompt.copyCapaLinked');
     }
     if (this.requiresCapaRoute(finding)) {
-      return 'This failed answer already has a finding, but the nonconformity still needs CAPA before the route is complete. Use Review Finding to continue that decision.';
+      return this.t('audits.conduct.findingPrompt.copyCapaNeeded');
     }
-    return 'This failed answer already has a lighter finding route. Use Review Finding if you need to review action or closure before continuing.';
+    return this.t('audits.conduct.findingPrompt.copyLightRoute');
   }
 
   protected pendingFindingItem() {
@@ -2995,7 +3001,14 @@ export class AuditsPageComponent {
     const findings = this.selectedAudit()?.findings || [];
     const capaLinkedCount = findings.filter((finding) => !!finding.linkedCapaId).length;
     const actionCount = this.selectedAudit()?.actionItemCount || 0;
-    return `Follow the chain from checklist evidence to finding, then into ${capaLinkedCount ? `${capaLinkedCount} linked CAPA record${capaLinkedCount === 1 ? '' : 's'}` : 'CAPA only where needed'} and ${actionCount} linked audit action${actionCount === 1 ? '' : 's'}.`;
+    return this.t('audits.review.traceabilityCopy', {
+      capaCount: capaLinkedCount,
+      capaText: capaLinkedCount
+        ? this.t('audits.review.capaLinkedCount', { count: capaLinkedCount })
+        : this.t('audits.review.capaOnlyWhereNeeded'),
+      actionCount,
+      actionText: this.t('audits.review.actionLinkedCount', { count: actionCount })
+    });
   }
 
   protected majorFindingCount() {
@@ -3022,13 +3035,15 @@ export class AuditsPageComponent {
 
   protected reviewFocusHeading() {
     const finding = this.activeReviewFinding();
-    return finding ? `Current focus: ${finding.title}` : 'Current focus: review each finding one at a time';
+    return finding
+      ? this.t('audits.review.focus.current', { title: finding.title })
+      : this.t('audits.review.focus.default');
   }
 
   protected reviewFocusCopy() {
     const finding = this.activeReviewFinding();
     if (!finding) {
-      return 'Select a finding, decide whether it should close, move into an audit action, or move into CAPA, then continue to the next finding.';
+      return this.t('audits.review.focus.copyDefault');
     }
     return `${this.findingDecisionBadge(finding)}. ${this.findingNextStepCopy(finding)}`;
   }
@@ -3067,18 +3082,18 @@ export class AuditsPageComponent {
 
   protected findingRouteStateLabel(finding: AuditFinding) {
     if (finding.status === 'CLOSED') {
-      return 'Closed';
+      return this.t('audits.review.routeState.closed');
     }
     if (finding.linkedCapaId) {
-      return 'CAPA linked';
+      return this.t('audits.review.routeState.capaLinked');
     }
     if (finding.linkedActionItemId) {
-      return 'Audit action linked';
+      return this.t('audits.review.routeState.actionLinked');
     }
     if (this.isPreparedActionFinding(finding)) {
-      return 'Action draft ready';
+      return this.t('audits.review.routeState.actionDraftReady');
     }
-    return this.requiresCapaRoute(finding) ? 'Create CAPA next' : 'Decide next step';
+    return this.requiresCapaRoute(finding) ? this.t('audits.review.routeState.createCapaNext') : this.t('audits.review.routeState.decideNextStep');
   }
 
   protected unresolvedFindingCount() {
@@ -3119,53 +3134,55 @@ export class AuditsPageComponent {
 
   protected findingDecisionBadge(finding: AuditFinding) {
     if (finding.status === 'CLOSED') {
-      return 'Closed';
+      return this.t('audits.review.badges.closed');
     }
     if (finding.linkedCapaId) {
-      return 'CAPA active';
+      return this.t('audits.review.badges.capaActive');
     }
     if (finding.linkedActionItemId) {
-      return 'Action active';
+      return this.t('audits.review.badges.actionActive');
     }
     if (this.isPreparedActionFinding(finding)) {
-      return 'Action draft open';
+      return this.t('audits.review.badges.actionDraftOpen');
     }
     if (finding.severity === 'MAJOR') {
-      return 'Create CAPA';
+      return this.t('audits.review.badges.createCapa');
     }
     if (finding.severity === 'MINOR') {
-      return 'Create CAPA';
+      return this.t('audits.review.badges.createCapa');
     }
     if (finding.severity === 'OPPORTUNITY') {
-      return 'Action recommended';
+      return this.t('audits.review.badges.actionRecommended');
     }
-    return 'Review observation';
+    return this.t('audits.review.badges.reviewObservation');
   }
 
   protected findingListGuidanceCopy(finding: AuditFinding) {
     if (finding.status === 'CLOSED') {
-      return 'Route is complete in the audit record.';
+      return this.t('audits.review.guidance.routeComplete');
     }
     if (finding.linkedCapaId) {
-      return 'Continue the linked CAPA, then return here only when you need to review closure.';
+      return this.t('audits.review.guidance.continueLinkedCapa');
     }
     if (finding.linkedActionItemId) {
-      return 'A lighter audit action is already linked to this finding.';
+      return this.t('audits.review.guidance.linkedAction');
     }
     if (this.isPreparedActionFinding(finding)) {
-      return 'Lighter follow-up is already prepared for this finding below.';
+      return this.t('audits.review.guidance.actionPrepared');
     }
     if (this.requiresCapaRoute(finding)) {
-      return 'This finding needs CAPA before the next step is complete.';
+      return this.t('audits.review.guidance.capaNeeded');
     }
-    return 'Choose a lighter action or close the finding directly when satisfied.';
+    return this.t('audits.review.guidance.lightRoute');
   }
 
   protected auditActionButtonLabel(finding: AuditFinding) {
     if (finding.linkedActionItemId) {
-      return 'Audit action already linked';
+      return this.t('audits.review.actions.actionAlreadyLinked');
     }
-    return this.isPreparedActionFinding(finding) ? 'Action form ready below' : 'Prepare audit action here';
+    return this.isPreparedActionFinding(finding)
+      ? this.t('audits.review.actions.actionFormReady')
+      : this.t('audits.review.actions.prepareAuditAction');
   }
 
   protected findingOwnerDueCopy(finding: AuditFinding) {
@@ -3187,15 +3204,15 @@ export class AuditsPageComponent {
   protected findingDraftHeading() {
     const severity = this.findingForm.getRawValue().severity;
     if (severity === 'MAJOR') {
-      return 'Major finding path';
+      return this.t('audits.findingModal.paths.major');
     }
     if (severity === 'MINOR') {
-      return 'Minor finding path';
+      return this.t('audits.findingModal.paths.minor');
     }
     if (severity === 'OPPORTUNITY') {
-      return 'Opportunity path';
+      return this.t('audits.findingModal.paths.opportunity');
     }
-    return 'Observation path';
+    return this.t('audits.findingModal.paths.observation');
   }
 
   protected findingDraftGuidance() {
@@ -3213,7 +3230,7 @@ export class AuditsPageComponent {
   }
 
   protected findingModalChecklistCopy() {
-    return '1. Write a short note in your own words. 2. Use AI only if you want cleaner wording. 3. Choose severity. 4. Save the finding. 5. Decide the next step later in Review findings.';
+    return this.t('audits.findingModal.checklistCopy');
   }
 
   protected findingSeverityHelperCopy() {
@@ -3305,90 +3322,87 @@ export class AuditsPageComponent {
   protected auditNextStepsCopy() {
     const audit = this.selectedAudit();
     if (!audit) {
-      return 'Next: continue the audit from the current workflow step.';
+      return this.t('audits.detail.nextSteps.default');
     }
     if (audit.status === 'COMPLETED' || audit.status === 'CLOSED') {
-      return 'Next: review the completed audit record, its findings, and the formal report output.';
+      return this.t('audits.detail.nextSteps.completed');
     }
     if (audit.isChecklistCompleted) {
-      return 'Next: review findings, complete the close-out, and then finish the audit from the review step.';
+      return this.t('audits.detail.nextSteps.review');
     }
-    return 'Next: continue the checklist, record findings where needed, and return to the review step when the checklist is complete.';
+    return this.t('audits.detail.nextSteps.conduct');
   }
 
   protected auditWorkflowHeading() {
     const audit = this.selectedAudit();
     if (!audit) {
-      return 'Open an audit record';
+      return this.t('audits.detail.workflow.openRecord');
     }
     if (audit.status === 'COMPLETED' || audit.status === 'CLOSED') {
-      return 'Audit complete';
+      return this.t('audits.detail.workflow.complete');
     }
     if (this.activeStep() === 'plan') {
-      return 'Step 1: confirm scope and audit setup';
+      return this.t('audits.detail.workflow.step1');
     }
     if (!audit.isChecklistCompleted) {
-      return 'Step 2: complete the checklist';
+      return this.t('audits.detail.workflow.step2');
     }
     if (this.unresolvedFindingCount()) {
-      return 'Step 3: decide the next step for each finding';
+      return this.t('audits.detail.workflow.step3Findings');
     }
     if (this.reviewStage() === 'closeout') {
-      return 'Step 3: record the audit close-out';
+      return this.t('audits.detail.workflow.step3Closeout');
     }
-    return 'Step 3: move into close-out';
+    return this.t('audits.detail.workflow.step3Move');
   }
 
   protected auditWorkflowCopy() {
     const audit = this.selectedAudit();
     if (!audit) {
-      return 'Select an audit to continue the workflow.';
+      return this.t('audits.detail.workflowCopy.openRecord');
     }
     if (audit.status === 'COMPLETED' || audit.status === 'CLOSED') {
-      return 'The audit record is already complete. You can still review findings, linked CAPA, lighter audit actions, and the final PDF report.';
+      return this.t('audits.detail.workflowCopy.completed');
     }
     if (this.activeStep() === 'plan') {
-      return 'Check the programme, scope, objectives, criteria, and meeting notes first. Once the setup reads correctly, start the audit and move into the checklist.';
+      return this.t('audits.detail.workflowCopy.plan');
     }
     if (!audit.isChecklistCompleted) {
-      return 'Work through the checklist question by question. Record findings only where the requirement is not met, then keep moving through the audit.';
+      return this.t('audits.detail.workflowCopy.conduct');
     }
     if (this.unresolvedFindingCount()) {
-      return 'Stay in the findings trail until every gap has a clear next step. Minor and major findings move into CAPA; observations and opportunities can use a lighter audit action or close directly.';
+      return this.t('audits.detail.workflowCopy.review');
     }
-    return 'All findings have a clear next step. Record the conclusion, recommendations, completion date, and auditor to finish the audit without reopening the checklist.';
+    return this.t('audits.detail.workflowCopy.closeout');
   }
 
   protected auditWorkflowStatusLabel() {
     const audit = this.selectedAudit();
     if (!audit) {
-      return 'No audit selected';
+      return this.t('audits.detail.workflowStatus.none');
     }
     if (audit.status === 'COMPLETED' || audit.status === 'CLOSED') {
-      return 'Completed';
+      return this.t('audits.detail.workflowStatus.completed');
     }
     if (this.activeStep() === 'plan') {
-      return 'Planning';
+      return this.t('audits.detail.workflowStatus.planning');
     }
     if (!audit.isChecklistCompleted) {
-      return 'Checklist in progress';
+      return this.t('audits.detail.workflowStatus.checklist');
     }
     if (this.unresolvedFindingCount()) {
-      return 'Next steps still open';
+      return this.t('audits.detail.workflowStatus.nextStepsOpen');
     }
-    return this.reviewStage() === 'closeout' ? 'Close-out in progress' : 'Ready for close-out';
+    return this.reviewStage() === 'closeout' ? this.t('audits.detail.workflowStatus.closeout') : this.t('audits.detail.workflowStatus.ready');
   }
 
   protected findingSeverityLabel(severity: FindingSeverity) {
-    if (severity === 'MAJOR') return 'Major nonconformity';
-    if (severity === 'MINOR') return 'Minor nonconformity';
-    if (severity === 'OPPORTUNITY') return 'Opportunity for improvement';
-    return 'Observation';
+    return this.t(`audits.severity.${severity}`);
   }
 
   protected findingStatusLabel(status: FindingStatus) {
-    if (status === 'CAPA_CREATED') return 'CAPA raised';
-    return status === 'CLOSED' ? 'Closed' : 'Open';
+    if (status === 'CAPA_CREATED') return this.t('audits.findingStatus.CAPA_CREATED');
+    return status === 'CLOSED' ? this.t('audits.findingStatus.CLOSED') : this.t('audits.findingStatus.OPEN');
   }
 
   protected findingSeveritySummary() {
@@ -3533,38 +3547,73 @@ export class AuditsPageComponent {
   }
 
   protected auditCloseoutHeading() {
-    return this.canCompleteAudit() ? 'Audit is ready for completion' : 'Close-out requirements are still open';
+    return this.canCompleteAudit() ? this.t('audits.closeout.readyTitle') : this.t('audits.closeout.openTitle');
   }
 
   protected auditCloseoutGuidance() {
     if (!this.isChecklistComplete()) {
-      return 'Complete all checklist questions before the audit can be finished.';
+      return this.t('audits.closeout.guidance.completeChecklist');
     }
     if (this.unresolvedFindingCount()) {
-      return 'Each finding still needs a clear next step before this audit should move into final close-out.';
+      return this.t('audits.closeout.guidance.unresolvedFindings');
     }
     if (this.closeoutForm.invalid) {
-      return 'Record the conclusion, recommendations, completion date, and auditor before finishing the audit.';
+      return this.t('audits.closeout.guidance.completeFields');
     }
-    return 'The audit record can be completed now. Findings, actions, and NCR follow-up can continue after audit completion without reopening the audit itself.';
+    return this.t('audits.closeout.guidance.ready');
   }
 
   protected auditDateValue(audit: AuditRecord) {
     const date = audit.completedAt || audit.scheduledAt || audit.startedAt;
-    return date ? date.slice(0, 10) : 'Not set';
+    return date ? date.slice(0, 10) : this.t('audits.list.auditDate.notSet');
   }
 
   protected auditDateLabel(audit: AuditRecord) {
     if (audit.completedAt) {
-      return 'Completed date';
+      return this.t('audits.list.auditDate.completed');
     }
     if (audit.scheduledAt) {
-      return 'Scheduled date';
+      return this.t('audits.list.auditDate.scheduled');
     }
     if (audit.startedAt) {
-      return 'Started date';
+      return this.t('audits.list.auditDate.started');
     }
-    return 'No audit date';
+    return this.t('audits.list.auditDate.none');
+  }
+
+  protected auditStatusLabel(status?: AuditStatus | string | null) {
+    if (!status) {
+      return '';
+    }
+    return this.t(`audits.status.${status}`);
+  }
+
+  protected auditTypeLabel(type?: AuditType | string | null) {
+    if (!type) {
+      return '';
+    }
+    if (type === 'Internal Audit') {
+      return this.t('audits.types.internalAudit');
+    }
+    if (type === 'Supplier Audit') {
+      return this.t('audits.types.supplierAudit');
+    }
+    return type;
+  }
+
+  protected scopeTypeLabel(scopeType?: AuditScopeType | string | null) {
+    if (!scopeType) {
+      return '';
+    }
+    const keyMap: Record<string, string> = {
+      'Company-wide': 'companyWide',
+      Department: 'department',
+      Process: 'process',
+      Site: 'site',
+      Supplier: 'supplier'
+    };
+    const key = keyMap[scopeType];
+    return key ? this.t(`audits.scopeTypes.${key}`) : scopeType;
   }
 
   protected auditLabel(type: AuditType, scopeType?: AuditScopeType | string | null) {
@@ -3627,18 +3676,18 @@ export class AuditsPageComponent {
     const closed = Math.max(total - open, 0);
 
     if (!total) {
-      return 'No findings raised';
+      return this.t('audits.list.followUp.none');
     }
 
     if (!open) {
-      return `${closed} closed`;
+      return this.t('audits.list.followUp.closed', { count: closed });
     }
 
     if (!closed) {
-      return `${open} open`;
+      return this.t('audits.list.followUp.open', { count: open });
     }
 
-    return `${open} open | ${closed} closed`;
+    return this.t('audits.list.followUp.openClosed', { open, closed });
   }
 
   protected findingsFollowUpClass(audit: AuditRecord) {
@@ -3655,8 +3704,9 @@ export class AuditsPageComponent {
 
   protected attentionLabel(audit: AuditRecord) {
     const reasons = this.auditAttentionReasons(audit);
-    if (!reasons.length) return 'Under control';
-    return reasons.length > 1 ? `${reasons[0]} +${reasons.length - 1}` : reasons[0];
+    if (!reasons.length) return this.t('audits.list.attention.underControl');
+    const first = this.attentionReasonLabel(reasons[0]);
+    return reasons.length > 1 ? `${first} +${reasons.length - 1}` : first;
   }
 
   protected attentionClass(audit: AuditRecord) {
@@ -3668,17 +3718,17 @@ export class AuditsPageComponent {
 
   protected attentionHeadline(audit: AuditRecord | null) {
     return audit && this.auditAttentionReasons(audit).length
-      ? 'This audit currently needs management attention.'
-      : 'This audit is currently under control.';
+      ? this.t('audits.attention.needsAttention')
+      : this.t('audits.attention.underControl');
   }
 
   protected attentionNarrative(audit: AuditRecord | null) {
-    if (!audit) return 'Attention guidance appears after the audit is loaded.';
+    if (!audit) return this.t('audits.attention.loading');
     const reasons = this.auditAttentionReasons(audit);
     if (!reasons.length) {
-      return 'Audit timing, checklist execution, and findings follow-up are controlled enough for routine oversight.';
+      return this.t('audits.attention.controlledCopy');
     }
-    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+    return this.t('audits.attention.reasonCopy', { reasons: reasons.map((reason) => reason.toLowerCase()).join(', ') });
   }
 
   protected isChecklistReadOnly() {
@@ -4002,12 +4052,12 @@ export class AuditsPageComponent {
   protected auditSaveButtonLabel() {
     if (this.saving()) {
       return this.hasProcedureChecklistSelection()
-        ? 'Saving and preparing AI checklist...'
-        : 'Saving...';
+        ? this.t('audits.actions.savingPreparingChecklist')
+        : this.t('audits.actions.saving');
     }
     return this.hasProcedureChecklistSelection()
-      ? 'Save audit and prepare AI checklist'
-      : 'Save audit';
+      ? this.t('audits.actions.saveAndPrepareChecklist')
+      : this.t('audits.actions.save');
   }
 
   private hasProcedureChecklistSelection() {
@@ -4276,6 +4326,17 @@ export class AuditsPageComponent {
       reasons.push('Execution stalled');
     }
     return reasons;
+  }
+
+  private attentionReasonLabel(reason: string) {
+    const keyMap: Record<string, string> = {
+      'Audit overdue': 'auditOverdue',
+      'Findings still open': 'findingsStillOpen',
+      'Owner needed': 'ownerNeeded',
+      'Execution stalled': 'executionStalled'
+    };
+    const key = keyMap[reason];
+    return key ? this.t(`audits.list.attention.${key}`) : reason;
   }
 
   private auditAttentionRank(audit: AuditRecord) {

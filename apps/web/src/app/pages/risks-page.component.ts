@@ -2,12 +2,14 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Input, OnChanges, OnInit, SimpleChanges, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 import { ContentLibraryResponse } from '../core/content-library.models';
 import { ContentLibraryService } from '../core/content-library.service';
 import { ContextApiService } from '../core/context-api.service';
+import { I18nService } from '../core/i18n.service';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
@@ -74,50 +76,50 @@ type SourceContextNavigation = {
 @Component({
   selector: 'iso-risks-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, RecordWorkItemsComponent, AttachmentPanelComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, RecordWorkItemsComponent, AttachmentPanelComponent, TranslatePipe],
   template: `
     <section class="page-grid">
       <iso-page-header
-        [label]="'Risks'"
+        [label]="t('risks.page.label')"
         [title]="pageTitle()"
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
-        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">Back to Start Here</a>
-        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/risks/new" class="button-link">+ New record</a>
-        <a *ngIf="mode() === 'detail' && selectedRisk() && canWrite()" [routerLink]="['/risks', selectedRisk()?.id, 'edit']" [state]="routeStateWithSource()" class="button-link">Edit {{ assessmentEntityLabel(selectedRisk()?.assessmentType || 'RISK').toLowerCase() }}</a>
-        <button *ngIf="mode() === 'detail' && canDeleteRisk()" type="button" class="button-link danger" (click)="deleteRisk()">Delete {{ assessmentEntityLabel(selectedRisk()?.assessmentType || 'RISK').toLowerCase() }}</button>
-        <a *ngIf="sourceContextNavigation()" [routerLink]="sourceContextNavigation()!.route" class="button-link tertiary">Back to {{ sourceContextNavigation()!.label }}</a>
-        <a *ngIf="mode() !== 'list'" routerLink="/risks" class="button-link secondary">Back to register</a>
+        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">{{ 'risks.actions.backToStartHere' | translate }}</a>
+        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/risks/new" class="button-link">+ {{ 'risks.actions.new' | translate }}</a>
+        <a *ngIf="mode() === 'detail' && selectedRisk() && canWrite()" [routerLink]="['/risks', selectedRisk()?.id, 'edit']" [state]="routeStateWithSource()" class="button-link">{{ t('risks.actions.edit', { entity: assessmentEntityLabel(selectedRisk()?.assessmentType || 'RISK').toLowerCase() }) }}</a>
+        <button *ngIf="mode() === 'detail' && canDeleteRisk()" type="button" class="button-link danger" (click)="deleteRisk()">{{ t('risks.actions.delete', { entity: assessmentEntityLabel(selectedRisk()?.assessmentType || 'RISK').toLowerCase() }) }}</button>
+        <a *ngIf="sourceContextNavigation()" [routerLink]="sourceContextNavigation()!.route" class="button-link tertiary">{{ t('risks.actions.backToSource', { label: sourceContextNavigation()!.label }) }}</a>
+        <a *ngIf="mode() !== 'list'" routerLink="/risks" class="button-link secondary">{{ 'risks.actions.backToRegister' | translate }}</a>
       </iso-page-header>
 
       <section *ngIf="mode() === 'list'" class="page-stack">
         <div class="card list-card">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Register</span>
-              <h3>Risk register</h3>
-              <p class="subtle">A clear enterprise register for risks, opportunities, treatment ownership, linked actions, and live scoring.</p>
+              <span class="section-eyebrow">{{ 'risks.list.eyebrow' | translate }}</span>
+              <h3>{{ 'risks.list.title' | translate }}</h3>
+              <p class="subtle">{{ 'risks.list.copy' | translate }}</p>
             </div>
           </div>
 
           <div class="toolbar top-space">
             <div class="toolbar-meta">
               <div>
-                <p class="toolbar-title">Risk filters</p>
-                <p class="toolbar-copy">Search by title or category, then open the record for assessment, actions, and evidence.</p>
+                <p class="toolbar-title">{{ 'risks.list.filtersTitle' | translate }}</p>
+                <p class="toolbar-copy">{{ 'risks.list.filtersCopy' | translate }}</p>
               </div>
               <div class="toolbar-stats">
                 <article class="toolbar-stat">
-                  <span>Total</span>
+                  <span>{{ 'risks.list.stats.total' | translate }}</span>
                   <strong>{{ risks().length }}</strong>
                 </article>
                 <article class="toolbar-stat">
-                  <span>Mitigation planned</span>
+                  <span>{{ 'risks.list.stats.mitigationPlanned' | translate }}</span>
                   <strong>{{ countByLifecycle('MITIGATION_PLANNED') }}</strong>
                 </article>
                 <article class="toolbar-stat">
-                  <span>High priority</span>
+                  <span>{{ 'risks.list.stats.highPriority' | translate }}</span>
                   <strong>{{ highRiskCount() }}</strong>
                 </article>
               </div>
@@ -125,60 +127,60 @@ type SourceContextNavigation = {
 
             <div class="filter-row standard-filter-grid">
               <label class="field compact-field search-field">
-                <span>Search</span>
-                <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Title or category">
+                <span>{{ 'risks.list.searchLabel' | translate }}</span>
+                <input [value]="search()" (input)="search.set(readInputValue($event))" [placeholder]="t('risks.list.searchPlaceholder')">
               </label>
               <label class="field compact-field">
-                <span>Type</span>
+                <span>{{ 'risks.list.typeLabel' | translate }}</span>
                 <select [value]="assessmentTypeFilter()" (change)="setAssessmentTypeFilter(readSelectValue($event))">
-                  <option value="">All records</option>
-                  <option value="RISK">Risks</option>
-                  <option value="OPPORTUNITY">Opportunities</option>
+                  <option value="">{{ 'risks.list.allRecords' | translate }}</option>
+                  <option value="RISK">{{ 'risks.entity.riskPlural' | translate }}</option>
+                  <option value="OPPORTUNITY">{{ 'risks.entity.opportunityPlural' | translate }}</option>
                 </select>
               </label>
               <label class="field compact-field">
-                <span>Status</span>
+                <span>{{ 'risks.list.statusLabel' | translate }}</span>
                 <select [value]="statusFilter()" (change)="setStatusFilter(readSelectValue($event))">
-                  <option value="">All statuses</option>
-                  <option value="DRAFT">Draft</option>
-                  <option value="ASSESSED">Assessed</option>
-                  <option value="MITIGATION_PLANNED">Mitigation planned</option>
-                  <option value="MONITORING">Monitoring</option>
-                  <option value="CLOSED">Closed</option>
+                  <option value="">{{ 'risks.list.allStatuses' | translate }}</option>
+                  <option value="DRAFT">{{ 'risks.lifecycle.draft' | translate }}</option>
+                  <option value="ASSESSED">{{ 'risks.lifecycle.assessed' | translate }}</option>
+                  <option value="MITIGATION_PLANNED">{{ 'risks.lifecycle.mitigation_planned' | translate }}</option>
+                  <option value="MONITORING">{{ 'risks.lifecycle.monitoring' | translate }}</option>
+                  <option value="CLOSED">{{ 'risks.lifecycle.closed' | translate }}</option>
                 </select>
               </label>
               <label class="field compact-field">
-                <span>Sort by</span>
+                <span>{{ 'risks.list.sortLabel' | translate }}</span>
                 <select [value]="sortBy()" (change)="setSortBy(readSelectValue($event))">
-                  <option value="attention">Attention</option>
-                  <option value="score">Score</option>
-                  <option value="targetDate">Target date</option>
-                  <option value="updated">Updated</option>
+                  <option value="attention">{{ 'risks.list.sort.attention' | translate }}</option>
+                  <option value="score">{{ 'risks.list.sort.score' | translate }}</option>
+                  <option value="targetDate">{{ 'risks.list.sort.targetDate' | translate }}</option>
+                  <option value="updated">{{ 'risks.list.sort.updated' | translate }}</option>
                 </select>
               </label>
             </div>
           </div>
 
           <div class="empty-state" *ngIf="loading()">
-            <strong>Loading risks</strong>
-            <span>Refreshing current assessment and treatment data.</span>
+            <strong>{{ 'risks.list.loadingTitle' | translate }}</strong>
+            <span>{{ 'risks.list.loadingCopy' | translate }}</span>
           </div>
 
           <div class="empty-state top-space" *ngIf="!loading() && !filteredRisks().length">
-            <strong>No records match the current filter</strong>
-            <span>Adjust the search or create the first risk or opportunity entry for this tenant.</span>
+            <strong>{{ 'risks.list.emptyTitle' | translate }}</strong>
+            <span>{{ 'risks.list.emptyCopy' | translate }}</span>
           </div>
 
           <div class="data-table-wrap" *ngIf="!loading() && filteredRisks().length">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Risk</th>
-                  <th>Type</th>
-                  <th>Assessment</th>
-                  <th>Status</th>
-                  <th>Attention</th>
-                  <th>Target</th>
+                  <th>{{ 'risks.list.table.record' | translate }}</th>
+                  <th>{{ 'risks.list.table.type' | translate }}</th>
+                  <th>{{ 'risks.list.table.assessment' | translate }}</th>
+                  <th>{{ 'risks.list.table.status' | translate }}</th>
+                  <th>{{ 'risks.list.table.attention' | translate }}</th>
+                  <th>{{ 'risks.list.table.target' | translate }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -186,10 +188,10 @@ type SourceContextNavigation = {
                   <td>
                     <div class="table-title">
                       <strong>{{ item.title }}</strong>
-                      <small>{{ item.category || 'General' }}</small>
+                      <small>{{ item.category || t('risks.list.generalCategory') }}</small>
                     </div>
                   </td>
-                  <td><span class="status-badge" [ngClass]="item.assessmentType === 'OPPORTUNITY' ? 'success' : 'attention'">{{ item.assessmentType === 'OPPORTUNITY' ? 'Opportunity' : 'Risk' }}</span></td>
+                  <td><span class="status-badge" [ngClass]="item.assessmentType === 'OPPORTUNITY' ? 'success' : 'attention'">{{ item.assessmentType === 'OPPORTUNITY' ? t('risks.entity.opportunity') : t('risks.entity.risk') }}</span></td>
                   <td>
                     <div class="table-title">
                       <strong>{{ assessmentSummary(item) }}</strong>
@@ -200,7 +202,7 @@ type SourceContextNavigation = {
                   </td>
                   <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ lifecycleStatusLabel(item.status) }}</span></td>
                   <td><span class="status-badge" [ngClass]="attentionClass(item)">{{ attentionLabel(item) }}</span></td>
-                  <td>{{ item.targetDate ? (item.targetDate | date:'yyyy-MM-dd') : 'N/A' }}</td>
+                  <td>{{ item.targetDate ? (item.targetDate | date:'yyyy-MM-dd') : t('common.na') }}</td>
                 </tr>
               </tbody>
             </table>
@@ -212,8 +214,8 @@ type SourceContextNavigation = {
         <form class="card form-card page-stack" [formGroup]="form" (ngSubmit)="save()">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">Risk assessment</span>
-              <h3>{{ mode() === 'create' ? 'New ' + assessmentEntityLabel(form.getRawValue().assessmentType).toLowerCase() : 'Edit ' + assessmentEntityLabel(form.getRawValue().assessmentType).toLowerCase() }}</h3>
+              <span class="section-eyebrow">{{ 'risks.form.eyebrow' | translate }}</span>
+              <h3>{{ mode() === 'create' ? t('risks.form.createTitle', { entity: assessmentEntityLabel(form.getRawValue().assessmentType).toLowerCase() }) : t('risks.form.editTitle', { entity: assessmentEntityLabel(form.getRawValue().assessmentType).toLowerCase() }) }}</h3>
               <p class="subtle">{{ assessmentIntroCopy(form.getRawValue().assessmentType) }}</p>
             </div>
           </div>
@@ -221,64 +223,64 @@ type SourceContextNavigation = {
           <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
           <section class="feedback next-steps-banner success" *ngIf="mode() === 'create' && sourceContextNavigation() && sourceContextSummary() as contextSummary">
-            <strong>Creating from a context issue</strong>
+            <strong>{{ 'risks.form.fromContextTitle' | translate }}</strong>
             <span>{{ contextSummary }}</span>
             <div class="button-row top-space">
-              <a [routerLink]="sourceContextNavigation()!.route" class="button-link secondary">Review source issue</a>
+              <a [routerLink]="sourceContextNavigation()!.route" class="button-link secondary">{{ 'risks.form.reviewSourceIssue' | translate }}</a>
             </div>
           </section>
 
           <section class="feedback next-steps-banner success" *ngIf="mode() === 'edit' && sourceContextNavigation() && sourceContextSummary() as contextSummary">
-            <strong>Still linked to the source issue</strong>
+            <strong>{{ 'risks.form.stillLinkedTitle' | translate }}</strong>
             <span>{{ contextSummary }}</span>
             <div class="button-row top-space">
-              <a [routerLink]="sourceContextNavigation()!.route" class="button-link secondary">Review source issue</a>
+              <a [routerLink]="sourceContextNavigation()!.route" class="button-link secondary">{{ 'risks.form.reviewSourceIssue' | translate }}</a>
             </div>
           </section>
 
           <section class="detail-section">
-            <h4>1. {{ assessmentEntityLabel(form.getRawValue().assessmentType) }} context</h4>
+            <h4>1. {{ t('risks.form.contextTitle', { entity: assessmentEntityLabel(form.getRawValue().assessmentType) }) }}</h4>
             <div class="segmented-control top-space" role="group" aria-label="Risk assessment type">
-              <button type="button" [class.active]="form.getRawValue().assessmentType === 'RISK'" (click)="setAssessmentType('RISK')">Risk</button>
-              <button type="button" [class.active]="form.getRawValue().assessmentType === 'OPPORTUNITY'" (click)="setAssessmentType('OPPORTUNITY')">Opportunity</button>
+              <button type="button" [class.active]="form.getRawValue().assessmentType === 'RISK'" (click)="setAssessmentType('RISK')">{{ 'risks.entity.risk' | translate }}</button>
+              <button type="button" [class.active]="form.getRawValue().assessmentType === 'OPPORTUNITY'" (click)="setAssessmentType('OPPORTUNITY')">{{ 'risks.entity.opportunity' | translate }}</button>
             </div>
             <div class="form-grid-2 top-space">
               <label class="field">
-                <span>Title</span>
-                <input formControlName="title" placeholder="Supplier delivery interruption">
+                <span>{{ 'risks.form.title' | translate }}</span>
+                <input formControlName="title" [placeholder]="t('risks.form.titlePlaceholder')">
               </label>
               <label class="field">
-                <span>Starter category</span>
+                <span>{{ 'risks.form.starterCategory' | translate }}</span>
                 <select [value]="selectedCategoryOption()" (change)="onCategoryOptionChange(readSelectValue($event))">
-                  <option value="">Choose a category</option>
+                  <option value="">{{ 'risks.form.chooseCategory' | translate }}</option>
                   <option *ngFor="let category of activeCategories()" [value]="category">{{ category }}</option>
-                  <option value="__custom__">Custom category</option>
+                  <option value="__custom__">{{ 'risks.form.customCategory' | translate }}</option>
                 </select>
-                <small class="field-hint">Starter categories switch with {{ assessmentEntityLabel(form.getRawValue().assessmentType).toLowerCase() }} type. You can still enter a custom category.</small>
+                <small class="field-hint">{{ t('risks.form.starterCategoryHint', { entity: assessmentEntityLabel(form.getRawValue().assessmentType).toLowerCase() }) }}</small>
               </label>
             </div>
             <label class="field top-space" *ngIf="customCategoryMode()">
-              <span>Custom category</span>
-              <input formControlName="category" placeholder="Enter a custom category">
+              <span>{{ 'risks.form.customCategory' | translate }}</span>
+              <input formControlName="category" [placeholder]="t('risks.form.customCategoryPlaceholder')">
             </label>
 
             <label class="field top-space">
-              <span>Description</span>
-              <textarea rows="4" formControlName="description" placeholder="What could happen and why"></textarea>
+              <span>{{ 'risks.form.description' | translate }}</span>
+              <textarea rows="4" formControlName="description" [placeholder]="t('risks.form.descriptionPlaceholder')"></textarea>
             </label>
 
             <div class="form-grid-2 top-space">
               <label class="field">
-                <span>Issue context</span>
+                <span>{{ 'risks.form.issueContext' | translate }}</span>
                 <select formControlName="issueContextType">
-                  <option value="">Not linked</option>
-                  <option value="INTERNAL">Internal issue</option>
-                  <option value="EXTERNAL">External issue</option>
+                  <option value="">{{ 'risks.form.notLinked' | translate }}</option>
+                  <option value="INTERNAL">{{ 'risks.form.internalIssue' | translate }}</option>
+                  <option value="EXTERNAL">{{ 'risks.form.externalIssue' | translate }}</option>
                 </select>
               </label>
               <label class="field">
-                <span>Issue reference</span>
-                <input formControlName="issueContext" placeholder="Strategic supplier dependency">
+                <span>{{ 'risks.form.issueReference' | translate }}</span>
+                <input formControlName="issueContext" [placeholder]="t('risks.form.issueReferencePlaceholder')">
               </label>
             </div>
           </section>
@@ -333,26 +335,26 @@ type SourceContextNavigation = {
 
             <div class="form-grid-2 top-space">
               <label class="field">
-                <span>Owner</span>
+                <span>{{ 'risks.form.owner' | translate }}</span>
                 <select formControlName="ownerId">
-                  <option value="">Unassigned</option>
+                  <option value="">{{ 'risks.form.unassigned' | translate }}</option>
                   <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
                 </select>
               </label>
               <label class="field">
-                <span>Due date</span>
+                <span>{{ 'risks.form.dueDate' | translate }}</span>
                 <input type="date" formControlName="targetDate">
               </label>
             </div>
 
             <label class="field top-space">
-              <span>Status</span>
+              <span>{{ 'risks.list.statusLabel' | translate }}</span>
               <select [value]="lifecycleStatus()" (change)="setLifecycleStatus(readSelectValue($event))">
-                <option value="DRAFT">Draft</option>
-                <option value="ASSESSED">Assessed</option>
-                <option value="MITIGATION_PLANNED">Mitigation planned</option>
-                <option value="MONITORING">Monitoring</option>
-                <option value="CLOSED">Closed</option>
+                <option value="DRAFT">{{ 'risks.lifecycle.draft' | translate }}</option>
+                <option value="ASSESSED">{{ 'risks.lifecycle.assessed' | translate }}</option>
+                <option value="MITIGATION_PLANNED">{{ 'risks.lifecycle.mitigation_planned' | translate }}</option>
+                <option value="MONITORING">{{ 'risks.lifecycle.monitoring' | translate }}</option>
+                <option value="CLOSED">{{ 'risks.lifecycle.closed' | translate }}</option>
               </select>
             </label>
 
@@ -366,12 +368,12 @@ type SourceContextNavigation = {
             <h4>4. {{ residualAssessmentHeading(form.getRawValue().assessmentType) }}</h4>
             <div class="form-grid-3 top-space">
               <label class="field">
-                <span>Residual {{ likelihoodLabel(form.getRawValue().assessmentType).toLowerCase() }}</span>
+                <span>{{ t('risks.form.residualLabel', { label: likelihoodLabel(form.getRawValue().assessmentType).toLowerCase() }) }}</span>
                 <input type="number" min="1" [attr.max]="likelihoodScaleMax()" formControlName="residualLikelihood">
                 <small class="field-hint">{{ likelihoodHint(form.getRawValue().assessmentType) }}</small>
               </label>
               <label class="field">
-                <span>Residual {{ impactLabel(form.getRawValue().assessmentType).toLowerCase() }}</span>
+                <span>{{ t('risks.form.residualLabel', { label: impactLabel(form.getRawValue().assessmentType).toLowerCase() }) }}</span>
                 <input type="number" min="1" [attr.max]="severityScaleMax()" formControlName="residualImpact">
                 <small class="field-hint">{{ impactHint(form.getRawValue().assessmentType) }}</small>
               </label>
@@ -380,7 +382,7 @@ type SourceContextNavigation = {
             <div class="summary-strip top-space">
               <article class="summary-item">
                 <span>{{ residualScoreLabel(form.getRawValue().assessmentType) }}</span>
-                <strong>{{ currentResidualScore() ?? 'Not assessed' }}</strong>
+                <strong>{{ currentResidualScore() ?? t('risks.levels.notAssessed') }}</strong>
               </article>
               <article class="summary-item">
                 <span>{{ residualRatingLabel(form.getRawValue().assessmentType) }}</span>
@@ -390,8 +392,8 @@ type SourceContextNavigation = {
           </section>
 
           <div class="button-row">
-            <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save ' + assessmentEntityLabel(form.getRawValue().assessmentType).toLowerCase() }}</button>
-            <a [routerLink]="cancelRoute()" [state]="cancelState()" class="button-link secondary">Cancel</a>
+            <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? t('risks.form.saving') : t('risks.form.save', { entity: assessmentEntityLabel(form.getRawValue().assessmentType).toLowerCase() }) }}</button>
+            <a [routerLink]="cancelRoute()" [state]="cancelState()" class="button-link secondary">{{ 'common.cancel' | translate }}</a>
           </div>
         </form>
 
@@ -403,9 +405,9 @@ type SourceContextNavigation = {
           <section class="card detail-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Risk detail</span>
+                <span class="section-eyebrow">{{ 'risks.detail.eyebrow' | translate }}</span>
                 <h3>{{ selectedRisk()?.title }}</h3>
-                <p class="subtle">{{ assessmentEntityLabel(selectedRisk()?.assessmentType || 'RISK') }} | {{ selectedRisk()?.category || 'General' }}</p>
+                <p class="subtle">{{ assessmentEntityLabel(selectedRisk()?.assessmentType || 'RISK') }} | {{ selectedRisk()?.category || t('risks.list.generalCategory') }}</p>
               </div>
               <span class="status-badge" [ngClass]="statusClass(selectedRisk()?.status || 'OPEN')">{{ lifecycleStatusLabel(selectedRisk()?.status || 'OPEN') }}</span>
             </div>
@@ -414,16 +416,16 @@ type SourceContextNavigation = {
               <strong>{{ message() }}</strong>
               <span>{{ nextStepsCopy(selectedRisk()?.assessmentType || 'RISK') }}</span>
               <div class="button-row top-space">
-                <button type="button" (click)="scrollToActions()">{{ selectedRisk()?.assessmentType === 'OPPORTUNITY' ? 'Create Action' : 'Create mitigation action' }}</button>
-                <button type="button" class="secondary" (click)="scrollToEvidence()">Review evidence</button>
-                <a *ngIf="sourceContextNavigation()" [routerLink]="sourceContextNavigation()!.route" class="button-link secondary">Review source issue</a>
-                <a routerLink="/risks" class="button-link tertiary">Review risks</a>
+                <button type="button" (click)="scrollToActions()">{{ selectedRisk()?.assessmentType === 'OPPORTUNITY' ? t('risks.detail.createAction') : t('risks.detail.createMitigationAction') }}</button>
+                <button type="button" class="secondary" (click)="scrollToEvidence()">{{ 'risks.detail.reviewEvidence' | translate }}</button>
+                <a *ngIf="sourceContextNavigation()" [routerLink]="sourceContextNavigation()!.route" class="button-link secondary">{{ 'risks.form.reviewSourceIssue' | translate }}</a>
+                <a routerLink="/risks" class="button-link tertiary">{{ 'risks.detail.reviewRisks' | translate }}</a>
               </div>
             </section>
 
             <div class="summary-strip top-space">
               <article class="summary-item">
-                <span>Response position</span>
+                <span>{{ 'risks.detail.responsePosition' | translate }}</span>
                 <strong>{{ riskResponseShortLabel(selectedRisk()?.assessmentType || 'RISK', selectedRisk()?.status || 'OPEN') }}</strong>
               </article>
               <article class="summary-item">
@@ -447,7 +449,7 @@ type SourceContextNavigation = {
             <section class="content-guidance top-space">
               <div class="section-head compact-head">
                 <div>
-                  <h4>Management attention</h4>
+                  <h4>{{ 'risks.detail.managementAttention' | translate }}</h4>
                   <p class="subtle">{{ attentionHeadline(selectedRisk()) }}</p>
                 </div>
               </div>
@@ -456,17 +458,17 @@ type SourceContextNavigation = {
 
             <div class="section-grid-2 top-space">
               <section class="detail-section">
-                <h4>Description</h4>
-                <p>{{ selectedRisk()?.description || 'No description provided.' }}</p>
+                <h4>{{ 'risks.form.description' | translate }}</h4>
+                <p>{{ selectedRisk()?.description || t('risks.detail.noDescription') }}</p>
               </section>
               <section class="detail-section">
-                <h4>Issue context</h4>
-                <p>{{ selectedRisk()?.issueContextType ? (selectedRisk()?.issueContextType + ' | ') : '' }}{{ selectedRisk()?.issueContext || 'No issue context linked.' }}</p>
+                <h4>{{ 'risks.form.issueContext' | translate }}</h4>
+                <p>{{ selectedRisk()?.issueContextType ? (selectedRisk()?.issueContextType + ' | ') : '' }}{{ selectedRisk()?.issueContext || t('risks.detail.noIssueContext') }}</p>
               </section>
             </div>
 
             <section class="detail-section top-space" *ngIf="linkedProcessSummary(selectedRisk()) as processSummary">
-              <h4>Process context</h4>
+              <h4>{{ 'risks.detail.processContext' | translate }}</h4>
               <p>{{ processSummary }}</p>
             </section>
 
@@ -475,19 +477,19 @@ type SourceContextNavigation = {
               <div class="section-grid-2 top-space">
                 <section class="detail-section">
                   <h4>{{ existingControlsLabel(selectedRisk()?.assessmentType || 'RISK') }}</h4>
-                  <p>{{ selectedRisk()?.existingControls || selectedRisk()?.treatmentSummary || 'No existing controls recorded.' }}</p>
+                  <p>{{ selectedRisk()?.existingControls || selectedRisk()?.treatmentSummary || t('risks.detail.noExistingControls') }}</p>
                 </section>
                 <section class="detail-section">
                   <h4>{{ plannedActionsLabel(selectedRisk()?.assessmentType || 'RISK') }}</h4>
-                  <p>{{ selectedRisk()?.plannedMitigationActions || selectedRisk()?.treatmentPlan || 'No planned mitigation actions recorded.' }}</p>
+                  <p>{{ selectedRisk()?.plannedMitigationActions || selectedRisk()?.treatmentPlan || t('risks.detail.noPlannedActions') }}</p>
                 </section>
               </div>
 
               <div id="risk-actions-section" class="detail-section top-space">
                 <div class="section-head compact-head">
                   <div>
-                    <span class="section-eyebrow">Linked actions</span>
-                    <h4>Create Action</h4>
+                    <span class="section-eyebrow">{{ 'risks.detail.linkedActionsEyebrow' | translate }}</span>
+                    <h4>{{ 'risks.detail.createAction' | translate }}</h4>
                     <p class="subtle">{{ linkedActionCopy(selectedRisk()?.assessmentType || 'RISK') }}</p>
                   </div>
                 </div>
@@ -499,11 +501,11 @@ type SourceContextNavigation = {
               <h4>4. {{ residualAssessmentHeading(selectedRisk()?.assessmentType || 'RISK') }}</h4>
               <div class="summary-strip top-space" *ngIf="selectedRisk()?.residualLikelihood && selectedRisk()?.residualImpact; else residualEmpty">
                 <article class="summary-item">
-                  <span>Residual {{ likelihoodLabel(selectedRisk()?.assessmentType || 'RISK').toLowerCase() }}</span>
+                  <span>{{ t('risks.form.residualLabel', { label: likelihoodLabel(selectedRisk()?.assessmentType || 'RISK').toLowerCase() }) }}</span>
                   <strong>{{ selectedRisk()?.residualLikelihood }}</strong>
                 </article>
                 <article class="summary-item">
-                  <span>Residual {{ impactLabel(selectedRisk()?.assessmentType || 'RISK').toLowerCase() }}</span>
+                  <span>{{ t('risks.form.residualLabel', { label: impactLabel(selectedRisk()?.assessmentType || 'RISK').toLowerCase() }) }}</span>
                   <strong>{{ selectedRisk()?.residualImpact }}</strong>
                 </article>
                 <article class="summary-item">
@@ -530,9 +532,9 @@ type SourceContextNavigation = {
             </section>
 
             <dl class="key-value top-space">
-              <dt>Due date</dt>
-              <dd>{{ selectedRisk()?.targetDate ? (selectedRisk()?.targetDate | date:'yyyy-MM-dd') : 'Not set' }}</dd>
-              <dt>Last updated</dt>
+              <dt>{{ 'risks.form.dueDate' | translate }}</dt>
+              <dd>{{ selectedRisk()?.targetDate ? (selectedRisk()?.targetDate | date:'yyyy-MM-dd') : t('common.notSet') }}</dd>
+              <dt>{{ 'documents.detail.lastUpdated' | translate }}</dt>
               <dd>{{ selectedRisk()?.updatedAt | date:'yyyy-MM-dd HH:mm' }}</dd>
             </dl>
           </section>
@@ -543,28 +545,28 @@ type SourceContextNavigation = {
           <section class="card panel-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Evidence trail</span>
-                <h3>Traceability</h3>
-                <p class="subtle">Keep the source issue, process context, mitigation actions, and supporting evidence aligned to this record.</p>
+                <span class="section-eyebrow">{{ 'risks.detail.evidenceEyebrow' | translate }}</span>
+                <h3>{{ 'risks.detail.evidenceTitle' | translate }}</h3>
+                <p class="subtle">{{ 'risks.detail.evidenceCopy' | translate }}</p>
               </div>
             </div>
             <dl class="key-value top-space">
-              <dt>Source issue</dt>
+              <dt>{{ 'risks.detail.sourceIssue' | translate }}</dt>
               <dd>
                 <ng-container *ngIf="sourceContextNavigation(); else noRiskSource">
-                  <a [routerLink]="sourceContextNavigation()!.route" class="table-link">Open {{ sourceContextNavigation()!.label }}</a>
+                  <a [routerLink]="sourceContextNavigation()!.route" class="table-link">{{ t('risks.detail.openSource', { label: sourceContextNavigation()!.label }) }}</a>
                 </ng-container>
-                <ng-template #noRiskSource>{{ selectedRisk()?.issueContext || 'No source issue linked.' }}</ng-template>
+                <ng-template #noRiskSource>{{ selectedRisk()?.issueContext || t('risks.detail.noSourceIssue') }}</ng-template>
               </dd>
-              <dt>Process context</dt>
-              <dd>{{ currentProcessContext() || 'No process linked.' }}</dd>
-              <dt>Linked actions</dt>
+              <dt>{{ 'risks.detail.processContext' | translate }}</dt>
+              <dd>{{ currentProcessContext() || t('risks.detail.noProcessLinked') }}</dd>
+              <dt>{{ 'risks.detail.linkedActionsLabel' | translate }}</dt>
               <dd>{{ linkedActionSummary(selectedRisk()?.assessmentType || 'RISK') }}</dd>
             </dl>
             <div class="button-row top-space">
-              <a *ngIf="sourceContextNavigation()" [routerLink]="sourceContextNavigation()!.route" class="button-link secondary">Open source issue</a>
-              <button type="button" class="secondary" (click)="scrollToActions()">Review linked actions</button>
-              <button type="button" class="tertiary" (click)="scrollToEvidence()">Review evidence</button>
+              <a *ngIf="sourceContextNavigation()" [routerLink]="sourceContextNavigation()!.route" class="button-link secondary">{{ 'risks.detail.openSourceIssue' | translate }}</a>
+              <button type="button" class="secondary" (click)="scrollToActions()">{{ 'risks.detail.reviewLinkedActions' | translate }}</button>
+              <button type="button" class="tertiary" (click)="scrollToEvidence()">{{ 'risks.detail.reviewEvidence' | translate }}</button>
             </div>
           </section>
 
@@ -736,6 +738,7 @@ export class RisksPageComponent implements OnInit, OnChanges {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
 
   protected readonly mode = signal<PageMode>('list');
   protected readonly risks = signal<RiskRow[]>([]);
@@ -804,31 +807,33 @@ export class RisksPageComponent implements OnInit, OnChanges {
   }
 
   protected pageTitle() {
+    this.i18n.language();
     return {
-      list: 'Risk & opportunity register',
-      create: 'Create record',
-      detail: this.selectedRisk()?.title || 'Record detail',
-      edit: this.selectedRisk()?.title || 'Edit record'
+      list: this.t('risks.page.titles.list'),
+      create: this.t('risks.page.titles.create'),
+      detail: this.selectedRisk()?.title || this.t('risks.page.titles.detail'),
+      edit: this.selectedRisk()?.title || this.t('risks.page.titles.edit')
     }[this.mode()];
   }
 
   protected pageDescription() {
+    this.i18n.language();
     return {
-      list: 'A calmer register for assessed risks and opportunities, ownership, target follow-up, and linked actions.',
-      create: 'Capture a new risk or opportunity in a dedicated page without mixing the register and editor.',
-      detail: 'Review the assessment, current actions, and evidence in one focused detail view.',
-      edit: 'Update the assessment and action plan in a dedicated edit workflow.'
+      list: this.t('risks.page.descriptions.list'),
+      create: this.t('risks.page.descriptions.create'),
+      detail: this.t('risks.page.descriptions.detail'),
+      edit: this.t('risks.page.descriptions.edit')
     }[this.mode()];
   }
 
   protected breadcrumbs() {
     if (this.mode() === 'list') {
-      return [{ label: 'Risks' }];
+      return [{ label: this.t('risks.page.label') }];
     }
-    const base = [{ label: 'Risks', link: '/risks' }];
-    if (this.mode() === 'create') return [...base, { label: 'New risk' }];
-    if (this.mode() === 'edit') return [...base, { label: this.selectedRisk()?.title || 'Risk', link: `/risks/${this.selectedId()}` }, { label: 'Edit' }];
-    return [...base, { label: this.selectedRisk()?.title || 'Risk' }];
+    const base = [{ label: this.t('risks.page.label'), link: '/risks' }];
+    if (this.mode() === 'create') return [...base, { label: this.t('risks.page.breadcrumbs.new') }];
+    if (this.mode() === 'edit') return [...base, { label: this.selectedRisk()?.title || this.t('risks.page.breadcrumbs.record'), link: `/risks/${this.selectedId()}` }, { label: this.t('risks.page.breadcrumbs.edit') }];
+    return [...base, { label: this.selectedRisk()?.title || this.t('risks.page.breadcrumbs.record') }];
   }
 
   protected filteredRisks() {
@@ -872,7 +877,8 @@ export class RisksPageComponent implements OnInit, OnChanges {
   }
 
   protected assessmentEntityLabel(type: RiskAssessmentType) {
-    return type === 'OPPORTUNITY' ? 'Opportunity' : 'Risk';
+    this.i18n.language();
+    return type === 'OPPORTUNITY' ? this.t('risks.entity.opportunity') : this.t('risks.entity.risk');
   }
 
   protected assessmentSummary(item: RiskRow) {
@@ -886,11 +892,9 @@ export class RisksPageComponent implements OnInit, OnChanges {
   }
 
   protected lifecycleStatusLabel(status: RiskStatus) {
-    const lifecycle = this.toLifecycleStatus(status);
-    return lifecycle
-      .toLowerCase()
-      .replace(/_/g, ' ')
-      .replace(/\b\w/g, (part) => part.toUpperCase());
+    this.i18n.language();
+    const lifecycle = this.toLifecycleStatus(status).toLowerCase();
+    return this.t(`risks.lifecycle.${lifecycle}`);
   }
 
   protected setLifecycleStatus(value: string) {
@@ -920,17 +924,18 @@ export class RisksPageComponent implements OnInit, OnChanges {
   }
 
   protected riskLevelLabel(score: number | null, type: RiskAssessmentType = 'RISK') {
+    this.i18n.language();
     if (!score) {
-      return 'Not assessed';
+      return this.t('risks.levels.notAssessed');
     }
 
     if (score <= 5) {
-      return type === 'OPPORTUNITY' ? 'Low potential' : 'Low';
+      return type === 'OPPORTUNITY' ? this.t('risks.levels.lowPotential') : this.t('risks.levels.low');
     }
     if (score <= 14) {
-      return type === 'OPPORTUNITY' ? 'Medium potential' : 'Medium';
+      return type === 'OPPORTUNITY' ? this.t('risks.levels.mediumPotential') : this.t('risks.levels.medium');
     }
-    return type === 'OPPORTUNITY' ? 'High potential' : 'High';
+    return type === 'OPPORTUNITY' ? this.t('risks.levels.highPotential') : this.t('risks.levels.high');
   }
 
   protected scoreToneClass(score: number | null, type: RiskAssessmentType = 'RISK') {
@@ -1032,30 +1037,38 @@ export class RisksPageComponent implements OnInit, OnChanges {
     this.sortBy.set((value as RiskSortOption) || 'attention');
   }
   protected assessmentIntroCopy(type: RiskAssessmentType) {
+    this.i18n.language();
     return type === 'OPPORTUNITY'
-      ? 'Separate the initial opportunity, realization actions, and residual opportunity review so the record is easy to follow.'
-      : 'Separate the initial risk, mitigation planning, and residual risk review so the assessment reads like a real IMS risk register.';
+      ? this.t('risks.assessment.intro.opportunity')
+      : this.t('risks.assessment.intro.risk');
   }
   protected initialAssessmentHeading(type: RiskAssessmentType) {
-    return type === 'OPPORTUNITY' ? 'Initial opportunity' : 'Initial risk';
+    this.i18n.language();
+    return type === 'OPPORTUNITY' ? this.t('risks.assessment.initialHeading.opportunity') : this.t('risks.assessment.initialHeading.risk');
   }
   protected likelihoodLabel(type: RiskAssessmentType) {
-    return type === 'OPPORTUNITY' ? 'Realization likelihood' : 'Likelihood';
+    this.i18n.language();
+    return type === 'OPPORTUNITY' ? this.t('risks.assessment.likelihood.opportunity') : this.t('risks.assessment.likelihood.risk');
   }
   protected impactLabel(type: RiskAssessmentType) {
-    return type === 'OPPORTUNITY' ? 'Benefit' : 'Impact';
+    this.i18n.language();
+    return type === 'OPPORTUNITY' ? this.t('risks.assessment.impact.opportunity') : this.t('risks.assessment.impact.risk');
   }
   protected likelihoodHint(type: RiskAssessmentType) {
-    return type === 'OPPORTUNITY' ? 'Scale 1-5: 1 unlikely to realize, 5 very likely to realize.' : 'Scale 1-5: 1 unlikely, 5 very likely.';
+    this.i18n.language();
+    return type === 'OPPORTUNITY' ? this.t('risks.assessment.likelihoodHint.opportunity') : this.t('risks.assessment.likelihoodHint.risk');
   }
   protected impactHint(type: RiskAssessmentType) {
-    return type === 'OPPORTUNITY' ? 'Scale 1-5: 1 limited benefit, 5 major benefit.' : 'Scale 1-5: 1 minor impact, 5 severe impact.';
+    this.i18n.language();
+    return type === 'OPPORTUNITY' ? this.t('risks.assessment.impactHint.opportunity') : this.t('risks.assessment.impactHint.risk');
   }
   protected initialScoreLabel(type: RiskAssessmentType) {
-    return type === 'OPPORTUNITY' ? 'Opportunity score' : 'Initial score';
+    this.i18n.language();
+    return type === 'OPPORTUNITY' ? this.t('risks.assessment.initialScore.opportunity') : this.t('risks.assessment.initialScore.risk');
   }
   protected matrixRatingLabel(type: RiskAssessmentType) {
-    return type === 'OPPORTUNITY' ? '5x5 priority rating' : '5x5 matrix rating';
+    this.i18n.language();
+    return type === 'OPPORTUNITY' ? this.t('risks.assessment.matrixRating.opportunity') : this.t('risks.assessment.matrixRating.risk');
   }
   protected treatmentHeading(type: RiskAssessmentType) {
     return type === 'OPPORTUNITY' ? 'Realization planning' : 'Mitigation';
@@ -1077,13 +1090,16 @@ export class RisksPageComponent implements OnInit, OnChanges {
       : 'Additional mitigation actions to reduce the risk';
   }
   protected residualAssessmentHeading(type: RiskAssessmentType) {
-    return type === 'OPPORTUNITY' ? 'Residual opportunity' : 'Residual risk';
+    this.i18n.language();
+    return type === 'OPPORTUNITY' ? this.t('risks.assessment.residualHeading.opportunity') : this.t('risks.assessment.residualHeading.risk');
   }
   protected residualScoreLabel(type: RiskAssessmentType) {
-    return type === 'OPPORTUNITY' ? 'Residual opportunity score' : 'Residual score';
+    this.i18n.language();
+    return type === 'OPPORTUNITY' ? this.t('risks.assessment.residualScore.opportunity') : this.t('risks.assessment.residualScore.risk');
   }
   protected residualRatingLabel(type: RiskAssessmentType) {
-    return type === 'OPPORTUNITY' ? 'Residual priority rating' : 'Residual rating';
+    this.i18n.language();
+    return type === 'OPPORTUNITY' ? this.t('risks.assessment.residualRating.opportunity') : this.t('risks.assessment.residualRating.risk');
   }
   protected residualEmptyCopy(type: RiskAssessmentType) {
     return type === 'OPPORTUNITY' ? 'No residual opportunity assessment recorded yet.' : 'No residual risk assessment recorded yet.';
@@ -1661,6 +1677,10 @@ export class RisksPageComponent implements OnInit, OnChanges {
 
   protected severityScaleMax() {
     return this.settings()?.risk.severityScale ?? 5;
+  }
+
+  protected t(key: string, params?: Record<string, unknown>) {
+    return this.i18n.t(key, params);
   }
 }
 
