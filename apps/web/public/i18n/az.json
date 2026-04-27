@@ -866,14 +866,70 @@
         "isoStandard": "ISO standartı",
         "auditProgramme": "Audit proqramı",
         "scopeType": "Əhatə növü",
-        "scope": "Əhatə"
+        "scope": "Əhatə",
+        "objectives": "Audit məqsədləri",
+        "criteria": "Audit meyarları",
+        "leadAuditor": "Aparıcı auditor",
+        "auditeeArea": "Audit olunan sahə",
+        "scheduledDate": "Planlaşdırılmış tarix",
+        "status": "Status",
+        "agenda": "Audit gündəliyi",
+        "openingMeetingNotes": "Açılış görüşü qeydləri",
+        "closingMeetingNotes": "Bağlanış görüşü qeydləri",
+        "summary": "Xülasə"
       },
       "placeholders": {
         "title": "Satınalma prosesi auditi",
         "programme": "2026 daxili audit proqramı",
-        "scope": "Audit olunan proses, sahə, təchizatçı və ya funksiya"
+        "scope": "Audit olunan proses, sahə, təchizatçı və ya funksiya",
+        "objectives": "Bu audit nəyi təsdiqləməli, yoxlamalı və ya yaxşılaşdırmalıdır?",
+        "criteria": "Audit olunan tələbləri, prosedurları, bəndləri və ya standartları qeyd edin.",
+        "auditeeArea": "Audit olunan proses sahibi, şöbə, təchizatçı və ya sahə",
+        "agenda": "Açılış görüşü, yoxlama siyahısı baxışı, sübutların nəzərdən keçirilməsi, bağlanış müzakirəsi",
+        "openingMeetingNotes": "Açılış görüşünün qeydlərini, iştirakçıları və əhatə təsdiqini yazın.",
+        "closingMeetingNotes": "Bağlanış görüşünün qeydlərini, nəticələri və öhdəlikləri yazın.",
+        "summary": "Planlaşdırılan audit fokusunu və gözlənilən nəticəni xülasə edin."
       },
+      "unassigned": "Təyin edilməyib",
       "selectStandard": "Standartı seçin",
+      "actions": {
+        "fillAgendaTemplate": "Gündəliyi şablonla doldur",
+        "fillMeetingTemplate": "Görüş qeydləri şablonunu doldur"
+      },
+      "procedureGuidance": {
+        "title": "Prosedur əsaslı audit quruluşu",
+        "copy": "Audit nəzarət olunan prosedura yönəlirsə, yoxlama siyahısının düzgün mənbədən qurulması üçün əvvəlcə prosesi və əlaqəli sənədi seçin.",
+        "auditArea": "Audit sahəsi",
+        "specificProcedure": "Xüsusi prosedur",
+        "selectProcess": "Prosesi seçin",
+        "selectLinkedProcedure": "Əlaqəli proseduru seçin",
+        "noProcedures": "Seçilmiş proses üçün hələ əlaqəli nəzarət olunan prosedur yoxdur.",
+        "selectOne": "Hədəfli yoxlama siyahısı qurmaq üçün bir əlaqəli prosedur seçin.",
+        "ready": "Əlaqəli prosedur audit yoxlama siyahısını qurmağa hazırdır."
+      },
+      "model": {
+        "eyebrow": "Audit modeli",
+        "title": "Bu audit necə icra olunacaq",
+        "copy": "Əvvəlcə planı qurun, sonra yoxlama siyahısı, tapıntılar və bağlanış mərhələlərini bir istiqamətləndirilmiş axında tamamlayın.",
+        "items": {
+          "programmePlanning": {
+            "title": "Proqram planlaması",
+            "copy": "Auditi düzgün illik proqram və ya təchizatçı qiymətləndirmə dövrünə bağlayın."
+          },
+          "scopePlanning": {
+            "title": "Əhatə planlaması",
+            "copy": "Sahə işləri başlamazdan əvvəl proses, şöbə, məkan və ya təchizatçını müəyyən edin."
+          },
+          "aiChecklist": {
+            "title": "AI yoxlama siyahısı dəstəyi",
+            "copy": "Daxili auditlər seçilmiş standart əsasında ISO uyğun sualları öncədən yükləyə bilər."
+          },
+          "meetingTemplates": {
+            "title": "Görüş şablonları",
+            "copy": "İcra başlamazdan əvvəl açılış və bağlanış görüşü qeydlərini hazırlayın."
+          }
+        }
+      },
       "errors": {
         "selectStandard": "Daxili auditlər üçün ISO standartını seçin."
       }

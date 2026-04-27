@@ -990,14 +990,70 @@
         "isoStandard": "ISO standard",
         "auditProgramme": "Audit programme",
         "scopeType": "Scope type",
-        "scope": "Scope"
+        "scope": "Scope",
+        "objectives": "Audit objectives",
+        "criteria": "Audit criteria",
+        "leadAuditor": "Lead auditor",
+        "auditeeArea": "Auditee area",
+        "scheduledDate": "Scheduled date",
+        "status": "Status",
+        "agenda": "Audit agenda",
+        "openingMeetingNotes": "Opening meeting notes",
+        "closingMeetingNotes": "Closing meeting notes",
+        "summary": "Summary"
       },
       "placeholders": {
         "title": "Purchasing process audit",
         "programme": "2026 internal audit programme",
-        "scope": "Process, site, supplier, or function under audit"
+        "scope": "Process, site, supplier, or function under audit",
+        "objectives": "What should this audit confirm, test, or improve?",
+        "criteria": "List the requirements, procedures, clauses, or standards being audited.",
+        "auditeeArea": "Process owner, department, supplier, or site being audited",
+        "agenda": "Opening meeting, checklist walk-through, evidence review, close-out discussion",
+        "openingMeetingNotes": "Capture opening meeting notes, attendees, and scope confirmation.",
+        "closingMeetingNotes": "Capture closing meeting notes, conclusions, and commitments.",
+        "summary": "Summarize the planned audit focus and expected outcome."
       },
+      "unassigned": "Unassigned",
       "selectStandard": "Select standard",
+      "actions": {
+        "fillAgendaTemplate": "Fill agenda template",
+        "fillMeetingTemplate": "Fill meeting notes template"
+      },
+      "procedureGuidance": {
+        "title": "Procedure-based audit setup",
+        "copy": "When the audit focuses on a controlled procedure, select the process and linked document first so the checklist is built from the right source.",
+        "auditArea": "Audit area",
+        "specificProcedure": "Specific procedure",
+        "selectProcess": "Select process",
+        "selectLinkedProcedure": "Select linked procedure",
+        "noProcedures": "No linked controlled procedures are available for the selected process yet.",
+        "selectOne": "Select one linked procedure to build a targeted checklist.",
+        "ready": "The linked procedure is ready to drive the audit checklist."
+      },
+      "model": {
+        "eyebrow": "Audit model",
+        "title": "How this audit will run",
+        "copy": "Use the plan first, then move through the checklist, findings, and close-out in one guided flow.",
+        "items": {
+          "programmePlanning": {
+            "title": "Programme planning",
+            "copy": "Keep the audit tied to the right annual programme or supplier review cycle."
+          },
+          "scopePlanning": {
+            "title": "Scope planning",
+            "copy": "Define the process, department, site, or supplier before fieldwork starts."
+          },
+          "aiChecklist": {
+            "title": "AI checklist support",
+            "copy": "Internal audits can preload ISO-aligned questions based on the selected standard."
+          },
+          "meetingTemplates": {
+            "title": "Meeting templates",
+            "copy": "Prepare opening and closing meeting notes before execution begins."
+          }
+        }
+      },
       "errors": {
         "selectStandard": "Select an ISO standard for internal audits."
       }
