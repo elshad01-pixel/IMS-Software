@@ -103,29 +103,27 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
           </div>
 
           <div class="topbar-actions">
-            <label class="language-switcher" [attr.aria-label]="'common.language' | translate">
-              <span class="language-switcher__label">{{ 'common.language' | translate }}</span>
+            <label class="topbar-control language-switcher" [attr.aria-label]="'common.language' | translate">
               <select class="language-switcher__select" [value]="i18n.language()" (change)="changeLanguage($event)">
                 <option *ngFor="let option of i18n.languageOptions" [value]="option.code">{{ option.label }}</option>
               </select>
             </label>
 
-            <button type="button" class="topbar-pin" (click)="togglePin()" *ngIf="!isCompactViewport()">
+            <button type="button" class="topbar-control topbar-pin" (click)="togglePin()" *ngIf="!isCompactViewport()">
               {{ sidebarPinned() ? ('shell.unpinSidebar' | translate) : ('shell.pinSidebar' | translate) }}
             </button>
 
             <div class="user-menu" [class.open]="menuOpen()">
-              <button type="button" class="user-trigger" (click)="toggleMenu($event)">
+              <button type="button" class="topbar-control user-trigger" (click)="toggleMenu($event)">
                 <span class="user-trigger__copy">
-                  <strong>{{ authStore.session()?.user?.email }}</strong>
-                  <small>{{ authStore.tenantSlug() || ('common.na' | translate) }}</small>
+                  <strong>{{ currentUserDisplayName() }}</strong>
                 </span>
                 <span class="user-trigger__caret">V</span>
               </button>
 
               <section class="user-dropdown card" *ngIf="menuOpen()">
                 <div class="user-dropdown__identity">
-                  <strong>{{ authStore.session()?.user?.email }}</strong>
+                  <strong>{{ currentUserDisplayName() }}</strong>
                   <small>{{ authStore.tenantSlug() || ('common.na' | translate) }}</small>
                   <small>{{ 'shell.rolePrefix' | translate }}: {{ authStore.roleLabel() }}</small>
                 </div>
@@ -477,31 +475,45 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
 
     .topbar-actions {
       display: flex;
-      gap: 0.75rem;
+      gap: 0.65rem;
       align-items: center;
       flex-wrap: wrap;
       justify-content: flex-end;
     }
 
+    .topbar-control {
+      min-height: 3.45rem;
+      border-radius: 16px;
+      border: 1px solid rgba(23, 50, 37, 0.12);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(245, 248, 244, 0.9));
+      box-shadow:
+        0 8px 20px rgba(15, 23, 42, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.82);
+      transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+    }
+
+    .topbar-control:hover {
+      transform: translateY(-1px);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 247, 0.96));
+      border-color: rgba(23, 50, 37, 0.18);
+      box-shadow:
+        0 12px 24px rgba(15, 23, 42, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.88);
+    }
+
     .language-switcher {
       display: inline-flex;
       align-items: center;
-      gap: 0.6rem;
-      padding: 0.55rem 0.8rem;
-      border-radius: 14px;
-      border: 1px solid rgba(23, 50, 37, 0.08);
-      background: rgba(244, 247, 242, 0.92);
+      justify-content: center;
+      min-width: 9rem;
+      padding: 0.65rem 0.85rem;
       color: var(--text-soft);
     }
 
-    .language-switcher__label {
-      color: var(--muted);
-      font-size: 0.78rem;
-      font-weight: 700;
-    }
-
     .language-switcher__select {
-      min-width: 7.5rem;
+      width: 100%;
       border: 0;
       background: transparent;
       color: var(--text-soft);
@@ -515,20 +527,19 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0.68rem 0.85rem;
-      border-radius: 14px;
-      border: 1px solid rgba(23, 50, 37, 0.08);
-      background: rgba(244, 247, 242, 0.92);
+      min-width: 10.75rem;
+      padding: 0.8rem 1rem;
       color: var(--text-soft);
-      box-shadow: none;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
     }
 
     .nav-toggle:hover,
     .topbar-pin:hover {
-      transform: none;
-      box-shadow: none;
-      background: rgba(255, 255, 255, 0.98);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 247, 0.96));
     }
 
     .main-body {
@@ -545,27 +556,19 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
       display: inline-flex;
       align-items: center;
       gap: 0.8rem;
-      min-width: 13.5rem;
-      max-width: min(100%, 18.5rem);
-      padding: 0.72rem 0.85rem;
-      border-radius: 16px;
-      border: 1px solid rgba(23, 50, 37, 0.08);
-      background: rgba(244, 247, 242, 0.92);
+      min-width: 10.75rem;
+      max-width: 12.5rem;
+      padding: 0.75rem 0.9rem;
       color: var(--text);
-      box-shadow: none;
-      transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
     }
 
     .user-trigger:hover {
-      transform: translateY(-1px);
-      background: rgba(255, 255, 255, 0.98);
-      border-color: rgba(36, 79, 61, 0.14);
-      box-shadow: var(--shadow-soft);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 247, 0.96));
     }
 
     .user-trigger__copy {
-      display: grid;
-      gap: 0.12rem;
+      display: block;
       text-align: left;
       min-width: 0;
       flex: 1;
@@ -589,7 +592,8 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
 
     .user-trigger__caret {
       color: var(--muted-strong);
-      font-size: 0.82rem;
+      font-size: 0.8rem;
+      font-weight: 800;
       transition: transform 140ms ease;
     }
 
@@ -863,6 +867,20 @@ export class ShellComponent {
   protected changeLanguage(event: Event) {
     const language = (event.target as HTMLSelectElement).value as AppLanguage;
     this.i18n.setLanguage(language);
+  }
+
+  protected currentUserDisplayName() {
+    const email = this.authStore.session()?.user?.email ?? '';
+    const localPart = email.split('@')[0]?.trim();
+    if (!localPart) {
+      return this.authStore.roleLabel();
+    }
+
+    return localPart
+      .split(/[._-]+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
   }
 
   protected logout() {

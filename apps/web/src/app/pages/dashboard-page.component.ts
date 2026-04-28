@@ -329,11 +329,13 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
       display: grid;
       gap: 0.3rem;
       padding: 1rem 1rem 0.9rem;
-      border-left: 6px solid var(--kpi-accent, rgba(23, 50, 37, 0.12));
+      border-left: 7px solid var(--kpi-accent, rgba(23, 50, 37, 0.18));
       border-radius: 20px;
-      background: var(--kpi-surface, rgba(255, 255, 255, 0.92));
-      border: 1px solid rgba(15, 23, 42, 0.06);
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.2)),
+        var(--kpi-surface, rgba(255, 255, 255, 0.92));
+      border: 1px solid rgba(22, 32, 26, 0.12);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.58);
       text-decoration: none;
       color: #17251f;
       transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
@@ -341,7 +343,7 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
 
     .kpi-item:hover {
       transform: translateY(-1px);
-      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.88);
     }
 
     .kpi-item__head {
@@ -352,11 +354,11 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
     }
 
     .kpi-item__dot {
-      width: 0.68rem;
-      height: 0.68rem;
+      width: 0.72rem;
+      height: 0.72rem;
       border-radius: 999px;
       background: var(--kpi-accent, rgba(23, 50, 37, 0.2));
-      box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.88);
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.56);
       flex: 0 0 auto;
     }
 
@@ -800,40 +802,40 @@ export class DashboardPageComponent {
         value: this.data().riskSummary.open + this.data().riskSummary.inTreatment,
         copy: this.t('dashboard.metrics.openRisks.copy'),
         link: '/risks',
-        accent: '#B8872B',
-        surface: '#F7EFE0'
+        accent: '#8B5E16',
+        surface: '#E7D7B7'
       },
       {
         label: this.t('dashboard.metrics.openCapa.label'),
         value: metrics['openCapas'] ?? 0,
         copy: this.t('dashboard.metrics.openCapa.copy'),
         link: '/capa',
-        accent: '#2563EB',
-        surface: '#EAF1FF'
+        accent: '#1E467F',
+        surface: '#DCE6F3'
       },
       {
         label: this.t('dashboard.metrics.activeAudits.label'),
         value: metrics['openAudits'] ?? 0,
         copy: this.t('dashboard.metrics.activeAudits.copy'),
         link: '/audits',
-        accent: '#334155',
-        surface: '#EEF2F6'
+        accent: '#344150',
+        surface: '#DDE4EA'
       },
       {
         label: this.t('dashboard.metrics.overdueActions.label'),
         value: metrics['overdueActions'] ?? 0,
         copy: this.t('dashboard.metrics.overdueActions.copy'),
         link: '/actions',
-        accent: '#C2410C',
-        surface: '#FDEEE8'
+        accent: '#94401B',
+        surface: '#EDD7CC'
       },
       {
         label: this.t('dashboard.metrics.kpiBreaches.label'),
         value: this.data().kpiSummary.length,
         copy: this.t('dashboard.metrics.kpiBreaches.copy'),
         link: '/kpis',
-        accent: '#047857',
-        surface: '#E7F6EF'
+        accent: '#18543F',
+        surface: '#D8E7DF'
       },
       {
         label: this.t('dashboard.metrics.customerFeedback.label'),
@@ -843,8 +845,8 @@ export class DashboardPageComponent {
             ? this.t('dashboard.metrics.customerFeedback.responses', { count: this.data().feedbackSummary.responseCount })
             : this.t('dashboard.metrics.customerFeedback.awaiting'),
         link: '/context/interested-parties',
-        accent: '#5B5FC7',
-        surface: '#EFEFFE'
+        accent: '#474B8C',
+        surface: '#DDDEF2'
       }
     ];
   }
