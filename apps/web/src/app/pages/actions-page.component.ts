@@ -222,6 +222,9 @@ type ReturnNavigation = {
           </div>
 
           <div class="data-table-wrap" *ngIf="!loading() && sortedActions().length">
+            <div class="filter-indicator" *ngIf="currentDueState() === 'overdue'">
+              <span class="filter-indicator__pill">{{ t('actionTracker.filters.activeOverdueView') }}</span>
+            </div>
             <table class="data-table">
               <thead>
                 <tr>
@@ -260,7 +263,13 @@ type ReturnNavigation = {
                     </div>
                   </td>
                   <td>{{ action.owner ? action.owner.firstName + ' ' + action.owner.lastName : t('actionTracker.common.unassigned') }}</td>
-                  <td>{{ action.dueDate ? (action.dueDate | date:'yyyy-MM-dd') : t('actionTracker.common.notSet') }}</td>
+                  <td>
+                    <div class="table-title">
+                      <strong [class.is-overdue-date]="isOverdueRecord(action)">{{ action.dueDate ? (action.dueDate | date:'yyyy-MM-dd') : t('actionTracker.common.notSet') }}</strong>
+                      <small class="attention-copy" *ngIf="isOverdueRecord(action)">{{ t('actionTracker.attention.short.overdue') }}</small>
+                      <small *ngIf="!isOverdueRecord(action) && isDueSoon(action)">{{ t('actionTracker.attention.short.dueSoon') }}</small>
+                    </div>
+                  </td>
                   <td>
                     <select [value]="action.status" [disabled]="!canWriteActions()" (click)="$event.stopPropagation()" (change)="updateStatus(action, readStatus($event))">
                       <option value="OPEN">{{ t('actionTracker.status.OPEN') }}</option>
@@ -334,6 +343,31 @@ type ReturnNavigation = {
 
     .table-link:hover {
       text-decoration: underline;
+    }
+
+    .filter-indicator {
+      display: flex;
+      justify-content: flex-start;
+      margin-bottom: 0.85rem;
+    }
+
+    .filter-indicator__pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.72rem;
+      border-radius: 999px;
+      background: rgba(164, 70, 26, 0.12);
+      border: 1px solid rgba(148, 64, 27, 0.16);
+      color: #7c3416;
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .is-overdue-date {
+      color: #8f3414;
     }
 
     .focused-row {
@@ -413,14 +447,23 @@ export class ActionsPageComponent {
     this.route.queryParamMap.subscribe((params) => {
       const nextFocusedActionId = params.get('focusActionId');
       const focusChanged = nextFocusedActionId !== this.focusedActionId();
+      this.filtersForm.patchValue(
+        {
+          sourceType: params.get('sourceType') ?? '',
+          status: params.get('status') ?? '',
+          ownerId: params.get('ownerId') ?? '',
+          dueState: params.get('dueState') ?? ''
+        },
+        { emitEvent: false }
+      );
       this.focusedActionId.set(nextFocusedActionId);
       this.returnNavigation.set((history.state?.returnNavigation as ReturnNavigation | undefined) ?? null);
       if (nextFocusedActionId && focusChanged) {
         this.message.set(this.t('actionTracker.messages.selectedOpenedAbove'));
         setTimeout(() => this.scrollToFocusedAction(), 0);
       }
+      this.reload();
     });
-    this.reload();
   }
 
   protected t(key: string, params?: Record<string, unknown>) {
@@ -480,6 +523,10 @@ export class ActionsPageComponent {
 
   protected overdueCount() {
     return this.actions().filter((action) => this.isOverdueRecord(action)).length;
+  }
+
+  protected currentDueState() {
+    return this.filtersForm.getRawValue().dueState;
   }
 
   protected ownerNeededCount() {
@@ -681,7 +728,7 @@ export class ActionsPageComponent {
     });
   }
 
-  private isOverdueRecord(action: ActionRecord) {
+  protected isOverdueRecord(action: ActionRecord) {
     if (!action.dueDate || action.status === 'DONE' || action.status === 'CANCELLED') {
       return false;
     }
@@ -692,7 +739,7 @@ export class ActionsPageComponent {
     return action.status !== 'DONE' && action.status !== 'CANCELLED';
   }
 
-  private isDueSoon(action: ActionRecord) {
+  protected isDueSoon(action: ActionRecord) {
     if (!action.dueDate || !this.isActiveAction(action) || this.isOverdueRecord(action)) {
       return false;
     }

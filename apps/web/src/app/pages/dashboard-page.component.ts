@@ -52,6 +52,7 @@ type DashboardPoint = {
   value: number;
   color: string;
   link: string | any[];
+  queryParams?: Record<string, string>;
   width: number;
 };
 
@@ -95,6 +96,7 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
             class="kpi-item"
             *ngFor="let item of summaryCards()"
             [routerLink]="item.link"
+            [queryParams]="item.queryParams || null"
             [style.--kpi-accent]="item.accent"
             [style.--kpi-surface]="item.surface"
           >
@@ -826,6 +828,7 @@ export class DashboardPageComponent {
         value: metrics['overdueActions'] ?? 0,
         copy: this.t('dashboard.metrics.overdueActions.copy'),
         link: '/actions',
+        queryParams: { dueState: 'overdue' },
         accent: '#94401B',
         surface: '#EDD7CC'
       },

@@ -186,11 +186,30 @@ import { PageHeaderComponent } from '../shared/page-header.component';
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 0.8rem 1rem;
       align-items: start;
-      padding: 1rem;
-      border: 1px solid var(--border-subtle);
+      padding: 1rem 1rem 0.9rem;
+      border: 1px solid rgba(31, 41, 51, 0.08);
       border-radius: 1rem;
-      background: color-mix(in srgb, var(--surface-strong) 94%, white);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(251, 252, 250, 0.94)),
+        color-mix(in srgb, var(--surface-strong) 94%, white);
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+      position: relative;
+      overflow: hidden;
     }
+
+    .area-card::before {
+      content: '';
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 4px;
+      background: var(--area-accent, rgba(23, 59, 47, 0.4));
+    }
+
+    .area-card:nth-child(1) { --area-accent: #173B2F; }
+    .area-card:nth-child(2) { --area-accent: #1E467F; }
+    .area-card:nth-child(3) { --area-accent: #6A4C93; }
+    .area-card:nth-child(4) { --area-accent: #9A6B1F; }
 
     .compact-summary-strip {
       display: grid;
@@ -206,30 +225,39 @@ import { PageHeaderComponent } from '../shared/page-header.component';
 
     .area-copy {
       display: grid;
-      gap: 0.3rem;
+      gap: 0.42rem;
       min-width: 0;
     }
 
     .area-card span {
-      color: var(--muted);
-      font-size: 0.78rem;
+      color: var(--muted-strong);
+      font-size: 0.74rem;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
     }
 
     .area-copy p {
       margin: 0;
       color: var(--muted);
-      line-height: 1.35;
-      font-size: 0.92rem;
+      line-height: 1.4;
+      font-size: 0.9rem;
     }
 
     .area-card strong {
-      font-size: 1.75rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2.6rem;
+      height: 2.35rem;
+      padding: 0 0.7rem;
+      border-radius: 999px;
+      border: 1px solid color-mix(in srgb, var(--area-accent) 18%, white);
+      background: color-mix(in srgb, var(--area-accent) 10%, white);
+      font-size: 1.35rem;
       line-height: 1;
-      letter-spacing: -0.04em;
+      letter-spacing: -0.03em;
       color: var(--text-soft);
-      min-width: 2.2rem;
       text-align: right;
     }
 
@@ -238,6 +266,8 @@ import { PageHeaderComponent } from '../shared/page-header.component';
       gap: 0.45rem;
       flex-wrap: wrap;
       grid-column: 1 / -1;
+      padding-top: 0.7rem;
+      border-top: 1px solid rgba(31, 41, 51, 0.08);
     }
 
     .link-row {
@@ -266,7 +296,10 @@ import { PageHeaderComponent } from '../shared/page-header.component';
 
       .areas-grid { grid-template-columns: minmax(0, 1fr); }
       .area-card { grid-template-columns: minmax(0, 1fr); }
-      .area-card strong { text-align: left; }
+      .area-card strong {
+        justify-self: start;
+        text-align: left;
+      }
     }
   `]
 })

@@ -118,7 +118,7 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
                 <span class="user-trigger__copy">
                   <strong>{{ currentUserDisplayName() }}</strong>
                 </span>
-                <span class="user-trigger__caret">V</span>
+                <span class="user-trigger__caret">▾</span>
               </button>
 
               <section class="user-dropdown card" *ngIf="menuOpen()">
@@ -475,7 +475,7 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
 
     .topbar-actions {
       display: flex;
-      gap: 0.65rem;
+      gap: 0.5rem;
       align-items: center;
       flex-wrap: wrap;
       justify-content: flex-end;
@@ -507,9 +507,10 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 9rem;
+      width: 9.4rem;
       padding: 0.65rem 0.85rem;
       color: var(--text-soft);
+      flex: 0 0 auto;
     }
 
     .language-switcher__select {
@@ -517,7 +518,9 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
       border: 0;
       background: transparent;
       color: var(--text-soft);
+      font-size: 0.82rem;
       font-weight: 700;
+      letter-spacing: -0.01em;
       padding: 0;
       outline: none;
     }
@@ -527,13 +530,14 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 10.75rem;
-      padding: 0.8rem 1rem;
+      width: 9.4rem;
+      padding: 0.8rem 0.9rem;
       color: var(--text-soft);
       font-size: 0.82rem;
-      font-weight: 800;
+      font-weight: 700;
       letter-spacing: -0.01em;
       white-space: nowrap;
+      flex: 0 0 auto;
     }
 
     .nav-toggle:hover,
@@ -555,11 +559,13 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
     .user-trigger {
       display: inline-flex;
       align-items: center;
+      justify-content: space-between;
       gap: 0.8rem;
-      min-width: 10.75rem;
-      max-width: 12.5rem;
+      width: 9.4rem;
+      max-width: 9.4rem;
       padding: 0.75rem 0.9rem;
       color: var(--text);
+      flex: 0 0 auto;
     }
 
     .user-trigger:hover {
@@ -568,7 +574,8 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
     }
 
     .user-trigger__copy {
-      display: block;
+      display: flex;
+      align-items: center;
       text-align: left;
       min-width: 0;
       flex: 1;
@@ -576,9 +583,12 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
 
     .user-trigger__copy strong,
     .user-dropdown__identity strong {
-      font-size: 0.92rem;
+      font-size: 0.82rem;
       line-height: 1.2;
       color: var(--text-soft);
+      display: block;
+      font-weight: 700;
+      letter-spacing: -0.01em;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -592,9 +602,10 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
 
     .user-trigger__caret {
       color: var(--muted-strong);
-      font-size: 0.8rem;
+      font-size: 0.86rem;
       font-weight: 800;
       transition: transform 140ms ease;
+      line-height: 1;
     }
 
     .user-menu.open .user-trigger__caret {

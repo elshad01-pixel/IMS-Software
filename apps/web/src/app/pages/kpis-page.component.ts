@@ -4,6 +4,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
+import { I18nService } from '../core/i18n.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
 type PageMode = 'list' | 'create' | 'detail' | 'edit';
@@ -53,35 +54,35 @@ type KpiRecord = {
   template: `
     <section class="page-grid">
       <iso-page-header
-        [label]="'KPIs'"
+        [label]="t('kpis.page.label')"
         [title]="pageTitle()"
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
-        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">Back to Start Here</a>
-        <a *ngIf="mode() === 'list'" routerLink="/kpis/new" class="button-link">+ New KPI</a>
-        <a *ngIf="mode() === 'detail' && selectedKpi()" [routerLink]="['/kpis', selectedKpi()?.id, 'edit']" class="button-link">Edit KPI</a>
-        <a *ngIf="mode() !== 'list'" routerLink="/kpis" class="button-link secondary">Back to KPIs</a>
+        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">{{ t('kpis.actions.backToStartHere') }}</a>
+        <a *ngIf="mode() === 'list'" routerLink="/kpis/new" class="button-link">+ {{ t('kpis.actions.new') }}</a>
+        <a *ngIf="mode() === 'detail' && selectedKpi()" [routerLink]="['/kpis', selectedKpi()?.id, 'edit']" class="button-link">{{ t('kpis.actions.edit') }}</a>
+        <a *ngIf="mode() !== 'list'" routerLink="/kpis" class="button-link secondary">{{ t('kpis.actions.backToList') }}</a>
       </iso-page-header>
 
       <section *ngIf="mode() === 'list'" class="page-stack">
         <div class="card list-card">
           <div class="section-head">
             <div>
-              <h3>KPI register</h3>
-              <p class="subtle">Track current performance, targets, thresholds, and watch or breach states in one calm list.</p>
+              <h3>{{ t('kpis.list.title') }}</h3>
+              <p *ngIf="t('kpis.list.copy') as listCopy" class="subtle">{{ listCopy }}</p>
             </div>
           </div>
 
-          <div class="empty-state" *ngIf="loading()">Loading KPIs...</div>
+          <div class="empty-state" *ngIf="loading()">{{ t('kpis.list.loading') }}</div>
           <table class="data-table" *ngIf="!loading()">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Current</th>
-                <th>Target</th>
-                <th>Status</th>
-                <th>Management view</th>
+                <th>{{ t('kpis.list.table.name') }}</th>
+                <th>{{ t('kpis.list.table.current') }}</th>
+                <th>{{ t('kpis.list.table.target') }}</th>
+                <th>{{ t('kpis.list.table.status') }}</th>
+                <th>{{ t('kpis.list.table.managementView') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -89,7 +90,7 @@ type KpiRecord = {
                 <td><strong>{{ item.name }}</strong></td>
                 <td>{{ item.actual }} {{ item.unit }}</td>
                 <td>{{ item.target }} {{ item.unit }}</td>
-                <td><span class="status-badge" [class.warn]="item.status === 'WATCH'" [class.danger]="item.status === 'BREACH'" [class.success]="item.status === 'ON_TARGET'">{{ item.status }}</span></td>
+                <td><span class="status-badge" [class.warn]="item.status === 'WATCH'" [class.danger]="item.status === 'BREACH'" [class.success]="item.status === 'ON_TARGET'">{{ statusLabel(item.status) }}</span></td>
                 <td>{{ managementView(item) }}</td>
               </tr>
             </tbody>
@@ -101,8 +102,8 @@ type KpiRecord = {
         <form class="card form-card page-stack" [formGroup]="kpiForm" (ngSubmit)="saveKpi()">
           <div class="section-head">
             <div>
-              <h3>{{ mode() === 'create' ? 'Create KPI' : 'Edit KPI' }}</h3>
-              <p class="subtle">Define target logic cleanly here. Readings and trend history stay on the KPI detail page.</p>
+              <h3>{{ mode() === 'create' ? t('kpis.form.createTitle') : t('kpis.form.editTitle') }}</h3>
+              <p class="subtle">{{ t('kpis.form.copy') }}</p>
             </div>
           </div>
 
@@ -111,21 +112,21 @@ type KpiRecord = {
           <section class="guidance-card">
             <strong>{{ directionLabel(kpiForm.getRawValue().direction) }}</strong>
             <p>{{ directionGuidance(kpiForm.getRawValue().direction) }}</p>
-            <small>Use the warning threshold to define when management attention should start before a full breach occurs.</small>
+            <small>{{ t('kpis.form.guidance') }}</small>
           </section>
 
-          <label class="field"><span>Name</span><input formControlName="name" placeholder="Supplier OTIF"></label>
-          <label class="field"><span>Description</span><textarea rows="3" formControlName="description" placeholder="On-time in-full supplier delivery rate"></textarea></label>
+          <label class="field"><span>{{ t('kpis.form.fields.name') }}</span><input formControlName="name" [placeholder]="t('kpis.form.placeholders.name')"></label>
+          <label class="field"><span>{{ t('kpis.form.fields.description') }}</span><textarea rows="3" formControlName="description" [placeholder]="t('kpis.form.placeholders.description')"></textarea></label>
           <div class="form-grid-2">
             <label class="field">
-              <span>Owner</span>
+              <span>{{ t('kpis.form.fields.owner') }}</span>
               <select formControlName="ownerId">
-                <option value="">Unassigned</option>
+                <option value="">{{ t('kpis.common.unassigned') }}</option>
                 <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
               </select>
             </label>
             <label class="field">
-              <span>Direction</span>
+              <span>{{ t('kpis.form.fields.direction') }}</span>
               <select formControlName="direction">
                 <option>AT_LEAST</option>
                 <option>AT_MOST</option>
@@ -133,15 +134,15 @@ type KpiRecord = {
             </label>
           </div>
           <div class="form-grid-3">
-            <label class="field"><span>Target</span><input type="number" step="0.01" formControlName="target"></label>
-            <label class="field"><span>Warning threshold</span><input type="number" step="0.01" formControlName="warningThreshold"></label>
-            <label class="field"><span>Unit</span><input formControlName="unit" placeholder="%"></label>
+            <label class="field"><span>{{ t('kpis.form.fields.target') }}</span><input type="number" step="0.01" formControlName="target"></label>
+            <label class="field"><span>{{ t('kpis.form.fields.warningThreshold') }}</span><input type="number" step="0.01" formControlName="warningThreshold"></label>
+            <label class="field"><span>{{ t('kpis.form.fields.unit') }}</span><input formControlName="unit" [placeholder]="t('kpis.form.placeholders.unit')"></label>
           </div>
-          <label class="field"><span>Period label</span><input formControlName="periodLabel" placeholder="Monthly"></label>
+          <label class="field"><span>{{ t('kpis.form.fields.periodLabel') }}</span><input formControlName="periodLabel" [placeholder]="t('kpis.form.placeholders.periodLabel')"></label>
 
           <div class="button-row">
-            <button type="submit" [disabled]="kpiForm.invalid || saving()">{{ saving() ? 'Saving...' : 'Save KPI' }}</button>
-            <a [routerLink]="selectedId() ? ['/kpis', selectedId()] : ['/kpis']" class="button-link secondary">Cancel</a>
+            <button type="submit" [disabled]="kpiForm.invalid || saving()">{{ saving() ? t('kpis.actions.saving') : t('kpis.actions.save') }}</button>
+            <a [routerLink]="selectedId() ? ['/kpis', selectedId()] : ['/kpis']" class="button-link secondary">{{ t('common.cancel') }}</a>
           </div>
         </form>
 
@@ -153,22 +154,22 @@ type KpiRecord = {
             <div class="section-head">
               <div>
                 <h3>{{ selectedKpi()?.name }}</h3>
-                <p class="subtle">{{ selectedKpi()?.periodLabel }} KPI</p>
+                <p class="subtle">{{ selectedKpi()?.periodLabel }} {{ t('kpis.detail.periodSuffix') }}</p>
               </div>
-              <span class="status-badge" [class.warn]="selectedKpi()?.status === 'WATCH'" [class.danger]="selectedKpi()?.status === 'BREACH'" [class.success]="selectedKpi()?.status === 'ON_TARGET'">{{ selectedKpi()?.status }}</span>
+              <span class="status-badge" [class.warn]="selectedKpi()?.status === 'WATCH'" [class.danger]="selectedKpi()?.status === 'BREACH'" [class.success]="selectedKpi()?.status === 'ON_TARGET'">{{ statusLabel(selectedKpi()?.status) }}</span>
             </div>
 
             <div class="summary-strip top-space">
               <article class="summary-item">
-                <span>Current</span>
+                <span>{{ t('kpis.detail.summary.current') }}</span>
                 <strong>{{ selectedKpi()?.actual }} {{ selectedKpi()?.unit }}</strong>
               </article>
               <article class="summary-item">
-                <span>Target</span>
+                <span>{{ t('kpis.detail.summary.target') }}</span>
                 <strong>{{ selectedKpi()?.target }} {{ selectedKpi()?.unit }}</strong>
               </article>
               <article class="summary-item">
-                <span>Trend</span>
+                <span>{{ t('kpis.detail.summary.trend') }}</span>
                 <strong>{{ selectedKpi()?.trend }}</strong>
               </article>
             </div>
@@ -180,13 +181,13 @@ type KpiRecord = {
             </section>
 
             <dl class="key-value top-space">
-              <dt>Description</dt>
-              <dd>{{ selectedKpi()?.description || 'No description provided.' }}</dd>
-              <dt>Warning threshold</dt>
-              <dd>{{ selectedKpi()?.warningThreshold ?? 'Not set' }}</dd>
-              <dt>Direction</dt>
+              <dt>{{ t('kpis.detail.fields.description') }}</dt>
+              <dd>{{ selectedKpi()?.description || t('kpis.detail.noDescription') }}</dd>
+              <dt>{{ t('kpis.detail.fields.warningThreshold') }}</dt>
+              <dd>{{ selectedKpi()?.warningThreshold ?? t('kpis.common.notSet') }}</dd>
+              <dt>{{ t('kpis.detail.fields.direction') }}</dt>
               <dd>{{ directionLabel(selectedKpi()?.direction || 'AT_LEAST') }}</dd>
-              <dt>Distance to target</dt>
+              <dt>{{ t('kpis.detail.fields.distanceToTarget') }}</dt>
               <dd>{{ distanceToTarget() }}</dd>
             </dl>
           </section>
@@ -194,18 +195,18 @@ type KpiRecord = {
           <section class="card panel-card">
             <div class="section-head">
               <div>
-                <h3>Readings</h3>
-                <p class="subtle">Add current readings and keep the recent evidence trail visible below.</p>
+                <h3>{{ t('kpis.readings.title') }}</h3>
+                <p class="subtle">{{ t('kpis.readings.copy') }}</p>
               </div>
             </div>
 
             <form [formGroup]="readingForm" class="page-stack top-space" (ngSubmit)="addReading()">
               <div class="form-grid-2">
-                <label class="field"><span>Value</span><input type="number" step="0.01" formControlName="value"></label>
-                <label class="field"><span>Reading date</span><input type="date" formControlName="readingDate"></label>
+                <label class="field"><span>{{ t('kpis.readings.fields.value') }}</span><input type="number" step="0.01" formControlName="value"></label>
+                <label class="field"><span>{{ t('kpis.readings.fields.readingDate') }}</span><input type="date" formControlName="readingDate"></label>
               </div>
-              <label class="field"><span>Notes</span><textarea rows="3" formControlName="notes" placeholder="Reading notes"></textarea></label>
-              <button type="submit" [disabled]="readingForm.invalid || saving()">Add reading</button>
+              <label class="field"><span>{{ t('kpis.readings.fields.notes') }}</span><textarea rows="3" formControlName="notes" [placeholder]="t('kpis.readings.placeholders.notes')"></textarea></label>
+              <button type="submit" [disabled]="readingForm.invalid || saving()">{{ t('kpis.readings.actions.add') }}</button>
             </form>
 
             <div class="entity-list top-space">
@@ -257,6 +258,7 @@ type KpiRecord = {
 export class KpisPageComponent {
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -270,6 +272,10 @@ export class KpisPageComponent {
   protected readonly saving = signal(false);
   protected readonly message = signal((history.state?.notice as string) || '');
   protected readonly error = signal('');
+
+  protected t(key: string, params?: Record<string, unknown>) {
+    return this.i18n.t(key, params);
+  }
 
   protected showStartHereBackLink() {
     return this.route.snapshot.queryParamMap.get('from') === 'start-here';
@@ -304,33 +310,33 @@ export class KpisPageComponent {
 
   protected pageTitle() {
     return {
-      list: 'KPI register',
-      create: 'Create KPI',
-      detail: this.selectedKpi()?.name || 'KPI detail',
-      edit: this.selectedKpi()?.name || 'Edit KPI'
+      list: this.t('kpis.page.titles.list'),
+      create: this.t('kpis.page.titles.create'),
+      detail: this.selectedKpi()?.name || this.t('kpis.page.titles.detail'),
+      edit: this.selectedKpi()?.name || this.t('kpis.page.titles.edit')
     }[this.mode()];
   }
 
   protected pageDescription() {
     return {
-      list: 'A focused list of KPI definitions and current status against target.',
-      create: 'Define a KPI in its own page without mixing reading history into the same screen.',
-      detail: 'Review current status, thresholds, and reading history in one clean KPI record.',
-      edit: 'Adjust the KPI definition in a dedicated editing workflow.'
+      list: this.t('kpis.page.descriptions.list'),
+      create: this.t('kpis.page.descriptions.create'),
+      detail: this.t('kpis.page.descriptions.detail'),
+      edit: this.t('kpis.page.descriptions.edit')
     }[this.mode()];
   }
 
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: 'KPIs' }];
-    const base = [{ label: 'KPIs', link: '/kpis' }];
-    if (this.mode() === 'create') return [...base, { label: 'New KPI' }];
-    if (this.mode() === 'edit') return [...base, { label: this.selectedKpi()?.name || 'KPI', link: `/kpis/${this.selectedId()}` }, { label: 'Edit' }];
-    return [...base, { label: this.selectedKpi()?.name || 'KPI' }];
+    if (this.mode() === 'list') return [{ label: this.t('kpis.page.label') }];
+    const base = [{ label: this.t('kpis.page.label'), link: '/kpis' }];
+    if (this.mode() === 'create') return [...base, { label: this.t('kpis.breadcrumbs.new') }];
+    if (this.mode() === 'edit') return [...base, { label: this.selectedKpi()?.name || this.t('kpis.breadcrumbs.record'), link: `/kpis/${this.selectedId()}` }, { label: this.t('kpis.breadcrumbs.edit') }];
+    return [...base, { label: this.selectedKpi()?.name || this.t('kpis.breadcrumbs.record') }];
   }
 
   protected saveKpi() {
     if (this.kpiForm.invalid) {
-      this.error.set('Complete the required KPI fields.');
+      this.error.set(this.t('kpis.messages.completeRequired'));
       return;
     }
 
@@ -355,11 +361,11 @@ export class KpisPageComponent {
     request.subscribe({
       next: (kpi) => {
         this.saving.set(false);
-        this.router.navigate(['/kpis', kpi.id], { state: { notice: 'KPI saved successfully.' } });
+        this.router.navigate(['/kpis', kpi.id], { state: { notice: this.t('kpis.messages.saved') } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'KPI save failed.'));
+        this.error.set(this.readError(error, this.t('kpis.messages.saveFailed')));
       }
     });
   }
@@ -377,121 +383,128 @@ export class KpisPageComponent {
     }).subscribe({
       next: () => {
         this.saving.set(false);
-        this.message.set('KPI reading added.');
+        this.message.set(this.t('kpis.messages.readingAdded'));
         this.readingForm.reset({ value: 0, readingDate: '', notes: '' });
         this.fetchKpi(this.selectedId() as string);
         this.reload();
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'KPI reading save failed.'));
+        this.error.set(this.readError(error, this.t('kpis.messages.readingSaveFailed')));
       }
     });
   }
 
   protected directionLabel(direction: KpiDirection) {
-    return direction === 'AT_MOST' ? 'Lower result is better' : 'Higher result is better';
+    return direction === 'AT_MOST' ? this.t('kpis.direction.atMost') : this.t('kpis.direction.atLeast');
   }
 
   protected directionGuidance(direction: KpiDirection) {
     return direction === 'AT_MOST'
-      ? 'Use this for metrics such as complaints, defects, waste, or incident rate where performance improves as the result goes down.'
-      : 'Use this for metrics such as on-time delivery, training completion, or compliance rate where performance improves as the result goes up.';
+      ? this.t('kpis.directionGuidance.atMost')
+      : this.t('kpis.directionGuidance.atLeast');
   }
 
   protected managementView(item: KpiRecord) {
     if (item.status === 'BREACH') {
-      return 'Immediate follow-up';
+      return this.t('kpis.managementView.breach');
     }
     if (item.status === 'WATCH') {
-      return 'Closer monitoring';
+      return this.t('kpis.managementView.watch');
     }
-    return 'On plan';
+    return this.t('kpis.managementView.onTarget');
+  }
+
+  protected statusLabel(status?: KpiRecord['status'] | null) {
+    if (!status) {
+      return this.t('kpis.common.notSet');
+    }
+    return this.t(`kpis.status.${status}`);
   }
 
   protected performanceHeadline() {
     const kpi = this.selectedKpi();
     if (!kpi) {
-      return 'Performance view';
+      return this.t('kpis.performance.defaultHeadline');
     }
     if (kpi.status === 'BREACH') {
-      return 'Management attention is required';
+      return this.t('kpis.performance.headlineBreach');
     }
     if (kpi.status === 'WATCH') {
-      return 'Performance is drifting toward breach';
+      return this.t('kpis.performance.headlineWatch');
     }
-    return 'Performance is currently on target';
+    return this.t('kpis.performance.headlineOnTarget');
   }
 
   protected performanceNarrative() {
     const kpi = this.selectedKpi();
     if (!kpi) {
-      return 'Review the KPI against target, warning threshold, and recent readings.';
+      return this.t('kpis.performance.defaultNarrative');
     }
     if (kpi.status === 'BREACH') {
-      return `This KPI is outside the accepted performance band for ${kpi.periodLabel.toLowerCase()} review. The management response should confirm cause, corrective action, and follow-up timing.`;
+      return this.t('kpis.performance.narrativeBreach', { period: kpi.periodLabel.toLowerCase() });
     }
     if (kpi.status === 'WATCH') {
-      return `This KPI is still within the control range but close enough to the warning threshold that management follow-up is appropriate before performance deteriorates further.`;
+      return this.t('kpis.performance.narrativeWatch');
     }
-    return `This KPI is meeting the expected target direction. Continue routine monitoring and keep the reading history current as evidence of sustained performance.`;
+    return this.t('kpis.performance.narrativeOnTarget');
   }
 
   protected performanceActionHint() {
     const kpi = this.selectedKpi();
     if (!kpi) {
-      return 'Save the KPI to start recording evidence-based readings.';
+      return this.t('kpis.performance.defaultHint');
     }
     if (kpi.status === 'BREACH') {
-      return 'Next step: update the latest reading notes with cause and planned response.';
+      return this.t('kpis.performance.hintBreach');
     }
     if (kpi.status === 'WATCH') {
-      return 'Next step: add the latest reading notes and confirm whether intervention is needed.';
+      return this.t('kpis.performance.hintWatch');
     }
-    return 'Next step: keep the next planned reading on schedule to demonstrate ongoing control.';
+    return this.t('kpis.performance.hintOnTarget');
   }
 
   protected distanceToTarget() {
     const kpi = this.selectedKpi();
     if (!kpi) {
-      return 'Not available';
+      return this.t('kpis.common.notAvailable');
     }
     const difference = Number((kpi.actual - kpi.target).toFixed(2));
     if (difference === 0) {
-      return `At target (${kpi.target} ${kpi.unit})`;
+      return this.t('kpis.distance.atTarget', { target: kpi.target, unit: kpi.unit });
     }
     if (kpi.direction === 'AT_LEAST') {
       return difference > 0
-        ? `${difference} ${kpi.unit} above target`
-        : `${Math.abs(difference)} ${kpi.unit} below target`;
+        ? this.t('kpis.distance.aboveTarget', { difference, unit: kpi.unit })
+        : this.t('kpis.distance.belowTarget', { difference: Math.abs(difference), unit: kpi.unit });
     }
     return difference < 0
-      ? `${Math.abs(difference)} ${kpi.unit} better than limit`
-      : `${difference} ${kpi.unit} above allowed limit`;
+      ? this.t('kpis.distance.betterThanLimit', { difference: Math.abs(difference), unit: kpi.unit })
+      : this.t('kpis.distance.aboveLimit', { difference, unit: kpi.unit });
   }
 
   protected readingInterpretation(value: number) {
     const kpi = this.selectedKpi();
     if (!kpi) {
-      return 'Reading logged';
+      return this.t('kpis.readings.interpretation.logged');
     }
     if (kpi.direction === 'AT_LEAST') {
       if (value >= kpi.target) {
-        return 'Reading met or exceeded target.';
+        return this.t('kpis.readings.interpretation.metTarget');
       }
       if (kpi.warningThreshold != null && value >= kpi.warningThreshold) {
-        return 'Reading entered the watch range.';
+        return this.t('kpis.readings.interpretation.watchRange');
       }
-      return 'Reading fell into breach range.';
+      return this.t('kpis.readings.interpretation.breachRange');
     }
 
     if (value <= kpi.target) {
-      return 'Reading stayed within the target limit.';
+      return this.t('kpis.readings.interpretation.withinLimit');
     }
     if (kpi.warningThreshold != null && value <= kpi.warningThreshold) {
-      return 'Reading entered the watch range.';
+      return this.t('kpis.readings.interpretation.watchRange');
     }
-    return 'Reading exceeded the accepted limit.';
+    return this.t('kpis.readings.interpretation.exceededLimit');
   }
 
   private handleRoute(params: ParamMap) {
@@ -551,7 +564,7 @@ export class KpisPageComponent {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'KPI details could not be loaded.'));
+        this.error.set(this.readError(error, this.t('kpis.messages.detailLoadFailed')));
       }
     });
   }
@@ -565,7 +578,7 @@ export class KpisPageComponent {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'KPIs could not be loaded.'));
+        this.error.set(this.readError(error, this.t('kpis.messages.listLoadFailed')));
       }
     });
   }

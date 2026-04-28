@@ -1146,6 +1146,7 @@
       "allStatuses": "Bütün statuslar",
       "allOwners": "Bütün məsul şəxslər",
       "allDueDates": "Bütün son tarixlər",
+      "activeOverdueView": "Gecikmiş tapşırıqlar göstərilir",
       "upcoming": "Yaxın son tarix",
       "sortBy": "Sıralama",
       "apply": "Filtrləri tətbiq et",
@@ -1231,6 +1232,161 @@
       "deleteConfirm": "\"{{title}}\" tapşırığı silinsin? Tamamlanmış tapşırıqlar qorunur.",
       "deleteSuccess": "Tapşırıq silindi.",
       "deleteFailed": "Tapşırığı silmək mümkün olmadı."
+    }
+  },
+  "kpis": {
+    "page": {
+      "label": "Əsas performans göstəriciləri",
+      "titles": {
+        "list": "KPI reyestri",
+        "create": "KPI yaradın",
+        "detail": "KPI detalı",
+        "edit": "KPI redaktəsi"
+      },
+      "descriptions": {
+        "list": "Hədəfə qarşı cari statusu göstərən KPI təriflərinin fokuslanmış reyestri.",
+        "create": "Oxunuş tarixçəsini eyni ekrana qarışdırmadan KPI-ni ayrıca səhifədə yaradın.",
+        "detail": "Cari statusu, hədləri və oxunuş tarixçəsini bir aydın KPI qeydində nəzərdən keçirin.",
+        "edit": "KPI tərifini ayrıca redaktə axınında yeniləyin."
+      }
+    },
+    "actions": {
+      "backToStartHere": "Buradan başlayın səhifəsinə qayıt",
+      "new": "Yeni KPI",
+      "edit": "KPI-ni redaktə et",
+      "backToList": "KPI-lərə qayıt",
+      "save": "KPI-ni yadda saxla",
+      "saving": "Yadda saxlanır..."
+    },
+    "breadcrumbs": {
+      "new": "Yeni KPI",
+      "record": "KPI",
+      "edit": "Redaktə"
+    },
+    "common": {
+      "unassigned": "Təyin edilməyib",
+      "notSet": "Təyin edilməyib",
+      "notAvailable": "Mövcud deyil"
+    },
+    "list": {
+      "title": "KPI reyestri",
+      "copy": "",
+      "loading": "KPI-lər yüklənir...",
+      "table": {
+        "name": "Ad",
+        "current": "Cari",
+        "target": "Hədəf",
+        "status": "Status",
+        "managementView": "Rəhbərlik baxışı"
+      }
+    },
+    "form": {
+      "createTitle": "KPI yaradın",
+      "editTitle": "KPI-ni redaktə edin",
+      "copy": "Hədəfləri burada müəyyən edin.",
+      "guidance": "Tam pozuntu baş verməzdən əvvəl rəhbərlik diqqətinin nə vaxt başlamalı olduğunu müəyyən etmək üçün xəbərdarlıq həddindən istifadə edin.",
+      "fields": {
+        "name": "Ad",
+        "description": "Təsvir",
+        "owner": "Məsul şəxs",
+        "direction": "İstiqamət",
+        "target": "Hədəf",
+        "warningThreshold": "Xəbərdarlıq həddi",
+        "unit": "Vahid",
+        "periodLabel": "Dövr etiketi"
+      },
+      "placeholders": {
+        "name": "Təchizatçı OTIF",
+        "description": "Vaxtında və tam təchizatçı çatdırılma dərəcəsi",
+        "unit": "%",
+        "periodLabel": "Aylıq"
+      }
+    },
+    "direction": {
+      "atLeast": "Daha yüksək nəticə daha yaxşıdır",
+      "atMost": "Daha aşağı nəticə daha yaxşıdır"
+    },
+    "directionGuidance": {
+      "atLeast": "Vaxtında çatdırılma, təlim tamamlama və ya uyğunluq faizi kimi nəticə artdıqca performansın yaxşılaşdığı göstəricilər üçün istifadə edin.",
+      "atMost": "Şikayətlər, qüsurlar, tullantı və ya hadisə dərəcəsi kimi nəticə azaldıqca performansın yaxşılaşdığı göstəricilər üçün istifadə edin."
+    },
+    "managementView": {
+      "breach": "Təcili izləmə",
+      "watch": "Daha yaxın izləmə",
+      "onTarget": "Plan üzrə"
+    },
+    "status": {
+      "ON_TARGET": "Hədəf üzərində",
+      "WATCH": "İzləmə",
+      "BREACH": "Pozuntu"
+    },
+    "detail": {
+      "periodSuffix": "KPI",
+      "summary": {
+        "current": "Cari",
+        "target": "Hədəf",
+        "trend": "Trend"
+      },
+      "fields": {
+        "description": "Təsvir",
+        "warningThreshold": "Xəbərdarlıq həddi",
+        "direction": "İstiqamət",
+        "distanceToTarget": "Hədəfdən fərq"
+      },
+      "noDescription": "Təsvir verilməyib."
+    },
+    "performance": {
+      "defaultHeadline": "Performans görünüşü",
+      "headlineBreach": "Rəhbərlik diqqəti tələb olunur",
+      "headlineWatch": "Performans pozuntuya yaxınlaşır",
+      "headlineOnTarget": "Performans hazırda hədəf üzərindədir",
+      "defaultNarrative": "KPI-ni hədəf, xəbərdarlıq həddi və son oxunuşlarla müqayisə edin.",
+      "narrativeBreach": "Bu KPI {{period}} baxışı üçün qəbul edilən performans zolağından kənardadır. Rəhbərlik reaksiyası səbəbi, düzəldici tədbiri və izləmə vaxtını təsdiqləməlidir.",
+      "narrativeWatch": "Bu KPI hələ nəzarət diapazonundadır, lakin performans daha da pisləşməzdən əvvəl rəhbərlik izləməsinin uyğun olacağı qədər xəbərdarlıq həddinə yaxındır.",
+      "narrativeOnTarget": "Bu KPI gözlənilən hədəf istiqamətinə uyğundur. Davamlı performansın sübutu kimi rutin izləməni davam etdirin və oxunuş tarixçəsini aktual saxlayın.",
+      "defaultHint": "Sübut əsaslı oxunuşlar yazmağa başlamaq üçün KPI-ni yadda saxlayın.",
+      "hintBreach": "Növbəti addım: səbəb və planlaşdırılmış reaksiya ilə son oxunuş qeydlərini yeniləyin.",
+      "hintWatch": "Növbəti addım: son oxunuş qeydlərini əlavə edin və müdaxilə lazım olub-olmadığını təsdiqləyin.",
+      "hintOnTarget": "Növbəti addım: davamlı nəzarəti göstərmək üçün növbəti planlaşdırılmış oxunuşu vaxtında saxlayın."
+    },
+    "distance": {
+      "atTarget": "Hədəfdədir ({{target}} {{unit}})",
+      "aboveTarget": "{{difference}} {{unit}} hədəfdən yuxarı",
+      "belowTarget": "{{difference}} {{unit}} hədəfdən aşağı",
+      "betterThanLimit": "{{difference}} {{unit}} limitdən daha yaxşı",
+      "aboveLimit": "{{difference}} {{unit}} icazə verilən limitdən yuxarı"
+    },
+    "readings": {
+      "title": "Oxunuşlar",
+      "copy": "Cari oxunuşları əlavə edin və son sübut izini aşağıda görünən saxlayın.",
+      "fields": {
+        "value": "Dəyər",
+        "readingDate": "Oxunuş tarixi",
+        "notes": "Qeydlər"
+      },
+      "placeholders": {
+        "notes": "Oxunuş qeydləri"
+      },
+      "actions": {
+        "add": "Oxunuş əlavə et"
+      },
+      "interpretation": {
+        "logged": "Oxunuş qeydə alındı",
+        "metTarget": "Oxunuş hədəfə çatdı və ya onu keçdi.",
+        "watchRange": "Oxunuş izləmə aralığına daxil oldu.",
+        "breachRange": "Oxunuş pozuntu aralığına düşdü.",
+        "withinLimit": "Oxunuş hədəf limiti daxilində qaldı.",
+        "exceededLimit": "Oxunuş qəbul edilən limiti aşdı."
+      }
+    },
+    "messages": {
+      "completeRequired": "Tələb olunan KPI sahələrini tamamlayın.",
+      "saved": "KPI uğurla yadda saxlanıldı.",
+      "saveFailed": "KPI yadda saxlanmadı.",
+      "readingAdded": "KPI oxunuşu əlavə edildi.",
+      "readingSaveFailed": "KPI oxunuşunu yadda saxlamaq mümkün olmadı.",
+      "detailLoadFailed": "KPI detalları yüklənə bilmədi.",
+      "listLoadFailed": "KPI-lər yüklənə bilmədi."
     }
   },
   "ncr": {

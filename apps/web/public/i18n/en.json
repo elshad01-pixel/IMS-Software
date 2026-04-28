@@ -1412,6 +1412,7 @@
       "allStatuses": "All statuses",
       "allOwners": "All owners",
       "allDueDates": "All due dates",
+      "activeOverdueView": "Showing overdue actions",
       "upcoming": "Due soon",
       "sortBy": "Sort by",
       "apply": "Apply filters",
@@ -1497,6 +1498,161 @@
       "deleteConfirm": "Delete action \"{{title}}\"? Completed actions are protected.",
       "deleteSuccess": "Action deleted.",
       "deleteFailed": "Action deletion failed."
+    }
+  },
+  "kpis": {
+    "page": {
+      "label": "KPIs",
+      "titles": {
+        "list": "KPI register",
+        "create": "Create KPI",
+        "detail": "KPI detail",
+        "edit": "Edit KPI"
+      },
+      "descriptions": {
+        "list": "A focused list of KPI definitions and current status against target.",
+        "create": "Define a KPI in its own page without mixing reading history into the same screen.",
+        "detail": "Review current status, thresholds, and reading history in one clean KPI record.",
+        "edit": "Adjust the KPI definition in a dedicated editing workflow."
+      }
+    },
+    "actions": {
+      "backToStartHere": "Back to Start Here",
+      "new": "New KPI",
+      "edit": "Edit KPI",
+      "backToList": "Back to KPIs",
+      "save": "Save KPI",
+      "saving": "Saving..."
+    },
+    "breadcrumbs": {
+      "new": "New KPI",
+      "record": "KPI",
+      "edit": "Edit"
+    },
+    "common": {
+      "unassigned": "Unassigned",
+      "notSet": "Not set",
+      "notAvailable": "Not available"
+    },
+    "list": {
+      "title": "KPI register",
+      "copy": "Track current performance, targets, thresholds, and watch or breach states in one calm list.",
+      "loading": "Loading KPIs...",
+      "table": {
+        "name": "Name",
+        "current": "Current",
+        "target": "Target",
+        "status": "Status",
+        "managementView": "Management view"
+      }
+    },
+    "form": {
+      "createTitle": "Create KPI",
+      "editTitle": "Edit KPI",
+      "copy": "Define target logic cleanly here. Readings and trend history stay on the KPI detail page.",
+      "guidance": "Use the warning threshold to define when management attention should start before a full breach occurs.",
+      "fields": {
+        "name": "Name",
+        "description": "Description",
+        "owner": "Owner",
+        "direction": "Direction",
+        "target": "Target",
+        "warningThreshold": "Warning threshold",
+        "unit": "Unit",
+        "periodLabel": "Period label"
+      },
+      "placeholders": {
+        "name": "Supplier OTIF",
+        "description": "On-time in-full supplier delivery rate",
+        "unit": "%",
+        "periodLabel": "Monthly"
+      }
+    },
+    "direction": {
+      "atLeast": "Higher result is better",
+      "atMost": "Lower result is better"
+    },
+    "directionGuidance": {
+      "atLeast": "Use this for metrics such as on-time delivery, training completion, or compliance rate where performance improves as the result goes up.",
+      "atMost": "Use this for metrics such as complaints, defects, waste, or incident rate where performance improves as the result goes down."
+    },
+    "managementView": {
+      "breach": "Immediate follow-up",
+      "watch": "Closer monitoring",
+      "onTarget": "On plan"
+    },
+    "status": {
+      "ON_TARGET": "On target",
+      "WATCH": "Watch",
+      "BREACH": "Breach"
+    },
+    "detail": {
+      "periodSuffix": "KPI",
+      "summary": {
+        "current": "Current",
+        "target": "Target",
+        "trend": "Trend"
+      },
+      "fields": {
+        "description": "Description",
+        "warningThreshold": "Warning threshold",
+        "direction": "Direction",
+        "distanceToTarget": "Distance to target"
+      },
+      "noDescription": "No description provided."
+    },
+    "performance": {
+      "defaultHeadline": "Performance view",
+      "headlineBreach": "Management attention is required",
+      "headlineWatch": "Performance is drifting toward breach",
+      "headlineOnTarget": "Performance is currently on target",
+      "defaultNarrative": "Review the KPI against target, warning threshold, and recent readings.",
+      "narrativeBreach": "This KPI is outside the accepted performance band for {{period}} review. The management response should confirm cause, corrective action, and follow-up timing.",
+      "narrativeWatch": "This KPI is still within the control range but close enough to the warning threshold that management follow-up is appropriate before performance deteriorates further.",
+      "narrativeOnTarget": "This KPI is meeting the expected target direction. Continue routine monitoring and keep the reading history current as evidence of sustained performance.",
+      "defaultHint": "Save the KPI to start recording evidence-based readings.",
+      "hintBreach": "Next step: update the latest reading notes with cause and planned response.",
+      "hintWatch": "Next step: add the latest reading notes and confirm whether intervention is needed.",
+      "hintOnTarget": "Next step: keep the next planned reading on schedule to demonstrate ongoing control."
+    },
+    "distance": {
+      "atTarget": "At target ({{target}} {{unit}})",
+      "aboveTarget": "{{difference}} {{unit}} above target",
+      "belowTarget": "{{difference}} {{unit}} below target",
+      "betterThanLimit": "{{difference}} {{unit}} better than limit",
+      "aboveLimit": "{{difference}} {{unit}} above allowed limit"
+    },
+    "readings": {
+      "title": "Readings",
+      "copy": "Add current readings and keep the recent evidence trail visible below.",
+      "fields": {
+        "value": "Value",
+        "readingDate": "Reading date",
+        "notes": "Notes"
+      },
+      "placeholders": {
+        "notes": "Reading notes"
+      },
+      "actions": {
+        "add": "Add reading"
+      },
+      "interpretation": {
+        "logged": "Reading logged",
+        "metTarget": "Reading met or exceeded target.",
+        "watchRange": "Reading entered the watch range.",
+        "breachRange": "Reading fell into breach range.",
+        "withinLimit": "Reading stayed within the target limit.",
+        "exceededLimit": "Reading exceeded the accepted limit."
+      }
+    },
+    "messages": {
+      "completeRequired": "Complete the required KPI fields.",
+      "saved": "KPI saved successfully.",
+      "saveFailed": "KPI save failed.",
+      "readingAdded": "KPI reading added.",
+      "readingSaveFailed": "KPI reading save failed.",
+      "detailLoadFailed": "KPI details could not be loaded.",
+      "listLoadFailed": "KPIs could not be loaded."
     }
   },
   "ncr": {
