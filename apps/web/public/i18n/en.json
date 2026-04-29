@@ -129,6 +129,10 @@
       "settings": {
         "label": "Settings",
         "hint": "System configuration"
+      },
+      "activityLog": {
+        "label": "Activity Log",
+        "hint": "User and record activity"
       }
     }
   },
@@ -402,11 +406,26 @@
       }
     },
     "metrics": {
-      "openRisks": { "label": "Open risks", "copy": "Open" },
-      "openCapa": { "label": "Open CAPA", "copy": "In progress" },
-      "activeAudits": { "label": "Active audits", "copy": "In progress" },
-      "overdueActions": { "label": "Overdue actions", "copy": "Overdue" },
-      "kpiBreaches": { "label": "KPIs", "copy": "Tracked" },
+      "openRisks": {
+        "label": "Open risks",
+        "copy": "Open"
+      },
+      "openCapa": {
+        "label": "Open CAPA",
+        "copy": "In progress"
+      },
+      "activeAudits": {
+        "label": "Active audits",
+        "copy": "In progress"
+      },
+      "overdueActions": {
+        "label": "Overdue actions",
+        "copy": "Overdue"
+      },
+      "kpiBreaches": {
+        "label": "KPIs",
+        "copy": "Tracked"
+      },
       "customerFeedback": {
         "label": "Customer feedback",
         "noData": "No data",
@@ -2060,6 +2079,77 @@
         "VERIFIED": "Verified",
         "CLOSED": "Closed"
       }
+    }
+  },
+  "activityLog": {
+    "page": {
+      "label": "Administration",
+      "title": "Activity log",
+      "description": "Review recent user and record activity across the IMS. Sign-in events are not tracked here yet.",
+      "breadcrumb": "Activity Log"
+    },
+    "actions": {
+      "refresh": "Refresh"
+    },
+    "filters": {
+      "label": "Filters",
+      "title": "Review activity",
+      "copy": "Filter by module or search by user, action, record, or visible details.",
+      "module": "Module",
+      "allModules": "All modules",
+      "search": "Search",
+      "searchPlaceholder": "User, action, record id, or detail"
+    },
+    "summary": {
+      "totalLoaded": "Loaded",
+      "visible": "Visible",
+      "users": "Users",
+      "modules": "Modules"
+    },
+    "list": {
+      "title": "Recent activity",
+      "copy": "This log shows record changes and exports written to the audit log service."
+    },
+    "table": {
+      "time": "Time",
+      "user": "User",
+      "action": "Action",
+      "module": "Module",
+      "record": "Record",
+      "details": "Details"
+    },
+    "states": {
+      "loading": "Loading activity log...",
+      "emptyTitle": "No matching activity found",
+      "emptyCopy": "Try another module filter or a broader search term.",
+      "loadError": "Activity log could not be loaded."
+    },
+    "common": {
+      "systemActor": "System",
+      "noDetails": "No additional details",
+      "detailsAvailable": "Details available"
+    },
+    "modules": {
+      "document": "Documents",
+      "risk": "Risks",
+      "audit": "Audits",
+      "ncr": "NCR",
+      "capa": "CAPA",
+      "actionItem": "Actions",
+      "user": "Users",
+      "training": "Training",
+      "process": "Process Register",
+      "context": "Context",
+      "complianceObligation": "Compliance Obligations",
+      "incident": "Incidents",
+      "environmentalAspect": "Environmental Aspects",
+      "hazard": "Hazards",
+      "externalProvider": "External Providers",
+      "changeRequest": "Change Management",
+      "kpi": "KPIs",
+      "managementReview": "Management Review",
+      "attachment": "Attachments",
+      "report": "Reports"
     }
   }
 }

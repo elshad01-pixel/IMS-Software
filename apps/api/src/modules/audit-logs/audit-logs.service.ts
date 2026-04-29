@@ -32,6 +32,16 @@ export class AuditLogsService {
         entityType: filters?.entityType,
         entityId: filters?.entityId
       },
+      include: {
+        actor: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' },
       take: 100
     });

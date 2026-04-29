@@ -19,18 +19,18 @@ import { AuthStore } from '../core/auth.store';
         <h2>Sign in</h2>
         <label>
           <span>Tenant slug</span>
-          <input formControlName="tenantSlug" placeholder="demo-tenant">
+          <input formControlName="tenantSlug" placeholder="Enter your tenant slug" autocomplete="organization">
         </label>
         <label>
           <span>Email</span>
-          <input formControlName="email" placeholder="admin@demo.local">
+          <input formControlName="email" placeholder="Enter your work email" autocomplete="username">
         </label>
         <label>
           <span>Password</span>
-          <input type="password" formControlName="password" placeholder="ChangeMe123!">
+          <input type="password" formControlName="password" placeholder="Enter your password" autocomplete="current-password">
         </label>
         <button type="submit" [disabled]="form.invalid || loading()">Access Platform</button>
-        <p class="hint">{{ error() || 'Seed credentials: demo-tenant / admin@demo.local / ChangeMe123!' }}</p>
+        <p class="hint">{{ error() || 'Use your assigned tenant slug, email, and password to sign in.' }}</p>
       </form>
     </section>
   `,
@@ -134,9 +134,9 @@ export class LoginPageComponent {
   protected readonly loading = signal(false);
   protected readonly error = signal('');
   protected readonly form = this.fb.nonNullable.group({
-    tenantSlug: ['demo-tenant', Validators.required],
-    email: ['admin@demo.local', [Validators.required, Validators.email]],
-    password: ['ChangeMe123!', [Validators.required, Validators.minLength(8)]]
+    tenantSlug: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(8)]]
   });
 
   submit() {

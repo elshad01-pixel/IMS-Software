@@ -806,6 +806,7 @@ export class ShellComponent {
       labelKey: 'shell.navGroups.administration',
       items: [
         { path: '/users', labelKey: 'shell.nav.users.label', hintKey: 'shell.nav.users.hint', icon: 'US', permission: 'users.read' },
+        { path: '/activity-log', labelKey: 'shell.nav.activityLog.label', hintKey: 'shell.nav.activityLog.hint', icon: 'LG', permission: 'settings.read' },
         { path: '/settings', labelKey: 'shell.nav.settings.label', hintKey: 'shell.nav.settings.hint', icon: 'ST', permission: 'settings.read' }
       ]
     }

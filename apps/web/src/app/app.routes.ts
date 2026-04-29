@@ -61,6 +61,7 @@ import {
 } from './pages/change-management-page.component';
 import { ImplementationPageComponent } from './pages/implementation-page.component';
 import { NoAccessPageComponent } from './pages/no-access-page.component';
+import { AuditLogPageComponent } from './pages/audit-log-page.component';
 
 export const appRoutes: Routes = [
   { path: 'login', component: LoginPageComponent },
@@ -155,6 +156,7 @@ export const appRoutes: Routes = [
       { path: 'users/new', component: UserCreatePageComponent, data: { permission: 'users.write' } },
       { path: 'users/:id', component: UserDetailPageComponent, data: { permission: 'users.read' } },
       { path: 'users/:id/edit', component: UserEditPageComponent, data: { permission: 'users.write' } },
+      { path: 'activity-log', component: AuditLogPageComponent, data: { permission: 'settings.read' } },
       { path: 'settings', component: SettingsPageComponent, data: { permission: 'settings.read' } }
     ]
   },

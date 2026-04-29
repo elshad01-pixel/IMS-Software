@@ -38,29 +38,102 @@
       "administration": "İdarəetmə"
     },
     "nav": {
-      "dashboard": { "label": "İdarəetmə paneli", "hint": "İş sahəsinə ümumi baxış" },
-      "startHere": { "label": "Buradan başlayın", "hint": "Hazırlıq və tətbiq yolu" },
-      "context": { "label": "Təşkilatın konteksti", "hint": "4-cü bənd məsələləri və tərəflər" },
-      "processRegister": { "label": "Proses reyestri", "hint": "Biznes proses əlaqələri" },
-      "risks": { "label": "Risklər və imkanlar", "hint": "Qiymətləndirmə və tədbirlər" },
-      "obligations": { "label": "Öhdəliklər", "hint": "Hüquqi və xarici tələblər" },
-      "complianceObligations": { "label": "Uyğunluq öhdəlikləri", "hint": "Hüquqi və xarici tələblər" },
-      "documents": { "label": "Sənədlər", "hint": "Nəzarətli kitabxana" },
-      "training": { "label": "Təlim və səriştə", "hint": "Tapşırıqlar və sübutlar" },
-      "externalProviders": { "label": "Təchizatçılar və podratçılar", "hint": "Təchizatçı və xidmət nəzarəti" },
-      "changeManagement": { "label": "Dəyişikliklərin idarə edilməsi", "hint": "Planlaşdırılmış və nəzərdən keçirilmiş dəyişikliklər" },
-      "incidents": { "label": "Hadisələr", "hint": "Hadisələr və az qala baş verənlər" },
-      "environmentalAspects": { "label": "Ekoloji aspektlər", "hint": "Aspektlər və təsirlər" },
-      "hazards": { "label": "Təhlükələr", "hint": "Təhlükə və zərər icmalı" },
-      "audits": { "label": "Auditlər", "hint": "Planlar və uyğunsuzluqlar" },
-      "ncr": { "label": "Uyğunsuzluqlar", "hint": "Uyğunsuzluğa nəzarət" },
-      "capa": { "label": "Düzəldici tədbirlər", "hint": "Düzəldici iş axınları" },
-      "actions": { "label": "Tapşırıqlar", "hint": "Qlobal izləmə siyahısı" },
-      "kpis": { "label": "Əsas performans göstəriciləri", "hint": "Hədəflər və trendlər" },
-      "managementReview": { "label": "Rəhbərliyin təhlili", "hint": "İclaslar və qərarlar" },
-      "reports": { "label": "Məlumat ixracı", "hint": "İxrac və xülasələr" },
-      "users": { "label": "İstifadəçilər", "hint": "Giriş və məsuliyyət" },
-      "settings": { "label": "Ayarlar", "hint": "Sistem konfiqurasiyası" }
+      "dashboard": {
+        "label": "İdarəetmə paneli",
+        "hint": "İş sahəsinə ümumi baxış"
+      },
+      "startHere": {
+        "label": "Buradan başlayın",
+        "hint": "Hazırlıq və tətbiq yolu"
+      },
+      "context": {
+        "label": "Təşkilatın konteksti",
+        "hint": "4-cü bənd məsələləri və tərəflər"
+      },
+      "processRegister": {
+        "label": "Proses reyestri",
+        "hint": "Biznes proses əlaqələri"
+      },
+      "risks": {
+        "label": "Risklər və imkanlar",
+        "hint": "Qiymətləndirmə və tədbirlər"
+      },
+      "obligations": {
+        "label": "Öhdəliklər",
+        "hint": "Hüquqi və xarici tələblər"
+      },
+      "complianceObligations": {
+        "label": "Uyğunluq öhdəlikləri",
+        "hint": "Hüquqi və xarici tələblər"
+      },
+      "documents": {
+        "label": "Sənədlər",
+        "hint": "Nəzarətli kitabxana"
+      },
+      "training": {
+        "label": "Təlim və səriştə",
+        "hint": "Tapşırıqlar və sübutlar"
+      },
+      "externalProviders": {
+        "label": "Təchizatçılar və podratçılar",
+        "hint": "Təchizatçı və xidmət nəzarəti"
+      },
+      "changeManagement": {
+        "label": "Dəyişikliklərin idarə edilməsi",
+        "hint": "Planlaşdırılmış və nəzərdən keçirilmiş dəyişikliklər"
+      },
+      "incidents": {
+        "label": "Hadisələr",
+        "hint": "Hadisələr və az qala baş verənlər"
+      },
+      "environmentalAspects": {
+        "label": "Ekoloji aspektlər",
+        "hint": "Aspektlər və təsirlər"
+      },
+      "hazards": {
+        "label": "Təhlükələr",
+        "hint": "Təhlükə və zərər icmalı"
+      },
+      "audits": {
+        "label": "Auditlər",
+        "hint": "Planlar və uyğunsuzluqlar"
+      },
+      "ncr": {
+        "label": "Uyğunsuzluqlar",
+        "hint": "Uyğunsuzluğa nəzarət"
+      },
+      "capa": {
+        "label": "Düzəldici tədbirlər",
+        "hint": "Düzəldici iş axınları"
+      },
+      "actions": {
+        "label": "Tapşırıqlar",
+        "hint": "Qlobal izləmə siyahısı"
+      },
+      "kpis": {
+        "label": "Əsas performans göstəriciləri",
+        "hint": "Hədəflər və trendlər"
+      },
+      "managementReview": {
+        "label": "Rəhbərliyin təhlili",
+        "hint": "İclaslar və qərarlar"
+      },
+      "reports": {
+        "label": "Məlumat ixracı",
+        "hint": "İxrac və xülasələr"
+      },
+      "users": {
+        "label": "İstifadəçilər",
+        "hint": "Giriş və məsuliyyət"
+      },
+      "settings": {
+        "label": "Ayarlar",
+        "hint": "Sistem konfiqurasiyası"
+      },
+      "activityLog": {
+        "label": "F?aliyy?t jurnal?",
+        "hint": "?stifad??i v? qeyd f?aliyy?ti"
+      }
     }
   },
   "implementation": {
@@ -98,15 +171,42 @@
       "copy": "Tenantın ilkin istifadə yolunu aydın etmək üçün daha dərin tətbiq işlərinə keçməzdən əvvəl bu əsas maddələri ardıcıllıqla keçin.",
       "setupPill": "Sazlama",
       "items": {
-        "companyProfile": { "label": "Şirkət profili", "hint": "Tenant kimliyini, nömrələmə standartlarını və sistem sazlamasını təsdiqləyin." },
-        "usersRoles": { "label": "İstifadəçilər və rollar", "hint": "Girişi, məsuliyyəti və hər modulu kimin işlədəcəyini təyin edin." },
-        "processMap": { "label": "Proses xəritəsi", "hint": "Əsas prosesləri və onların sistem boyunca necə bağlandığını müəyyən edin." },
-        "controlledDocuments": { "label": "Nəzarətli sənədlər", "hint": "Əməliyyat üçün lazım olan siyasətləri, prosedurları, formaları və təlimatları yükləyin." },
-        "risks": { "label": "Risklər", "hint": "Əsas biznes, uyğunluq, QHSE və əməliyyat risklərini erkən mərhələdə qeyd edin." },
-        "audits": { "label": "Auditlər", "hint": "Audit proqramını qurun və effektivliyin necə yoxlanacağını hazırlayın." },
-        "ncrCapaActions": { "label": "NCR/CAPA/tapşırıqlar", "hint": "Uyğunsuzluqların, düzəldici tədbirlərin və izləmə məsuliyyətinin hazır olduğuna əmin olun." },
-        "kpis": { "label": "KPI-lar", "hint": "Sistemin işlədiyini göstərən ölçüləri və hədləri müəyyən edin." },
-        "managementReview": { "label": "Rəhbərliyin təhlili", "hint": "Qərarlar, resurslar və təkmilləşdirmə üçün rəhbərlik təhlili yolunu hazırlayın." }
+        "companyProfile": {
+          "label": "Şirkət profili",
+          "hint": "Tenant kimliyini, nömrələmə standartlarını və sistem sazlamasını təsdiqləyin."
+        },
+        "usersRoles": {
+          "label": "İstifadəçilər və rollar",
+          "hint": "Girişi, məsuliyyəti və hər modulu kimin işlədəcəyini təyin edin."
+        },
+        "processMap": {
+          "label": "Proses xəritəsi",
+          "hint": "Əsas prosesləri və onların sistem boyunca necə bağlandığını müəyyən edin."
+        },
+        "controlledDocuments": {
+          "label": "Nəzarətli sənədlər",
+          "hint": "Əməliyyat üçün lazım olan siyasətləri, prosedurları, formaları və təlimatları yükləyin."
+        },
+        "risks": {
+          "label": "Risklər",
+          "hint": "Əsas biznes, uyğunluq, QHSE və əməliyyat risklərini erkən mərhələdə qeyd edin."
+        },
+        "audits": {
+          "label": "Auditlər",
+          "hint": "Audit proqramını qurun və effektivliyin necə yoxlanacağını hazırlayın."
+        },
+        "ncrCapaActions": {
+          "label": "NCR/CAPA/tapşırıqlar",
+          "hint": "Uyğunsuzluqların, düzəldici tədbirlərin və izləmə məsuliyyətinin hazır olduğuna əmin olun."
+        },
+        "kpis": {
+          "label": "KPI-lar",
+          "hint": "Sistemin işlədiyini göstərən ölçüləri və hədləri müəyyən edin."
+        },
+        "managementReview": {
+          "label": "Rəhbərliyin təhlili",
+          "hint": "Qərarlar, resurslar və təkmilləşdirmə üçün rəhbərlik təhlili yolunu hazırlayın."
+        }
       }
     },
     "guidance": {
@@ -202,10 +302,22 @@
       "title": "Tövsiyə olunan modul ardıcıllığı",
       "copy": "PDCA-nı yenilənən başqa bir reyestr kimi deyil, tövsiyə olunan tətbiq ardıcıllığı kimi istifadə edin.",
       "phases": {
-        "Plan": { "label": "Plan", "summary": "Qeydləri gündəlik istifadəyə keçirməzdən əvvəl idarəetmə sisteminin istiqamətini müəyyən edin." },
-        "Do": { "label": "Do", "summary": "Nəzarətləri, səriştəni və təchizatçı idarəetməsini gündəlik əməliyyatlara tətbiq edin." },
-        "Check": { "label": "Check", "summary": "Sistemin nəzərdə tutulduğu kimi işlədiyini yoxlamaq üçün sübutlardan, hadisələrdən və auditlərdən istifadə edin." },
-        "Act": { "label": "Act", "summary": "Uyğunsuzluqlardan, uğursuzluqlardan, dəyişikliklərdən və rəhbərlik qərarlarından təkmilləşdirmə aparın." }
+        "Plan": {
+          "label": "Plan",
+          "summary": "Qeydləri gündəlik istifadəyə keçirməzdən əvvəl idarəetmə sisteminin istiqamətini müəyyən edin."
+        },
+        "Do": {
+          "label": "Do",
+          "summary": "Nəzarətləri, səriştəni və təchizatçı idarəetməsini gündəlik əməliyyatlara tətbiq edin."
+        },
+        "Check": {
+          "label": "Check",
+          "summary": "Sistemin nəzərdə tutulduğu kimi işlədiyini yoxlamaq üçün sübutlardan, hadisələrdən və auditlərdən istifadə edin."
+        },
+        "Act": {
+          "label": "Act",
+          "summary": "Uyğunsuzluqlardan, uğursuzluqlardan, dəyişikliklərdən və rəhbərlik qərarlarından təkmilləşdirmə aparın."
+        }
       },
       "modules": {
         "Context": "Əhatə dairəsi, məsələlər, maraqlı tərəflər və ehtiyaclar",
@@ -278,11 +390,26 @@
       "moduleOverview": "{{module}} icmalı"
     },
     "metrics": {
-      "openRisks": { "label": "Açıq risklər", "copy": "Açıq" },
-      "openCapa": { "label": "Açıq CAPA", "copy": "Davam edir" },
-      "activeAudits": { "label": "Aktiv auditlər", "copy": "Davam edir" },
-      "overdueActions": { "label": "Gecikmiş tapşırıqlar", "copy": "Gecikib" },
-      "kpiBreaches": { "label": "Əsas performans göstəriciləri", "copy": "İzlənir" },
+      "openRisks": {
+        "label": "Açıq risklər",
+        "copy": "Açıq"
+      },
+      "openCapa": {
+        "label": "Açıq CAPA",
+        "copy": "Davam edir"
+      },
+      "activeAudits": {
+        "label": "Aktiv auditlər",
+        "copy": "Davam edir"
+      },
+      "overdueActions": {
+        "label": "Gecikmiş tapşırıqlar",
+        "copy": "Gecikib"
+      },
+      "kpiBreaches": {
+        "label": "Əsas performans göstəriciləri",
+        "copy": "İzlənir"
+      },
       "customerFeedback": {
         "label": "Müştəri rəyi",
         "noData": "Məlumat yoxdur",
@@ -964,12 +1091,26 @@
       "CAPA_CREATED": "CAPA yaradılıb"
     },
     "detail": {
-      "summary": { "checklist": "Yoxlama siyahısı", "findings": "Tapıntılar", "openFindings": "Açıq tapıntılar" },
+      "summary": {
+        "checklist": "Yoxlama siyahısı",
+        "findings": "Tapıntılar",
+        "openFindings": "Açıq tapıntılar"
+      },
       "currentStep": "Cari addım",
       "unresolvedNextSteps": "{{count}} növbəti addım hələ açıqdır",
       "readyForCloseout": "Bağlanışa hazırdır",
-      "procedureChecklist": { "title": "Prosedura üzrə xüsusi yoxlama siyahısı istifadədədir", "auditArea": "Audit sahəsi", "procedure": "Prosedur", "checklist": "Yoxlama siyahısı" },
-      "actions": { "startAudit": "Auditi başlat", "continueChecklist": "Yoxlama siyahısına davam et", "reviewFindings": "Tapıntılara bax", "goToCloseout": "Bağlanışa keç" },
+      "procedureChecklist": {
+        "title": "Prosedura üzrə xüsusi yoxlama siyahısı istifadədədir",
+        "auditArea": "Audit sahəsi",
+        "procedure": "Prosedur",
+        "checklist": "Yoxlama siyahısı"
+      },
+      "actions": {
+        "startAudit": "Auditi başlat",
+        "continueChecklist": "Yoxlama siyahısına davam et",
+        "reviewFindings": "Tapıntılara bax",
+        "goToCloseout": "Bağlanışa keç"
+      },
       "nextSteps": {
         "default": "Növbəti: cari iş axını addımından auditə davam edin.",
         "completed": "Növbəti: tamamlanmış audit qeydini, tapıntılarını və formal hesabatını nəzərdən keçirin.",
@@ -978,9 +1119,18 @@
       },
       "steps": {
         "ariaLabel": "Audit addımları",
-        "plan": { "title": "Auditi planlaşdır", "copy": "Əhatə və quruluş" },
-        "conduct": { "title": "Auditi icra et", "copy": "Sualları qiymətləndir" },
-        "review": { "title": "Tapıntılar və bağlanış", "copy": "Növbəti addımları müəyyən et və yekunlaşdır" }
+        "plan": {
+          "title": "Auditi planlaşdır",
+          "copy": "Əhatə və quruluş"
+        },
+        "conduct": {
+          "title": "Auditi icra et",
+          "copy": "Sualları qiymətləndir"
+        },
+        "review": {
+          "title": "Tapıntılar və bağlanış",
+          "copy": "Növbəti addımları müəyyən et və yekunlaşdır"
+        }
       },
       "workflow": {
         "openRecord": "Audit qeydini açın",
@@ -1014,10 +1164,33 @@
       "title": "Proqram, əhatə və hazırlıq",
       "copy": "Sahə işlərinə başlamazdan əvvəl audit proqramını, əhatə növünü, meyarları, gündəliyi və görüş quruluşunu təsdiqləyin.",
       "notScheduled": "Planlaşdırılmayıb",
-      "summary": { "programme": "Proqram", "scopeType": "Əhatə növü", "scheduledDate": "Planlaşdırılmış tarix" },
-      "fields": { "scope": "Əhatə", "objectives": "Audit məqsədləri", "criteria": "Audit meyarları", "auditeeArea": "Audit olunan sahə", "summary": "Xülasə", "agenda": "Audit gündəliyi", "openingMeeting": "Açılış görüşü", "closingMeeting": "Bağlanış görüşü" },
-      "empty": { "scope": "Əhatə qeyd olunmayıb.", "objectives": "Məqsədlər qeyd olunmayıb.", "criteria": "Meyarlar qeyd olunmayıb.", "summary": "Hələ xülasə yoxdur.", "agenda": "Hələ gündəlik hazırlanmayıb.", "openingMeeting": "Hələ açılış görüşü qeydləri hazırlanmayıb.", "closingMeeting": "Hələ bağlanış görüşü qeydləri hazırlanmayıb." },
-      "actions": { "editPlan": "Planı redaktə et" },
+      "summary": {
+        "programme": "Proqram",
+        "scopeType": "Əhatə növü",
+        "scheduledDate": "Planlaşdırılmış tarix"
+      },
+      "fields": {
+        "scope": "Əhatə",
+        "objectives": "Audit məqsədləri",
+        "criteria": "Audit meyarları",
+        "auditeeArea": "Audit olunan sahə",
+        "summary": "Xülasə",
+        "agenda": "Audit gündəliyi",
+        "openingMeeting": "Açılış görüşü",
+        "closingMeeting": "Bağlanış görüşü"
+      },
+      "empty": {
+        "scope": "Əhatə qeyd olunmayıb.",
+        "objectives": "Məqsədlər qeyd olunmayıb.",
+        "criteria": "Meyarlar qeyd olunmayıb.",
+        "summary": "Hələ xülasə yoxdur.",
+        "agenda": "Hələ gündəlik hazırlanmayıb.",
+        "openingMeeting": "Hələ açılış görüşü qeydləri hazırlanmayıb.",
+        "closingMeeting": "Hələ bağlanış görüşü qeydləri hazırlanmayıb."
+      },
+      "actions": {
+        "editPlan": "Planı redaktə et"
+      },
       "pack": {
         "eyebrow": "Plan paketi",
         "internalTitle": "Daxili audit planlaşdırma tövsiyəsi",
@@ -1026,9 +1199,18 @@
         "supplierCopy": "Təchizatçı auditləri də suallar qiymətləndirilməzdən əvvəl sadə gündəlik, açılış müzakirəsi və planlaşdırılmış bağlanış xülasəsi ilə başlamalıdır.",
         "touchpointsTitle": "Təminat toxunma nöqtələri",
         "items": {
-          "annualProgramme": { "title": "İllik audit proqramı", "copy": "Bu audit icraya keçməzdən əvvəl onun hansı illik planın və ya audit dövrünün hissəsi olduğunu göstərmək üçün proqram sahəsindən istifadə edin." },
-          "scopePlanning": { "title": "Şöbə, proses və ya şirkət üzrə planlama", "copy": "Əhatə növü auditin şirkət üzrə, şöbə üzrə, proses üzrə, sahə üzrə və ya təchizatçı mərkəzli olduğunu aydın göstərir." },
-          "meetingStructure": { "title": "Görüş quruluşu", "copy": "Açılış və bağlanış görüşü qeydləri audit qeydində gündəliyin necə paylandığını, auditin necə açıldığını və nəticələrin necə yekunlaşdırıldığını göstərir." }
+          "annualProgramme": {
+            "title": "İllik audit proqramı",
+            "copy": "Bu audit icraya keçməzdən əvvəl onun hansı illik planın və ya audit dövrünün hissəsi olduğunu göstərmək üçün proqram sahəsindən istifadə edin."
+          },
+          "scopePlanning": {
+            "title": "Şöbə, proses və ya şirkət üzrə planlama",
+            "copy": "Əhatə növü auditin şirkət üzrə, şöbə üzrə, proses üzrə, sahə üzrə və ya təchizatçı mərkəzli olduğunu aydın göstərir."
+          },
+          "meetingStructure": {
+            "title": "Görüş quruluşu",
+            "copy": "Açılış və bağlanış görüşü qeydləri audit qeydində gündəliyin necə paylandığını, auditin necə açıldığını və nəticələrin necə yekunlaşdırıldığını göstərir."
+          }
         }
       }
     },
@@ -1043,16 +1225,53 @@
       "progressClauses": "{{current}}/{{total}} bənd",
       "noActiveClause": "Aktiv bənd yoxdur",
       "clauseLabel": "Bənd {{clause}} - {{heading}}",
-      "currentClauseHelper": { "supplier": "Hər təchizatçı auditi sualına cavab verin, sübutu qeyd edin və yalnız tələb yerinə yetirilmədikdə tapıntı yaradın.", "internal": "Hər suala cavab verin. Tələb yerinə yetirilmədikdə tapıntını qeyd edin və növbəti suala davam edin." },
+      "currentClauseHelper": {
+        "supplier": "Hər təchizatçı auditi sualına cavab verin, sübutu qeyd edin və yalnız tələb yerinə yetirilmədikdə tapıntı yaradın.",
+        "internal": "Hər suala cavab verin. Tələb yerinə yetirilmədikdə tapıntını qeyd edin və növbəti suala davam edin."
+      },
       "notAnswered": "Cavab verilməyib",
-      "supplierBuilder": { "sectionOrGroup": "Bölmə və ya qrup", "subclause": "Alt bənd", "addQuestion": "Sual əlavə et", "commentPrompt": "Şərh sahəsi", "addQuestionButton": "Sual əlavə et" },
+      "supplierBuilder": {
+        "sectionOrGroup": "Bölmə və ya qrup",
+        "subclause": "Alt bənd",
+        "addQuestion": "Sual əlavə et",
+        "commentPrompt": "Şərh sahəsi",
+        "addQuestionButton": "Sual əlavə et"
+      },
       "emptyTitle": "Sual cavablandırmaqla auditi başladın",
       "emptyInternalCopy": "Audit şablonu hazır olduqda yoxlama siyahısı sualları burada görünəcək.",
       "emptySupplierCopy": "Auditi başlatmaq üçün ilk təchizatçı auditi sualını əlavə edin.",
-      "completion": { "eyebrow": "Yoxlama siyahısı tamamlandı", "title": "Növbəti addım: tapıntılara baxış", "copy": "Bütün yoxlama siyahısı sualları cavablandırılıb. İndi Tapıntılara baxışı açın, hər boşluq üçün növbəti addımı müəyyən edin, sonra auditin bağlanışını yekunlaşdırın.", "button": "Növbəti: Tapıntılara baxış" },
-      "findingIndicator": { "needed": "Tapıntı lazımdır", "closed": "Tapıntı bağlanıb", "capaLinked": "CAPA əlaqələndirilib", "capaNeeded": "CAPA lazımdır", "open": "Tapıntı açıqdır" },
-      "findingNextStep": { "needed": "Uğursuz tələbin tam audit izi olması üçün davam etməzdən əvvəl tapıntını qeyd edin.", "closed": "Bu sual üzrə tapıntı yolu artıq bağlanıb. Lazım gəlsə, ona baxın və ya növbəti suala davam edin.", "capaLinked": "Tapıntı və CAPA artıq əlaqələndirilib. Əlaqəli CAPA-ya baxın və ya növbəti suala davam edin.", "capaNeeded": "Tapıntı qeyd olunub. Yol tamamlanmadan əvvəl bu uyğunsuzluq üçün hələ CAPA yaradılmalıdır.", "lightRoute": "Tapıntı qeyd olunub. Daha yüngül izləmə yoluna baxın və ya növbəti suala davam edin." },
-      "findingPrompt": { "titleNeeded": "Tələb yerinə yetirilmədi: tapıntı lazımdır", "titleClosed": "Bu sual üzrə tapıntı yolu artıq bağlanıb", "titleCapaLinked": "Bu sual üzrə tapıntı və CAPA artıq əlaqələndirilib", "titleCapaNeeded": "Tapıntı qeyd olunub: bu sual üçün hələ CAPA lazımdır", "titleRecorded": "Bu sual üzrə tapıntı qeyd olunub", "copyNeeded": "Xeyr cavabı qeyd olunub. İndi tapıntı başlığını, boşluq təsvirini və ciddilik səviyyəsini qeyd edin ki, baxış mərhələsində tam audit izi olsun.", "copyClosed": "Bu uğursuz cavab artıq bağlanmış yolu olan tapıntıya malikdir. Davam etməzdən əvvəl bu izi yenidən açmaq lazımdırsa, Tapıntıya bax düyməsindən istifadə edin.", "copyCapaLinked": "Bu uğursuz cavab artıq əlaqəli tapıntı və CAPA-ya malikdir. Davam etməzdən əvvəl bu izə qayıtmaq lazımdırsa, Tapıntıya bax və ya CAPA-nı aç düyməsindən istifadə edin.", "copyCapaNeeded": "Bu uğursuz cavab artıq tapıntıya malikdir, lakin yol tamamlanmazdan əvvəl uyğunsuzluq hələ CAPA tələb edir. Bu qərarı davam etdirmək üçün Tapıntıya bax düyməsindən istifadə edin.", "copyLightRoute": "Bu uğursuz cavab artıq daha yüngül tapıntı yoluna malikdir. Davam etməzdən əvvəl tapşırıq və ya bağlanışa baxmaq lazımdırsa, Tapıntıya bax düyməsindən istifadə edin." }
+      "completion": {
+        "eyebrow": "Yoxlama siyahısı tamamlandı",
+        "title": "Növbəti addım: tapıntılara baxış",
+        "copy": "Bütün yoxlama siyahısı sualları cavablandırılıb. İndi Tapıntılara baxışı açın, hər boşluq üçün növbəti addımı müəyyən edin, sonra auditin bağlanışını yekunlaşdırın.",
+        "button": "Növbəti: Tapıntılara baxış"
+      },
+      "findingIndicator": {
+        "needed": "Tapıntı lazımdır",
+        "closed": "Tapıntı bağlanıb",
+        "capaLinked": "CAPA əlaqələndirilib",
+        "capaNeeded": "CAPA lazımdır",
+        "open": "Tapıntı açıqdır"
+      },
+      "findingNextStep": {
+        "needed": "Uğursuz tələbin tam audit izi olması üçün davam etməzdən əvvəl tapıntını qeyd edin.",
+        "closed": "Bu sual üzrə tapıntı yolu artıq bağlanıb. Lazım gəlsə, ona baxın və ya növbəti suala davam edin.",
+        "capaLinked": "Tapıntı və CAPA artıq əlaqələndirilib. Əlaqəli CAPA-ya baxın və ya növbəti suala davam edin.",
+        "capaNeeded": "Tapıntı qeyd olunub. Yol tamamlanmadan əvvəl bu uyğunsuzluq üçün hələ CAPA yaradılmalıdır.",
+        "lightRoute": "Tapıntı qeyd olunub. Daha yüngül izləmə yoluna baxın və ya növbəti suala davam edin."
+      },
+      "findingPrompt": {
+        "titleNeeded": "Tələb yerinə yetirilmədi: tapıntı lazımdır",
+        "titleClosed": "Bu sual üzrə tapıntı yolu artıq bağlanıb",
+        "titleCapaLinked": "Bu sual üzrə tapıntı və CAPA artıq əlaqələndirilib",
+        "titleCapaNeeded": "Tapıntı qeyd olunub: bu sual üçün hələ CAPA lazımdır",
+        "titleRecorded": "Bu sual üzrə tapıntı qeyd olunub",
+        "copyNeeded": "Xeyr cavabı qeyd olunub. İndi tapıntı başlığını, boşluq təsvirini və ciddilik səviyyəsini qeyd edin ki, baxış mərhələsində tam audit izi olsun.",
+        "copyClosed": "Bu uğursuz cavab artıq bağlanmış yolu olan tapıntıya malikdir. Davam etməzdən əvvəl bu izi yenidən açmaq lazımdırsa, Tapıntıya bax düyməsindən istifadə edin.",
+        "copyCapaLinked": "Bu uğursuz cavab artıq əlaqəli tapıntı və CAPA-ya malikdir. Davam etməzdən əvvəl bu izə qayıtmaq lazımdırsa, Tapıntıya bax və ya CAPA-nı aç düyməsindən istifadə edin.",
+        "copyCapaNeeded": "Bu uğursuz cavab artıq tapıntıya malikdir, lakin yol tamamlanmazdan əvvəl uyğunsuzluq hələ CAPA tələb edir. Bu qərarı davam etdirmək üçün Tapıntıya bax düyməsindən istifadə edin.",
+        "copyLightRoute": "Bu uğursuz cavab artıq daha yüngül tapıntı yoluna malikdir. Davam etməzdən əvvəl tapşırıq və ya bağlanışa baxmaq lazımdırsa, Tapıntıya bax düyməsindən istifadə edin."
+      }
     },
     "findingModal": {
       "eyebrow": "Tapıntı",
@@ -1064,21 +1283,66 @@
       "descriptionHelper": "Əvvəlcə real vəziyyəti yazın, sonra audit dilini daha səlis etmək üçün istəsəniz AI-dan istifadə edin.",
       "save": "Tapıntını yadda saxla",
       "checklistCopy": "1. Qısa qeydi öz sözlərinizlə yazın. 2. Yalnız daha səlis ifadə lazımdırsa AI-dan istifadə edin. 3. Ciddilik səviyyəsini seçin. 4. Tapıntını yadda saxlayın. 5. Növbəti addımı sonra Tapıntılara baxış mərhələsində müəyyən edin.",
-      "fields": { "title": "Tapıntı başlığı", "description": "Auditor qeydi / təsviri", "severity": "Ciddilik" },
-      "paths": { "major": "Böyük tapıntı yolu", "minor": "Kiçik tapıntı yolu", "opportunity": "İmkan yolu", "observation": "Müşahidə yolu" }
+      "fields": {
+        "title": "Tapıntı başlığı",
+        "description": "Auditor qeydi / təsviri",
+        "severity": "Ciddilik"
+      },
+      "paths": {
+        "major": "Böyük tapıntı yolu",
+        "minor": "Kiçik tapıntı yolu",
+        "opportunity": "İmkan yolu",
+        "observation": "Müşahidə yolu"
+      }
     },
     "review": {
       "eyebrow": "Baxış axını",
       "title": "Tapıntı yollarını tamamlayın, sonra auditi bağlayın",
       "copy": "Zənciri sadə saxlayın: hər tapıntıya baxın, həmin tapıntı daxilində növbəti addımı müəyyən edin, sonra auditin bağlanışını qeyd edin.",
-      "summary": { "questions": "Suallar", "findings": "Tapıntılar", "major": "Böyük", "routesOpen": "Açıq yollar" },
+      "summary": {
+        "questions": "Suallar",
+        "findings": "Tapıntılar",
+        "major": "Böyük",
+        "routesOpen": "Açıq yollar"
+      },
       "incompleteTitle": "Yoxlama siyahısı hələ tamamlanmayıb",
       "incompleteCopy": "Audit yekun tamamlanmaya keçməzdən əvvəl bütün tələb olunan suallara cavab verin.",
-      "actions": { "nextUnresolvedFinding": "Növbəti həll olunmamış tapıntı", "actionAlreadyLinked": "Audit tapşırığı artıq əlaqələndirilib", "actionFormReady": "Tapşırıq formu aşağıda hazırdır", "prepareAuditAction": "Burada audit tapşırığı hazırla" },
-      "focus": { "current": "Cari fokus: {{title}}", "default": "Cari fokus: tapıntılara bir-bir baxın", "copyDefault": "Tapıntını seçin, onun bağlanmalı, audit tapşırığına keçməli, yoxsa CAPA-ya keçməli olduğunu müəyyən edin, sonra növbəti tapıntıya davam edin." },
-      "routeState": { "closed": "Bağlanıb", "capaLinked": "CAPA əlaqələndirilib", "actionLinked": "Audit tapşırığı əlaqələndirilib", "actionDraftReady": "Tapşırıq qaralaması hazırdır", "createCapaNext": "Növbəti CAPA yaradın", "decideNextStep": "Növbəti addımı müəyyən edin" },
-      "badges": { "closed": "Bağlanıb", "capaActive": "CAPA aktivdir", "actionActive": "Tapşırıq aktivdir", "actionDraftOpen": "Tapşırıq qaralaması açıqdır", "createCapa": "CAPA yaradın", "actionRecommended": "Tapşırıq tövsiyə olunur", "reviewObservation": "Müşahidəyə baxın" },
-      "guidance": { "routeComplete": "Yol audit qeydində tamamlanıb.", "continueLinkedCapa": "Əlaqəli CAPA-ya davam edin, sonra yalnız bağlanışı yoxlamaq lazım olduqda bura qayıdın.", "linkedAction": "Bu tapıntı ilə artıq daha yüngül audit tapşırığı əlaqələndirilib.", "actionPrepared": "Daha yüngül izləmə bu tapıntı üçün artıq aşağıda hazırlanıb.", "capaNeeded": "Növbəti addım tamamlanmadan əvvəl bu tapıntı CAPA tələb edir.", "lightRoute": "Məmnunsunuzsa daha yüngül tapşırıq seçin və ya tapıntını birbaşa bağlayın." },
+      "actions": {
+        "nextUnresolvedFinding": "Növbəti həll olunmamış tapıntı",
+        "actionAlreadyLinked": "Audit tapşırığı artıq əlaqələndirilib",
+        "actionFormReady": "Tapşırıq formu aşağıda hazırdır",
+        "prepareAuditAction": "Burada audit tapşırığı hazırla"
+      },
+      "focus": {
+        "current": "Cari fokus: {{title}}",
+        "default": "Cari fokus: tapıntılara bir-bir baxın",
+        "copyDefault": "Tapıntını seçin, onun bağlanmalı, audit tapşırığına keçməli, yoxsa CAPA-ya keçməli olduğunu müəyyən edin, sonra növbəti tapıntıya davam edin."
+      },
+      "routeState": {
+        "closed": "Bağlanıb",
+        "capaLinked": "CAPA əlaqələndirilib",
+        "actionLinked": "Audit tapşırığı əlaqələndirilib",
+        "actionDraftReady": "Tapşırıq qaralaması hazırdır",
+        "createCapaNext": "Növbəti CAPA yaradın",
+        "decideNextStep": "Növbəti addımı müəyyən edin"
+      },
+      "badges": {
+        "closed": "Bağlanıb",
+        "capaActive": "CAPA aktivdir",
+        "actionActive": "Tapşırıq aktivdir",
+        "actionDraftOpen": "Tapşırıq qaralaması açıqdır",
+        "createCapa": "CAPA yaradın",
+        "actionRecommended": "Tapşırıq tövsiyə olunur",
+        "reviewObservation": "Müşahidəyə baxın"
+      },
+      "guidance": {
+        "routeComplete": "Yol audit qeydində tamamlanıb.",
+        "continueLinkedCapa": "Əlaqəli CAPA-ya davam edin, sonra yalnız bağlanışı yoxlamaq lazım olduqda bura qayıdın.",
+        "linkedAction": "Bu tapıntı ilə artıq daha yüngül audit tapşırığı əlaqələndirilib.",
+        "actionPrepared": "Daha yüngül izləmə bu tapıntı üçün artıq aşağıda hazırlanıb.",
+        "capaNeeded": "Növbəti addım tamamlanmadan əvvəl bu tapıntı CAPA tələb edir.",
+        "lightRoute": "Məmnunsunuzsa daha yüngül tapşırıq seçin və ya tapıntını birbaşa bağlayın."
+      },
       "traceabilityCopy": "İzi yoxlama siyahısı sübutundan tapıntıya, sonra isə {{capaText}} və {{actionText}} müstəvisinədək izləyin.",
       "capaLinkedCount": "{{count}} əlaqəli CAPA qeydi",
       "capaOnlyWhereNeeded": "yalnız lazım olduqda CAPA",
@@ -1087,7 +1351,12 @@
     "closeout": {
       "readyTitle": "Audit tamamlanmağa hazırdır",
       "openTitle": "Bağlanış tələbləri hələ açıqdır",
-      "guidance": { "completeChecklist": "Auditin tamamlanmasından əvvəl bütün yoxlama siyahısı suallarını tamamlayın.", "unresolvedFindings": "Bu audit yekun bağlanışa keçməzdən əvvəl hər tapıntının aydın növbəti addımı olmalıdır.", "completeFields": "Auditi yekunlaşdırmazdan əvvəl nəticəni, tövsiyələri, tamamlanma tarixini və auditoru qeyd edin.", "ready": "Audit qeydi indi tamamlana bilər. Auditin özünü yenidən açmadan tapıntılar, tapşırıqlar və NCR izləməsi audit tamamlandıqdan sonra da davam edə bilər." }
+      "guidance": {
+        "completeChecklist": "Auditin tamamlanmasından əvvəl bütün yoxlama siyahısı suallarını tamamlayın.",
+        "unresolvedFindings": "Bu audit yekun bağlanışa keçməzdən əvvəl hər tapıntının aydın növbəti addımı olmalıdır.",
+        "completeFields": "Auditi yekunlaşdırmazdan əvvəl nəticəni, tövsiyələri, tamamlanma tarixini və auditoru qeyd edin.",
+        "ready": "Audit qeydi indi tamamlana bilər. Auditin özünü yenidən açmadan tapıntılar, tapşırıqlar və NCR izləməsi audit tamamlandıqdan sonra da davam edə bilər."
+      }
     },
     "attention": {
       "needsAttention": "Bu audit hazırda rəhbərliyin diqqətini tələb edir.",
@@ -1794,6 +2063,77 @@
         "VERIFIED": "Təsdiqlənib",
         "CLOSED": "Bağlanıb"
       }
+    }
+  },
+  "activityLog": {
+    "page": {
+      "label": "?dar?etm?",
+      "title": "F?aliyy?t jurnal?",
+      "description": "IMS ?zr? son istifad??i v? qeyd f?aliyy?tini n?z?rd?n ke?irin. Giri? hadis?l?ri h?l? burada izl?nmir.",
+      "breadcrumb": "F?aliyy?t jurnal?"
+    },
+    "actions": {
+      "refresh": "Yenil?"
+    },
+    "filters": {
+      "label": "Filtrl?r",
+      "title": "F?aliyy?t? bax??",
+      "copy": "Modula g?r? s?z?n v? ya istifad??i, ?m?liyyat, qeyd v? g?r?n?n detallarla axtar?n.",
+      "module": "Modul",
+      "allModules": "B?t?n modullar",
+      "search": "Axtar??",
+      "searchPlaceholder": "?stifad??i, ?m?liyyat, qeyd ID-si v? ya detal"
+    },
+    "summary": {
+      "totalLoaded": "Y?kl?nib",
+      "visible": "G?r?n?n",
+      "users": "?stifad??il?r",
+      "modules": "Modullar"
+    },
+    "list": {
+      "title": "Son f?aliyy?t",
+      "copy": "Bu jurnal audit log xidm?tin? yaz?lm?? qeyd d?yi?iklikl?rini v? ixrac ?m?liyyatlar?n? g?st?rir."
+    },
+    "table": {
+      "time": "Vaxt",
+      "user": "?stifad??i",
+      "action": "?m?liyyat",
+      "module": "Modul",
+      "record": "Qeyd",
+      "details": "Detallar"
+    },
+    "states": {
+      "loading": "F?aliyy?t jurnal? y?kl?nir...",
+      "emptyTitle": "Uy?un f?aliyy?t tap?lmad?",
+      "emptyCopy": "Ba?qa modul filtri v? ya daha geni? axtar?? termini s?nay?n.",
+      "loadError": "F?aliyy?t jurnal? y?kl?n? bilm?di."
+    },
+    "common": {
+      "systemActor": "Sistem",
+      "noDetails": "?lav? detal yoxdur",
+      "detailsAvailable": "Detallar m?vcuddur"
+    },
+    "modules": {
+      "document": "S?n?dl?r",
+      "risk": "Riskl?r",
+      "audit": "Auditl?r",
+      "ncr": "Uy?unsuzluqlar",
+      "capa": "D?z?ldici t?dbirl?r",
+      "actionItem": "Tap??r?qlar",
+      "user": "?stifad??il?r",
+      "training": "T?lim",
+      "process": "Proses reyestri",
+      "context": "T??kilat?n konteksti",
+      "complianceObligation": "Uy?unluq ?hd?likl?ri",
+      "incident": "Hadis?l?r",
+      "environmentalAspect": "Ekoloji aspektl?r",
+      "hazard": "T?hl?k?l?r",
+      "externalProvider": "T?chizat??lar v? podrat??lar",
+      "changeRequest": "D?yi?iklikl?rin idar? edilm?si",
+      "kpi": "?sas performans g?st?ricil?ri",
+      "managementReview": "R?hb?rliyin t?hlili",
+      "attachment": "?lav?l?r",
+      "report": "M?lumat ixrac?"
     }
   }
 }
