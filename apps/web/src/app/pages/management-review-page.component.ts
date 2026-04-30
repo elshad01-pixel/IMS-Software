@@ -350,15 +350,41 @@ type ReviewRecord = {
 
     .readiness-strip {
       display: grid;
-      gap: 1rem;
+      gap: 0.9rem;
       grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
     }
 
     .readiness-card {
-      padding: 1rem 1.1rem;
-      border: 1px solid rgba(46, 67, 56, 0.1);
+      display: grid;
+      gap: 0.45rem;
+      align-content: start;
+      padding: 1rem 1rem 0.95rem;
+      border: 1px solid rgba(31, 41, 51, 0.08);
       border-radius: 1rem;
-      background: rgba(252, 253, 250, 0.8);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(251, 252, 250, 0.94)),
+        color-mix(in srgb, var(--surface-strong) 94%, white);
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .readiness-card::before {
+      content: '';
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 4px;
+      background: var(--mr-card-accent, rgba(23, 59, 47, 0.4));
+    }
+
+    .readiness-card:nth-child(1) { --mr-card-accent: #173B2F; }
+    .readiness-card:nth-child(2) { --mr-card-accent: #1E467F; }
+    .readiness-card:nth-child(3) { --mr-card-accent: #9A6B1F; }
+
+    .readiness-card strong,
+    .readiness-card small {
+      min-width: 0;
     }
 
     .readiness-card span,
@@ -367,22 +393,30 @@ type ReviewRecord = {
     }
 
     .readiness-card span {
-      color: #5e6e63;
-      font-size: 0.78rem;
+      color: var(--muted-strong);
+      font-size: 0.74rem;
+      font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
     .readiness-card strong {
-      display: block;
-      margin-top: 0.45rem;
-      font-size: 1.35rem;
-      color: #203427;
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 2.35rem;
+      padding: 0 0.8rem;
+      border-radius: 999px;
+      border: 1px solid color-mix(in srgb, var(--mr-card-accent) 18%, white);
+      background: color-mix(in srgb, var(--mr-card-accent) 10%, white);
+      font-size: 1.28rem;
+      color: var(--text-soft);
+      line-height: 1;
+      letter-spacing: -0.03em;
     }
 
     .readiness-card small {
-      margin-top: 0.45rem;
-      color: #617165;
+      color: var(--muted);
       line-height: 1.45;
     }
 
@@ -420,13 +454,40 @@ type ReviewRecord = {
 
     .touchpoint-card {
       display: grid;
-      gap: 0.35rem;
-      padding: 0.95rem 1rem;
+      gap: 0.42rem;
+      align-content: start;
+      padding: 1rem 1rem 0.95rem;
       border-radius: 1rem;
-      border: 1px solid rgba(46, 67, 56, 0.1);
-      background: rgba(252, 253, 250, 0.82);
+      border: 1px solid rgba(31, 41, 51, 0.08);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(251, 252, 250, 0.94)),
+        color-mix(in srgb, var(--surface-strong) 94%, white);
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.85);
       text-decoration: none;
       color: inherit;
+      position: relative;
+      overflow: hidden;
+      transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    .touchpoint-card::before {
+      content: '';
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 4px;
+      background: var(--mr-signal-accent, rgba(23, 59, 47, 0.4));
+    }
+
+    .touchpoint-card:nth-child(1) { --mr-signal-accent: #6A4C93; }
+    .touchpoint-card:nth-child(2) { --mr-signal-accent: #173B2F; }
+    .touchpoint-card:nth-child(3) { --mr-signal-accent: #9A6B1F; }
+    .touchpoint-card:nth-child(4) { --mr-signal-accent: #1E467F; }
+
+    .touchpoint-card:hover {
+      transform: translateY(-1px);
+      border-color: rgba(31, 41, 51, 0.12);
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.88);
     }
 
     .touchpoint-card span,
@@ -435,20 +496,32 @@ type ReviewRecord = {
     }
 
     .touchpoint-card span {
-      color: #5e6e63;
-      font-size: 0.78rem;
+      color: var(--muted-strong);
+      font-size: 0.74rem;
+      font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
     .touchpoint-card strong {
-      font-size: 1.5rem;
-      color: #203427;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: fit-content;
+      min-width: 2.6rem;
+      min-height: 2.35rem;
+      padding: 0 0.7rem;
+      border-radius: 999px;
+      border: 1px solid color-mix(in srgb, var(--mr-signal-accent) 18%, white);
+      background: color-mix(in srgb, var(--mr-signal-accent) 10%, white);
+      font-size: 1.35rem;
+      color: var(--text-soft);
       line-height: 1;
+      letter-spacing: -0.03em;
     }
 
     .touchpoint-card small {
-      color: #617165;
+      color: var(--muted);
       line-height: 1.45;
     }
   `]
