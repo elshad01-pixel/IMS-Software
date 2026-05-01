@@ -240,6 +240,15 @@
       </div>
 
       <div class="page-stack top-space">
+        <section class="content-guidance">
+          <div class="section-head compact-head">
+            <div>
+              <h4>Optional links</h4>
+              <p class="subtle">This obligation is already saved. Add process, risk, audit, or action links only when they are useful for traceability or follow-up.</p>
+            </div>
+          </div>
+        </section>
+
         <section class="detail-section link-group" *ngFor="let type of visibleLinkTypes">
           <div class="section-head compact-head">
             <div>
@@ -266,7 +275,11 @@
                 </div>
                 <div class="route-context">
                   <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
-                  <a *ngIf="link.path && !link.missing" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">Open</a>
+                  <a *ngIf="canOpenLink(link)" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">Open</a>
+                  <div *ngIf="!canOpenLink(link) && inaccessibleLinkSummary(link) as summary" class="package-link-note">
+                    <strong>Included from {{ packageTierLabel(summary.requiredTier) }}</strong>
+                    <small>{{ summary.moduleLabel }}</small>
+                  </div>
                   <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">Remove</button>
                 </div>
               </div>
@@ -284,7 +297,7 @@
             </label>
             <label class="field"><span>Note</span><input formControlName="note" placeholder="Optional context for this link"></label>
             <div class="button-row">
-              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? 'Linking...' : 'Save link' }}</button>
+              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? 'Linking...' : 'Add link' }}</button>
             </div>
           </form>
         </section>

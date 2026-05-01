@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
 
@@ -244,6 +245,27 @@ export class EnvironmentalAspectsPageComponent implements OnInit, OnChanges {
   protected linkRoute(link: AspectLink) { return link.path || '/environmental-aspects'; }
   protected linkQueryParams(link: AspectLink) { return link.linkType === 'ACTION' ? { focusActionId: link.linkedId } : undefined; }
   protected linkState(link: AspectLink) { return link.linkType === 'ACTION' ? { returnNavigation: { route: ['/environmental-aspects', this.selectedId()], label: 'environmental aspect' } } : undefined; }
+  protected canOpenLink(link: AspectLink) {
+    if (!link.path || link.missing) return false;
+    const moduleKey = this.linkPackageModule(link);
+    return !moduleKey || this.authStore.hasModule(moduleKey);
+  }
+  protected inaccessibleLinkSummary(link: AspectLink) {
+    const moduleKey = this.linkPackageModule(link);
+    if (!moduleKey || this.authStore.hasModule(moduleKey)) return null;
+    return {
+      title: link.title,
+      moduleLabel: this.linkModuleLabel(link.linkType),
+      requiredTier: minimumPackageTierForModule(moduleKey)
+    };
+  }
+  protected packageTierLabel(packageTier: TenantPackageTier) {
+    return {
+      ASSURANCE: 'Assurance',
+      CORE_IMS: 'Core IMS',
+      QHSE_PRO: 'QHSE Pro'
+    }[packageTier];
+  }
 
   protected save() {
     if (!this.canWrite()) return this.error.set('You do not have permission to edit environmental aspects.');
@@ -407,6 +429,23 @@ export class EnvironmentalAspectsPageComponent implements OnInit, OnChanges {
     if (type === 'PROCESS') return `${item.referenceNo || 'Uncoded'} - ${item.name}`;
     if (type === 'RISK') return item.title;
     return item.title;
+  }
+
+  private linkPackageModule(link: AspectLink): PackageModuleKey | null {
+    const mapping: Record<LinkType, PackageModuleKey> = {
+      PROCESS: 'process-register',
+      RISK: 'risks',
+      ACTION: 'actions'
+    };
+    return mapping[link.linkType] ?? null;
+  }
+
+  private linkModuleLabel(linkType: LinkType) {
+    return {
+      PROCESS: 'Process Register',
+      RISK: 'Risks',
+      ACTION: 'Actions'
+    }[linkType];
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

@@ -74,10 +74,23 @@ const packageModules: Record<TenantPackageTier, PackageModuleKey[]> = {
   ]
 };
 
+const minimumPackageTierByModule = Object.entries(packageModules).reduce((accumulator, [tier, modules]) => {
+  for (const moduleKey of modules) {
+    if (!accumulator[moduleKey]) {
+      accumulator[moduleKey] = tier as TenantPackageTier;
+    }
+  }
+  return accumulator;
+}, {} as Partial<Record<PackageModuleKey, TenantPackageTier>>);
+
 export function getEnabledModules(packageTier: TenantPackageTier): PackageModuleKey[] {
   return [...new Set([...alwaysIncludedModules, ...packageModules[packageTier]])];
 }
 
 export function isModuleIncluded(packageTier: TenantPackageTier, moduleKey: PackageModuleKey) {
   return getEnabledModules(packageTier).includes(moduleKey);
+}
+
+export function minimumPackageTierForModule(moduleKey: PackageModuleKey): TenantPackageTier {
+  return minimumPackageTierByModule[moduleKey] ?? DEFAULT_PACKAGE_TIER;
 }

@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
 
@@ -263,6 +264,30 @@ export class HazardsPageComponent implements OnInit, OnChanges {
       : undefined;
   }
 
+  protected canOpenLink(link: HazardLink) {
+    if (!link.path || link.missing) return false;
+    const moduleKey = this.linkPackageModule(link);
+    return !moduleKey || this.authStore.hasModule(moduleKey);
+  }
+
+  protected inaccessibleLinkSummary(link: HazardLink) {
+    const moduleKey = this.linkPackageModule(link);
+    if (!moduleKey || this.authStore.hasModule(moduleKey)) return null;
+    return {
+      title: link.title,
+      moduleLabel: this.linkModuleLabel(link.linkType),
+      requiredTier: minimumPackageTierForModule(moduleKey)
+    };
+  }
+
+  protected packageTierLabel(packageTier: TenantPackageTier) {
+    return {
+      ASSURANCE: 'Assurance',
+      CORE_IMS: 'Core IMS',
+      QHSE_PRO: 'QHSE Pro'
+    }[packageTier];
+  }
+
   protected save() {
     if (!this.canWrite()) return this.error.set('You do not have permission to edit hazards.');
     if (this.form.invalid) return this.error.set('Complete the required hazard fields.');
@@ -426,6 +451,25 @@ export class HazardsPageComponent implements OnInit, OnChanges {
     if (type === 'RISK') return item.title;
     if (type === 'INCIDENT') return `${item.referenceNo || 'Uncoded'} - ${item.title}`;
     return item.title;
+  }
+
+  private linkPackageModule(link: HazardLink): PackageModuleKey | null {
+    const mapping: Record<LinkType, PackageModuleKey> = {
+      PROCESS: 'process-register',
+      RISK: 'risks',
+      ACTION: 'actions',
+      INCIDENT: 'incidents'
+    };
+    return mapping[link.linkType] ?? null;
+  }
+
+  private linkModuleLabel(linkType: LinkType) {
+    return {
+      PROCESS: 'Process Register',
+      RISK: 'Risks',
+      ACTION: 'Actions',
+      INCIDENT: 'Incidents'
+    }[linkType];
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

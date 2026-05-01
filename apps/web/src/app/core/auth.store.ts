@@ -131,6 +131,25 @@ export class AuthStore {
       .subscribe();
   }
 
+  updateEntitlements(packageTier: TenantPackageTier, enabledAddOns: TenantAddOns) {
+    const current = this.sessionState();
+    if (!current) {
+      return;
+    }
+
+    const next: Session = {
+      ...current,
+      user: {
+        ...current.user,
+        packageTier,
+        enabledModules: getEnabledModules(packageTier),
+        enabledAddOns: normalizeTenantAddOns(enabledAddOns)
+      }
+    };
+    this.sessionState.set(next);
+    localStorage.setItem('iso-session', JSON.stringify(next));
+  }
+
   logout() {
     this.sessionState.set(null);
     localStorage.removeItem('iso-session');

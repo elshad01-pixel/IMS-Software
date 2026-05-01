@@ -6,7 +6,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
-import { TenantPackageTier } from '../core/package-entitlements';
+import { getEnabledModules, PackageModuleKey, TenantPackageTier } from '../core/package-entitlements';
 import { TenantAddOns } from '../core/tenant-addons';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
@@ -207,6 +207,32 @@ const rolePositionGuidance: Array<{
     summary: 'Reads the system, updates assigned actions, and contributes evidence without broad edit rights.'
   }
 ];
+
+const packageModulePresentation: Record<PackageModuleKey, { label: string; copy: string }> = {
+  dashboard: { label: 'Dashboard', copy: 'Executive dashboard, KPI cards, watchlists, and cross-module overview.' },
+  implementation: { label: 'Start Here', copy: 'Guided rollout workspace, readiness checks, and implementation launchpad.' },
+  settings: { label: 'Settings', copy: 'Tenant configuration, package selection, AI controls, and implementation settings.' },
+  users: { label: 'Users', copy: 'User access, role assignments, and identity management for the tenant.' },
+  'activity-log': { label: 'Activity Log', copy: 'Central audit trail for record changes and cross-module activity.' },
+  audits: { label: 'Audits', copy: 'Internal and supplier audit workflow, findings, and linked follow-up.' },
+  ncr: { label: 'NCR', copy: 'Nonconformance register and issue follow-up workflow.' },
+  capa: { label: 'CAPA', copy: 'Corrective-action register, ownership, due dates, and closure review.' },
+  actions: { label: 'Actions', copy: 'Shared follow-up tracker for actions raised from any module.' },
+  documents: { label: 'Documents', copy: 'Controlled documents, approvals, lifecycle status, and linked evidence.' },
+  risks: { label: 'Risks', copy: 'Risk and opportunity assessments, treatment records, and linked actions.' },
+  context: { label: 'Context', copy: 'Interested parties, internal and external factors, and needs and expectations.' },
+  'process-register': { label: 'Process Register', copy: 'Business process map with linked IMS records and traceability.' },
+  training: { label: 'Training', copy: 'Competence and assignment tracking for required training activities.' },
+  'compliance-obligations': { label: 'Compliance Obligations', copy: 'Legal, regulatory, and external requirements with review follow-up.' },
+  kpis: { label: 'KPIs', copy: 'Key performance indicators, readings, thresholds, and performance review.' },
+  'management-review': { label: 'Management Review', copy: 'Leadership review inputs, outputs, decisions, and resulting follow-up.' },
+  reports: { label: 'Reports', copy: 'Data exports and evidence pack support for reporting and external review.' },
+  incidents: { label: 'Incidents', copy: 'Incident records, response tracking, and linked operational follow-up.' },
+  'environmental-aspects': { label: 'Environmental Aspects', copy: 'Environmental aspect register, significance, and control follow-up.' },
+  hazards: { label: 'Hazards', copy: 'Hazard identification, harm review, and linked action tracking.' },
+  'external-providers': { label: 'External Providers', copy: 'Supplier and provider oversight, review status, and assurance links.' },
+  'change-management': { label: 'Change Management', copy: 'Planned change records, review controls, and implementation follow-up.' }
+};
 
 @Component({
   standalone: true,
@@ -578,6 +604,23 @@ const rolePositionGuidance: Array<{
               <section class="detail-section">
                 <div class="section-head">
                   <div>
+                    <span class="section-eyebrow">Included modules</span>
+                    <h4>Package scope preview</h4>
+                    <p class="subtle">These modules will stay visible and functional for the tenant after the package is saved.</p>
+                  </div>
+                </div>
+
+                <div class="entity-list compact-entity-list top-space">
+                  <div class="entity-item" *ngFor="let module of selectedPackageModules()">
+                    <strong>{{ module.label }}</strong>
+                    <small>{{ module.copy }}</small>
+                  </div>
+                </div>
+              </section>
+
+              <section class="detail-section">
+                <div class="section-head">
+                  <div>
                     <span class="section-eyebrow">Add-ons</span>
                     <h4>Tenant add-ons</h4>
                     <p class="subtle">Use add-ons for optional capabilities that sit inside owned modules, rather than changing the base package tier.</p>
@@ -593,6 +636,17 @@ const rolePositionGuidance: Array<{
                     <input type="checkbox" formControlName="customerFeedback" [disabled]="!canWrite()">
                     <span>Customer feedback add-on</span>
                   </label>
+                </div>
+
+                <div class="entity-list compact-entity-list top-space">
+                  <div class="entity-item">
+                    <strong>AI assistant</strong>
+                    <small>Enables AI draft helpers inside owned modules such as Audits and Management Review.</small>
+                  </div>
+                  <div class="entity-item">
+                    <strong>Customer feedback</strong>
+                    <small>Enables survey issuance, response tracking, dashboard feedback visibility, and review inputs tied to interested parties.</small>
+                  </div>
                 </div>
               </section>
 
@@ -636,6 +690,14 @@ const rolePositionGuidance: Array<{
               </div>
             </div>
 
+            <section class="guidance-card" *ngIf="!hasAiAddOn()">
+              <strong>AI add-on is currently disabled</strong>
+              <p>Turn on the AI assistant add-on in the Package section before changing tenant AI settings or enabling workflow assistants.</p>
+              <div class="button-row top-space">
+                <button type="button" class="secondary" (click)="activeSection.set('subscription')">Open package settings</button>
+              </div>
+            </section>
+
             <section class="detail-section compact-runtime-panel" *ngIf="aiRuntime() as runtime">
               <div class="compact-runtime-grid">
                 <article>
@@ -662,14 +724,14 @@ const rolePositionGuidance: Array<{
 
             <form [formGroup]="aiForm" class="page-stack" (ngSubmit)="saveSection('ai')">
               <label class="toggle-row">
-                <input type="checkbox" formControlName="enabled" [disabled]="!canWrite()">
+                <input type="checkbox" formControlName="enabled" [disabled]="!canWrite() || !hasAiAddOn()">
                 <span>Enable AI assistance for this tenant</span>
               </label>
 
               <div class="form-grid-2">
                 <label class="field">
                   <span>Provider</span>
-                  <select formControlName="provider">
+                  <select formControlName="provider" [disabled]="!canWrite() || !hasAiAddOn()">
                     <option value="openai">OpenAI</option>
                   </select>
                 </label>
@@ -688,25 +750,25 @@ const rolePositionGuidance: Array<{
 
               <div class="role-toggle-grid ai-feature-grid">
                 <label class="toggle-row">
-                  <input type="checkbox" formControlName="auditFindingAssistant" [disabled]="!canWrite()">
+                  <input type="checkbox" formControlName="auditFindingAssistant" [disabled]="!canWrite() || !hasAiAddOn()">
                   <span>Audit finding assistant</span>
                 </label>
                 <label class="toggle-row">
-                  <input type="checkbox" formControlName="documentDraftAssistant" [disabled]="!canWrite()">
+                  <input type="checkbox" formControlName="documentDraftAssistant" [disabled]="!canWrite() || !hasAiAddOn()">
                   <span>Document draft assistant</span>
                 </label>
                 <label class="toggle-row">
-                  <input type="checkbox" formControlName="managementReviewAssistant" [disabled]="!canWrite()">
+                  <input type="checkbox" formControlName="managementReviewAssistant" [disabled]="!canWrite() || !hasAiAddOn()">
                   <span>Management review assistant</span>
                 </label>
                 <label class="toggle-row">
-                  <input type="checkbox" formControlName="riskSuggestionAssistant" [disabled]="!canWrite()">
+                  <input type="checkbox" formControlName="riskSuggestionAssistant" [disabled]="!canWrite() || !hasAiAddOn()">
                   <span>Risk suggestion assistant</span>
                 </label>
               </div>
 
               <div class="button-row">
-                <button type="submit" [disabled]="aiForm.invalid || savingSection() === 'ai' || !canWrite()">
+                <button type="submit" [disabled]="aiForm.invalid || savingSection() === 'ai' || !canWrite() || !hasAiAddOn()">
                   {{ savingSection() === 'ai' ? 'Saving...' : 'Save AI settings' }}
                 </button>
               </div>
@@ -1073,6 +1135,12 @@ export class SettingsPageComponent {
       return;
     }
 
+    if (section === 'ai' && !this.hasAiAddOn()) {
+      this.error.set('AI assistant add-on is not enabled for this tenant.');
+      this.message.set('');
+      return;
+    }
+
     const formMap = {
       organization: this.organizationForm,
       document: this.documentForm,
@@ -1131,6 +1199,8 @@ export class SettingsPageComponent {
         this.message.set('Settings saved successfully.');
         this.applyConfig(config as SettingsConfig);
         if (section === 'subscription') {
+          const subscription = (config as SettingsConfig).subscription;
+          this.authStore.updateEntitlements(subscription.packageTier, subscription.addOns);
           this.authStore.refreshSession();
         }
         if (section === 'ai') {
@@ -1194,6 +1264,10 @@ export class SettingsPageComponent {
 
   protected enabledAddOnCount(addOns: TenantAddOns) {
     return Object.values(addOns).filter(Boolean).length;
+  }
+
+  protected selectedPackageModules() {
+    return getEnabledModules(this.subscriptionForm.getRawValue().packageTier).map((moduleKey) => packageModulePresentation[moduleKey]);
   }
 
   protected hasAiAddOn() {

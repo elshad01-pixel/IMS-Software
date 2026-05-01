@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
 
@@ -468,6 +469,36 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
       : undefined;
   }
 
+  protected canOpenLink(link: ProviderLink) {
+    if (!link.path || link.missing) {
+      return false;
+    }
+
+    const moduleKey = this.linkPackageModule(link);
+    return !moduleKey || this.authStore.hasModule(moduleKey);
+  }
+
+  protected inaccessibleLinkSummary(link: ProviderLink) {
+    const moduleKey = this.linkPackageModule(link);
+    if (!moduleKey || this.authStore.hasModule(moduleKey)) {
+      return null;
+    }
+
+    return {
+      title: link.title,
+      moduleLabel: this.linkModuleLabel(link.linkType),
+      requiredTier: minimumPackageTierForModule(moduleKey)
+    };
+  }
+
+  protected packageTierLabel(packageTier: TenantPackageTier) {
+    return {
+      ASSURANCE: 'Assurance',
+      CORE_IMS: 'Core IMS',
+      QHSE_PRO: 'QHSE Pro'
+    }[packageTier];
+  }
+
   protected save() {
     if (!this.canWrite()) return this.error.set('You do not have permission to edit external providers.');
     if (this.form.invalid) return this.error.set('Complete the required external provider fields.');
@@ -646,6 +677,27 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
     if (type === 'AUDIT') return `${item.code} - ${item.title}`;
     if (type === 'OBLIGATION') return `${item.referenceNo || 'Uncoded'} - ${item.title}`;
     return item.title;
+  }
+
+  private linkPackageModule(link: ProviderLink): PackageModuleKey | null {
+    const mapping: Record<LinkType, PackageModuleKey> = {
+      PROCESS: 'process-register',
+      RISK: 'risks',
+      AUDIT: 'audits',
+      ACTION: 'actions',
+      OBLIGATION: 'compliance-obligations'
+    };
+    return mapping[link.linkType] ?? null;
+  }
+
+  private linkModuleLabel(linkType: LinkType) {
+    return {
+      PROCESS: 'Process Register',
+      RISK: 'Risks',
+      AUDIT: 'Audits',
+      ACTION: 'Actions',
+      OBLIGATION: 'Compliance Obligations'
+    }[linkType];
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

@@ -7,6 +7,7 @@ import { AuthStore } from '../core/auth.store';
 import { ApiService } from '../core/api.service';
 import { ContentLibraryResponse, ProcessTemplate } from '../core/content-library.models';
 import { ContentLibraryService } from '../core/content-library.service';
+import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
 type PageMode = 'list' | 'create' | 'detail' | 'edit';
@@ -291,8 +292,20 @@ type ReturnNavigation = { route: string[]; label: string };
 
             <div class="button-row top-space">
               <a *ngIf="firstLinkByType('RISK') as firstRisk" [routerLink]="linkRoute(firstRisk)" [queryParams]="linkQueryParams(firstRisk)" [state]="linkState(firstRisk)" class="button-link secondary">Open linked risk</a>
+              <div *ngIf="!firstLinkByType('RISK') && inaccessibleFirstLinkByType('RISK') as firstRiskSummary" class="package-inline-summary">
+                <strong>Linked risk kept in {{ packageTierLabel(firstRiskSummary.requiredTier) }}</strong>
+                <small>{{ firstRiskSummary.title }}</small>
+              </div>
               <a *ngIf="firstLinkByType('AUDIT') as firstAudit" [routerLink]="linkRoute(firstAudit)" [queryParams]="linkQueryParams(firstAudit)" [state]="linkState(firstAudit)" class="button-link secondary">Open linked audit</a>
+              <div *ngIf="!firstLinkByType('AUDIT') && inaccessibleFirstLinkByType('AUDIT') as firstAuditSummary" class="package-inline-summary">
+                <strong>Linked audit kept in {{ packageTierLabel(firstAuditSummary.requiredTier) }}</strong>
+                <small>{{ firstAuditSummary.title }}</small>
+              </div>
               <a *ngIf="firstLinkByType('NCR') as firstNcr" [routerLink]="linkRoute(firstNcr)" [queryParams]="linkQueryParams(firstNcr)" [state]="linkState(firstNcr)" class="button-link tertiary">Open linked NCR</a>
+              <div *ngIf="!firstLinkByType('NCR') && inaccessibleFirstLinkByType('NCR') as firstNcrSummary" class="package-inline-summary">
+                <strong>Linked NCR kept in {{ packageTierLabel(firstNcrSummary.requiredTier) }}</strong>
+                <small>{{ firstNcrSummary.title }}</small>
+              </div>
               <a *ngIf="firstLinkByType('ACTION') as firstAction" [routerLink]="linkRoute(firstAction)" [queryParams]="linkQueryParams(firstAction)" [state]="linkState(firstAction)" class="button-link tertiary">Open linked action</a>
             </div>
           </section>
@@ -339,6 +352,10 @@ type ReturnNavigation = { route: string[]; label: string };
                       <div class="route-context">
                         <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
                         <a *ngIf="link.path && !link.missing" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link secondary">Open</a>
+                        <div *ngIf="!canOpenLink(link) && inaccessibleLinkSummary(link) as summary" class="package-link-note">
+                          <strong>Included from {{ packageTierLabel(summary.requiredTier) }}</strong>
+                          <small>{{ summary.moduleLabel }}</small>
+                        </div>
                         <button *ngIf="canWrite()" type="button" class="button-link tertiary" (click)="removeLink(link.id)">Remove</button>
                       </div>
                     </div>
@@ -388,6 +405,31 @@ type ReturnNavigation = { route: string[]; label: string };
     .compact-empty { min-height: 0; padding: 1rem 1.1rem; }
     .link-composer { border-top: 1px solid var(--border-subtle); padding-top: 1rem; }
     .align-end { align-items: end; justify-content: flex-start; }
+    .package-inline-summary {
+      display: grid;
+      gap: 0.15rem;
+      min-width: 0;
+      padding: 0.6rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: color-mix(in srgb, var(--surface-strong) 88%, white);
+    }
+    .package-inline-summary strong,
+    .package-inline-summary small,
+    .package-link-note strong,
+    .package-link-note small {
+      display: block;
+    }
+    .package-inline-summary small,
+    .package-link-note small {
+      color: var(--muted);
+    }
+    .package-link-note {
+      display: grid;
+      gap: 0.1rem;
+      justify-items: end;
+      text-align: right;
+    }
     .content-guidance {
       border: 1px solid var(--border-subtle);
       border-radius: 1rem;
@@ -577,7 +619,12 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
     return this.linksByType(type).length;
   }
   protected firstLinkByType(type: LinkType) {
-    return this.linksByType(type).find((link) => !!link.path && !link.missing) ?? null;
+    return this.linksByType(type).find((link) => this.canOpenLink(link)) ?? null;
+  }
+  protected inaccessibleFirstLinkByType(type: LinkType) {
+    return this.linksByType(type)
+      .map((link) => ({ link, summary: this.inaccessibleLinkSummary(link) }))
+      .find((entry) => !!entry.summary)?.summary ?? null;
   }
   protected linkRoute(link: ProcessLink) {
     return link.path || '/process-register';
@@ -589,6 +636,34 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
     return link.linkType === 'ACTION' && this.returnNavigation()
       ? { returnNavigation: this.returnNavigation() }
       : undefined;
+  }
+  protected canOpenLink(link: ProcessLink) {
+    if (!link.path || link.missing) {
+      return false;
+    }
+
+    const moduleKey = this.linkPackageModule(link);
+    return !moduleKey || this.authStore.hasModule(moduleKey);
+  }
+  protected inaccessibleLinkSummary(link: ProcessLink) {
+    const moduleKey = this.linkPackageModule(link);
+    if (!moduleKey || this.authStore.hasModule(moduleKey)) {
+      return null;
+    }
+
+    return {
+      title: link.title,
+      moduleLabel: this.linkModuleLabel(link.linkType),
+      requiredTier: minimumPackageTierForModule(moduleKey)
+    };
+  }
+
+  protected packageTierLabel(packageTier: TenantPackageTier) {
+    return {
+      ASSURANCE: 'Assurance',
+      CORE_IMS: 'Core IMS',
+      QHSE_PRO: 'QHSE Pro'
+    }[packageTier];
   }
 
   protected pageTitle() {
@@ -792,6 +867,31 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => { this.loading.set(false); this.error.set(this.readError(error, 'Process details could not be loaded.')); }
     });
+  }
+
+  private linkPackageModule(link: ProcessLink): PackageModuleKey | null {
+    const mapping: Record<LinkType, PackageModuleKey> = {
+      DOCUMENT: 'documents',
+      RISK: 'risks',
+      AUDIT: 'audits',
+      KPI: 'kpis',
+      ACTION: 'actions',
+      NCR: 'ncr',
+      CONTEXT_ISSUE: 'context'
+    };
+    return mapping[link.linkType] ?? null;
+  }
+
+  private linkModuleLabel(linkType: LinkType) {
+    return {
+      DOCUMENT: 'Documents',
+      RISK: 'Risks',
+      AUDIT: 'Audits',
+      KPI: 'KPIs',
+      ACTION: 'Actions',
+      NCR: 'NCR',
+      CONTEXT_ISSUE: 'Context'
+    }[linkType];
   }
 
   private loadOwners() {

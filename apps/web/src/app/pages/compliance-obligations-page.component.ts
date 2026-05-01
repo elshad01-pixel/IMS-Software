@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
 
@@ -215,31 +216,31 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
   protected reviewNarrative() {
     const obligation = this.selectedObligation();
     if (!obligation) return 'Save the obligation first, then link the records that show how it is managed.';
-    if (!obligation.links?.length) return 'This obligation is recorded but not yet tied to visible management evidence.';
+    if (!obligation.links?.length) return 'This obligation is saved and can stay unlinked for now. Add process, risk, audit, or action links later when they become relevant.';
     if (!this.linkCountByType('PROCESS') || !this.linkCountByType('RISK')) return 'This obligation has some traceability, but it would benefit from both process and risk visibility.';
     return 'This obligation is already supported by linked records for review and audit follow-up.';
   }
   protected nextStepHeadline() {
     const obligation = this.selectedObligation();
     if (!obligation) return 'Next steps appear after the obligation is saved.';
-    if (!this.linkCountByType('PROCESS')) return 'Link the owning process next.';
-    if (!this.linkCountByType('AUDIT')) return 'Add audit coverage for this obligation when applicable.';
-    if (!this.linkCountByType('ACTION') && obligation.status !== 'OBSOLETE') return 'Prepare a compliance follow-up action if review work is still needed.';
-    return 'This obligation is connected to the main review controls.';
+    if (!this.linkCountByType('PROCESS')) return 'You can link the owning process when you are ready.';
+    if (!this.linkCountByType('AUDIT')) return 'Add audit coverage later if this obligation is formally reviewed in audit.';
+    if (!this.linkCountByType('ACTION') && obligation.status !== 'OBSOLETE') return 'Add a follow-up action later only if review work or gap closure is needed.';
+    return 'This obligation already has helpful review links in place.';
   }
   protected nextStepNarrative() {
     const obligation = this.selectedObligation();
-    if (!obligation) return 'Save the obligation first, then connect it to the process, audit, and action records that show how the requirement is managed.';
+    if (!obligation) return 'Save the obligation first, then decide later whether any process, risk, audit, or action links would be useful.';
     if (!this.linkCountByType('PROCESS')) {
-      return 'Link the process that owns or applies this requirement first so the obligation is grounded in the live IMS flow.';
+      return 'A process link is helpful when you want to show who owns or applies the requirement, but it is not required to keep the obligation on the register.';
     }
     if (!this.linkCountByType('AUDIT')) {
-      return 'Link an audit when this obligation is part of formal assurance activity so review evidence is easier to show later.';
+      return 'Link an audit only when this obligation is actually checked during formal assurance activity.';
     }
     if (!this.linkCountByType('ACTION') && obligation.status !== 'OBSOLETE') {
-      return 'If the obligation still needs review follow-up, gap closure, or reminder ownership, prepare an action so due dates and responsibilities stay visible.';
+      return 'Create or link an action only if this obligation needs follow-up, gap closure, renewal preparation, or another owned task.';
     }
-    return 'The obligation already shows ownership, review timing, and linked process, audit, and action support in one place.';
+    return 'The obligation already shows ownership, review timing, and useful linked support in one place.';
   }
   protected obligationDraftTitle() {
     const obligation = this.selectedObligation();
@@ -269,17 +270,17 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
     return {
       PROCESS: 'Processes affected by or responsible for this obligation.',
       RISK: 'Risks used to track exposure or compliance impact.',
-      AUDIT: 'Audits that review how this obligation is controlled.',
-      ACTION: 'Actions already being tracked to address gaps or review needs.'
+      AUDIT: 'Optional audit evidence for obligations that are formally reviewed during assurance activity.',
+      ACTION: 'Optional follow-up actions for gaps, reminders, renewals, or review work.'
     }[type];
   }
 
   protected sectionEmptyCopy(type: LinkType) {
     return {
-      PROCESS: 'Link the process that owns or applies this requirement.',
-      RISK: 'Link a related risk where the obligation creates exposure or opportunity.',
-      AUDIT: 'Link audits when this obligation is reviewed during assurance activity.',
-      ACTION: 'Link follow-up actions already tracked in the action register.'
+      PROCESS: 'Optional for now. Link the process later if you want to show clear ownership in the IMS.',
+      RISK: 'Optional for now. Link a related risk later if the obligation creates exposure or opportunity.',
+      AUDIT: 'Optional for now. Add an audit link later if this obligation is reviewed during assurance activity.',
+      ACTION: 'Optional for now. Link or create an action later only when follow-up work is needed.'
     }[type];
   }
 
@@ -307,6 +308,36 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
     return link.linkType === 'ACTION'
       ? { returnNavigation: { route: ['/compliance-obligations', this.selectedId()], label: 'compliance obligation' } }
       : undefined;
+  }
+
+  protected canOpenLink(link: ObligationLink) {
+    if (!link.path || link.missing) {
+      return false;
+    }
+
+    const moduleKey = this.linkPackageModule(link);
+    return !moduleKey || this.authStore.hasModule(moduleKey);
+  }
+
+  protected inaccessibleLinkSummary(link: ObligationLink) {
+    const moduleKey = this.linkPackageModule(link);
+    if (!moduleKey || this.authStore.hasModule(moduleKey)) {
+      return null;
+    }
+
+    return {
+      title: link.title,
+      moduleLabel: this.linkModuleLabel(link.linkType),
+      requiredTier: minimumPackageTierForModule(moduleKey)
+    };
+  }
+
+  protected packageTierLabel(packageTier: TenantPackageTier) {
+    return {
+      ASSURANCE: 'Assurance',
+      CORE_IMS: 'Core IMS',
+      QHSE_PRO: 'QHSE Pro'
+    }[packageTier];
   }
 
   protected attentionHeadline() {
@@ -515,6 +546,25 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
     if (type === 'RISK') return item.title;
     if (type === 'AUDIT') return `${item.code} - ${item.title}`;
     return item.title;
+  }
+
+  private linkPackageModule(link: ObligationLink): PackageModuleKey | null {
+    const mapping: Record<LinkType, PackageModuleKey> = {
+      PROCESS: 'process-register',
+      RISK: 'risks',
+      AUDIT: 'audits',
+      ACTION: 'actions'
+    };
+    return mapping[link.linkType] ?? null;
+  }
+
+  private linkModuleLabel(linkType: LinkType) {
+    return {
+      PROCESS: 'Process Register',
+      RISK: 'Risks',
+      AUDIT: 'Audits',
+      ACTION: 'Actions'
+    }[linkType];
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

@@ -17,6 +17,22 @@
   justify-content: flex-end;
 }
 
+.package-link-note {
+  display: grid;
+  gap: 0.1rem;
+  justify-items: end;
+  text-align: right;
+}
+
+.package-link-note strong,
+.package-link-note small {
+  display: block;
+}
+
+.package-link-note small {
+  color: var(--muted);
+}
+
 .link-form {
   border-top: 1px solid rgba(46, 67, 56, 0.08);
   padding-top: 1rem;

@@ -6,6 +6,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 import { I18nService } from '../core/i18n.service';
+import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
 import { IconActionButtonComponent } from '../shared/icon-action-button.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
@@ -100,6 +101,20 @@ type ReturnNavigation = {
               <p>{{ sourceTypeLabel(focused.sourceType) }} | {{ focused.sourceTitle }}</p>
               <div class="button-row top-space" *ngIf="sourceRoute(focused) as route">
                 <a [routerLink]="route" class="button-link secondary">{{ t('actionTracker.actions.openSource') }}</a>
+              </div>
+              <div class="guidance-card top-space compact-guidance-card" *ngIf="sourcePackageSummary(focused) as summary">
+                <strong>Source record kept in a higher package</strong>
+                <p>This action stays linked to {{ summary.moduleLabel }}. The full source module is included from {{ packageTierLabel(summary.requiredTier) }} upward, so this summary stays visible here without breaking the action workflow.</p>
+                <div class="summary-strip top-space source-summary-strip">
+                  <article class="summary-item">
+                    <span>{{ t('actionTracker.focused.source') }}</span>
+                    <strong>{{ focused.sourceTitle }}</strong>
+                  </article>
+                  <article class="summary-item">
+                    <span>Included from</span>
+                    <strong>{{ packageTierLabel(summary.requiredTier) }}</strong>
+                  </article>
+                </div>
               </div>
             </section>
           </div>
@@ -260,6 +275,9 @@ type ReturnNavigation = {
                       <small *ngIf="sourceRoute(action) as route">
                         <a [routerLink]="route" class="table-link" (click)="$event.stopPropagation()">{{ t('actionTracker.actions.openSource') }}</a>
                       </small>
+                      <small *ngIf="!sourceRoute(action) && sourcePackageSummary(action) as summary">
+                        Included from {{ packageTierLabel(summary.requiredTier) }}
+                      </small>
                     </div>
                   </td>
                   <td>{{ action.owner ? action.owner.firstName + ' ' + action.owner.lastName : t('actionTracker.common.unassigned') }}</td>
@@ -333,6 +351,15 @@ type ReturnNavigation = {
       margin-top: 0.4rem;
       color: var(--muted);
       line-height: 1.45;
+    }
+
+    .compact-guidance-card {
+      padding: 0.9rem 1rem;
+    }
+
+    .source-summary-strip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
     }
 
     .table-link {
@@ -671,6 +698,11 @@ export class ActionsPageComponent {
   }
 
   protected sourceRoute(action: ActionRecord) {
+    const moduleKey = this.sourcePackageModule(action.sourceType);
+    if (moduleKey && !this.authStore.hasModule(moduleKey)) {
+      return null;
+    }
+
     switch (action.sourceType) {
       case 'risk':
         return ['/risks', action.sourceId];
@@ -699,6 +731,19 @@ export class ActionsPageComponent {
       default:
         return null;
     }
+  }
+
+  protected sourcePackageSummary(action: ActionRecord) {
+    const moduleKey = this.sourcePackageModule(action.sourceType);
+    if (!moduleKey || this.authStore.hasModule(moduleKey)) {
+      return null;
+    }
+
+    return {
+      moduleKey,
+      moduleLabel: this.sourceTypeLabel(action.sourceType),
+      requiredTier: minimumPackageTierForModule(moduleKey)
+    };
   }
 
   protected clearFocusedAction() {
@@ -773,6 +818,33 @@ export class ActionsPageComponent {
     };
     const label = this.t(`actionTracker.attention.${short ? 'short' : 'reasons'}.${reasonKeyMap[reason]}`);
     return lowercase ? label.toLowerCase() : label;
+  }
+
+  private sourcePackageModule(sourceType?: string | null): PackageModuleKey | null {
+    const mapping: Record<string, PackageModuleKey> = {
+      risk: 'risks',
+      capa: 'capa',
+      audit: 'audits',
+      'management-review': 'management-review',
+      ncr: 'ncr',
+      incident: 'incidents',
+      hazard: 'hazards',
+      aspect: 'environmental-aspects',
+      obligation: 'compliance-obligations',
+      provider: 'external-providers',
+      'change-management': 'change-management',
+      document: 'documents',
+      context: 'context'
+    };
+    return sourceType ? mapping[sourceType] ?? null : null;
+  }
+
+  protected packageTierLabel(packageTier: TenantPackageTier) {
+    return {
+      ASSURANCE: 'Assurance',
+      CORE_IMS: 'Core IMS',
+      QHSE_PRO: 'QHSE Pro'
+    }[packageTier];
   }
 
   private compareActions(left: ActionRecord, right: ActionRecord) {

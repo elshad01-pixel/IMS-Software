@@ -282,7 +282,11 @@
                 </div>
                 <div class="route-context">
                   <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
-                  <a *ngIf="link.path && !link.missing" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">Open</a>
+                  <a *ngIf="canOpenLink(link)" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">Open</a>
+                  <div *ngIf="!canOpenLink(link) && inaccessibleLinkSummary(link) as summary" class="package-link-note">
+                    <strong>Included from {{ packageTierLabel(summary.requiredTier) }}</strong>
+                    <small>{{ summary.moduleLabel }}</small>
+                  </div>
                   <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">Remove</button>
                 </div>
               </div>

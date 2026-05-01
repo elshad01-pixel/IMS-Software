@@ -429,7 +429,7 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
     }
 
     .main-chart-surface {
-      padding: 0.75rem 0.8rem 0.8rem;
+      padding: 0.9rem 0.95rem 0.95rem;
       border-radius: 20px;
       background: rgba(255, 255, 255, 0.52);
       border: 1px solid rgba(23, 50, 37, 0.05);
@@ -469,7 +469,7 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
     }
 
     .bar-track {
-      height: 0.85rem;
+      height: 1rem;
       border-radius: 999px;
       background: rgba(23, 50, 37, 0.08);
       overflow: hidden;
@@ -531,13 +531,13 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
     }
 
     .donut-layout--main {
-      min-height: 188px;
+      min-height: 238px;
     }
 
     .donut-chart {
       position: relative;
-      width: 158px;
-      height: 158px;
+      width: 206px;
+      height: 206px;
       border-radius: 50%;
       display: grid;
       place-items: center;
@@ -553,7 +553,7 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
     .donut-chart::after {
       content: '';
       position: absolute;
-      inset: 19px;
+      inset: 24px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.95);
       box-shadow: inset 0 0 0 1px rgba(23, 50, 37, 0.06);
@@ -572,22 +572,22 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
     }
 
     .donut-center strong {
-      font-size: 1.7rem;
+      font-size: 2.15rem;
       line-height: 1;
       letter-spacing: -0.04em;
     }
 
     .donut-center span {
-      margin-top: 0.2rem;
+      margin-top: 0.24rem;
       color: var(--muted);
-      font-size: 0.82rem;
+      font-size: 0.92rem;
     }
 
     .secondary-chart-panel {
       display: grid;
-      gap: 0.55rem;
+      gap: 0.65rem;
       align-self: stretch;
-      padding: 0.62rem 0.7rem;
+      padding: 0.82rem 0.85rem;
       border-radius: 16px;
       background: rgba(248, 250, 246, 0.88);
       border: 1px solid rgba(23, 50, 37, 0.05);
@@ -628,12 +628,12 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
 
     .mini-bar-chart {
       display: grid;
-      gap: 0.5rem;
+      gap: 0.78rem;
     }
 
     .mini-bar-row {
       display: grid;
-      gap: 0.24rem;
+      gap: 0.4rem;
       text-decoration: none;
       color: inherit;
     }
@@ -647,15 +647,15 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
 
     .mini-bar-row__head span {
       color: var(--muted-strong);
-      font-size: 0.84rem;
-    }
-
-    .mini-bar-row__head strong {
       font-size: 0.9rem;
     }
 
+    .mini-bar-row__head strong {
+      font-size: 1rem;
+    }
+
     .mini-bar-track {
-      height: 0.46rem;
+      height: 0.72rem;
       border-radius: 999px;
       background: rgba(23, 50, 37, 0.08);
       overflow: hidden;
@@ -702,12 +702,12 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
       }
 
       .donut-chart {
-        width: 150px;
-        height: 150px;
+        width: 178px;
+        height: 178px;
       }
 
       .donut-chart::after {
-        inset: 18px;
+        inset: 22px;
       }
 
       .kpi-item strong {

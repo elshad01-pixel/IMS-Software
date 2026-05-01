@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
 
@@ -284,6 +285,27 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
   protected linkRoute(link: ChangeLink) { return link.path || '/change-management'; }
   protected linkQueryParams(link: ChangeLink) { return link.linkType === 'ACTION' ? { focusActionId: link.linkedId } : undefined; }
   protected linkState(link: ChangeLink) { return link.linkType === 'ACTION' ? { returnNavigation: { route: ['/change-management', this.selectedId()], label: 'change request' } } : undefined; }
+  protected canOpenLink(link: ChangeLink) {
+    if (!link.path || link.missing) return false;
+    const moduleKey = this.linkPackageModule(link);
+    return !moduleKey || this.authStore.hasModule(moduleKey);
+  }
+  protected inaccessibleLinkSummary(link: ChangeLink) {
+    const moduleKey = this.linkPackageModule(link);
+    if (!moduleKey || this.authStore.hasModule(moduleKey)) return null;
+    return {
+      title: link.title,
+      moduleLabel: this.linkModuleLabel(link.linkType),
+      requiredTier: minimumPackageTierForModule(moduleKey)
+    };
+  }
+  protected packageTierLabel(packageTier: TenantPackageTier) {
+    return {
+      ASSURANCE: 'Assurance',
+      CORE_IMS: 'Core IMS',
+      QHSE_PRO: 'QHSE Pro'
+    }[packageTier];
+  }
 
   protected save() {
     if (!this.canWrite()) return this.error.set('You do not have permission to edit change requests.');
@@ -439,6 +461,29 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
     if (type === 'OBLIGATION') return `${item.referenceNo || 'Uncoded'} - ${item.title}`;
     if (type === 'PROVIDER') return `${item.referenceNo || 'Uncoded'} - ${item.providerName}`;
     return item.title;
+  }
+
+  private linkPackageModule(link: ChangeLink): PackageModuleKey | null {
+    const mapping: Record<LinkType, PackageModuleKey> = {
+      PROCESS: 'process-register',
+      RISK: 'risks',
+      ACTION: 'actions',
+      DOCUMENT: 'documents',
+      OBLIGATION: 'compliance-obligations',
+      PROVIDER: 'external-providers'
+    };
+    return mapping[link.linkType] ?? null;
+  }
+
+  private linkModuleLabel(linkType: LinkType) {
+    return {
+      PROCESS: 'Process Register',
+      RISK: 'Risks',
+      ACTION: 'Actions',
+      DOCUMENT: 'Documents',
+      OBLIGATION: 'Compliance Obligations',
+      PROVIDER: 'External Providers'
+    }[linkType];
   }
 
   private readError(error: HttpErrorResponse, fallback: string) {

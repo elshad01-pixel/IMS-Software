@@ -1403,14 +1403,17 @@
       "unassigned": "Unassigned",
       "notSet": "Not set"
     },
-    "focused": {
-      "eyebrow": "Selected action",
-      "copy": "Review the action details above, then update status or return to the source record.",
-      "description": "Description",
-      "noDescription": "No description provided.",
-      "source": "Source record",
-      "updateStatus": "Update status"
-    },
+      "focused": {
+        "eyebrow": "Selected action",
+        "copy": "Review the action details above, then update status or return to the source record.",
+        "description": "Description",
+        "noDescription": "No description provided.",
+        "source": "Source record",
+        "updateStatus": "Update status",
+        "packageSummaryTitle": "Source record kept in a higher package",
+        "packageSummaryCopy": "This action stays linked to {{module}}. The full source module is included from {{package}} upward, so this summary stays visible here without breaking the action workflow.",
+        "includedIn": "Included from"
+      },
     "register": {
       "eyebrow": "Action tracker",
       "title": "Assigned follow-up",
@@ -1463,16 +1466,17 @@
       "noneTitle": "No actions match the current filters",
       "noneCopy": "Adjust the filters or open a source record to create a new action."
     },
-    "table": {
-      "action": "Action",
-      "source": "Source",
-      "owner": "Owner",
-      "dueDate": "Due date",
-      "status": "Status",
-      "admin": "Admin",
-      "noDescription": "No description provided.",
-      "openedAbove": "Opened above"
-    },
+      "table": {
+        "action": "Action",
+        "source": "Source",
+        "owner": "Owner",
+        "dueDate": "Due date",
+        "status": "Status",
+        "admin": "Admin",
+        "noDescription": "No description provided.",
+        "openedAbove": "Opened above",
+        "includedIn": "Included from {{package}}"
+      },
     "guidance": {
       "headlines": {
         "overdue": "Some assigned follow-up is overdue",
