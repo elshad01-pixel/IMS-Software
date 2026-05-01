@@ -15,11 +15,18 @@ type RoleConfig = {
   description?: string | null;
   isSystem: boolean;
   capabilities: {
-    createRecords: boolean;
+    manageUsersAndSettings: boolean;
+    createOperationalRecords: boolean;
+    manageActions: boolean;
+    manageAssuranceWorkflows: boolean;
+    leadManagementReview: boolean;
     approveDocuments: boolean;
     closeCapa: boolean;
+    exportReports: boolean;
   };
 };
+
+type RoleCapabilityKey = keyof RoleConfig['capabilities'];
 
 type SettingsConfig = {
   organization: {
@@ -78,6 +85,123 @@ type AiRuntimeConfig = {
   };
 };
 
+const roleCapabilityGroups: Array<{
+  id: string;
+  title: string;
+  description: string;
+  capabilities: Array<{
+    key: RoleCapabilityKey;
+    label: string;
+    description: string;
+  }>;
+}> = [
+  {
+    id: 'administration',
+    title: 'Administration',
+    description: 'Use these controls for tenant administration, settings ownership, and sensitive system changes.',
+    capabilities: [
+      {
+        key: 'manageUsersAndSettings',
+        label: 'Manage users and settings',
+        description: 'Allows user administration, tenant settings changes, and sensitive delete controls.'
+      },
+      {
+        key: 'exportReports',
+        label: 'Export data',
+        description: 'Allows report and export access for offline review, evidence packs, and management reporting.'
+      }
+    ]
+  },
+  {
+    id: 'operations',
+    title: 'Operational editing',
+    description: 'Use these controls for daily record keeping, improvement actions, and operational follow-up.',
+    capabilities: [
+      {
+        key: 'createOperationalRecords',
+        label: 'Create operational records',
+        description: 'Allows teams to create and update documents, risks, context, training, incidents, obligations, process links, and other live IMS records.'
+      },
+      {
+        key: 'manageActions',
+        label: 'Manage actions',
+        description: 'Allows action owners to update follow-up items created from audits, risks, incidents, reviews, and other modules.'
+      }
+    ]
+  },
+  {
+    id: 'assurance',
+    title: 'Assurance workflows',
+    description: 'Use these controls for audits, NCR/CAPA follow-up, approval decisions, and formal close-out.',
+    capabilities: [
+      {
+        key: 'manageAssuranceWorkflows',
+        label: 'Manage audits, NCR, and CAPA',
+        description: 'Allows the role to run audits, record nonconformances, and manage corrective-action workflows.'
+      },
+      {
+        key: 'approveDocuments',
+        label: 'Approve documents',
+        description: 'Allows controlled documents to be formally approved and moved into active use.'
+      },
+      {
+        key: 'closeCapa',
+        label: 'Close CAPA',
+        description: 'Allows corrective actions to be closed after effectiveness has been reviewed.'
+      }
+    ]
+  },
+  {
+    id: 'leadership',
+    title: 'Leadership review',
+    description: 'Use these controls for KPI ownership and management-review coordination.',
+    capabilities: [
+      {
+        key: 'leadManagementReview',
+        label: 'Manage KPIs and management review',
+        description: 'Allows the role to maintain KPIs, lead management-review records, and coordinate leadership follow-up.'
+      }
+    ]
+  }
+];
+
+const rolePositionGuidance: Array<{
+  title: string;
+  recommendedRole: string;
+  summary: string;
+}> = [
+  {
+    title: 'System Administrator',
+    recommendedRole: 'Admin',
+    summary: 'Owns tenant setup, user access, system settings, and sensitive exports.'
+  },
+  {
+    title: 'QHSE Manager',
+    recommendedRole: 'Manager',
+    summary: 'Leads audits, NCR/CAPA, KPIs, management review, and operational records.'
+  },
+  {
+    title: 'Operations Manager',
+    recommendedRole: 'Manager',
+    summary: 'Maintains operational records, owns actions, and contributes to review workflows without full system control.'
+  },
+  {
+    title: 'Internal Auditor',
+    recommendedRole: 'Manager',
+    summary: 'Runs audit and NCR follow-up work, then routes actions and CAPA for closure.'
+  },
+  {
+    title: 'Document Controller',
+    recommendedRole: 'Manager',
+    summary: 'Maintains controlled documents and approvals, with limited need for wider admin rights.'
+  },
+  {
+    title: 'Employee / Action Owner',
+    recommendedRole: 'User',
+    summary: 'Reads the system, updates assigned actions, and contributes evidence without broad edit rights.'
+  }
+];
+
 @Component({
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, AttachmentPanelComponent],
@@ -132,7 +256,7 @@ type AiRuntimeConfig = {
             </button>
             <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'roles'" (click)="activeSection.set('roles')">
               <span>Users & Roles</span>
-              <small>Three shared capability switches</small>
+              <small>Capability groups and role guidance</small>
             </button>
             <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'document'" (click)="activeSection.set('document')">
               <span>Documents</span>
@@ -211,24 +335,48 @@ type AiRuntimeConfig = {
               <div>
                 <span class="section-eyebrow">Users & Roles</span>
                 <h3>Role capabilities</h3>
-                <p class="subtle">Keep role control simple. These shared capability switches update the managed permissions behind each role.</p>
+                <p class="subtle">Keep the core system roles simple, then use grouped capabilities to reflect how QHSE, operations, audit, and leadership work is actually assigned.</p>
               </div>
             </div>
 
-            <div class="entity-list compact-entity-list">
-              <div class="entity-item">
-                <strong>Create records</strong>
-                <small>Allows users in the role to create and update operational records across the main IMS modules.</small>
-              </div>
-              <div class="entity-item">
-                <strong>Approve documents</strong>
-                <small>Allows controlled documents to be formally approved.</small>
-              </div>
-              <div class="entity-item">
-                <strong>Close CAPA</strong>
-                <small>Allows corrective actions to be closed once effectiveness has been reviewed.</small>
-              </div>
+            <div class="capability-group-grid">
+              <article class="detail-section capability-group-card" *ngFor="let group of capabilityGroups">
+                <div class="section-head">
+                  <div>
+                    <span class="section-eyebrow">{{ group.title }}</span>
+                    <h4>{{ group.title }}</h4>
+                    <p class="subtle">{{ group.description }}</p>
+                  </div>
+                </div>
+
+                <div class="entity-list compact-entity-list top-space">
+                  <div class="entity-item" *ngFor="let capability of group.capabilities">
+                    <strong>{{ capability.label }}</strong>
+                    <small>{{ capability.description }}</small>
+                  </div>
+                </div>
+              </article>
             </div>
+
+            <section class="detail-section role-guidance-card">
+              <div class="section-head">
+                <div>
+                  <span class="section-eyebrow">Typical positions</span>
+                  <h4>Recommended role templates</h4>
+                  <p class="subtle">These are business-facing position guides. They help customers pick the right starting role without exposing the full permission model.</p>
+                </div>
+              </div>
+
+              <div class="position-grid top-space">
+                <article class="position-card" *ngFor="let position of rolePositionGuidance">
+                  <div class="position-card__head">
+                    <strong>{{ position.title }}</strong>
+                    <span>{{ position.recommendedRole }}</span>
+                  </div>
+                  <p>{{ position.summary }}</p>
+                </article>
+              </div>
+            </section>
 
             <div class="role-grid">
               <article class="detail-section" *ngFor="let role of config()?.usersRoles || []">
@@ -237,22 +385,32 @@ type AiRuntimeConfig = {
                     <h4>{{ role.name }}</h4>
                     <p class="subtle">{{ role.description || 'No description provided.' }}</p>
                   </div>
+                  <span class="summary-chip">{{ enabledCapabilityCount(role) }} enabled</span>
                 </div>
 
-                <div class="role-toggle-grid top-space">
-                  <label class="toggle-row">
-                    <input type="checkbox" [checked]="role.capabilities.createRecords" [disabled]="!canWrite()" (change)="updateRoleCapability(role.id, 'createRecords', readCheckbox($event))">
-                    <span>Create records</span>
-                  </label>
-                  <label class="toggle-row">
-                    <input type="checkbox" [checked]="role.capabilities.approveDocuments" [disabled]="!canWrite()" (change)="updateRoleCapability(role.id, 'approveDocuments', readCheckbox($event))">
-                    <span>Approve documents</span>
-                  </label>
-                  <label class="toggle-row">
-                    <input type="checkbox" [checked]="role.capabilities.closeCapa" [disabled]="!canWrite()" (change)="updateRoleCapability(role.id, 'closeCapa', readCheckbox($event))">
-                    <span>Close CAPA</span>
-                  </label>
+                <div class="role-capability-groups top-space">
+                  <section class="role-capability-group" *ngFor="let group of capabilityGroups">
+                    <div class="role-capability-group__head">
+                      <span class="section-eyebrow">{{ group.title }}</span>
+                    </div>
+
+                    <div class="role-toggle-grid">
+                      <label class="toggle-row role-toggle-card" *ngFor="let capability of group.capabilities">
+                        <input
+                          type="checkbox"
+                          [checked]="role.capabilities[capability.key]"
+                          [disabled]="!canWrite() || isProtectedAdminCapability(role, capability.key)"
+                          (change)="updateRoleCapability(role.id, capability.key, readCheckbox($event))"
+                        >
+                        <span>{{ capability.label }}</span>
+                      </label>
+                    </div>
+                  </section>
                 </div>
+
+                <p class="subtle top-space" *ngIf="role.isSystem && role.name === 'Admin'">
+                  The system Admin role always keeps user and settings management enabled.
+                </p>
               </article>
             </div>
           </section>
@@ -587,6 +745,18 @@ type AiRuntimeConfig = {
       gap: 1rem;
     }
 
+    .capability-group-grid,
+    .position-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .capability-group-card,
+    .role-guidance-card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(243, 247, 243, 0.92));
+    }
+
     .compact-entity-list {
       margin-bottom: 1rem;
     }
@@ -594,6 +764,93 @@ type AiRuntimeConfig = {
     .role-toggle-grid {
       display: grid;
       gap: 0.65rem;
+    }
+
+    .role-capability-groups {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .role-capability-group {
+      display: grid;
+      gap: 0.7rem;
+      padding-top: 0.25rem;
+      border-top: 1px solid rgba(95, 107, 99, 0.14);
+    }
+
+    .role-capability-group:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .role-capability-group__head {
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .role-toggle-card {
+      padding: 0.7rem 0.8rem;
+      border: 1px solid rgba(95, 107, 99, 0.14);
+      border-radius: 0.95rem;
+      background: rgba(255, 255, 255, 0.86);
+    }
+
+    .summary-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.35rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(20, 61, 43, 0.09);
+      border: 1px solid rgba(20, 61, 43, 0.14);
+      color: var(--text-soft);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .position-card {
+      display: grid;
+      gap: 0.55rem;
+      padding: 0.95rem 1rem;
+      border: 1px solid rgba(95, 107, 99, 0.14);
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.86);
+    }
+
+    .position-card__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .position-card__head strong {
+      color: var(--text-strong);
+    }
+
+    .position-card__head span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
+      background: rgba(43, 75, 109, 0.1);
+      color: var(--text-soft);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .position-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.92rem;
     }
 
     .compact-runtime-panel {
@@ -631,6 +888,8 @@ type AiRuntimeConfig = {
     @media (max-width: 1100px) {
       .settings-summary-strip,
       .settings-layout,
+      .capability-group-grid,
+      .position-grid,
       .role-grid,
       .compact-runtime-grid,
       .ai-feature-grid {
@@ -655,6 +914,8 @@ export class SettingsPageComponent {
   protected readonly savingSection = signal<string | null>(null);
   protected readonly message = signal('');
   protected readonly error = signal('');
+  protected readonly capabilityGroups = roleCapabilityGroups;
+  protected readonly rolePositionGuidance = rolePositionGuidance;
 
   protected showStartHereBackLink() {
     return this.route.snapshot.queryParamMap.get('from') === 'start-here';
@@ -705,6 +966,7 @@ export class SettingsPageComponent {
   });
 
   constructor() {
+    this.authStore.refreshSession();
     this.reload();
   }
 
@@ -777,7 +1039,7 @@ export class SettingsPageComponent {
     });
   }
 
-  protected updateRoleCapability(roleId: string, capability: 'createRecords' | 'approveDocuments' | 'closeCapa', checked: boolean) {
+  protected updateRoleCapability(roleId: string, capability: RoleCapabilityKey, checked: boolean) {
     if (!this.canWrite()) {
       this.error.set('You do not have permission to update settings.');
       return;
@@ -800,6 +1062,7 @@ export class SettingsPageComponent {
         this.savingSection.set(null);
         this.message.set('Role capabilities updated.');
         this.config.update((current) => current ? { ...current, usersRoles: roles as RoleConfig[] } : current);
+        this.authStore.refreshSession();
       },
       error: (error: HttpErrorResponse) => {
         this.savingSection.set(null);
@@ -810,6 +1073,14 @@ export class SettingsPageComponent {
 
   protected readCheckbox(event: Event) {
     return (event.target as HTMLInputElement).checked;
+  }
+
+  protected enabledCapabilityCount(role: RoleConfig) {
+    return Object.values(role.capabilities).filter(Boolean).length;
+  }
+
+  protected isProtectedAdminCapability(role: RoleConfig, capability: RoleCapabilityKey) {
+    return role.isSystem && role.name === 'Admin' && capability === 'manageUsersAndSettings';
   }
 
   private reload() {

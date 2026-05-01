@@ -60,18 +60,30 @@ const settingsDefaults = {
 } as const;
 
 const roleCapabilityPermissions = {
-  createRecords: [
+  manageUsersAndSettings: ['users.write', 'settings.write', 'admin.delete'],
+  createOperationalRecords: [
     'documents.write',
     'risks.write',
-    'capa.write',
-    'audits.write',
-    'management-review.write',
-    'kpis.write',
-    'training.write'
+    'training.write',
+    'context.write',
+    'incidents.write',
+    'aspects.write',
+    'hazards.write',
+    'providers.write',
+    'change.write',
+    'obligations.write',
+    'processes.write'
   ],
+  manageActions: ['action-items.write'],
+  manageAssuranceWorkflows: ['audits.write', 'ncr.write', 'capa.write'],
+  leadManagementReview: ['management-review.write', 'kpis.write'],
   approveDocuments: ['documents.approve'],
-  closeCapa: ['capa.close']
+  closeCapa: ['capa.close'],
+  exportReports: ['reports.read']
 } as const;
+
+type RoleCapabilityKey = keyof typeof roleCapabilityPermissions;
+type RoleCapabilityFlags = Record<RoleCapabilityKey, boolean>;
 
 @Injectable()
 export class SettingsService {
@@ -218,16 +230,17 @@ export class SettingsService {
         name: role.name,
         description: role.description,
         isSystem: role.isSystem,
-        capabilities: {
-          createRecords: roleCapabilityPermissions.createRecords.every((key) => permissionKeys.includes(key)),
-          approveDocuments: permissionKeys.includes('documents.approve'),
-          closeCapa: permissionKeys.includes('capa.close')
-        }
+        capabilities: Object.fromEntries(
+          Object.entries(roleCapabilityPermissions).map(([capability, keys]) => [
+            capability,
+            keys.every((key) => permissionKeys.includes(key))
+          ])
+        ) as RoleCapabilityFlags
       };
     });
   }
 
-  async updateRole(tenantId: string, roleId: string, values: { createRecords: boolean; approveDocuments: boolean; closeCapa: boolean }) {
+  async updateRole(tenantId: string, roleId: string, values: RoleCapabilityFlags) {
     const role = await this.prisma.role.findFirstOrThrow({
       where: { id: roleId, tenantId },
       include: {
@@ -236,6 +249,10 @@ export class SettingsService {
         }
       }
     });
+
+    if (role.isSystem && role.name === 'Admin' && !values.manageUsersAndSettings) {
+      throw new BadRequestException('The system Admin role must keep user and settings management enabled.');
+    }
 
     const existingPermissionKeys = role.permissions.map((entry) => entry.permission.key);
     const targetPermissionKeys = new Set(existingPermissionKeys.filter((key) => !this.isManagedCapabilityPermission(key)));
