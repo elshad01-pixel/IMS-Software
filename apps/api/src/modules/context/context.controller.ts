@@ -2,8 +2,10 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } f
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
+import { PackageModule } from '../../common/auth/package-module.decorator';
 import { Permissions } from '../../common/auth/permissions.decorator';
 import { PermissionsGuard } from '../../common/auth/permissions.guard';
+import { TenantAddOn } from '../../common/auth/tenant-addon.decorator';
 import { CurrentTenant } from '../../common/tenancy/current-tenant.decorator';
 import { CreateContextIssueProcessLinkDto } from './dto/create-context-issue-process-link.dto';
 import { CreateContextIssueRiskLinkDto } from './dto/create-context-issue-risk-link.dto';
@@ -20,6 +22,7 @@ import { ContextService } from './context.service';
 @ApiTags('context')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, PermissionsGuard)
+@PackageModule('context')
 @Controller('context')
 export class ContextController {
   constructor(private readonly contextService: ContextService) {}
@@ -127,6 +130,7 @@ export class ContextController {
 
   @Post('interested-parties/:id/survey-requests')
   @Permissions('context.write')
+  @TenantAddOn('customerFeedback')
   createCustomerSurveyRequest(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { sub: string },

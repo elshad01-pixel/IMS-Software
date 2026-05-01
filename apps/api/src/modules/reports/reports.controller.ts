@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
+import { PackageModule } from '../../common/auth/package-module.decorator';
 import { Permissions } from '../../common/auth/permissions.decorator';
 import { PermissionsGuard } from '../../common/auth/permissions.guard';
 import { buildAttachmentContentDisposition } from '../../common/http/download-header.util';
@@ -14,6 +15,7 @@ import { ReportsService } from './reports.service';
 @ApiTags('reports')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, PermissionsGuard)
+@PackageModule('reports')
 @Controller('reports')
 export class ReportsController {
   constructor(

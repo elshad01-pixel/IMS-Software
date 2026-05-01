@@ -1,5 +1,9 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { DEFAULT_PACKAGE_TIER, isModuleIncluded, PackageModuleKey, TenantPackageTier } from './package-entitlements';
+import { PACKAGE_MODULE_KEY } from './package-module.decorator';
+import { DEFAULT_TENANT_ADD_ONS, normalizeTenantAddOns, TenantAddOnKey } from './tenant-addons';
+import { TENANT_ADD_ON_KEY } from './tenant-addon.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { TenantRequest } from '../tenancy/tenant-request.interface';
 import { PERMISSIONS_KEY } from './permissions.decorator';
@@ -16,8 +20,16 @@ export class PermissionsGuard implements CanActivate {
       context.getHandler(),
       context.getClass()
     ]);
+    const requiredPackageModule = this.reflector.getAllAndOverride<PackageModuleKey | undefined>(PACKAGE_MODULE_KEY, [
+      context.getHandler(),
+      context.getClass()
+    ]);
+    const requiredAddOn = this.reflector.getAllAndOverride<TenantAddOnKey | undefined>(TENANT_ADD_ON_KEY, [
+      context.getHandler(),
+      context.getClass()
+    ]);
 
-    if (!required || required.length === 0) {
+    if ((!required || required.length === 0) && !requiredPackageModule && !requiredAddOn) {
       return true;
     }
 
@@ -29,28 +41,84 @@ export class PermissionsGuard implements CanActivate {
       return false;
     }
 
-    const dbUser = await this.prisma.user.findFirst({
-      where: { id: userId, tenantId, isActive: true },
-      select: {
-        role: {
-          select: {
-            permissions: {
-              select: {
-                permission: {
-                  select: {
-                    key: true
+    const [dbUser, tenantPackage, tenantAddOns] = await Promise.all([
+      this.prisma.user.findFirst({
+        where: { id: userId, tenantId, isActive: true },
+        select: {
+          role: {
+            select: {
+              permissions: {
+                select: {
+                  permission: {
+                    select: {
+                      key: true
+                    }
                   }
                 }
               }
             }
           }
         }
-      }
-    });
+      }),
+      requiredPackageModule
+        ? this.prisma.tenantSetting.findUnique({
+            where: {
+              tenantId_key: {
+                tenantId,
+                key: 'subscription.packageTier'
+              }
+            },
+            select: { value: true }
+          })
+        : Promise.resolve(null),
+      requiredAddOn
+        ? this.prisma.tenantSetting.findUnique({
+            where: {
+              tenantId_key: {
+                tenantId,
+                key: 'subscription.addOns'
+              }
+            },
+            select: { value: true }
+          })
+        : Promise.resolve(null)
+    ]);
 
     const permissions =
       dbUser?.role?.permissions.map((entry) => entry.permission.key) ?? request.user?.permissions ?? [];
 
-    return required.every((permission) => permissions.includes(permission));
+    const hasPermissions = !required || required.every((permission) => permissions.includes(permission));
+    if (!hasPermissions) {
+      return false;
+    }
+
+    if (requiredPackageModule) {
+      const packageTier = this.readPackageTier(tenantPackage?.value);
+      if (!isModuleIncluded(packageTier, requiredPackageModule)) {
+        return false;
+      }
+    }
+
+    if (!requiredAddOn) {
+      return true;
+    }
+
+    return this.readAddOns(tenantAddOns?.value)[requiredAddOn];
+  }
+
+  private readPackageTier(value?: string | null): TenantPackageTier {
+    return value === 'ASSURANCE' || value === 'CORE_IMS' || value === 'QHSE_PRO' ? value : DEFAULT_PACKAGE_TIER;
+  }
+
+  private readAddOns(value?: string | null) {
+    if (!value) {
+      return { ...DEFAULT_TENANT_ADD_ONS };
+    }
+
+    try {
+      return normalizeTenantAddOns(JSON.parse(value));
+    } catch {
+      return { ...DEFAULT_TENANT_ADD_ONS };
+    }
   }
 }

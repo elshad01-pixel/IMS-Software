@@ -1,5 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
+import { DEFAULT_TENANT_ADD_ONS, normalizeTenantAddOns } from '../../common/auth/tenant-addons';
 import {
   getCustomerSurveyRequestDelegate,
   getContextIssueDelegate,
@@ -634,6 +635,7 @@ export class ContextService {
     interestedPartyId: string,
     dto: CreateCustomerSurveyRequestDto
   ) {
+    await this.ensureCustomerFeedbackEnabled(tenantId);
     const party = await this.getInterestedPartyCore(tenantId, interestedPartyId);
     if (party.type !== 'CUSTOMER') {
       throw new BadRequestException('Customer surveys can only be issued for interested parties of type CUSTOMER.');
@@ -675,6 +677,7 @@ export class ContextService {
 
   async getPublicCustomerSurvey(token: string) {
     const request = await this.findSurveyRequestByToken(token);
+    await this.ensureCustomerFeedbackEnabled(request.tenantId);
     const current = await this.refreshSurveyRequestStatusIfNeeded(request);
 
     return {
@@ -693,6 +696,7 @@ export class ContextService {
 
   async submitPublicCustomerSurvey(token: string, dto: SubmitCustomerSurveyDto) {
     const request = await this.findSurveyRequestByToken(token);
+    await this.ensureCustomerFeedbackEnabled(request.tenantId);
     const current = await this.refreshSurveyRequestStatusIfNeeded(request);
 
     if (current.status === 'COMPLETED') {
@@ -1019,6 +1023,21 @@ export class ContextService {
   }
 
   private async buildCustomerFeedbackSummary(tenantId: string): Promise<SurveySummary> {
+    if (!(await this.isCustomerFeedbackEnabled(tenantId))) {
+      return {
+        responseCount: 0,
+        openRequestCount: 0,
+        expiredRequestCount: 0,
+        averageScore: null,
+        lowScoreCount: 0,
+        mediumScoreCount: 0,
+        highScoreCount: 0,
+        health: 'NO_DATA',
+        categoryAverages: [],
+        recentComments: []
+      };
+    }
+
     const parties = (await getInterestedPartyDelegate(this.prisma).findMany({
       where: { tenantId, deletedAt: null, type: 'CUSTOMER' },
       select: { id: true }
@@ -1236,5 +1255,33 @@ export class ContextService {
   private normalizeText(value?: string | null) {
     const trimmed = value?.trim();
     return trimmed ? trimmed : null;
+  }
+
+  private async ensureCustomerFeedbackEnabled(tenantId: string) {
+    if (!(await this.isCustomerFeedbackEnabled(tenantId))) {
+      throw new BadRequestException('Customer feedback add-on is not enabled for this tenant.');
+    }
+  }
+
+  private async isCustomerFeedbackEnabled(tenantId: string) {
+    const setting = await this.prisma.tenantSetting.findUnique({
+      where: {
+        tenantId_key: {
+          tenantId,
+          key: 'subscription.addOns'
+        }
+      },
+      select: { value: true }
+    });
+
+    if (!setting?.value) {
+      return DEFAULT_TENANT_ADD_ONS.customerFeedback;
+    }
+
+    try {
+      return normalizeTenantAddOns(JSON.parse(setting.value)).customerFeedback;
+    } catch {
+      return DEFAULT_TENANT_ADD_ONS.customerFeedback;
+    }
   }
 }

@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } f
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
+import { PackageModule } from '../../common/auth/package-module.decorator';
 import { Permissions } from '../../common/auth/permissions.decorator';
 import { PermissionsGuard } from '../../common/auth/permissions.guard';
 import { CurrentTenant } from '../../common/tenancy/current-tenant.decorator';
@@ -13,6 +14,7 @@ import { ProcessRegisterService } from './process-register.service';
 @ApiTags('process-register')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, PermissionsGuard)
+@PackageModule('process-register')
 @Controller('process-register')
 export class ProcessRegisterController {
   constructor(private readonly processRegisterService: ProcessRegisterService) {}

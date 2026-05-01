@@ -54,7 +54,7 @@ import { PageHeaderComponent } from '../shared/page-header.component';
               <span>{{ 'contextDashboard.focus.resolved' | translate }}</span>
               <strong>{{ recentIssueCount('RESOLVED') }}</strong>
             </article>
-            <article class="summary-item">
+            <article class="summary-item" *ngIf="hasCustomerFeedbackAddOn()">
               <span>{{ 'contextDashboard.focus.customerFeedback' | translate }}</span>
               <strong>{{ customerFeedbackHeadline() }}</strong>
             </article>
@@ -336,6 +336,10 @@ export class ContextDashboardPageComponent implements OnInit {
 
   protected canWrite() {
     return this.authStore.hasPermission('context.write');
+  }
+
+  protected hasCustomerFeedbackAddOn() {
+    return this.authStore.hasAddOn('customerFeedback');
   }
 
   protected t(key: string, params?: Record<string, unknown>) {

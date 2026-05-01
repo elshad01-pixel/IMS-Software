@@ -192,7 +192,10 @@ type ReviewRecord = {
 
           <section class="guidance-card">
             <strong>Live system inputs</strong>
-            <p>Use these registers as live evidence when writing the input sections below. You can also ask AI to draft the input text from the current tenant records, then edit it before saving.</p>
+            <p>
+              Use these registers as live evidence when writing the input sections below.
+              <ng-container *ngIf="hasAiAddOn()"> You can also ask AI to draft the input text from the current tenant records, then edit it before saving.</ng-container>
+            </p>
             <div class="touchpoint-grid top-space">
               <a class="touchpoint-card" *ngFor="let item of managementSignals()" [routerLink]="item.link">
                 <span>{{ item.label }}</span>
@@ -200,12 +203,12 @@ type ReviewRecord = {
                 <small>{{ item.copy }}</small>
               </a>
             </div>
-            <div class="button-row top-space">
+            <div class="button-row top-space" *ngIf="hasAiAddOn()">
               <button type="button" class="secondary" [disabled]="generatingAiInputs() || saving() || !canWrite()" (click)="draftInputsWithAi()">
                 {{ generatingAiInputs() ? 'Drafting inputs...' : 'AI draft inputs from live records' }}
               </button>
             </div>
-            <small class="top-space">AI fills only the management review input sections. You can edit every field before saving the meeting.</small>
+            <small class="top-space" *ngIf="hasAiAddOn()">AI fills only the management review input sections. You can edit every field before saving the meeting.</small>
           </section>
 
           <label class="field"><span>Title</span><input formControlName="title" placeholder="Q1 2026 management review"></label>
@@ -727,7 +730,7 @@ export class ManagementReviewPageComponent {
         reviewCopy: 'Use active change requests to support the changes affecting the system section.',
         link: '/change-management'
       }
-    ];
+    ].filter((item) => this.hasCustomerFeedbackAddOn() || item.label !== 'Customer feedback');
   }
 
   protected completedInputCount() {
@@ -897,6 +900,11 @@ export class ManagementReviewPageComponent {
   }
 
   protected draftInputsWithAi() {
+    if (!this.hasAiAddOn()) {
+      this.error.set('AI assistant add-on is not enabled for this tenant.');
+      return;
+    }
+
     if (!this.canWrite()) {
       this.error.set('You do not have permission to update management reviews.');
       return;
@@ -952,6 +960,14 @@ export class ManagementReviewPageComponent {
 
   protected canWrite() {
     return this.authStore.hasPermission('management-review.write');
+  }
+
+  protected hasAiAddOn() {
+    return this.authStore.hasAddOn('aiAssistant');
+  }
+
+  protected hasCustomerFeedbackAddOn() {
+    return this.authStore.hasAddOn('customerFeedback');
   }
 
   protected canCreateActions() {

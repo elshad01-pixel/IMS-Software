@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@n
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
+import { PackageModule } from '../../common/auth/package-module.decorator';
 import { Permissions } from '../../common/auth/permissions.decorator';
 import { PermissionsGuard } from '../../common/auth/permissions.guard';
 import { CurrentTenant } from '../../common/tenancy/current-tenant.decorator';
@@ -12,6 +13,7 @@ import { CapaService } from './capa.service';
 @ApiTags('capa')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, PermissionsGuard)
+@PackageModule('capa')
 @Controller('capa')
 export class CapaController {
   constructor(private readonly capaService: CapaService) {}

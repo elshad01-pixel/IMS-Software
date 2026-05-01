@@ -35,7 +35,7 @@ type SourceNavigation = { route: string[]; label: string };
       </section>
 
       <section *ngIf="canRead() && mode() === 'list'" class="page-stack">
-        <div class="card panel-card" *ngIf="customerParties().length">
+        <div class="card panel-card" *ngIf="hasCustomerFeedbackAddOn() && customerParties().length">
           <div class="section-head">
             <div>
               <span class="section-eyebrow">Customer survey</span>
@@ -148,13 +148,13 @@ type SourceNavigation = { route: string[]; label: string };
 
           <div class="data-table-wrap top-space" *ngIf="!loading() && filteredParties().length">
             <table class="data-table">
-              <thead><tr><th>Name</th><th>Type</th><th>Needs</th><th>Survey</th><th>Updated</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Name</th><th>Type</th><th>Needs</th><th *ngIf="hasCustomerFeedbackAddOn()">Survey</th><th>Updated</th><th>Actions</th></tr></thead>
               <tbody>
                 <tr *ngFor="let item of filteredParties()">
                   <td><div class="table-title"><strong>{{ item.name }}</strong><small>{{ item.description || 'No description recorded' }}</small></div></td>
                   <td>{{ labelize(item.type) }}</td>
                   <td>{{ item.needCount || 0 }}</td>
-                  <td>{{ interestedPartySurveyStatus(item) }}</td>
+                  <td *ngIf="hasCustomerFeedbackAddOn()">{{ interestedPartySurveyStatus(item) }}</td>
                   <td>{{ item.updatedAt | date:'yyyy-MM-dd' }}</td>
                   <td>
                     <div class="inline-actions">
@@ -215,7 +215,7 @@ type SourceNavigation = { route: string[]; label: string };
           </div>
         </form>
 
-        <section class="card panel-card page-stack" *ngIf="mode() === 'edit' && selectedParty()?.type === 'CUSTOMER' && selectedParty()?.surveyRequests?.length">
+        <section class="card panel-card page-stack" *ngIf="hasCustomerFeedbackAddOn() && mode() === 'edit' && selectedParty()?.type === 'CUSTOMER' && selectedParty()?.surveyRequests?.length">
           <div class="section-head">
             <div>
               <span class="section-eyebrow">Survey history</span>
@@ -427,6 +427,7 @@ export class InterestedPartiesPageComponent implements OnInit, OnChanges {
   protected canRead() { return this.authStore.hasPermission('context.read'); }
   protected canWrite() { return this.authStore.hasPermission('context.write'); }
   protected canDelete() { return this.authStore.hasPermission('admin.delete'); }
+  protected hasCustomerFeedbackAddOn() { return this.authStore.hasAddOn('customerFeedback'); }
   protected pageTitle() { return { list: 'Interested Parties', create: 'New Interested Party', edit: this.selectedParty()?.name || 'Edit Interested Party' }[this.mode()]; }
   protected pageDescription() { return this.mode() === 'list' ? 'Keep stakeholder context available for Clause 4 review.' : 'Capture the interested party in a simple, maintainable way.'; }
   protected breadcrumbs() {

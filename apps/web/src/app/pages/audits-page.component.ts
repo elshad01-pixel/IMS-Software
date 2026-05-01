@@ -879,7 +879,7 @@ type AuditFormValue = {
               <section class="detail-section">
                 <h4>{{ t('audits.findingModal.whatToDoNow') }}</h4>
                 <p>{{ findingModalChecklistCopy() }}</p>
-                <div class="button-row compact-row top-space">
+                <div class="button-row compact-row top-space" *ngIf="hasAiAddOn()">
                   <button type="button" class="secondary" (click)="draftFindingWithAi(pendingItem)" [disabled]="saving() || draftingFindingWithAi()">
                     {{ draftingFindingWithAi() ? t('audits.findingModal.drafting') : t('audits.findingModal.draftWithAi') }}
                   </button>
@@ -2246,6 +2246,12 @@ export class AuditsPageComponent {
   }
 
   protected draftFindingWithAi(item: AuditChecklistItem) {
+    if (!this.hasAiAddOn()) {
+      this.findingAiNotice.set('AI assistant add-on is not enabled for this tenant.');
+      this.findingAiNoticeIsError.set(true);
+      return;
+    }
+
     const audit = this.selectedAudit();
     const clause = item.clause || this.currentChecklistGroup()?.clause || 'Clause';
     const evidenceNote = this.findingForm.getRawValue().description.trim() || this.checklistNoteDraft(item).trim();
@@ -3860,6 +3866,10 @@ export class AuditsPageComponent {
 
   protected canCreateActions() {
     return this.authStore.hasPermission('action-items.write');
+  }
+
+  protected hasAiAddOn() {
+    return this.authStore.hasAddOn('aiAssistant');
   }
 
   protected canArchiveAudit() {

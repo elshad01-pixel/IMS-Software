@@ -9,6 +9,7 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
+import { PackageModule } from '../../common/auth/package-module.decorator';
 import { Permissions } from '../../common/auth/permissions.decorator';
 import { PermissionsGuard } from '../../common/auth/permissions.guard';
 import { CurrentTenant } from '../../common/tenancy/current-tenant.decorator';
@@ -20,6 +21,7 @@ import { NcrService } from './ncr.service';
 @ApiTags('ncr')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, PermissionsGuard)
+@PackageModule('ncr')
 @Controller('ncr')
 export class NcrController {
   constructor(private readonly ncrService: NcrService) {}

@@ -1,6 +1,8 @@
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
+import { DEFAULT_PACKAGE_TIER, getEnabledModules, TenantPackageTier } from '../../common/auth/package-entitlements';
+import { DEFAULT_TENANT_ADD_ONS, normalizeTenantAddOns, TenantAddOns } from '../../common/auth/tenant-addons';
 import { getAuditChecklistQuestionDelegate } from '../../common/prisma/prisma-delegate-compat';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { createStarterQuestionSeedData } from '../audits/audit-question-bank';
@@ -210,7 +212,8 @@ export class AuthService {
   }
 
   async me(userId: string, tenantId: string) {
-    return this.prisma.user.findFirst({
+    const [user, packageTier, enabledAddOns] = await Promise.all([
+      this.prisma.user.findFirst({
       where: { id: userId, tenantId },
       select: {
         id: true,
@@ -234,23 +237,42 @@ export class AuthService {
           }
         }
       }
-    });
+      }),
+      this.readTenantPackageTier(tenantId),
+      this.readTenantAddOns(tenantId)
+    ]);
+
+    return user
+      ? {
+          ...user,
+          packageTier,
+          enabledModules: getEnabledModules(packageTier),
+          enabledAddOns
+        }
+      : null;
   }
 
   private async issueToken(userId: string, tenantId: string, email: string, roleId?: string) {
-    const permissions = roleId
-      ? await this.prisma.rolePermission.findMany({
-          where: { roleId },
-          include: { permission: true }
-        })
-      : [];
+    const [permissions, packageTier, enabledAddOns] = await Promise.all([
+      roleId
+        ? this.prisma.rolePermission.findMany({
+            where: { roleId },
+            include: { permission: true }
+          })
+        : Promise.resolve([]),
+      this.readTenantPackageTier(tenantId),
+      this.readTenantAddOns(tenantId)
+    ]);
 
     const payload = {
       sub: userId,
       tenantId,
       email,
       roleId,
-      permissions: permissions.map((entry) => entry.permission.key)
+      permissions: permissions.map((entry) => entry.permission.key),
+      packageTier,
+      enabledModules: getEnabledModules(packageTier),
+      enabledAddOns
     };
 
     const accessToken = await this.jwtService.signAsync(payload);
@@ -258,5 +280,42 @@ export class AuthService {
       accessToken,
       user: payload
     };
+  }
+
+  private async readTenantPackageTier(tenantId: string): Promise<TenantPackageTier> {
+    const setting = await this.prisma.tenantSetting.findUnique({
+      where: {
+        tenantId_key: {
+          tenantId,
+          key: 'subscription.packageTier'
+        }
+      },
+      select: { value: true }
+    });
+
+    const value = setting?.value as TenantPackageTier | undefined;
+    return value === 'ASSURANCE' || value === 'CORE_IMS' || value === 'QHSE_PRO' ? value : DEFAULT_PACKAGE_TIER;
+  }
+
+  private async readTenantAddOns(tenantId: string): Promise<TenantAddOns> {
+    const setting = await this.prisma.tenantSetting.findUnique({
+      where: {
+        tenantId_key: {
+          tenantId,
+          key: 'subscription.addOns'
+        }
+      },
+      select: { value: true }
+    });
+
+    if (!setting?.value) {
+      return { ...DEFAULT_TENANT_ADD_ONS };
+    }
+
+    try {
+      return normalizeTenantAddOns(JSON.parse(setting.value));
+    } catch {
+      return { ...DEFAULT_TENANT_ADD_ONS };
+    }
   }
 }

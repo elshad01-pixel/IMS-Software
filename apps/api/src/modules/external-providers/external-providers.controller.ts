@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } f
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
+import { PackageModule } from '../../common/auth/package-module.decorator';
 import { Permissions } from '../../common/auth/permissions.decorator';
 import { PermissionsGuard } from '../../common/auth/permissions.guard';
 import { CurrentTenant } from '../../common/tenancy/current-tenant.decorator';
@@ -16,6 +17,7 @@ import { ExternalProvidersService } from './external-providers.service';
 @ApiTags('external-providers')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, PermissionsGuard)
+@PackageModule('external-providers')
 @Controller('external-providers')
 export class ExternalProvidersController {
   constructor(private readonly externalProvidersService: ExternalProvidersService) {}

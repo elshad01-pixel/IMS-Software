@@ -1,4 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { DEFAULT_PACKAGE_TIER, TenantPackageTier } from '../../common/auth/package-entitlements';
+import { DEFAULT_TENANT_ADD_ONS, normalizeTenantAddOns, TenantAddOns } from '../../common/auth/tenant-addons';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
 const settingsDefaults = {
@@ -23,6 +25,10 @@ const settingsDefaults = {
   },
   notifications: {
     enabled: true
+  },
+  subscription: {
+    packageTier: DEFAULT_PACKAGE_TIER,
+    addOns: { ...DEFAULT_TENANT_ADD_ONS }
   },
   ai: {
     enabled: false,
@@ -132,6 +138,10 @@ export class SettingsService {
         warningThreshold: this.readNumberSetting(map, 'kpi.warningThreshold', settingsDefaults.kpi.warningThreshold),
         breachThreshold: this.readNumberSetting(map, 'kpi.breachThreshold', settingsDefaults.kpi.breachThreshold)
       },
+      subscription: {
+        packageTier: this.readPackageTierSetting(map, 'subscription.packageTier', settingsDefaults.subscription.packageTier),
+        addOns: this.readAddOnsSetting(map, 'subscription.addOns', settingsDefaults.subscription.addOns)
+      },
       notifications: {
         enabled: this.readBooleanSetting(map, 'notifications.enabled', settingsDefaults.notifications.enabled)
       },
@@ -183,7 +193,7 @@ export class SettingsService {
   }
 
   async updateSection(tenantId: string, section: string, values: Record<string, unknown>) {
-    const validSections = ['organization', 'document', 'risk', 'kpi', 'notifications', 'ai', 'implementation'];
+    const validSections = ['organization', 'document', 'risk', 'kpi', 'subscription', 'notifications', 'ai', 'implementation'];
     if (!validSections.includes(section)) {
       throw new BadRequestException('Unsupported settings section');
     }
@@ -198,6 +208,15 @@ export class SettingsService {
         where: { id: tenantId },
         data: { name: companyName }
       });
+    }
+
+    if (section === 'subscription') {
+      const packageTier = values['packageTier'];
+      if (packageTier !== 'ASSURANCE' && packageTier !== 'CORE_IMS' && packageTier !== 'QHSE_PRO') {
+        throw new BadRequestException('Unsupported package tier');
+      }
+
+      values['addOns'] = normalizeTenantAddOns(values['addOns']);
     }
 
     const entries = Object.entries(values).map(([key, value]) => ({
@@ -295,6 +314,24 @@ export class SettingsService {
   private readBooleanSetting(map: Map<string, string>, key: string, fallback: boolean) {
     const value = map.get(key);
     return value !== undefined ? value === 'true' : fallback;
+  }
+
+  private readPackageTierSetting(map: Map<string, string>, key: string, fallback: TenantPackageTier) {
+    const value = map.get(key);
+    return value === 'ASSURANCE' || value === 'CORE_IMS' || value === 'QHSE_PRO' ? value : fallback;
+  }
+
+  private readAddOnsSetting(map: Map<string, string>, key: string, fallback: TenantAddOns) {
+    const value = map.get(key);
+    if (!value) {
+      return { ...fallback };
+    }
+
+    try {
+      return normalizeTenantAddOns(JSON.parse(value));
+    } catch {
+      return { ...fallback };
+    }
   }
 
   private readJsonSetting<T>(map: Map<string, string>, key: string, fallback: T) {

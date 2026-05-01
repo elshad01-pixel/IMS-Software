@@ -4,6 +4,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthStore } from '../core/auth.store';
 import { AppLanguage, I18nService } from '../core/i18n.service';
+import { PackageModuleKey } from '../core/package-entitlements';
 
 type NavItem = {
   path: string;
@@ -12,6 +13,7 @@ type NavItem = {
   icon: string;
   exact?: boolean;
   permission?: string;
+  packageModule?: PackageModuleKey;
 };
 
 type NavGroup = {
@@ -755,59 +757,59 @@ export class ShellComponent {
       key: 'start',
       labelKey: 'shell.navGroups.start',
       items: [
-        { path: '/dashboard', labelKey: 'shell.nav.dashboard.label', hintKey: 'shell.nav.dashboard.hint', icon: 'DB', exact: true, permission: 'dashboard.read' },
-        { path: '/implementation', labelKey: 'shell.nav.startHere.label', hintKey: 'shell.nav.startHere.hint', icon: 'SH', permission: 'dashboard.read' }
+        { path: '/dashboard', labelKey: 'shell.nav.dashboard.label', hintKey: 'shell.nav.dashboard.hint', icon: 'DB', exact: true, permission: 'dashboard.read', packageModule: 'dashboard' },
+        { path: '/implementation', labelKey: 'shell.nav.startHere.label', hintKey: 'shell.nav.startHere.hint', icon: 'SH', permission: 'dashboard.read', packageModule: 'implementation' }
       ]
     },
     {
       key: 'planning',
       labelKey: 'shell.navGroups.planning',
       items: [
-        { path: '/context', labelKey: 'shell.nav.context.label', hintKey: 'shell.nav.context.hint', icon: 'CX', permission: 'context.read' },
-        { path: '/process-register', labelKey: 'shell.nav.processRegister.label', hintKey: 'shell.nav.processRegister.hint', icon: 'PR', permission: 'processes.read' },
-        { path: '/risks', labelKey: 'shell.nav.risks.label', hintKey: 'shell.nav.risks.hint', icon: 'RK', permission: 'risks.read' },
-        { path: '/compliance-obligations', labelKey: 'shell.nav.complianceObligations.label', hintKey: 'shell.nav.complianceObligations.hint', icon: 'OB', permission: 'obligations.read' }
+        { path: '/context', labelKey: 'shell.nav.context.label', hintKey: 'shell.nav.context.hint', icon: 'CX', permission: 'context.read', packageModule: 'context' },
+        { path: '/process-register', labelKey: 'shell.nav.processRegister.label', hintKey: 'shell.nav.processRegister.hint', icon: 'PR', permission: 'processes.read', packageModule: 'process-register' },
+        { path: '/risks', labelKey: 'shell.nav.risks.label', hintKey: 'shell.nav.risks.hint', icon: 'RK', permission: 'risks.read', packageModule: 'risks' },
+        { path: '/compliance-obligations', labelKey: 'shell.nav.complianceObligations.label', hintKey: 'shell.nav.complianceObligations.hint', icon: 'OB', permission: 'obligations.read', packageModule: 'compliance-obligations' }
       ]
     },
     {
       key: 'operations',
       labelKey: 'shell.navGroups.operations',
       items: [
-        { path: '/documents', labelKey: 'shell.nav.documents.label', hintKey: 'shell.nav.documents.hint', icon: 'DC', permission: 'documents.read' },
-        { path: '/training', labelKey: 'shell.nav.training.label', hintKey: 'shell.nav.training.hint', icon: 'TR', permission: 'training.read' },
-        { path: '/external-providers', labelKey: 'shell.nav.externalProviders.label', hintKey: 'shell.nav.externalProviders.hint', icon: 'EV', permission: 'providers.read' },
-        { path: '/change-management', labelKey: 'shell.nav.changeManagement.label', hintKey: 'shell.nav.changeManagement.hint', icon: 'CH', permission: 'change.read' },
-        { path: '/incidents', labelKey: 'shell.nav.incidents.label', hintKey: 'shell.nav.incidents.hint', icon: 'IN', permission: 'incidents.read' },
-        { path: '/environmental-aspects', labelKey: 'shell.nav.environmentalAspects.label', hintKey: 'shell.nav.environmentalAspects.hint', icon: 'EA', permission: 'aspects.read' },
-        { path: '/hazards', labelKey: 'shell.nav.hazards.label', hintKey: 'shell.nav.hazards.hint', icon: 'HZ', permission: 'hazards.read' }
+        { path: '/documents', labelKey: 'shell.nav.documents.label', hintKey: 'shell.nav.documents.hint', icon: 'DC', permission: 'documents.read', packageModule: 'documents' },
+        { path: '/training', labelKey: 'shell.nav.training.label', hintKey: 'shell.nav.training.hint', icon: 'TR', permission: 'training.read', packageModule: 'training' },
+        { path: '/external-providers', labelKey: 'shell.nav.externalProviders.label', hintKey: 'shell.nav.externalProviders.hint', icon: 'EV', permission: 'providers.read', packageModule: 'external-providers' },
+        { path: '/change-management', labelKey: 'shell.nav.changeManagement.label', hintKey: 'shell.nav.changeManagement.hint', icon: 'CH', permission: 'change.read', packageModule: 'change-management' },
+        { path: '/incidents', labelKey: 'shell.nav.incidents.label', hintKey: 'shell.nav.incidents.hint', icon: 'IN', permission: 'incidents.read', packageModule: 'incidents' },
+        { path: '/environmental-aspects', labelKey: 'shell.nav.environmentalAspects.label', hintKey: 'shell.nav.environmentalAspects.hint', icon: 'EA', permission: 'aspects.read', packageModule: 'environmental-aspects' },
+        { path: '/hazards', labelKey: 'shell.nav.hazards.label', hintKey: 'shell.nav.hazards.hint', icon: 'HZ', permission: 'hazards.read', packageModule: 'hazards' }
       ]
     },
     {
       key: 'assurance',
       labelKey: 'shell.navGroups.assurance',
       items: [
-        { path: '/audits', labelKey: 'shell.nav.audits.label', hintKey: 'shell.nav.audits.hint', icon: 'AU', permission: 'audits.read' },
-        { path: '/ncr', labelKey: 'shell.nav.ncr.label', hintKey: 'shell.nav.ncr.hint', icon: 'NC', permission: 'ncr.read' },
-        { path: '/capa', labelKey: 'shell.nav.capa.label', hintKey: 'shell.nav.capa.hint', icon: 'CP', permission: 'capa.read' },
-        { path: '/actions', labelKey: 'shell.nav.actions.label', hintKey: 'shell.nav.actions.hint', icon: 'AC', permission: 'action-items.read' }
+        { path: '/audits', labelKey: 'shell.nav.audits.label', hintKey: 'shell.nav.audits.hint', icon: 'AU', permission: 'audits.read', packageModule: 'audits' },
+        { path: '/ncr', labelKey: 'shell.nav.ncr.label', hintKey: 'shell.nav.ncr.hint', icon: 'NC', permission: 'ncr.read', packageModule: 'ncr' },
+        { path: '/capa', labelKey: 'shell.nav.capa.label', hintKey: 'shell.nav.capa.hint', icon: 'CP', permission: 'capa.read', packageModule: 'capa' },
+        { path: '/actions', labelKey: 'shell.nav.actions.label', hintKey: 'shell.nav.actions.hint', icon: 'AC', permission: 'action-items.read', packageModule: 'actions' }
       ]
     },
     {
       key: 'leadership',
       labelKey: 'shell.navGroups.leadership',
       items: [
-        { path: '/kpis', labelKey: 'shell.nav.kpis.label', hintKey: 'shell.nav.kpis.hint', icon: 'KP', permission: 'kpis.read' },
-        { path: '/management-review', labelKey: 'shell.nav.managementReview.label', hintKey: 'shell.nav.managementReview.hint', icon: 'MR', permission: 'management-review.read' },
-        { path: '/reports', labelKey: 'shell.nav.reports.label', hintKey: 'shell.nav.reports.hint', icon: 'RP', permission: 'reports.read' }
+        { path: '/kpis', labelKey: 'shell.nav.kpis.label', hintKey: 'shell.nav.kpis.hint', icon: 'KP', permission: 'kpis.read', packageModule: 'kpis' },
+        { path: '/management-review', labelKey: 'shell.nav.managementReview.label', hintKey: 'shell.nav.managementReview.hint', icon: 'MR', permission: 'management-review.read', packageModule: 'management-review' },
+        { path: '/reports', labelKey: 'shell.nav.reports.label', hintKey: 'shell.nav.reports.hint', icon: 'RP', permission: 'reports.read', packageModule: 'reports' }
       ]
     },
     {
       key: 'administration',
       labelKey: 'shell.navGroups.administration',
       items: [
-        { path: '/users', labelKey: 'shell.nav.users.label', hintKey: 'shell.nav.users.hint', icon: 'US', permission: 'users.read' },
-        { path: '/activity-log', labelKey: 'shell.nav.activityLog.label', hintKey: 'shell.nav.activityLog.hint', icon: 'LG', permission: 'settings.read' },
-        { path: '/settings', labelKey: 'shell.nav.settings.label', hintKey: 'shell.nav.settings.hint', icon: 'ST', permission: 'settings.read' }
+        { path: '/users', labelKey: 'shell.nav.users.label', hintKey: 'shell.nav.users.hint', icon: 'US', permission: 'users.read', packageModule: 'users' },
+        { path: '/activity-log', labelKey: 'shell.nav.activityLog.label', hintKey: 'shell.nav.activityLog.hint', icon: 'LG', permission: 'settings.read', packageModule: 'activity-log' },
+        { path: '/settings', labelKey: 'shell.nav.settings.label', hintKey: 'shell.nav.settings.hint', icon: 'ST', permission: 'settings.read', packageModule: 'settings' }
       ]
     }
   ];
@@ -815,7 +817,11 @@ export class ShellComponent {
     this.navGroups
       .map((group) => ({
         ...group,
-        items: group.items.filter((item) => !item.permission || this.authStore.hasPermission(item.permission))
+        items: group.items.filter(
+          (item) =>
+            (!item.permission || this.authStore.hasPermission(item.permission)) &&
+            (!item.packageModule || this.authStore.hasModule(item.packageModule))
+        )
       }))
       .filter((group) => group.items.length)
   );

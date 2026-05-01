@@ -2,6 +2,8 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { catchError, of, tap } from 'rxjs';
+import { DEFAULT_PACKAGE_TIER, PackageModuleKey, TenantPackageTier, getEnabledModules } from './package-entitlements';
+import { DEFAULT_TENANT_ADD_ONS, TenantAddOnKey, TenantAddOns, normalizeTenantAddOns } from './tenant-addons';
 
 type Session = {
   accessToken: string;
@@ -12,6 +14,9 @@ type Session = {
     permissions: string[];
     roleId?: string;
     roleName?: string;
+    packageTier: TenantPackageTier;
+    enabledModules: PackageModuleKey[];
+    enabledAddOns: TenantAddOns;
   };
   tenantSlug: string;
 };
@@ -31,6 +36,9 @@ export class AuthStore {
   readonly tenantId = computed(() => this.sessionState()?.user.tenantId ?? null);
   readonly tenantSlug = computed(() => this.sessionState()?.tenantSlug ?? null);
   readonly permissions = computed(() => this.sessionState()?.user.permissions ?? []);
+  readonly packageTier = computed(() => this.sessionState()?.user.packageTier ?? DEFAULT_PACKAGE_TIER);
+  readonly enabledModules = computed(() => this.sessionState()?.user.enabledModules ?? getEnabledModules(DEFAULT_PACKAGE_TIER));
+  readonly enabledAddOns = computed(() => this.sessionState()?.user.enabledAddOns ?? { ...DEFAULT_TENANT_ADD_ONS });
   readonly roleLabel = computed(() => {
     const explicit = this.sessionState()?.user.roleName;
     if (explicit) {
@@ -51,6 +59,14 @@ export class AuthStore {
 
   hasPermission(permission: string) {
     return this.permissions().includes(permission);
+  }
+
+  hasModule(moduleKey: PackageModuleKey) {
+    return this.enabledModules().includes(moduleKey);
+  }
+
+  hasAddOn(addOn: TenantAddOnKey) {
+    return this.enabledAddOns()[addOn];
   }
 
   isAdmin() {
@@ -81,6 +97,9 @@ export class AuthStore {
         id: string;
         tenantId: string;
         email: string;
+        packageTier: TenantPackageTier;
+        enabledModules: PackageModuleKey[];
+        enabledAddOns: TenantAddOns;
         role?: {
           id: string;
           name: string;
@@ -98,7 +117,10 @@ export class AuthStore {
               email: me.email,
               roleId: me.role?.id,
               roleName: me.role?.name,
-              permissions: me.role?.permissions.map((entry) => entry.permission.key) ?? []
+              permissions: me.role?.permissions.map((entry) => entry.permission.key) ?? [],
+              packageTier: me.packageTier,
+              enabledModules: me.enabledModules,
+              enabledAddOns: normalizeTenantAddOns(me.enabledAddOns)
             }
           };
           this.sessionState.set(next);
@@ -117,6 +139,17 @@ export class AuthStore {
 
   private readSession(): Session | null {
     const raw = localStorage.getItem('iso-session');
-    return raw ? (JSON.parse(raw) as Session) : null;
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as Session;
+    return {
+      ...parsed,
+      user: {
+        ...parsed.user,
+        enabledAddOns: normalizeTenantAddOns(parsed.user.enabledAddOns)
+      }
+    };
   }
 }

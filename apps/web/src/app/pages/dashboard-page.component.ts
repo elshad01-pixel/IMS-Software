@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
+import { AuthStore } from '../core/auth.store';
 import { I18nService } from '../core/i18n.service';
+import { PackageModuleKey } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
 type DashboardResponse = {
@@ -51,6 +53,7 @@ type DashboardPoint = {
   label: string;
   value: number;
   color: string;
+  packageModule?: PackageModuleKey;
   link: string | any[];
   queryParams?: Record<string, string>;
   width: number;
@@ -115,12 +118,7 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
           <label class="control-field">
             <span>{{ filterModuleLabel() }}</span>
             <select aria-label="Module" [value]="selectedModule()" (change)="setModule($any($event.target).value)">
-              <option value="risks">{{ 'dashboard.modules.risks' | translate }}</option>
-              <option value="capa">{{ 'dashboard.modules.capa' | translate }}</option>
-              <option value="actions">{{ 'dashboard.modules.actions' | translate }}</option>
-              <option value="audits">{{ 'dashboard.modules.audits' | translate }}</option>
-              <option value="context">{{ 'dashboard.modules.context' | translate }}</option>
-              <option value="feedback">{{ 'dashboard.modules.feedback' | translate }}</option>
+              <option *ngFor="let item of availableModules()" [value]="item.value">{{ item.labelKey | translate }}</option>
             </select>
           </label>
 
@@ -720,6 +718,7 @@ type AspectSummaryRow = { id: string; status: string; significance: string };
 })
 export class DashboardPageComponent {
   private readonly api = inject(ApiService);
+  private readonly authStore = inject(AuthStore);
   private readonly i18n = inject(I18nService);
 
   protected readonly data = signal<DashboardResponse>({
@@ -752,8 +751,35 @@ export class DashboardPageComponent {
   protected readonly selectedModule = signal<DashboardModule>('risks');
   protected readonly selectedTimeRange = signal<DashboardRange>('quarter');
   protected readonly selectedChartType = signal<DashboardChartType>('donut');
+  protected readonly availableModules = computed(() =>
+    ([
+      { value: 'risks' as DashboardModule, labelKey: 'dashboard.modules.risks', packageModule: 'risks' },
+      { value: 'capa' as DashboardModule, labelKey: 'dashboard.modules.capa', packageModule: 'capa' },
+      { value: 'actions' as DashboardModule, labelKey: 'dashboard.modules.actions', packageModule: 'actions' },
+      { value: 'audits' as DashboardModule, labelKey: 'dashboard.modules.audits', packageModule: 'audits' },
+      { value: 'context' as DashboardModule, labelKey: 'dashboard.modules.context', packageModule: 'context' },
+      {
+        value: 'feedback' as DashboardModule,
+        labelKey: 'dashboard.modules.feedback',
+        packageModule: 'context',
+        requiredAddOn: 'customerFeedback'
+      }
+    ] as Array<{
+      value: DashboardModule;
+      labelKey: string;
+      packageModule: PackageModuleKey;
+      requiredAddOn?: 'customerFeedback';
+    }>).filter((item) => this.authStore.hasModule(item.packageModule) && (!item.requiredAddOn || this.authStore.hasAddOn(item.requiredAddOn)))
+  );
 
   constructor() {
+    effect(() => {
+      const available = this.availableModules();
+      if (available.length && !available.some((item) => item.value === this.selectedModule())) {
+        this.selectedModule.set(available[0].value);
+      }
+    });
+
     this.api.get<DashboardResponse>('dashboard/summary').subscribe({
       next: (result) => this.data.set(result),
       error: () => this.data.set(this.data())
@@ -798,12 +824,13 @@ export class DashboardPageComponent {
 
   protected summaryCards() {
     const metrics = this.data().metrics;
-    return [
+    return ([
       {
         label: this.t('dashboard.metrics.openRisks.label'),
         value: this.data().riskSummary.open + this.data().riskSummary.inTreatment,
         copy: this.t('dashboard.metrics.openRisks.copy'),
         link: '/risks',
+        packageModule: 'risks',
         accent: '#8B5E16',
         surface: '#E7D7B7'
       },
@@ -812,6 +839,7 @@ export class DashboardPageComponent {
         value: metrics['openCapas'] ?? 0,
         copy: this.t('dashboard.metrics.openCapa.copy'),
         link: '/capa',
+        packageModule: 'capa',
         accent: '#1E467F',
         surface: '#DCE6F3'
       },
@@ -820,6 +848,7 @@ export class DashboardPageComponent {
         value: metrics['openAudits'] ?? 0,
         copy: this.t('dashboard.metrics.activeAudits.copy'),
         link: '/audits',
+        packageModule: 'audits',
         accent: '#344150',
         surface: '#DDE4EA'
       },
@@ -828,6 +857,7 @@ export class DashboardPageComponent {
         value: metrics['overdueActions'] ?? 0,
         copy: this.t('dashboard.metrics.overdueActions.copy'),
         link: '/actions',
+        packageModule: 'actions',
         queryParams: { dueState: 'overdue' },
         accent: '#94401B',
         surface: '#EDD7CC'
@@ -837,6 +867,7 @@ export class DashboardPageComponent {
         value: this.data().kpiSummary.length,
         copy: this.t('dashboard.metrics.kpiBreaches.copy'),
         link: '/kpis',
+        packageModule: 'kpis',
         accent: '#18543F',
         surface: '#D8E7DF'
       },
@@ -848,10 +879,22 @@ export class DashboardPageComponent {
             ? this.t('dashboard.metrics.customerFeedback.responses', { count: this.data().feedbackSummary.responseCount })
             : this.t('dashboard.metrics.customerFeedback.awaiting'),
         link: '/context/interested-parties',
+        packageModule: 'context',
+        requiredAddOn: 'customerFeedback' as const,
         accent: '#474B8C',
         surface: '#DDDEF2'
       }
-    ];
+    ] as Array<{
+      label: string;
+      value: number | string;
+      copy: string;
+      link: string;
+      packageModule: PackageModuleKey;
+      requiredAddOn?: 'customerFeedback';
+      accent: string;
+      surface: string;
+      queryParams?: Record<string, string>;
+    }>).filter((item) => this.authStore.hasModule(item.packageModule) && (!item.requiredAddOn || this.authStore.hasAddOn(item.requiredAddOn)));
   }
 
   protected currentModuleLabel() {
@@ -971,35 +1014,41 @@ export class DashboardPageComponent {
         label: this.t('dashboard.watchlist.items.incidents'),
         value: this.incidents().filter((item) => item.status !== 'CLOSED' && item.status !== 'ARCHIVED').length,
         color: '#b45a47',
-        link: '/incidents'
+        link: '/incidents',
+        packageModule: 'incidents' as PackageModuleKey
       },
       {
         label: this.t('dashboard.watchlist.items.providers'),
         value: this.providers().filter((item) => item.status === 'UNDER_REVIEW' || item.evaluationOutcome === 'ESCALATED' || item.evaluationOutcome === 'DISQUALIFIED' || (!!item.supplierAuditRequired && !item.supplierAuditLinked)).length,
         color: '#9a6e2d',
-        link: '/external-providers'
+        link: '/external-providers',
+        packageModule: 'external-providers' as PackageModuleKey
       },
       {
         label: this.t('dashboard.watchlist.items.obligations'),
         value: this.obligations().filter((item) => item.status === 'UNDER_REVIEW' || this.isOverdue(item.nextReviewDate ?? undefined)).length,
         color: '#446d8e',
-        link: '/compliance-obligations'
+        link: '/compliance-obligations',
+        packageModule: 'compliance-obligations' as PackageModuleKey
       },
       {
         label: this.t('dashboard.watchlist.items.hazards'),
         value: this.hazards().filter((item) => item.status !== 'OBSOLETE' && item.severity === 'HIGH').length,
         color: '#8c3f36',
-        link: '/hazards'
+        link: '/hazards',
+        packageModule: 'hazards' as PackageModuleKey
       },
       {
         label: this.t('dashboard.watchlist.items.aspects'),
         value: this.aspects().filter((item) => item.status !== 'OBSOLETE' && item.significance === 'HIGH').length,
         color: '#3f6f59',
-        link: '/environmental-aspects'
+        link: '/environmental-aspects',
+        packageModule: 'environmental-aspects' as PackageModuleKey
       }
     ];
-    const total = Math.max(raw.reduce((sum, item) => sum + item.value, 0), 1);
-    return raw.map((item) => ({ ...item, width: (item.value / total) * 100 }));
+    const filtered = raw.filter((item) => !item.packageModule || this.authStore.hasModule(item.packageModule));
+    const total = Math.max(filtered.reduce((sum, item) => sum + item.value, 0), 1);
+    return filtered.map((item) => ({ ...item, width: (item.value / total) * 100 }));
   }
 
   protected breakdownTitle() {

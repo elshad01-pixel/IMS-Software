@@ -6,6 +6,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { TenantPackageTier } from '../core/package-entitlements';
+import { TenantAddOns } from '../core/tenant-addons';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
@@ -49,6 +51,10 @@ type SettingsConfig = {
     greenThreshold: number;
     warningThreshold: number;
     breachThreshold: number;
+  };
+  subscription: {
+    packageTier: TenantPackageTier;
+    addOns: TenantAddOns;
   };
   notifications: {
     enabled: boolean;
@@ -237,6 +243,11 @@ const rolePositionGuidance: Array<{
           <strong>{{ current.kpi.greenThreshold }} / {{ current.kpi.warningThreshold }} / {{ current.kpi.breachThreshold }}</strong>
           <small>Green, warning, breach</small>
         </article>
+        <article class="summary-item">
+          <span>Package</span>
+          <strong>{{ packageTierLabel(current.subscription.packageTier) }}</strong>
+          <small>{{ enabledAddOnCount(current.subscription.addOns) }} add-on{{ enabledAddOnCount(current.subscription.addOns) === 1 ? '' : 's' }} enabled</small>
+        </article>
       </section>
 
       <section class="page-columns settings-layout">
@@ -269,6 +280,10 @@ const rolePositionGuidance: Array<{
             <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'kpi'" (click)="activeSection.set('kpi')">
               <span>KPIs</span>
               <small>Default threshold bands for new KPIs</small>
+            </button>
+            <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'subscription'" (click)="activeSection.set('subscription')">
+              <span>Package</span>
+              <small>Choose which module bundle is active for this tenant</small>
             </button>
             <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'notifications'" (click)="activeSection.set('notifications')">
               <span>Notifications</span>
@@ -517,6 +532,78 @@ const rolePositionGuidance: Array<{
             </form>
           </section>
 
+          <section class="card form-card page-stack" *ngIf="activeSection() === 'subscription'">
+            <div class="section-head">
+              <div>
+                <span class="section-eyebrow">Package</span>
+                <h3>Tenant package</h3>
+                <p class="subtle">Select the commercial package for this tenant. The app will hide and block modules that are outside the selected bundle.</p>
+              </div>
+            </div>
+
+            <div class="position-grid">
+              <article class="position-card">
+                <div class="position-card__head">
+                  <strong>Assurance</strong>
+                  <span>Audit loop</span>
+                </div>
+                <p>Audits, NCR, CAPA, Actions, and Activity Log for a self-contained assurance workflow.</p>
+              </article>
+              <article class="position-card">
+                <div class="position-card__head">
+                  <strong>Core IMS</strong>
+                  <span>Integrated system</span>
+                </div>
+                <p>Everything in Assurance, plus Documents, Risks, Context, Processes, Training, Obligations, KPIs, Management Review, and Reports.</p>
+              </article>
+              <article class="position-card">
+                <div class="position-card__head">
+                  <strong>QHSE Pro</strong>
+                  <span>Extended operations</span>
+                </div>
+                <p>Everything in Core IMS, plus Incidents, Hazards, Environmental Aspects, External Providers, and Change Management.</p>
+              </article>
+            </div>
+
+            <form [formGroup]="subscriptionForm" class="page-stack" (ngSubmit)="saveSection('subscription')">
+              <label class="field">
+                <span>Package tier</span>
+                <select formControlName="packageTier">
+                  <option value="ASSURANCE">Assurance</option>
+                  <option value="CORE_IMS">Core IMS</option>
+                  <option value="QHSE_PRO">QHSE Pro</option>
+                </select>
+              </label>
+
+              <section class="detail-section">
+                <div class="section-head">
+                  <div>
+                    <span class="section-eyebrow">Add-ons</span>
+                    <h4>Tenant add-ons</h4>
+                    <p class="subtle">Use add-ons for optional capabilities that sit inside owned modules, rather than changing the base package tier.</p>
+                  </div>
+                </div>
+
+                <div class="role-toggle-grid top-space">
+                  <label class="toggle-row role-toggle-card">
+                    <input type="checkbox" formControlName="aiAssistant" [disabled]="!canWrite()">
+                    <span>AI assistant add-on</span>
+                  </label>
+                  <label class="toggle-row role-toggle-card">
+                    <input type="checkbox" formControlName="customerFeedback" [disabled]="!canWrite()">
+                    <span>Customer feedback add-on</span>
+                  </label>
+                </div>
+              </section>
+
+              <div class="button-row">
+                <button type="submit" [disabled]="subscriptionForm.invalid || savingSection() === 'subscription' || !canWrite()">
+                  {{ savingSection() === 'subscription' ? 'Saving...' : 'Save package' }}
+                </button>
+              </div>
+            </form>
+          </section>
+
           <section class="card form-card page-stack" *ngIf="activeSection() === 'notifications'">
             <div class="section-head">
               <div>
@@ -680,7 +767,7 @@ const rolePositionGuidance: Array<{
   `,
   styles: [`
     .settings-summary-strip {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       margin-bottom: 0.25rem;
     }
 
@@ -908,7 +995,7 @@ export class SettingsPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
 
-  protected readonly activeSection = signal<'organization' | 'roles' | 'document' | 'risk' | 'kpi' | 'notifications' | 'ai' | 'implementation'>('organization');
+  protected readonly activeSection = signal<'organization' | 'roles' | 'document' | 'risk' | 'kpi' | 'subscription' | 'notifications' | 'ai' | 'implementation'>('organization');
   protected readonly config = signal<SettingsConfig | null>(null);
   protected readonly aiRuntime = signal<AiRuntimeConfig | null>(null);
   protected readonly savingSection = signal<string | null>(null);
@@ -944,6 +1031,12 @@ export class SettingsPageComponent {
     breachThreshold: [80, Validators.required]
   });
 
+  protected readonly subscriptionForm = this.fb.nonNullable.group({
+    packageTier: ['QHSE_PRO' as TenantPackageTier, Validators.required],
+    aiAssistant: [true],
+    customerFeedback: [true]
+  });
+
   protected readonly notificationsForm = this.fb.nonNullable.group({
     enabled: [true]
   });
@@ -974,7 +1067,7 @@ export class SettingsPageComponent {
     return this.authStore.hasPermission('settings.write');
   }
 
-  protected saveSection(section: 'organization' | 'document' | 'risk' | 'kpi' | 'notifications' | 'ai' | 'implementation') {
+  protected saveSection(section: 'organization' | 'document' | 'risk' | 'kpi' | 'subscription' | 'notifications' | 'ai' | 'implementation') {
     if (!this.canWrite()) {
       this.error.set('You do not have permission to update settings.');
       return;
@@ -985,6 +1078,7 @@ export class SettingsPageComponent {
       document: this.documentForm,
       risk: this.riskForm,
       kpi: this.kpiForm,
+      subscription: this.subscriptionForm,
       notifications: this.notificationsForm,
       ai: this.aiForm,
       implementation: this.implementationForm
@@ -1021,6 +1115,14 @@ export class SettingsPageComponent {
               ...form.getRawValue(),
               targetStandards: this.parseImplementationStandards()
             }
+        : section === 'subscription'
+          ? {
+              packageTier: this.subscriptionForm.getRawValue().packageTier,
+              addOns: {
+                aiAssistant: this.subscriptionForm.getRawValue().aiAssistant,
+                customerFeedback: this.subscriptionForm.getRawValue().customerFeedback
+              }
+            }
         : form.getRawValue();
 
     this.api.put('settings/section/' + section, { values }).subscribe({
@@ -1028,6 +1130,9 @@ export class SettingsPageComponent {
         this.savingSection.set(null);
         this.message.set('Settings saved successfully.');
         this.applyConfig(config as SettingsConfig);
+        if (section === 'subscription') {
+          this.authStore.refreshSession();
+        }
         if (section === 'ai') {
           this.reloadAiRuntime();
         }
@@ -1079,6 +1184,22 @@ export class SettingsPageComponent {
     return Object.values(role.capabilities).filter(Boolean).length;
   }
 
+  protected packageTierLabel(packageTier: TenantPackageTier) {
+    return {
+      ASSURANCE: 'Assurance',
+      CORE_IMS: 'Core IMS',
+      QHSE_PRO: 'QHSE Pro'
+    }[packageTier];
+  }
+
+  protected enabledAddOnCount(addOns: TenantAddOns) {
+    return Object.values(addOns).filter(Boolean).length;
+  }
+
+  protected hasAiAddOn() {
+    return this.subscriptionForm.getRawValue().aiAssistant;
+  }
+
   protected isProtectedAdminCapability(role: RoleConfig, capability: RoleCapabilityKey) {
     return role.isSystem && role.name === 'Admin' && capability === 'manageUsersAndSettings';
   }
@@ -1116,6 +1237,11 @@ export class SettingsPageComponent {
       greenThreshold: config.kpi.greenThreshold,
       warningThreshold: config.kpi.warningThreshold,
       breachThreshold: config.kpi.breachThreshold
+    });
+    this.subscriptionForm.reset({
+      packageTier: config.subscription.packageTier,
+      aiAssistant: config.subscription.addOns.aiAssistant,
+      customerFeedback: config.subscription.addOns.customerFeedback
     });
     this.notificationsForm.reset({
       enabled: config.notifications.enabled

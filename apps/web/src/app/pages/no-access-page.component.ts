@@ -13,8 +13,7 @@ import { AuthStore } from '../core/auth.store';
           <span class="section-eyebrow">Access</span>
           <h1>No access to this area</h1>
           <p class="subtle">
-            You do not have access to this area. Your current role does not include the required permission.
-            Contact your system administrator if you believe this is incorrect.
+            {{ explanation() }}
           </p>
         </div>
 
@@ -25,11 +24,19 @@ import { AuthStore } from '../core/auth.store';
           </article>
           <article class="detail-card">
             <span>Required permission</span>
-            <strong>{{ requiredPermission() }}</strong>
+            <strong>{{ requiredPermission() || 'Not applicable' }}</strong>
+          </article>
+          <article class="detail-card">
+            <span>Required package area</span>
+            <strong>{{ requiredPackageModuleLabel() }}</strong>
           </article>
           <article class="detail-card">
             <span>Current role</span>
             <strong>{{ authStore.roleLabel() }}</strong>
+          </article>
+          <article class="detail-card">
+            <span>Current package</span>
+            <strong>{{ packageTier() }}</strong>
           </article>
         </div>
 
@@ -115,6 +122,42 @@ export class NoAccessPageComponent {
   protected readonly authStore = inject(AuthStore);
 
   protected readonly areaLabel = computed(() => this.route.snapshot.queryParamMap.get('area') || 'This area');
-  protected readonly requiredPermission = computed(() => this.route.snapshot.queryParamMap.get('permission') || 'Unknown permission');
+  protected readonly requiredPermission = computed(() => this.route.snapshot.queryParamMap.get('permission') || '');
+  protected readonly requiredPackageModule = computed(() => this.route.snapshot.queryParamMap.get('packageModule') || '');
+  protected readonly packageTier = computed(() => this.route.snapshot.queryParamMap.get('packageTier') || this.authStore.packageTier());
   protected readonly attemptedUrl = computed(() => this.route.snapshot.queryParamMap.get('attempted') || '');
+  protected readonly requiredPackageModuleLabel = computed(() =>
+    ({
+      dashboard: 'Dashboard',
+      implementation: 'Start Here',
+      documents: 'Documents',
+      risks: 'Risks',
+      capa: 'CAPA',
+      audits: 'Audits',
+      'management-review': 'Management Review',
+      kpis: 'KPIs',
+      training: 'Training',
+      actions: 'Actions',
+      ncr: 'NCR',
+      context: 'Context',
+      'compliance-obligations': 'Compliance Obligations',
+      incidents: 'Incidents',
+      'environmental-aspects': 'Environmental Aspects',
+      hazards: 'Hazards',
+      'external-providers': 'External Providers',
+      'change-management': 'Change Management',
+      'process-register': 'Process Register',
+      reports: 'Reports',
+      users: 'Users',
+      'activity-log': 'Activity Log',
+      settings: 'Settings'
+    } as Record<string, string>)[this.requiredPackageModule()] || 'Included module'
+  );
+  protected readonly explanation = computed(() => {
+    if (this.requiredPackageModule()) {
+      return `Your current package does not include this area. Ask your system administrator to review the tenant package if you need access.`;
+    }
+
+    return `You do not have access to this area. Your current role does not include the required permission. Contact your system administrator if you believe this is incorrect.`;
+  });
 }

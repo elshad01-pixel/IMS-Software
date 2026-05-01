@@ -7,6 +7,7 @@ import { RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 import { I18nService } from '../core/i18n.service';
+import { PackageModuleKey } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
 type ImplementationChecklistItem = {
@@ -37,7 +38,7 @@ type ImplementationConfig = {
 type PdcaCard = {
   phase: 'Plan' | 'Do' | 'Check' | 'Act';
   summaryKey: string;
-  modules: Array<{ label: string; route: string; hintKey: string }>;
+  modules: Array<{ label: string; route: string; hintKey: string; packageModule: PackageModuleKey }>;
 };
 
 type ReadinessChecklistCard = {
@@ -46,6 +47,7 @@ type ReadinessChecklistCard = {
   hintKey: string;
   route: string;
   permission: string;
+  packageModule: PackageModuleKey;
 };
 
 const CHECKLIST_LABEL_KEYS: Record<string, string> = {
@@ -324,7 +326,7 @@ const CHECKLIST_LABEL_KEYS: Record<string, string> = {
             </div>
 
             <div class="pdca-grid">
-              <article class="detail-section pdca-card" *ngFor="let card of pdcaCards">
+              <article class="detail-section pdca-card" *ngFor="let card of visiblePdcaCards()">
                 <div class="pdca-card__header">
                   <span class="phase-pill">{{ ('implementation.pdca.phases.' + card.phase + '.label') | translate }}</span>
                   <h4>{{ card.summaryKey | translate }}</h4>
@@ -585,8 +587,16 @@ export class ImplementationPageComponent {
   protected readonly readinessChecklist = computed(() =>
     this.readinessCards.map((item) => ({
       ...item,
-      accessible: this.authStore.hasPermission(item.permission)
-    }))
+      accessible: this.authStore.hasPermission(item.permission) && this.authStore.hasModule(item.packageModule)
+    })).filter((item) => this.authStore.hasModule(item.packageModule))
+  );
+  protected readonly visiblePdcaCards = computed(() =>
+    this.pdcaCards
+      .map((card) => ({
+        ...card,
+        modules: card.modules.filter((module) => this.authStore.hasModule(module.packageModule))
+      }))
+      .filter((card) => card.modules.length > 0)
   );
   protected readonly objectiveReadinessLabel = computed(() => {
     this.i18n.language();
@@ -610,53 +620,53 @@ export class ImplementationPageComponent {
       phase: 'Plan',
       summaryKey: 'implementation.pdca.phases.Plan.summary',
       modules: [
-        { label: 'Context', route: '/context', hintKey: 'implementation.pdca.modules.Context' },
-        { label: 'Obligations', route: '/compliance-obligations', hintKey: 'implementation.pdca.modules.Obligations' },
-        { label: 'Risks', route: '/risks', hintKey: 'implementation.pdca.modules.Risks' },
-        { label: 'KPIs', route: '/kpis', hintKey: 'implementation.pdca.modules.KPIs' }
+        { label: 'Context', route: '/context', hintKey: 'implementation.pdca.modules.Context', packageModule: 'context' },
+        { label: 'Obligations', route: '/compliance-obligations', hintKey: 'implementation.pdca.modules.Obligations', packageModule: 'compliance-obligations' },
+        { label: 'Risks', route: '/risks', hintKey: 'implementation.pdca.modules.Risks', packageModule: 'risks' },
+        { label: 'KPIs', route: '/kpis', hintKey: 'implementation.pdca.modules.KPIs', packageModule: 'kpis' }
       ]
     },
     {
       phase: 'Do',
       summaryKey: 'implementation.pdca.phases.Do.summary',
       modules: [
-        { label: 'Documents', route: '/documents', hintKey: 'implementation.pdca.modules.Documents' },
-        { label: 'Process Register', route: '/process-register', hintKey: 'implementation.pdca.modules.Process Register' },
-        { label: 'Training', route: '/training', hintKey: 'implementation.pdca.modules.Training' },
-        { label: 'External Providers', route: '/external-providers', hintKey: 'implementation.pdca.modules.External Providers' }
+        { label: 'Documents', route: '/documents', hintKey: 'implementation.pdca.modules.Documents', packageModule: 'documents' },
+        { label: 'Process Register', route: '/process-register', hintKey: 'implementation.pdca.modules.Process Register', packageModule: 'process-register' },
+        { label: 'Training', route: '/training', hintKey: 'implementation.pdca.modules.Training', packageModule: 'training' },
+        { label: 'External Providers', route: '/external-providers', hintKey: 'implementation.pdca.modules.External Providers', packageModule: 'external-providers' }
       ]
     },
     {
       phase: 'Check',
       summaryKey: 'implementation.pdca.phases.Check.summary',
       modules: [
-        { label: 'Audits', route: '/audits', hintKey: 'implementation.pdca.modules.Audits' },
-        { label: 'Incidents', route: '/incidents', hintKey: 'implementation.pdca.modules.Incidents' },
-        { label: 'Hazards', route: '/hazards', hintKey: 'implementation.pdca.modules.Hazards' },
-        { label: 'Environmental Aspects', route: '/environmental-aspects', hintKey: 'implementation.pdca.modules.Environmental Aspects' }
+        { label: 'Audits', route: '/audits', hintKey: 'implementation.pdca.modules.Audits', packageModule: 'audits' },
+        { label: 'Incidents', route: '/incidents', hintKey: 'implementation.pdca.modules.Incidents', packageModule: 'incidents' },
+        { label: 'Hazards', route: '/hazards', hintKey: 'implementation.pdca.modules.Hazards', packageModule: 'hazards' },
+        { label: 'Environmental Aspects', route: '/environmental-aspects', hintKey: 'implementation.pdca.modules.Environmental Aspects', packageModule: 'environmental-aspects' }
       ]
     },
     {
       phase: 'Act',
       summaryKey: 'implementation.pdca.phases.Act.summary',
       modules: [
-        { label: 'NCR', route: '/ncr', hintKey: 'implementation.pdca.modules.NCR' },
-        { label: 'CAPA', route: '/capa', hintKey: 'implementation.pdca.modules.CAPA' },
-        { label: 'Actions', route: '/actions', hintKey: 'implementation.pdca.modules.Actions' },
-        { label: 'Management Review', route: '/management-review', hintKey: 'implementation.pdca.modules.Management Review' }
+        { label: 'NCR', route: '/ncr', hintKey: 'implementation.pdca.modules.NCR', packageModule: 'ncr' },
+        { label: 'CAPA', route: '/capa', hintKey: 'implementation.pdca.modules.CAPA', packageModule: 'capa' },
+        { label: 'Actions', route: '/actions', hintKey: 'implementation.pdca.modules.Actions', packageModule: 'actions' },
+        { label: 'Management Review', route: '/management-review', hintKey: 'implementation.pdca.modules.Management Review', packageModule: 'management-review' }
       ]
     }
   ];
   private readonly readinessCards: ReadinessChecklistCard[] = [
-    { id: 'companyProfile', labelKey: 'implementation.readiness.items.companyProfile.label', hintKey: 'implementation.readiness.items.companyProfile.hint', route: '/settings', permission: 'settings.read' },
-    { id: 'usersRoles', labelKey: 'implementation.readiness.items.usersRoles.label', hintKey: 'implementation.readiness.items.usersRoles.hint', route: '/users', permission: 'users.read' },
-    { id: 'processMap', labelKey: 'implementation.readiness.items.processMap.label', hintKey: 'implementation.readiness.items.processMap.hint', route: '/process-register', permission: 'processes.read' },
-    { id: 'controlledDocuments', labelKey: 'implementation.readiness.items.controlledDocuments.label', hintKey: 'implementation.readiness.items.controlledDocuments.hint', route: '/documents', permission: 'documents.read' },
-    { id: 'risks', labelKey: 'implementation.readiness.items.risks.label', hintKey: 'implementation.readiness.items.risks.hint', route: '/risks', permission: 'risks.read' },
-    { id: 'audits', labelKey: 'implementation.readiness.items.audits.label', hintKey: 'implementation.readiness.items.audits.hint', route: '/audits', permission: 'audits.read' },
-    { id: 'ncrCapaActions', labelKey: 'implementation.readiness.items.ncrCapaActions.label', hintKey: 'implementation.readiness.items.ncrCapaActions.hint', route: '/actions', permission: 'action-items.read' },
-    { id: 'kpis', labelKey: 'implementation.readiness.items.kpis.label', hintKey: 'implementation.readiness.items.kpis.hint', route: '/kpis', permission: 'kpis.read' },
-    { id: 'managementReview', labelKey: 'implementation.readiness.items.managementReview.label', hintKey: 'implementation.readiness.items.managementReview.hint', route: '/management-review', permission: 'management-review.read' }
+    { id: 'companyProfile', labelKey: 'implementation.readiness.items.companyProfile.label', hintKey: 'implementation.readiness.items.companyProfile.hint', route: '/settings', permission: 'settings.read', packageModule: 'settings' },
+    { id: 'usersRoles', labelKey: 'implementation.readiness.items.usersRoles.label', hintKey: 'implementation.readiness.items.usersRoles.hint', route: '/users', permission: 'users.read', packageModule: 'users' },
+    { id: 'processMap', labelKey: 'implementation.readiness.items.processMap.label', hintKey: 'implementation.readiness.items.processMap.hint', route: '/process-register', permission: 'processes.read', packageModule: 'process-register' },
+    { id: 'controlledDocuments', labelKey: 'implementation.readiness.items.controlledDocuments.label', hintKey: 'implementation.readiness.items.controlledDocuments.hint', route: '/documents', permission: 'documents.read', packageModule: 'documents' },
+    { id: 'risks', labelKey: 'implementation.readiness.items.risks.label', hintKey: 'implementation.readiness.items.risks.hint', route: '/risks', permission: 'risks.read', packageModule: 'risks' },
+    { id: 'audits', labelKey: 'implementation.readiness.items.audits.label', hintKey: 'implementation.readiness.items.audits.hint', route: '/audits', permission: 'audits.read', packageModule: 'audits' },
+    { id: 'ncrCapaActions', labelKey: 'implementation.readiness.items.ncrCapaActions.label', hintKey: 'implementation.readiness.items.ncrCapaActions.hint', route: '/actions', permission: 'action-items.read', packageModule: 'actions' },
+    { id: 'kpis', labelKey: 'implementation.readiness.items.kpis.label', hintKey: 'implementation.readiness.items.kpis.hint', route: '/kpis', permission: 'kpis.read', packageModule: 'kpis' },
+    { id: 'managementReview', labelKey: 'implementation.readiness.items.managementReview.label', hintKey: 'implementation.readiness.items.managementReview.hint', route: '/management-review', permission: 'management-review.read', packageModule: 'management-review' }
   ];
 
   constructor() {
