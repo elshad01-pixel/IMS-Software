@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateChildFn, Router } from '@angular/router';
 import { AuthStore } from './auth.store';
-import { PackageModuleKey } from './package-entitlements';
+import { PackageModuleKey, minimumPackageTierForModule } from './package-entitlements';
 
 function readAreaLabel(url: string) {
   const firstSegment = url.split('?')[0].split('/').filter(Boolean)[0];
@@ -83,6 +83,7 @@ export const permissionGuard: CanActivateChildFn = (childRoute, state) => {
       permission: requiredPermission || '',
       packageModule: requiredModule || '',
       packageTier: authStore.packageTier(),
+      requiredTier: requiredModule ? minimumPackageTierForModule(requiredModule) : '',
       attempted: state.url
     }
   });

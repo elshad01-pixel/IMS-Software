@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthStore } from '../core/auth.store';
+import { TenantPackageTier } from '../core/package-entitlements';
 
 @Component({
   standalone: true,
@@ -27,8 +28,12 @@ import { AuthStore } from '../core/auth.store';
             <strong>{{ requiredPermission() || 'Not applicable' }}</strong>
           </article>
           <article class="detail-card">
-            <span>Required package area</span>
+            <span>Package module</span>
             <strong>{{ requiredPackageModuleLabel() }}</strong>
+          </article>
+          <article class="detail-card" *ngIf="requiredTier()">
+            <span>Available in</span>
+            <strong>{{ requiredTierLabel() }}</strong>
           </article>
           <article class="detail-card">
             <span>Current role</span>
@@ -45,9 +50,15 @@ import { AuthStore } from '../core/auth.store';
           <p>{{ attempted }}</p>
         </div>
 
+        <div class="guidance-card no-access-guidance" *ngIf="requiredTier()">
+          <strong>What to do next</strong>
+          <p>{{ resolutionCopy() }}</p>
+        </div>
+
         <div class="button-row">
           <a class="button-link" [routerLink]="['/dashboard']">Open dashboard</a>
           <a class="button-link secondary" [routerLink]="['/implementation']">Go to Start Here</a>
+          <a *ngIf="canReviewPackages()" class="button-link secondary" [routerLink]="['/settings']">Review package settings</a>
         </div>
       </section>
     </section>
@@ -125,6 +136,7 @@ export class NoAccessPageComponent {
   protected readonly requiredPermission = computed(() => this.route.snapshot.queryParamMap.get('permission') || '');
   protected readonly requiredPackageModule = computed(() => this.route.snapshot.queryParamMap.get('packageModule') || '');
   protected readonly packageTier = computed(() => this.route.snapshot.queryParamMap.get('packageTier') || this.authStore.packageTier());
+  protected readonly requiredTier = computed(() => this.route.snapshot.queryParamMap.get('requiredTier') || '');
   protected readonly attemptedUrl = computed(() => this.route.snapshot.queryParamMap.get('attempted') || '');
   protected readonly requiredPackageModuleLabel = computed(() =>
     ({
@@ -153,11 +165,37 @@ export class NoAccessPageComponent {
       settings: 'Settings'
     } as Record<string, string>)[this.requiredPackageModule()] || 'Included module'
   );
+  protected readonly requiredTierLabel = computed(() => this.formatTierLabel(this.requiredTier() as TenantPackageTier));
   protected readonly explanation = computed(() => {
     if (this.requiredPackageModule()) {
-      return `Your current package does not include this area. Ask your system administrator to review the tenant package if you need access.`;
+      return `Your current package does not include this area. This is a package boundary rather than a broken link.`;
     }
 
     return `You do not have access to this area. Your current role does not include the required permission. Contact your system administrator if you believe this is incorrect.`;
   });
+  protected readonly resolutionCopy = computed(() => {
+    if (!this.requiredTier()) {
+      return '';
+    }
+
+    const nextTier = this.requiredTierLabel();
+    if (this.canReviewPackages()) {
+      return `This module is included in ${nextTier}. If that matches your rollout scope, you can review the tenant package in Settings.`;
+    }
+
+    return `This module is included in ${nextTier}. Ask your system administrator to review the tenant package if you need access.`;
+  });
+
+  protected canReviewPackages() {
+    return this.authStore.hasPermission('settings.write');
+  }
+
+  private formatTierLabel(packageTier: TenantPackageTier | '') {
+    return {
+      ASSURANCE: 'Assurance',
+      CORE_IMS: 'Core IMS',
+      QHSE_PRO: 'QHSE Pro',
+      '': ''
+    }[packageTier];
+  }
 }

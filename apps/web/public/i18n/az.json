@@ -1503,6 +1503,246 @@
       "deleteFailed": "Tapşırığı silmək mümkün olmadı."
     }
   },
+  "managementReview": {
+    "page": {
+      "label": "Rəhbərliyin təhlili",
+      "titles": {
+        "list": "Rəhbərlik təhlilləri",
+        "create": "Rəhbərlik təhlili yarat",
+        "detail": "Rəhbərlik təhlili detalı",
+        "edit": "Rəhbərlik təhlilini redaktə et"
+      },
+      "descriptions": {
+        "list": "Aydın girişlər, qərarlar və tapşırıq çıxışları ilə strukturlaşdırılmış ISO rəhbərlik təhlillərini aparın.",
+        "create": "İclası strukturlaşdırılmış ISO şablonu üzrə qeyd edin və canlı sistem qeydlərindən sübut kimi istifadə edin.",
+        "detail": "Rəhbərlik girişlərini, çıxışlarını və əlaqəli tapşırıqları bir sakit iş sahəsində nəzərdən keçirin.",
+        "edit": "Tapşırıq kontekstini qoruyaraq və canlı qeydlərdən sübut kimi istifadə edərək iclas qeydini yeniləyin."
+      }
+    },
+    "actions": {
+      "backToStartHere": "Buradan başlayına qayıt",
+      "new": "Yeni iclas",
+      "preparingPdf": "PDF hazırlanır...",
+      "downloadPdf": "PDF protokolunu yüklə",
+      "preparingPpt": "PPT hazırlanır...",
+      "downloadPpt": "PPT dashboard-u yüklə",
+      "edit": "İclası redaktə et",
+      "archive": "İclası arxivlə",
+      "backToList": "İclaslara qayıt",
+      "save": "İclası yadda saxla",
+      "saving": "Yadda saxlanılır..."
+    },
+    "breadcrumbs": {
+      "new": "Yeni təhlil",
+      "record": "Təhlil",
+      "edit": "Redaktə et"
+    },
+    "common": {
+      "unassigned": "Təyin edilməyib"
+    },
+    "status": {
+      "PLANNED": "Planlaşdırılıb",
+      "HELD": "Keçirilib",
+      "CLOSED": "Bağlanıb"
+    },
+    "list": {
+      "title": "Strukturlaşdırılmış rəhbərlik təhlilləri",
+      "copy": "Aydın girişlər, çıxışlar, qərarlar və izləmə tapşırıqları ilə ISO rəhbərlik təhlili iclaslarını aparın.",
+      "loadingTitle": "Rəhbərlik təhlilləri yüklənir",
+      "loadingCopy": "İclaslar, status və qeyd olunmuş rəhbərlik təhlili məzmunu yenilənir.",
+      "noSummary": "Xülasə yoxdur",
+      "tbd": "Təyin ediləcək",
+      "recorded": "Qeyd olunub",
+      "pending": "Gözləyir",
+      "table": {
+        "meeting": "İclas",
+        "date": "Tarix",
+        "status": "Status",
+        "inputCoverage": "Giriş əhatəsi",
+        "outputsReadiness": "Çıxış hazırlığı"
+      }
+    },
+    "form": {
+      "createTitle": "Rəhbərlik təhlili yarat",
+      "editTitle": "Rəhbərlik təhlilini redaktə et",
+      "copy": "Bir sərbəst qeyddən istifadə etmək əvəzinə giriş və çıxışlar üçün daxili ISO strukturundan istifadə edin.",
+      "fields": {
+        "title": "Başlıq",
+        "reviewDate": "İclas tarixi",
+        "chairperson": "Sədr",
+        "status": "Status",
+        "summary": "Xülasə"
+      },
+      "placeholders": {
+        "title": "2026 Q1 rəhbərlik təhlili"
+      },
+      "readiness": {
+        "inputsCaptured": "Girişlər toplanıb",
+        "outputsCaptured": "Çıxışlar toplanıb",
+        "meetingReadiness": "İclas hazırlığı",
+        "inputsReady": "Giriş əhatəsi sübuta əsaslanan təhlil üçün kifayət qədər güclüdür.",
+        "inputsThin": "İclasdan əvvəl əsas audit, CAPA, KPI, təchizatçı, öhdəlik və risk girişlərini qeyd edin.",
+        "outputsReady": "Çıxışlar nəzarətli izləmə üçün formalaşır.",
+        "outputsThin": "Qərarlar, sistem dəyişiklikləri, məqsəd dəyişiklikləri və resurslar açıq göstərilməlidir."
+      },
+      "liveInputs": {
+        "title": "Canlı sistem girişləri",
+        "copy": "Aşağıdakı giriş bölmələrini yazarkən bu reyestrlərdən canlı sübut kimi istifadə edin.",
+        "aiCopy": "Siz həmçinin AI-dan cari tenant qeydlərindən giriş mətnini hazırlamağı xahiş edə, sonra yadda saxlamazdan əvvəl onu redaktə edə bilərsiniz.",
+        "aiAction": "Canlı qeydlərdən AI giriş layihəsi",
+        "aiBusy": "Girişlər hazırlanır...",
+        "aiNote": "AI yalnız rəhbərlik təhlili giriş bölmələrini doldurur. İclası yadda saxlamazdan əvvəl hər sahəni redaktə edə bilərsiniz."
+      }
+    },
+    "inputs": {
+      "title": "Girişlər",
+      "copy": "Bu bölmələrdən keyfiyyət, ətraf mühit və ƏSG performansı üzrə əsas ISO rəhbərlik təhlili girişlərini əhatə etmək üçün istifadə edin.",
+      "placeholders": {
+        "auditResults": "Audit nəticələrini və əsas mövzuları xülasə edin",
+        "capaStatus": "Açıq, gecikmiş və effektiv CAPA-ları xülasə edin",
+        "kpiPerformance": "KPI performansını, pozuntuları və trendləri xülasə edin",
+        "customerInterestedPartiesFeedback": "Müştəri məmnuniyyəti, şikayətlər, maraqlı tərəf narahatlıqları və digər rəy",
+        "providerPerformance": "Təchizatçı/podratçı performansı, təsdiqlər, auditlər və eskalasiyalar",
+        "complianceObligations": "Tənzimləyici, hüquqi, müqavilə və uyğunluq öhdəliklərinin baxış statusu",
+        "incidentEmergencyPerformance": "Hadisələr, az qala baş verənlər, fövqəladə cavab, təlimlər və çıxarılan dərslər",
+        "consultationCommunication": "İşçi məsləhətləşməsi, iştirak, kommunikasiya, şikayətlər və ya aidiyyəti maraqlı tərəf dialoqu",
+        "risksOpportunities": "Cari risk məruzəsini və imkanları xülasə edin",
+        "changesAffectingSystem": "Tənzimləyici, təşkilati, təchizatçı və ya proses dəyişiklikləri",
+        "previousActions": "Əvvəlki rəhbərlik təhlili çıxışlarının statusu"
+      }
+    },
+    "outputs": {
+      "title": "Çıxışlar",
+      "copy": "Bu bölmələrdən sadəcə iclas qeydlərini deyil, rəhbərlik təhlilindən gözlənilən rəsmi çıxışları qeyd etmək üçün istifadə edin.",
+      "placeholders": {
+        "minutes": "Rəsmi iclas protokolu",
+        "decisions": "Rəhbərlik tərəfindən verilmiş qərarlar",
+        "improvementActions": "Təkmilləşdirmə öhdəlikləri və tapşırıqları",
+        "systemChangesNeeded": "İdarəetmə sistemi, nəzarətlər və ya proseslər üçün tələb olunan dəyişikliklər",
+        "objectiveTargetChanges": "Məqsədlər, hədəflər, ölçülər və ya baxış prioritetləri üzrə dəyişikliklər",
+        "resourceNeeds": "İnsan, büdcə, səriştə və ya infrastruktur ehtiyacları",
+        "effectivenessConclusion": "İdarəetmə sisteminin uyğunluğu, yetərliliyi və effektivliyi barədə nəticə",
+        "summary": "Təhlilin rəhbərlik xülasəsi"
+      }
+    },
+    "sections": {
+      "auditResults": "Audit nəticələri",
+      "capaStatus": "CAPA statusu",
+      "kpiPerformance": "KPI performansı",
+      "customerInterestedPartiesFeedback": "Müştəri və maraqlı tərəf rəyi",
+      "providerPerformance": "Təchizatçı performansı",
+      "complianceObligations": "Uyğunluq öhdəlikləri",
+      "incidentEmergencyPerformance": "Hadisə və fövqəladə vəziyyət performansı",
+      "consultationCommunication": "Məsləhətləşmə və kommunikasiya",
+      "risksOpportunities": "Risklər və imkanlar",
+      "changesAffectingSystem": "Sistemə təsir edən dəyişikliklər",
+      "previousActions": "Əvvəlki tapşırıqlar",
+      "minutes": "Protokol",
+      "decisions": "Qərarlar",
+      "improvementActions": "Təkmilləşdirmə tapşırıqları",
+      "systemChangesNeeded": "Tələb olunan sistem dəyişiklikləri",
+      "objectiveTargetChanges": "Məqsəd və hədəf dəyişiklikləri",
+      "resourceNeeds": "Resurs ehtiyacları",
+      "effectivenessConclusion": "Effektivlik nəticəsi"
+    },
+    "detail": {
+      "dateNotSet": "Tarix təyin edilməyib",
+      "summary": {
+        "inputsRecorded": "Girişlər qeyd olunub",
+        "inputsCopy": "Əsas rəhbərlik təhlili girişləri birbaşa iclasın özündə qeyd olunur.",
+        "outputsRecorded": "Çıxışlar qeyd olunub",
+        "outputsReady": "Qərarlar və çıxışlar izləmə üçün qeyd olunub.",
+        "outputsThin": "Bağlamadan əvvəl qərarları, sistem dəyişikliklərini, məqsəd dəyişikliklərini və resursları qeyd edin.",
+        "managementPosition": "Rəhbərlik mövqeyi"
+      },
+      "attention": {
+        "title": "Tapşırıq yaratmazdan əvvəl iclas qeydini tamamlayın",
+        "copy": "Bu təhlil hələ də yazılı iclas məzmunu tələb edir. Əvvəlcə İclası redaktə et seçin, sonra faktiki qərar və ya izləmə ehtiyacı olan bölmələrdən tapşırıq yaradın.",
+        "note": "Tapşırıq düymələri yalnız bölmə məzmunu artıq mövcud olduqda aktiv qalır."
+      },
+      "liveSignals": {
+        "title": "Canlı təhlil siqnalları",
+        "copy": "Bu qeydlər iclas məzmununu dəstəkləməlidir, lakin avtomatik olaraq təhlilə yazılmır. Audit nəticələrini, risk və imkanları və sistemə təsir edən dəyişiklikləri yeniləyərkən onlardan istifadə edin."
+      },
+      "noContent": "Hələ məzmun qeyd olunmayıb.",
+      "prepareAction": "İzləmə tapşırığı hazırla"
+    },
+    "readinessLabels": {
+      "readyToClose": "Bağlamağa hazırdır",
+      "closureGaps": "Bağlama boşluqları",
+      "followUpForming": "İzləmə formalaşır",
+      "outputsStillThin": "Çıxışlar hələ zəifdir",
+      "agendaReady": "Gündəm hazırdır",
+      "buildInputs": "Girişləri tamamlayın"
+    },
+    "readinessHints": {
+      "closed": "Bağlanmış təhlildə qərarlar, sistem dəyişiklikləri, məqsəd dəyişiklikləri, resurslar və effektivlik nəticəsi göstərilməlidir.",
+      "held": "Keçirilmiş iclaslarda artıq protokol, qərarlar, ilkin tapşırıqlar və izləmə üçün rəhbərlik istiqaməti göstərilməlidir.",
+      "planned": "Planlaşdırılmış iclaslarda müzakirə başlamazdan əvvəl audit, KPI, təchizatçı, uyğunluq, hadisə və risk girişləri bir araya gətirilməlidir."
+    },
+    "managementPosition": {
+      "pending": "Gözləyir",
+      "decisionRecorded": "Qərar qeyd olunub",
+      "closureIncomplete": "Bağlama natamamdır",
+      "followUpDefined": "İzləmə müəyyən edilib",
+      "awaitingFollowUp": "İzləmə gözlənilir",
+      "plannedDiscussion": "Planlaşdırılmış müzakirə"
+    },
+    "managementPositionHints": {
+      "pending": "Rəhbərlik təhlili çıxışları iclas qeydi yadda saxlandıqdan sonra görünəcək.",
+      "closed": "Nəticə tapşırıqları sonra davam etsə belə, iclas bağlana bilər, lakin nəticə və resurs mövqeyi açıq olmalıdır.",
+      "held": "Bu iclası bağlanmış hesab etməzdən əvvəl qərarları, çıxış tapşırıqlarını və effektivlik istiqamətini nəzərdən keçirin.",
+      "planned": "İclas keçirilməzdən əvvəl sübut hazırlamaq üçün aşağıdakı canlı sistem qeydlərindən istifadə edin."
+    },
+    "signals": {
+      "customerFeedback": {
+        "label": "Müştəri rəyi",
+        "copyWithResponses": "{{count}} tamamlanmış sorğu cavabı, orta göstərici {{average}}/10. {{attention}} cavab 0-6 diqqət aralığındadır.",
+        "copyEmpty": "Hələ tamamlanmış müştəri sorğusu qeydə alınmayıb, buna görə bu bölmə NCR-lərə, şikayətlərə və birbaşa maraqlı tərəf müzakirəsinə əsaslana bilər.",
+        "reviewCopy": "Bu bölməni yazarkən müştəri sorğu ballarından, aşağı ballı rəylərdən, şikayətlərdən və digər maraqlı tərəf rəylərindən istifadə edin."
+      },
+      "auditSupplier": {
+        "label": "Audit və təchizatçı təminatı",
+        "copy": "{{incidents}} açıq hadisə və {{providers}} təchizatçı baxış maddəsi audit nəticələrini və təchizatçı nəzarəti müzakirəsini dəstəkləməlidir.",
+        "reviewCopy": "Audit nəticələrini və təchizatçı təminatı mövzularını xülasə edərkən bu canlı qeydlərdən istifadə edin."
+      },
+      "riskCompliance": {
+        "label": "Risk və uyğunluq məruzəsi",
+        "copy": "{{obligations}} öhdəlik baxış maddəsi, {{hazards}} yüksək təhlükə və {{aspects}} əhəmiyyətli aspekt risk və imkan baxışını dəstəkləməlidir.",
+        "reviewCopy": "Risk və imkanları və daha geniş uyğunluq məruzəsini yazarkən bu canlı qeydlərdən istifadə edin."
+      },
+      "changes": {
+        "label": "Sistemə təsir edən dəyişikliklər",
+        "copy": "{{count}} aktiv dəyişiklik sorğusunun cari sistem dəyişikliyi kimi müzakirəsi lazım ola bilər.",
+        "reviewCopy": "Sistemə təsir edən dəyişikliklər bölməsini dəstəkləmək üçün aktiv dəyişiklik sorğularından istifadə edin."
+      }
+    },
+    "messages": {
+      "noPermissionWrite": "Rəhbərlik təhlillərini yeniləmək üçün icazəniz yoxdur.",
+      "completeRequired": "Tələb olunan rəhbərlik təhlili sahələrini tamamlayın.",
+      "saved": "Rəhbərlik təhlili uğurla yadda saxlandı.",
+      "saveFailed": "Rəhbərlik təhlili yadda saxlanmadı.",
+      "aiAddonOff": "Bu tenant üçün AI assistant əlavəsi aktiv deyil.",
+      "aiReplaceConfirm": "Cari rəhbərlik təhlili giriş mətnini canlı qeydlərdən yeni AI layihəsi ilə əvəz edilsin?",
+      "aiDrafted": "Rəhbərlik təhlili girişləri canlı qeydlərdən istifadə edilərək {{provider}} {{model}} ilə hazırlandı.",
+      "aiDraftFailed": "Rəhbərlik təhlili AI layihəsi uğursuz oldu.",
+      "noPermissionActions": "Tapşırıq yaratmaq üçün icazəniz yoxdur.",
+      "actionDraftTitle": "Rəhbərlik təhlili tapşırığı: {{section}}",
+      "followUpOpened": "{{section}} bölməsindən aşağıda izləmə tapşırığı layihəsi açıldı.",
+      "defaultAgenda": "Vahid idarəetmə sisteminin performansını nəzərdən keçirin.",
+      "addContentTooltip": "Əvvəlcə iclas məzmununu əlavə edin, sonra həmin bölmədən tapşırıq hazırlayın.",
+      "prepareActionTooltip": "Bu bölmədən izləmə tapşırığı hazırlayın.",
+      "archiveConfirm": "Bu rəhbərlik təhlili arxivlənsin? O, aktiv iclas siyahısından çıxarılacaq, lakin audit izində saxlanacaq.",
+      "archived": "Rəhbərlik təhlili arxivləndi.",
+      "archiveFailed": "Rəhbərlik təhlili arxivlənmədi.",
+      "pdfStarted": "Rəhbərlik təhlili PDF yüklənməsi başladı.",
+      "pdfFailed": "Rəhbərlik təhlili PDF hazırlana bilmədi.",
+      "pptStarted": "Rəhbərlik təhlili PPT yüklənməsi başladı.",
+      "pptFailed": "Rəhbərlik təhlili PPT hazırlana bilmədi.",
+      "loadDetailsFailed": "Rəhbərlik təhlili detalları yüklənə bilmədi.",
+      "loadListFailed": "Rəhbərlik təhlilləri yüklənə bilmədi."
+    }
+  },
   "kpis": {
     "page": {
       "label": "Əsas performans göstəriciləri",

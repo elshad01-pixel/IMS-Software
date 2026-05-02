@@ -1523,6 +1523,246 @@
       "deleteFailed": "Action deletion failed."
     }
   },
+  "managementReview": {
+    "page": {
+      "label": "Management Review",
+      "titles": {
+        "list": "Management reviews",
+        "create": "Create management review",
+        "detail": "Management review detail",
+        "edit": "Edit management review"
+      },
+      "descriptions": {
+        "list": "Run structured ISO management reviews with clear inputs, decisions, and action outputs.",
+        "create": "Capture the meeting against a structured ISO template and use live system records as evidence.",
+        "detail": "Review management inputs, outputs, and linked actions in one calm operational workspace.",
+        "edit": "Update the meeting record while preserving the action context and using live records as evidence."
+      }
+    },
+    "actions": {
+      "backToStartHere": "Back to Start Here",
+      "new": "New review meeting",
+      "preparingPdf": "Preparing PDF...",
+      "downloadPdf": "Download PDF protocol",
+      "preparingPpt": "Preparing PPT...",
+      "downloadPpt": "Download PPT dashboard",
+      "edit": "Edit meeting",
+      "archive": "Archive meeting",
+      "backToList": "Back to meetings",
+      "save": "Save meeting",
+      "saving": "Saving..."
+    },
+    "breadcrumbs": {
+      "new": "New review",
+      "record": "Review",
+      "edit": "Edit"
+    },
+    "common": {
+      "unassigned": "Unassigned"
+    },
+    "status": {
+      "PLANNED": "Planned",
+      "HELD": "Held",
+      "CLOSED": "Closed"
+    },
+    "list": {
+      "title": "Structured management reviews",
+      "copy": "Run ISO management review meetings with explicit inputs, outputs, decisions, and action follow-up.",
+      "loadingTitle": "Loading management reviews",
+      "loadingCopy": "Refreshing meetings, status, and recorded management-review content.",
+      "noSummary": "No summary",
+      "tbd": "TBD",
+      "recorded": "Recorded",
+      "pending": "Pending",
+      "table": {
+        "meeting": "Meeting",
+        "date": "Date",
+        "status": "Status",
+        "inputCoverage": "Input coverage",
+        "outputsReadiness": "Outputs readiness"
+      }
+    },
+    "form": {
+      "createTitle": "Create management review",
+      "editTitle": "Edit management review",
+      "copy": "Use the built-in ISO structure for inputs and outputs instead of a single free-form note.",
+      "fields": {
+        "title": "Title",
+        "reviewDate": "Meeting date",
+        "chairperson": "Chairperson",
+        "status": "Status",
+        "summary": "Summary"
+      },
+      "placeholders": {
+        "title": "Q1 2026 management review"
+      },
+      "readiness": {
+        "inputsCaptured": "Inputs captured",
+        "outputsCaptured": "Outputs captured",
+        "meetingReadiness": "Meeting readiness",
+        "inputsReady": "Input coverage is strong enough for an evidence-based review.",
+        "inputsThin": "Record the main audit, CAPA, KPI, provider, obligation, and risk inputs before the meeting.",
+        "outputsReady": "Outputs are taking shape for controlled follow-up.",
+        "outputsThin": "Decisions, system changes, objective changes, and resources should be explicit."
+      },
+      "liveInputs": {
+        "title": "Live system inputs",
+        "copy": "Use these registers as live evidence when writing the input sections below.",
+        "aiCopy": "You can also ask AI to draft the input text from the current tenant records, then edit it before saving.",
+        "aiAction": "AI draft inputs from live records",
+        "aiBusy": "Drafting inputs...",
+        "aiNote": "AI fills only the management review input sections. You can edit every field before saving the meeting."
+      }
+    },
+    "inputs": {
+      "title": "Inputs",
+      "copy": "Use these sections to cover the main ISO management-review inputs across quality, environmental, and OH&S performance.",
+      "placeholders": {
+        "auditResults": "Summarize audit outcomes and themes",
+        "capaStatus": "Summarize open, overdue, and effective CAPA",
+        "kpiPerformance": "Summarize KPI performance, breaches, and trends",
+        "customerInterestedPartiesFeedback": "Customer satisfaction, complaints, stakeholder concerns, and other feedback",
+        "providerPerformance": "Supplier/provider performance, approvals, audits, and escalations",
+        "complianceObligations": "Regulatory, legal, contractual, and compliance-obligation review status",
+        "incidentEmergencyPerformance": "Incidents, near misses, emergency response, drills, and lessons learned",
+        "consultationCommunication": "Worker consultation, participation, communications, complaints, or relevant interested-party dialogue",
+        "risksOpportunities": "Summarize current risk exposure and opportunities",
+        "changesAffectingSystem": "Regulatory, organizational, supplier, or process changes",
+        "previousActions": "Status of previous management review outputs"
+      }
+    },
+    "outputs": {
+      "title": "Outputs",
+      "copy": "Use these sections to record the formal outputs expected from management review, not just meeting notes.",
+      "placeholders": {
+        "minutes": "Formal meeting minutes",
+        "decisions": "Decisions made by management",
+        "improvementActions": "Improvement commitments and actions",
+        "systemChangesNeeded": "Needed changes to the management system, controls, or processes",
+        "objectiveTargetChanges": "Changes to objectives, targets, measures, or review priorities",
+        "resourceNeeds": "People, budget, competence, or infrastructure needs",
+        "effectivenessConclusion": "Conclusion on suitability, adequacy, and effectiveness of the management system",
+        "summary": "Executive summary of the review"
+      }
+    },
+    "sections": {
+      "auditResults": "Audit results",
+      "capaStatus": "CAPA status",
+      "kpiPerformance": "KPI performance",
+      "customerInterestedPartiesFeedback": "Customer and interested-party feedback",
+      "providerPerformance": "Provider performance",
+      "complianceObligations": "Compliance obligations",
+      "incidentEmergencyPerformance": "Incidents and emergency performance",
+      "consultationCommunication": "Consultation and communication",
+      "risksOpportunities": "Risks and opportunities",
+      "changesAffectingSystem": "Changes affecting the system",
+      "previousActions": "Previous actions",
+      "minutes": "Minutes",
+      "decisions": "Decisions",
+      "improvementActions": "Improvement actions",
+      "systemChangesNeeded": "System changes needed",
+      "objectiveTargetChanges": "Objective and target changes",
+      "resourceNeeds": "Resource needs",
+      "effectivenessConclusion": "Effectiveness conclusion"
+    },
+    "detail": {
+      "dateNotSet": "Date not set",
+      "summary": {
+        "inputsRecorded": "Inputs recorded",
+        "inputsCopy": "Core management review inputs are recorded directly in the meeting itself.",
+        "outputsRecorded": "Outputs recorded",
+        "outputsReady": "Decisions and outputs are recorded for follow-up.",
+        "outputsThin": "Capture decisions, system changes, objective changes, and resources before closure.",
+        "managementPosition": "Management position"
+      },
+      "attention": {
+        "title": "Complete the meeting record before raising actions",
+        "copy": "This review still needs written meeting content. Use Edit meeting first, then create actions from the sections that contain actual decisions or follow-up needs.",
+        "note": "Action buttons stay available only where section content already exists."
+      },
+      "liveSignals": {
+        "title": "Live review signals",
+        "copy": "These records should inform the meeting narrative, but they do not write into the review automatically. Use them when updating audit results, risks and opportunities, and changes affecting the system."
+      },
+      "noContent": "No content recorded yet.",
+      "prepareAction": "Prepare follow-up action"
+    },
+    "readinessLabels": {
+      "readyToClose": "Ready to close",
+      "closureGaps": "Closure gaps",
+      "followUpForming": "Follow-up forming",
+      "outputsStillThin": "Outputs still thin",
+      "agendaReady": "Agenda ready",
+      "buildInputs": "Build inputs"
+    },
+    "readinessHints": {
+      "closed": "A closed review should show decisions, system changes, objective changes, resources, and an effectiveness conclusion.",
+      "held": "Held meetings should already show minutes, decisions, initial actions, and management direction for follow-up.",
+      "planned": "Planned meetings should bring together audit, KPI, provider, compliance, incident, and risk inputs before discussion starts."
+    },
+    "managementPosition": {
+      "pending": "Pending",
+      "decisionRecorded": "Decision recorded",
+      "closureIncomplete": "Closure incomplete",
+      "followUpDefined": "Follow-up defined",
+      "awaitingFollowUp": "Awaiting follow-up",
+      "plannedDiscussion": "Planned discussion"
+    },
+    "managementPositionHints": {
+      "pending": "Management review outputs will appear once the meeting record is saved.",
+      "closed": "The meeting can be closed even while resulting actions continue afterward, but the conclusion and resource position should be explicit.",
+      "held": "Review the decisions, output actions, and effectiveness direction before treating this meeting as closed.",
+      "planned": "Use the live system records below to prepare evidence before the meeting is held."
+    },
+    "signals": {
+      "customerFeedback": {
+        "label": "Customer feedback",
+        "copyWithResponses": "{{count}} completed survey responses with an average of {{average}}/10. {{attention}} responses sit in the 0-6 attention range.",
+        "copyEmpty": "No completed customer surveys are recorded yet, so this section may still rely on NCRs, complaints, and direct stakeholder discussion.",
+        "reviewCopy": "Use customer survey scores, low-score comments, complaints, and other interested-party feedback when writing this section."
+      },
+      "auditSupplier": {
+        "label": "Audit and supplier assurance",
+        "copy": "{{incidents}} open incidents and {{providers}} provider review items should inform audit results and supplier-control discussion.",
+        "reviewCopy": "Use these live records when summarising audit results and supplier assurance themes."
+      },
+      "riskCompliance": {
+        "label": "Risk and compliance exposure",
+        "copy": "{{obligations}} obligation review items, {{hazards}} high hazards, and {{aspects}} significant aspects should inform risk and opportunity review.",
+        "reviewCopy": "Use these live records when writing risks and opportunities and wider compliance exposure."
+      },
+      "changes": {
+        "label": "Changes affecting the system",
+        "copy": "{{count}} active change requests may need to be discussed as current system change.",
+        "reviewCopy": "Use active change requests to support the changes affecting the system section."
+      }
+    },
+    "messages": {
+      "noPermissionWrite": "You do not have permission to update management reviews.",
+      "completeRequired": "Complete the required management review fields.",
+      "saved": "Management review saved successfully.",
+      "saveFailed": "Management review save failed.",
+      "aiAddonOff": "AI assistant add-on is not enabled for this tenant.",
+      "aiReplaceConfirm": "Replace the current management review input text with a new AI draft from live records?",
+      "aiDrafted": "Management review inputs drafted from live records using {{provider}} {{model}}.",
+      "aiDraftFailed": "Management review AI draft failed.",
+      "noPermissionActions": "You do not have permission to create actions.",
+      "actionDraftTitle": "Management review action: {{section}}",
+      "followUpOpened": "Follow-up action draft opened below from {{section}}.",
+      "defaultAgenda": "Review performance of the integrated management system.",
+      "addContentTooltip": "Add meeting content first, then prepare an action from that section.",
+      "prepareActionTooltip": "Prepare a follow-up action from this section.",
+      "archiveConfirm": "Archive this management review? It will be removed from the active meeting list but kept in the audit trail.",
+      "archived": "Management review archived.",
+      "archiveFailed": "Management review archive failed.",
+      "pdfStarted": "Management review PDF download started.",
+      "pdfFailed": "Management review PDF could not be prepared.",
+      "pptStarted": "Management review PPT download started.",
+      "pptFailed": "Management review PPT could not be prepared.",
+      "loadDetailsFailed": "Management review details could not be loaded.",
+      "loadListFailed": "Management reviews could not be loaded."
+    }
+  },
   "kpis": {
     "page": {
       "label": "KPIs",

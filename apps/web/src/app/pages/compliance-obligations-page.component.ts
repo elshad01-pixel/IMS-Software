@@ -327,6 +327,8 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
 
     return {
       title: link.title,
+      subtitle: link.subtitle,
+      statusLabel: link.status ? this.prettyStatus(link.status) : '',
       moduleLabel: this.linkModuleLabel(link.linkType),
       requiredTier: minimumPackageTierForModule(moduleKey)
     };

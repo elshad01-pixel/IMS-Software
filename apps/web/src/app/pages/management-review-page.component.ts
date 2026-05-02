@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { I18nService } from '../core/i18n.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
 
@@ -93,22 +94,22 @@ type ReviewRecord = {
   template: `
     <section class="page-grid">
       <iso-page-header
-        [label]="'Management Review'"
+        [label]="t('managementReview.page.label')"
         [title]="pageTitle()"
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
-        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">Back to Start Here</a>
-        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/management-review/new" class="button-link">+ New review meeting</a>
+        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">{{ t('managementReview.actions.backToStartHere') }}</a>
+        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/management-review/new" class="button-link">+ {{ t('managementReview.actions.new') }}</a>
         <button *ngIf="mode() === 'detail' && selectedReview()" type="button" class="button-link secondary" [disabled]="generatingReport()" (click)="generateReport()">
-          {{ generatingReport() ? 'Preparing PDF...' : 'Download PDF protocol' }}
+          {{ generatingReport() ? t('managementReview.actions.preparingPdf') : t('managementReview.actions.downloadPdf') }}
         </button>
         <button *ngIf="mode() === 'detail' && selectedReview()" type="button" class="button-link secondary" [disabled]="generatingPresentation()" (click)="generatePresentation()">
-          {{ generatingPresentation() ? 'Preparing PPT...' : 'Download PPT dashboard' }}
+          {{ generatingPresentation() ? t('managementReview.actions.preparingPpt') : t('managementReview.actions.downloadPpt') }}
         </button>
-        <a *ngIf="mode() === 'detail' && selectedReview() && canWrite()" [routerLink]="['/management-review', selectedReview()?.id, 'edit']" class="button-link">Edit meeting</a>
-        <button *ngIf="mode() === 'detail' && canArchiveReview()" type="button" class="button-link secondary" (click)="archiveReview()">Archive meeting</button>
-        <a *ngIf="mode() !== 'list'" routerLink="/management-review" class="button-link secondary">Back to meetings</a>
+        <a *ngIf="mode() === 'detail' && selectedReview() && canWrite()" [routerLink]="['/management-review', selectedReview()?.id, 'edit']" class="button-link">{{ t('managementReview.actions.edit') }}</a>
+        <button *ngIf="mode() === 'detail' && canArchiveReview()" type="button" class="button-link secondary" (click)="archiveReview()">{{ t('managementReview.actions.archive') }}</button>
+        <a *ngIf="mode() !== 'list'" routerLink="/management-review" class="button-link secondary">{{ t('managementReview.actions.backToList') }}</a>
       </iso-page-header>
 
       <section *ngIf="mode() === 'list'" class="page-stack">
@@ -116,25 +117,25 @@ type ReviewRecord = {
           <div class="section-head">
             <div>
               <span class="section-eyebrow">Meetings</span>
-              <h3>Structured management reviews</h3>
-              <p class="subtle">Run ISO management review meetings with explicit inputs, outputs, decisions, and action follow-up.</p>
+              <h3>{{ t('managementReview.list.title') }}</h3>
+              <p class="subtle">{{ t('managementReview.list.copy') }}</p>
             </div>
           </div>
 
           <div class="empty-state" *ngIf="loading()">
-            <strong>Loading management reviews</strong>
-            <span>Refreshing meetings, status, and recorded management-review content.</span>
+            <strong>{{ t('managementReview.list.loadingTitle') }}</strong>
+            <span>{{ t('managementReview.list.loadingCopy') }}</span>
           </div>
 
           <div class="data-table-wrap" *ngIf="!loading() && reviews().length">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Meeting</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>Input coverage</th>
-                  <th>Outputs readiness</th>
+                  <th>{{ t('managementReview.list.table.meeting') }}</th>
+                  <th>{{ t('managementReview.list.table.date') }}</th>
+                  <th>{{ t('managementReview.list.table.status') }}</th>
+                  <th>{{ t('managementReview.list.table.inputCoverage') }}</th>
+                  <th>{{ t('managementReview.list.table.outputsReadiness') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -142,15 +143,15 @@ type ReviewRecord = {
                   <td>
                     <div class="table-title">
                       <strong>{{ item.title }}</strong>
-                      <small>{{ item.summary || 'No summary' }}</small>
+                      <small>{{ item.summary || t('managementReview.list.noSummary') }}</small>
                     </div>
                   </td>
-                  <td>{{ item.reviewDate ? (item.reviewDate | date:'yyyy-MM-dd') : 'TBD' }}</td>
-                  <td><span class="status-badge" [class.success]="item.status === 'CLOSED'" [class.warn]="item.status === 'HELD'">{{ item.status }}</span></td>
+                  <td>{{ item.reviewDate ? (item.reviewDate | date:'yyyy-MM-dd') : t('managementReview.list.tbd') }}</td>
+                  <td><span class="status-badge" [class.success]="item.status === 'CLOSED'" [class.warn]="item.status === 'HELD'">{{ statusLabel(item.status) }}</span></td>
                   <td>{{ reviewInputCoverage(item) }}/{{ inputSectionCount() }}</td>
                   <td>
                     <span class="status-badge" [class.success]="reviewOutputsReady(item)" [class.warn]="item.status !== 'PLANNED' && !reviewOutputsReady(item)">
-                      {{ reviewOutputsReady(item) ? 'Recorded' : 'Pending' }}
+                      {{ reviewOutputsReady(item) ? t('managementReview.list.recorded') : t('managementReview.list.pending') }}
                     </span>
                   </td>
                 </tr>
@@ -165,8 +166,8 @@ type ReviewRecord = {
           <div class="section-head">
             <div>
               <span class="section-eyebrow">Meeting record</span>
-              <h3>{{ mode() === 'create' ? 'Create management review' : 'Edit management review' }}</h3>
-              <p class="subtle">Use the built-in ISO structure for inputs and outputs instead of a single free-form note.</p>
+              <h3>{{ mode() === 'create' ? t('managementReview.form.createTitle') : t('managementReview.form.editTitle') }}</h3>
+              <p class="subtle">{{ t('managementReview.form.copy') }}</p>
             </div>
           </div>
 
@@ -174,27 +175,27 @@ type ReviewRecord = {
 
           <section class="readiness-strip">
             <article class="readiness-card">
-              <span>Inputs captured</span>
+              <span>{{ t('managementReview.form.readiness.inputsCaptured') }}</span>
               <strong>{{ completedInputCount() }}/{{ inputSectionCount() }}</strong>
-              <small>{{ completedInputCount() >= plannedInputTarget() ? 'Input coverage is strong enough for an evidence-based review.' : 'Record the main audit, CAPA, KPI, provider, obligation, and risk inputs before the meeting.' }}</small>
+              <small>{{ completedInputCount() >= plannedInputTarget() ? t('managementReview.form.readiness.inputsReady') : t('managementReview.form.readiness.inputsThin') }}</small>
             </article>
             <article class="readiness-card">
-              <span>Outputs captured</span>
+              <span>{{ t('managementReview.form.readiness.outputsCaptured') }}</span>
               <strong>{{ completedOutputCount() }}/{{ outputSectionCount() }}</strong>
-              <small>{{ completedOutputCount() >= heldOutputTarget() ? 'Outputs are taking shape for controlled follow-up.' : 'Decisions, system changes, objective changes, and resources should be explicit.' }}</small>
+              <small>{{ completedOutputCount() >= heldOutputTarget() ? t('managementReview.form.readiness.outputsReady') : t('managementReview.form.readiness.outputsThin') }}</small>
             </article>
             <article class="readiness-card">
-              <span>Meeting readiness</span>
+              <span>{{ t('managementReview.form.readiness.meetingReadiness') }}</span>
               <strong>{{ reviewReadinessLabel() }}</strong>
               <small>{{ reviewReadinessHint() }}</small>
             </article>
           </section>
 
           <section class="guidance-card">
-            <strong>Live system inputs</strong>
+            <strong>{{ t('managementReview.form.liveInputs.title') }}</strong>
             <p>
-              Use these registers as live evidence when writing the input sections below.
-              <ng-container *ngIf="hasAiAddOn()"> You can also ask AI to draft the input text from the current tenant records, then edit it before saving.</ng-container>
+              {{ t('managementReview.form.liveInputs.copy') }}
+              <ng-container *ngIf="hasAiAddOn()"> {{ t('managementReview.form.liveInputs.aiCopy') }}</ng-container>
             </p>
             <div class="touchpoint-grid top-space">
               <a class="touchpoint-card" *ngFor="let item of managementSignals()" [routerLink]="item.link">
@@ -205,68 +206,68 @@ type ReviewRecord = {
             </div>
             <div class="button-row top-space" *ngIf="hasAiAddOn()">
               <button type="button" class="secondary" [disabled]="generatingAiInputs() || saving() || !canWrite()" (click)="draftInputsWithAi()">
-                {{ generatingAiInputs() ? 'Drafting inputs...' : 'AI draft inputs from live records' }}
+                {{ generatingAiInputs() ? t('managementReview.form.liveInputs.aiBusy') : t('managementReview.form.liveInputs.aiAction') }}
               </button>
             </div>
-            <small class="top-space" *ngIf="hasAiAddOn()">AI fills only the management review input sections. You can edit every field before saving the meeting.</small>
+            <small class="top-space" *ngIf="hasAiAddOn()">{{ t('managementReview.form.liveInputs.aiNote') }}</small>
           </section>
 
-          <label class="field"><span>Title</span><input formControlName="title" placeholder="Q1 2026 management review"></label>
+          <label class="field"><span>{{ t('managementReview.form.fields.title') }}</span><input formControlName="title" [placeholder]="t('managementReview.form.placeholders.title')"></label>
           <div class="form-grid-3">
-            <label class="field"><span>Meeting date</span><input type="date" formControlName="reviewDate"></label>
+            <label class="field"><span>{{ t('managementReview.form.fields.reviewDate') }}</span><input type="date" formControlName="reviewDate"></label>
             <label class="field">
-              <span>Chairperson</span>
+              <span>{{ t('managementReview.form.fields.chairperson') }}</span>
               <select formControlName="chairpersonId">
-                <option value="">Unassigned</option>
+                <option value="">{{ t('managementReview.common.unassigned') }}</option>
                 <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
               </select>
             </label>
             <label class="field">
-              <span>Status</span>
+              <span>{{ t('managementReview.form.fields.status') }}</span>
               <select formControlName="status">
-                <option>PLANNED</option>
-                <option>HELD</option>
-                <option>CLOSED</option>
+                <option value="PLANNED">{{ statusLabel('PLANNED') }}</option>
+                <option value="HELD">{{ statusLabel('HELD') }}</option>
+                <option value="CLOSED">{{ statusLabel('CLOSED') }}</option>
               </select>
             </label>
           </div>
 
           <section class="detail-section">
-            <h4>Inputs</h4>
+            <h4>{{ t('managementReview.inputs.title') }}</h4>
             <div class="page-stack top-space">
-              <p class="section-note">Use these sections to cover the main ISO management-review inputs across quality, environmental, and OH&amp;S performance.</p>
-              <label class="field"><span>Audit results</span><textarea rows="3" formControlName="auditResults" placeholder="Summarize audit outcomes and themes"></textarea></label>
-              <label class="field"><span>CAPA status</span><textarea rows="3" formControlName="capaStatus" placeholder="Summarize open, overdue, and effective CAPA"></textarea></label>
-              <label class="field"><span>KPI performance</span><textarea rows="3" formControlName="kpiPerformance" placeholder="Summarize KPI performance, breaches, and trends"></textarea></label>
-              <label class="field"><span>Customer and interested-party feedback</span><textarea rows="3" formControlName="customerInterestedPartiesFeedback" placeholder="Customer satisfaction, complaints, stakeholder concerns, and other feedback"></textarea></label>
-              <label class="field"><span>Provider performance</span><textarea rows="3" formControlName="providerPerformance" placeholder="Supplier/provider performance, approvals, audits, and escalations"></textarea></label>
-              <label class="field"><span>Compliance obligations</span><textarea rows="3" formControlName="complianceObligations" placeholder="Regulatory, legal, contractual, and compliance-obligation review status"></textarea></label>
-              <label class="field"><span>Incidents and emergency performance</span><textarea rows="3" formControlName="incidentEmergencyPerformance" placeholder="Incidents, near misses, emergency response, drills, and lessons learned"></textarea></label>
-              <label class="field"><span>Consultation and communication</span><textarea rows="3" formControlName="consultationCommunication" placeholder="Worker consultation, participation, communications, complaints, or relevant interested-party dialogue"></textarea></label>
-              <label class="field"><span>Risks and opportunities</span><textarea rows="3" formControlName="risksOpportunities" placeholder="Summarize current risk exposure and opportunities"></textarea></label>
-              <label class="field"><span>Changes affecting the system</span><textarea rows="3" formControlName="changesAffectingSystem" placeholder="Regulatory, organizational, supplier, or process changes"></textarea></label>
-              <label class="field"><span>Previous actions</span><textarea rows="3" formControlName="previousActions" placeholder="Status of previous management review outputs"></textarea></label>
+              <p class="section-note">{{ t('managementReview.inputs.copy') }}</p>
+              <label class="field"><span>{{ t('managementReview.sections.auditResults') }}</span><textarea rows="3" formControlName="auditResults" [placeholder]="t('managementReview.inputs.placeholders.auditResults')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.capaStatus') }}</span><textarea rows="3" formControlName="capaStatus" [placeholder]="t('managementReview.inputs.placeholders.capaStatus')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.kpiPerformance') }}</span><textarea rows="3" formControlName="kpiPerformance" [placeholder]="t('managementReview.inputs.placeholders.kpiPerformance')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.customerInterestedPartiesFeedback') }}</span><textarea rows="3" formControlName="customerInterestedPartiesFeedback" [placeholder]="t('managementReview.inputs.placeholders.customerInterestedPartiesFeedback')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.providerPerformance') }}</span><textarea rows="3" formControlName="providerPerformance" [placeholder]="t('managementReview.inputs.placeholders.providerPerformance')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.complianceObligations') }}</span><textarea rows="3" formControlName="complianceObligations" [placeholder]="t('managementReview.inputs.placeholders.complianceObligations')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.incidentEmergencyPerformance') }}</span><textarea rows="3" formControlName="incidentEmergencyPerformance" [placeholder]="t('managementReview.inputs.placeholders.incidentEmergencyPerformance')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.consultationCommunication') }}</span><textarea rows="3" formControlName="consultationCommunication" [placeholder]="t('managementReview.inputs.placeholders.consultationCommunication')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.risksOpportunities') }}</span><textarea rows="3" formControlName="risksOpportunities" [placeholder]="t('managementReview.inputs.placeholders.risksOpportunities')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.changesAffectingSystem') }}</span><textarea rows="3" formControlName="changesAffectingSystem" [placeholder]="t('managementReview.inputs.placeholders.changesAffectingSystem')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.previousActions') }}</span><textarea rows="3" formControlName="previousActions" [placeholder]="t('managementReview.inputs.placeholders.previousActions')"></textarea></label>
             </div>
           </section>
 
           <section class="detail-section">
-            <h4>Outputs</h4>
+            <h4>{{ t('managementReview.outputs.title') }}</h4>
             <div class="page-stack top-space">
-              <p class="section-note">Use these sections to record the formal outputs expected from management review, not just meeting notes.</p>
-              <label class="field"><span>Minutes</span><textarea rows="4" formControlName="minutes" placeholder="Formal meeting minutes"></textarea></label>
-              <label class="field"><span>Decisions</span><textarea rows="3" formControlName="decisions" placeholder="Decisions made by management"></textarea></label>
-              <label class="field"><span>Improvement actions</span><textarea rows="3" formControlName="improvementActions" placeholder="Improvement commitments and actions"></textarea></label>
-              <label class="field"><span>System changes needed</span><textarea rows="3" formControlName="systemChangesNeeded" placeholder="Needed changes to the management system, controls, or processes"></textarea></label>
-              <label class="field"><span>Objective and target changes</span><textarea rows="3" formControlName="objectiveTargetChanges" placeholder="Changes to objectives, targets, measures, or review priorities"></textarea></label>
-              <label class="field"><span>Resource needs</span><textarea rows="3" formControlName="resourceNeeds" placeholder="People, budget, competence, or infrastructure needs"></textarea></label>
-              <label class="field"><span>Effectiveness conclusion</span><textarea rows="3" formControlName="effectivenessConclusion" placeholder="Conclusion on suitability, adequacy, and effectiveness of the management system"></textarea></label>
-              <label class="field"><span>Summary</span><textarea rows="2" formControlName="summary" placeholder="Executive summary of the review"></textarea></label>
+              <p class="section-note">{{ t('managementReview.outputs.copy') }}</p>
+              <label class="field"><span>{{ t('managementReview.sections.minutes') }}</span><textarea rows="4" formControlName="minutes" [placeholder]="t('managementReview.outputs.placeholders.minutes')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.decisions') }}</span><textarea rows="3" formControlName="decisions" [placeholder]="t('managementReview.outputs.placeholders.decisions')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.improvementActions') }}</span><textarea rows="3" formControlName="improvementActions" [placeholder]="t('managementReview.outputs.placeholders.improvementActions')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.systemChangesNeeded') }}</span><textarea rows="3" formControlName="systemChangesNeeded" [placeholder]="t('managementReview.outputs.placeholders.systemChangesNeeded')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.objectiveTargetChanges') }}</span><textarea rows="3" formControlName="objectiveTargetChanges" [placeholder]="t('managementReview.outputs.placeholders.objectiveTargetChanges')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.resourceNeeds') }}</span><textarea rows="3" formControlName="resourceNeeds" [placeholder]="t('managementReview.outputs.placeholders.resourceNeeds')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.sections.effectivenessConclusion') }}</span><textarea rows="3" formControlName="effectivenessConclusion" [placeholder]="t('managementReview.outputs.placeholders.effectivenessConclusion')"></textarea></label>
+              <label class="field"><span>{{ t('managementReview.form.fields.summary') }}</span><textarea rows="2" formControlName="summary" [placeholder]="t('managementReview.outputs.placeholders.summary')"></textarea></label>
             </div>
           </section>
 
           <div class="button-row">
-            <button type="submit" [disabled]="reviewForm.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save meeting' }}</button>
-            <a [routerLink]="selectedId() ? ['/management-review', selectedId()] : ['/management-review']" class="button-link secondary">Cancel</a>
+            <button type="submit" [disabled]="reviewForm.invalid || saving() || !canWrite()">{{ saving() ? t('managementReview.actions.saving') : t('managementReview.actions.save') }}</button>
+            <a [routerLink]="selectedId() ? ['/management-review', selectedId()] : ['/management-review']" class="button-link secondary">{{ t('common.cancel') }}</a>
           </div>
         </form>
       </section>
@@ -276,40 +277,40 @@ type ReviewRecord = {
           <section class="card detail-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Management review</span>
+                <span class="section-eyebrow">{{ t('managementReview.page.label') }}</span>
                 <h3>{{ selectedReview()?.title }}</h3>
-                <p class="subtle">{{ selectedReview()?.reviewDate ? (selectedReview()?.reviewDate | date:'yyyy-MM-dd') : 'Date not set' }}</p>
+                <p class="subtle">{{ selectedReview()?.reviewDate ? (selectedReview()?.reviewDate | date:'yyyy-MM-dd') : t('managementReview.detail.dateNotSet') }}</p>
               </div>
-              <span class="status-badge" [class.success]="selectedReview()?.status === 'CLOSED'" [class.warn]="selectedReview()?.status === 'HELD'">{{ selectedReview()?.status }}</span>
+              <span class="status-badge" [class.success]="selectedReview()?.status === 'CLOSED'" [class.warn]="selectedReview()?.status === 'HELD'">{{ statusLabel(selectedReview()?.status || null) }}</span>
             </div>
 
             <section class="readiness-strip top-space">
               <article class="readiness-card">
-                <span>Inputs recorded</span>
+                <span>{{ t('managementReview.detail.summary.inputsRecorded') }}</span>
                 <strong>{{ detailInputCount() }}/{{ inputSectionCount() }}</strong>
-                <small>Core management review inputs are recorded directly in the meeting itself.</small>
+                <small>{{ t('managementReview.detail.summary.inputsCopy') }}</small>
               </article>
               <article class="readiness-card">
-                <span>Outputs recorded</span>
+                <span>{{ t('managementReview.detail.summary.outputsRecorded') }}</span>
                 <strong>{{ detailOutputCount() }}/{{ outputSectionCount() }}</strong>
-                <small>{{ detailOutputCount() >= heldOutputTarget() ? 'Decisions and outputs are recorded for follow-up.' : 'Capture decisions, system changes, objective changes, and resources before closure.' }}</small>
+                <small>{{ detailOutputCount() >= heldOutputTarget() ? t('managementReview.detail.summary.outputsReady') : t('managementReview.detail.summary.outputsThin') }}</small>
               </article>
               <article class="readiness-card">
-                <span>Management position</span>
+                <span>{{ t('managementReview.detail.summary.managementPosition') }}</span>
                 <strong>{{ managementPositionLabel() }}</strong>
                 <small>{{ managementPositionHint() }}</small>
               </article>
             </section>
 
             <section class="guidance-card top-space" *ngIf="needsMeetingContentAttention()">
-              <strong>Complete the meeting record before raising actions</strong>
-              <p>This review still needs written meeting content. Use Edit meeting first, then create actions from the sections that contain actual decisions or follow-up needs.</p>
-              <small>Action buttons stay available only where section content already exists.</small>
+              <strong>{{ t('managementReview.detail.attention.title') }}</strong>
+              <p>{{ t('managementReview.detail.attention.copy') }}</p>
+              <small>{{ t('managementReview.detail.attention.note') }}</small>
             </section>
 
             <section class="guidance-card top-space">
-              <strong>Live review signals</strong>
-              <p>These records should inform the meeting narrative, but they do not write into the review automatically. Use them when updating audit results, risks and opportunities, and changes affecting the system.</p>
+              <strong>{{ t('managementReview.detail.liveSignals.title') }}</strong>
+              <p>{{ t('managementReview.detail.liveSignals.copy') }}</p>
               <div class="touchpoint-grid top-space">
                 <a class="touchpoint-card" *ngFor="let item of managementSignals()" [routerLink]="item.link">
                   <span>{{ item.label }}</span>
@@ -324,9 +325,9 @@ type ReviewRecord = {
                 <div class="section-head">
                   <div>
                     <h4>{{ section.label }}</h4>
-                    <p class="subtle">{{ section.value || 'No content recorded yet.' }}</p>
+                    <p class="subtle">{{ section.value || t('managementReview.detail.noContent') }}</p>
                   </div>
-                  <button type="button" class="secondary" [disabled]="!canCreateActionFromSection(section.value)" [title]="createActionTooltip(section.value)" (click)="prepareAction(section.label, section.value)">Prepare follow-up action</button>
+                  <button type="button" class="secondary" [disabled]="!canCreateActionFromSection(section.value)" [title]="createActionTooltip(section.value)" (click)="prepareAction(section.label, section.value)">{{ t('managementReview.detail.prepareAction') }}</button>
                 </div>
               </section>
             </div>
@@ -533,6 +534,7 @@ export class ManagementReviewPageComponent {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -552,6 +554,9 @@ export class ManagementReviewPageComponent {
 
   protected showStartHereBackLink() {
     return this.route.snapshot.queryParamMap.get('from') === 'start-here';
+  }
+  protected t(key: string, params?: Record<string, unknown>) {
+    return this.i18n.t(key, params);
   }
   protected readonly draftActionDescription = signal<string | null>(null);
   protected readonly loading = signal(false);
@@ -632,52 +637,52 @@ export class ManagementReviewPageComponent {
 
   protected pageTitle() {
     return {
-      list: 'Management reviews',
-      create: 'Create management review',
-      detail: this.selectedReview()?.title || 'Management review detail',
-      edit: this.selectedReview()?.title || 'Edit management review'
+      list: this.t('managementReview.page.titles.list'),
+      create: this.t('managementReview.page.titles.create'),
+      detail: this.selectedReview()?.title || this.t('managementReview.page.titles.detail'),
+      edit: this.selectedReview()?.title || this.t('managementReview.page.titles.edit')
     }[this.mode()];
   }
 
   protected pageDescription() {
     return {
-      list: 'Run structured ISO management reviews with clear inputs, decisions, and action outputs.',
-      create: 'Capture the meeting against a structured ISO template and use live system records as evidence.',
-      detail: 'Review management inputs, outputs, and linked actions in one calm operational workspace.',
-      edit: 'Update the meeting record while preserving the action context and using live records as evidence.'
+      list: this.t('managementReview.page.descriptions.list'),
+      create: this.t('managementReview.page.descriptions.create'),
+      detail: this.t('managementReview.page.descriptions.detail'),
+      edit: this.t('managementReview.page.descriptions.edit')
     }[this.mode()];
   }
 
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: 'Management Review' }];
-    const base = [{ label: 'Management Review', link: '/management-review' }];
-    if (this.mode() === 'create') return [...base, { label: 'New review' }];
-    if (this.mode() === 'edit') return [...base, { label: this.selectedReview()?.title || 'Review', link: `/management-review/${this.selectedId()}` }, { label: 'Edit' }];
-    return [...base, { label: this.selectedReview()?.title || 'Review' }];
+    if (this.mode() === 'list') return [{ label: this.t('managementReview.page.label') }];
+    const base = [{ label: this.t('managementReview.page.label'), link: '/management-review' }];
+    if (this.mode() === 'create') return [...base, { label: this.t('managementReview.breadcrumbs.new') }];
+    if (this.mode() === 'edit') return [...base, { label: this.selectedReview()?.title || this.t('managementReview.breadcrumbs.record'), link: `/management-review/${this.selectedId()}` }, { label: this.t('managementReview.breadcrumbs.edit') }];
+    return [...base, { label: this.selectedReview()?.title || this.t('managementReview.breadcrumbs.record') }];
   }
 
   protected reviewSections() {
     const review = this.selectedReview();
     if (!review) return [];
     return [
-      { label: 'Audit results', value: review.auditResults },
-      { label: 'CAPA status', value: review.capaStatus },
-      { label: 'KPI performance', value: review.kpiPerformance },
-      { label: 'Customer and interested-party feedback', value: review.customerInterestedPartiesFeedback },
-      { label: 'Provider performance', value: review.providerPerformance },
-      { label: 'Compliance obligations', value: review.complianceObligations },
-      { label: 'Incidents and emergency performance', value: review.incidentEmergencyPerformance },
-      { label: 'Consultation and communication', value: review.consultationCommunication },
-      { label: 'Risks and opportunities', value: review.risksOpportunities },
-      { label: 'Changes affecting the system', value: review.changesAffectingSystem },
-      { label: 'Previous actions', value: review.previousActions },
-      { label: 'Minutes', value: review.minutes },
-      { label: 'Decisions', value: review.decisions },
-      { label: 'Improvement actions', value: review.improvementActions },
-      { label: 'System changes needed', value: review.systemChangesNeeded },
-      { label: 'Objective and target changes', value: review.objectiveTargetChanges },
-      { label: 'Resource needs', value: review.resourceNeeds },
-      { label: 'Effectiveness conclusion', value: review.effectivenessConclusion }
+      { label: this.t('managementReview.sections.auditResults'), value: review.auditResults },
+      { label: this.t('managementReview.sections.capaStatus'), value: review.capaStatus },
+      { label: this.t('managementReview.sections.kpiPerformance'), value: review.kpiPerformance },
+      { label: this.t('managementReview.sections.customerInterestedPartiesFeedback'), value: review.customerInterestedPartiesFeedback },
+      { label: this.t('managementReview.sections.providerPerformance'), value: review.providerPerformance },
+      { label: this.t('managementReview.sections.complianceObligations'), value: review.complianceObligations },
+      { label: this.t('managementReview.sections.incidentEmergencyPerformance'), value: review.incidentEmergencyPerformance },
+      { label: this.t('managementReview.sections.consultationCommunication'), value: review.consultationCommunication },
+      { label: this.t('managementReview.sections.risksOpportunities'), value: review.risksOpportunities },
+      { label: this.t('managementReview.sections.changesAffectingSystem'), value: review.changesAffectingSystem },
+      { label: this.t('managementReview.sections.previousActions'), value: review.previousActions },
+      { label: this.t('managementReview.sections.minutes'), value: review.minutes },
+      { label: this.t('managementReview.sections.decisions'), value: review.decisions },
+      { label: this.t('managementReview.sections.improvementActions'), value: review.improvementActions },
+      { label: this.t('managementReview.sections.systemChangesNeeded'), value: review.systemChangesNeeded },
+      { label: this.t('managementReview.sections.objectiveTargetChanges'), value: review.objectiveTargetChanges },
+      { label: this.t('managementReview.sections.resourceNeeds'), value: review.resourceNeeds },
+      { label: this.t('managementReview.sections.effectivenessConclusion'), value: review.effectivenessConclusion }
     ];
   }
 
@@ -701,36 +706,36 @@ export class ManagementReviewPageComponent {
 
     return [
       {
-        label: 'Customer feedback',
+        label: this.t('managementReview.signals.customerFeedback.label'),
         value: feedbackResponses,
         copy: feedbackResponses
-          ? `${feedbackResponses} completed survey response${feedbackResponses === 1 ? '' : 's'} with an average of ${feedbackAverage ?? 0}/10. ${feedbackAttention} response${feedbackAttention === 1 ? '' : 's'} sit in the 0-6 attention range.`
-          : 'No completed customer surveys are recorded yet, so this section may still rely on NCRs, complaints, and direct stakeholder discussion.',
-        reviewCopy: 'Use customer survey scores, low-score comments, complaints, and other interested-party feedback when writing this section.',
+          ? this.t('managementReview.signals.customerFeedback.copyWithResponses', { count: feedbackResponses, average: feedbackAverage ?? 0, attention: feedbackAttention })
+          : this.t('managementReview.signals.customerFeedback.copyEmpty'),
+        reviewCopy: this.t('managementReview.signals.customerFeedback.reviewCopy'),
         link: '/context/interested-parties'
       },
       {
-        label: 'Audit and supplier assurance',
+        label: this.t('managementReview.signals.auditSupplier.label'),
         value: openIncidents + providerReviews,
-        copy: `${openIncidents} open incident${openIncidents === 1 ? '' : 's'} and ${providerReviews} provider review item${providerReviews === 1 ? '' : 's'} should inform audit results and supplier-control discussion.`,
-        reviewCopy: 'Use these live records when summarising audit results and supplier assurance themes.',
+        copy: this.t('managementReview.signals.auditSupplier.copy', { incidents: openIncidents, providers: providerReviews }),
+        reviewCopy: this.t('managementReview.signals.auditSupplier.reviewCopy'),
         link: '/external-providers'
       },
       {
-        label: 'Risk and compliance exposure',
+        label: this.t('managementReview.signals.riskCompliance.label'),
         value: overdueObligations + highHazards + highAspects,
-        copy: `${overdueObligations} obligation review item${overdueObligations === 1 ? '' : 's'}, ${highHazards} high hazard${highHazards === 1 ? '' : 's'}, and ${highAspects} significant aspect${highAspects === 1 ? '' : 's'} should inform risk and opportunity review.`,
-        reviewCopy: 'Use these live records when writing risks and opportunities and wider compliance exposure.',
+        copy: this.t('managementReview.signals.riskCompliance.copy', { obligations: overdueObligations, hazards: highHazards, aspects: highAspects }),
+        reviewCopy: this.t('managementReview.signals.riskCompliance.reviewCopy'),
         link: '/compliance-obligations'
       },
       {
-        label: 'Changes affecting the system',
+        label: this.t('managementReview.signals.changes.label'),
         value: activeChanges,
-        copy: `${activeChanges} active change request${activeChanges === 1 ? '' : 's'} may need to be discussed as current system change.`,
-        reviewCopy: 'Use active change requests to support the changes affecting the system section.',
+        copy: this.t('managementReview.signals.changes.copy', { count: activeChanges }),
+        reviewCopy: this.t('managementReview.signals.changes.reviewCopy'),
         link: '/change-management'
       }
-    ].filter((item) => this.hasCustomerFeedbackAddOn() || item.label !== 'Customer feedback');
+    ].filter((item) => this.hasCustomerFeedbackAddOn() || item.label !== this.t('managementReview.signals.customerFeedback.label'));
   }
 
   protected completedInputCount() {
@@ -760,23 +765,23 @@ export class ManagementReviewPageComponent {
   protected reviewReadinessLabel() {
     const status = this.reviewForm.getRawValue().status;
     if (status === 'CLOSED') {
-      return this.completedOutputCount() >= 6 ? 'Ready to close' : 'Closure gaps';
+      return this.completedOutputCount() >= 6 ? this.t('managementReview.readinessLabels.readyToClose') : this.t('managementReview.readinessLabels.closureGaps');
     }
     if (status === 'HELD') {
-      return this.completedOutputCount() >= this.heldOutputTarget() ? 'Follow-up forming' : 'Outputs still thin';
+      return this.completedOutputCount() >= this.heldOutputTarget() ? this.t('managementReview.readinessLabels.followUpForming') : this.t('managementReview.readinessLabels.outputsStillThin');
     }
-    return this.completedInputCount() >= this.plannedInputTarget() ? 'Agenda ready' : 'Build inputs';
+    return this.completedInputCount() >= this.plannedInputTarget() ? this.t('managementReview.readinessLabels.agendaReady') : this.t('managementReview.readinessLabels.buildInputs');
   }
 
   protected reviewReadinessHint() {
     const status = this.reviewForm.getRawValue().status;
     if (status === 'CLOSED') {
-      return 'A closed review should show decisions, system changes, objective changes, resources, and an effectiveness conclusion.';
+      return this.t('managementReview.readinessHints.closed');
     }
     if (status === 'HELD') {
-      return 'Held meetings should already show minutes, decisions, initial actions, and management direction for follow-up.';
+      return this.t('managementReview.readinessHints.held');
     }
-    return 'Planned meetings should bring together audit, KPI, provider, compliance, incident, and risk inputs before discussion starts.';
+    return this.t('managementReview.readinessHints.planned');
   }
 
   protected reviewOutputsReady(review: ReviewRecord) {
@@ -806,29 +811,29 @@ export class ManagementReviewPageComponent {
   protected managementPositionLabel() {
     const review = this.selectedReview();
     if (!review) {
-      return 'Pending';
+      return this.t('managementReview.managementPosition.pending');
     }
     if (review.status === 'CLOSED') {
-      return this.detailOutputCount() >= 6 ? 'Decision recorded' : 'Closure incomplete';
+      return this.detailOutputCount() >= 6 ? this.t('managementReview.managementPosition.decisionRecorded') : this.t('managementReview.managementPosition.closureIncomplete');
     }
     if (review.status === 'HELD') {
-      return this.detailOutputCount() >= this.heldOutputTarget() ? 'Follow-up defined' : 'Awaiting follow-up';
+      return this.detailOutputCount() >= this.heldOutputTarget() ? this.t('managementReview.managementPosition.followUpDefined') : this.t('managementReview.managementPosition.awaitingFollowUp');
     }
-    return 'Planned discussion';
+    return this.t('managementReview.managementPosition.plannedDiscussion');
   }
 
   protected managementPositionHint() {
     const review = this.selectedReview();
     if (!review) {
-      return 'Management review outputs will appear once the meeting record is saved.';
+      return this.t('managementReview.managementPositionHints.pending');
     }
     if (review.status === 'CLOSED') {
-      return 'The meeting can be closed even while resulting actions continue afterward, but the conclusion and resource position should be explicit.';
+      return this.t('managementReview.managementPositionHints.closed');
     }
     if (review.status === 'HELD') {
-      return 'Review the decisions, output actions, and effectiveness direction before treating this meeting as closed.';
+      return this.t('managementReview.managementPositionHints.held');
     }
-    return 'Use the live system records below to prepare evidence before the meeting is held.';
+    return this.t('managementReview.managementPositionHints.planned');
   }
 
   protected needsMeetingContentAttention() {
@@ -842,12 +847,12 @@ export class ManagementReviewPageComponent {
 
   protected saveReview() {
     if (!this.canWrite()) {
-      this.error.set('You do not have permission to update management reviews.');
+      this.error.set(this.t('managementReview.messages.noPermissionWrite'));
       return;
     }
 
     if (this.reviewForm.invalid) {
-      this.error.set('Complete the required management review fields.');
+      this.error.set(this.t('managementReview.messages.completeRequired'));
       return;
     }
 
@@ -890,27 +895,27 @@ export class ManagementReviewPageComponent {
     request.subscribe({
       next: (review) => {
         this.saving.set(false);
-        this.router.navigate(['/management-review', review.id], { state: { notice: 'Management review saved successfully.' } });
+        this.router.navigate(['/management-review', review.id], { state: { notice: this.t('managementReview.messages.saved') } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Management review save failed.'));
+        this.error.set(this.readError(error, this.t('managementReview.messages.saveFailed')));
       }
     });
   }
 
   protected draftInputsWithAi() {
     if (!this.hasAiAddOn()) {
-      this.error.set('AI assistant add-on is not enabled for this tenant.');
+      this.error.set(this.t('managementReview.messages.aiAddonOff'));
       return;
     }
 
     if (!this.canWrite()) {
-      this.error.set('You do not have permission to update management reviews.');
+      this.error.set(this.t('managementReview.messages.noPermissionWrite'));
       return;
     }
 
-    if (this.hasExistingInputContent() && !window.confirm('Replace the current management review input text with a new AI draft from live records?')) {
+    if (this.hasExistingInputContent() && !window.confirm(this.t('managementReview.messages.aiReplaceConfirm'))) {
       return;
     }
 
@@ -937,25 +942,25 @@ export class ManagementReviewPageComponent {
         this.message.set(
           draft.warning
             ? draft.warning
-            : `Management review inputs drafted from live records using ${draft.provider} ${draft.model}.`
+            : this.t('managementReview.messages.aiDrafted', { provider: draft.provider, model: draft.model })
         );
       },
       error: (error: HttpErrorResponse) => {
         this.generatingAiInputs.set(false);
-        this.error.set(this.readError(error, 'Management review AI draft failed.'));
+        this.error.set(this.readError(error, this.t('managementReview.messages.aiDraftFailed')));
       }
     });
   }
 
   protected prepareAction(sectionLabel: string, content?: string | null) {
     if (!this.canCreateActions()) {
-      this.error.set('You do not have permission to create actions.');
+      this.error.set(this.t('managementReview.messages.noPermissionActions'));
       return;
     }
 
-    this.draftActionTitle.set(`Management review action: ${sectionLabel}`);
+    this.draftActionTitle.set(this.t('managementReview.messages.actionDraftTitle', { section: sectionLabel }));
     this.draftActionDescription.set(content || '');
-    this.message.set(`Follow-up action draft opened below from ${sectionLabel.toLowerCase()}.`);
+    this.message.set(this.t('managementReview.messages.followUpOpened', { section: sectionLabel.toLowerCase() }));
   }
 
   protected canWrite() {
@@ -980,12 +985,12 @@ export class ManagementReviewPageComponent {
 
   protected createActionTooltip(value?: string | null) {
     if (!this.canCreateActions()) {
-      return 'You do not have permission to create actions.';
+      return this.t('managementReview.messages.noPermissionActions');
     }
     if (!(value || '').trim()) {
-      return 'Add meeting content first, then prepare an action from that section.';
+      return this.t('managementReview.messages.addContentTooltip');
     }
-    return 'Prepare a follow-up action from this section.';
+    return this.t('managementReview.messages.prepareActionTooltip');
   }
 
   protected canArchiveReview() {
@@ -1004,7 +1009,7 @@ export class ManagementReviewPageComponent {
       return;
     }
 
-    if (!window.confirm('Archive this management review? It will be removed from the active meeting list but kept in the audit trail.')) {
+    if (!window.confirm(this.t('managementReview.messages.archiveConfirm'))) {
       return;
     }
 
@@ -1014,11 +1019,11 @@ export class ManagementReviewPageComponent {
     this.api.patch(`management-review/${this.selectedId()}/archive`, {}).subscribe({
       next: () => {
         this.saving.set(false);
-        void this.router.navigate(['/management-review'], { state: { notice: 'Management review archived.' } });
+        void this.router.navigate(['/management-review'], { state: { notice: this.t('managementReview.messages.archived') } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Management review archive failed.'));
+        this.error.set(this.readError(error, this.t('managementReview.messages.archiveFailed')));
       }
     });
   }
@@ -1036,11 +1041,11 @@ export class ManagementReviewPageComponent {
       next: (response) => {
         this.generatingReport.set(false);
         this.downloadResponse(response, 'management-review-protocol.pdf');
-        this.message.set('Management review PDF download started.');
+        this.message.set(this.t('managementReview.messages.pdfStarted'));
       },
       error: (error: HttpErrorResponse) => {
         this.generatingReport.set(false);
-        this.error.set(this.readError(error, 'Management review PDF could not be prepared.'));
+        this.error.set(this.readError(error, this.t('managementReview.messages.pdfFailed')));
       }
     });
   }
@@ -1058,13 +1063,11 @@ export class ManagementReviewPageComponent {
       next: (response) => {
         this.generatingPresentation.set(false);
         this.downloadResponse(response, 'management-review-dashboard.pptx');
-        this.message.set('Management review PPT download started.');
+        this.message.set(this.t('managementReview.messages.pptStarted'));
       },
       error: (error: HttpErrorResponse) => {
         this.generatingPresentation.set(false);
-        this.error.set(
-          this.readError(error, 'Management review PPT could not be prepared.')
-        );
+        this.error.set(this.readError(error, this.t('managementReview.messages.pptFailed')));
       }
     });
   }
@@ -1100,7 +1103,7 @@ export class ManagementReviewPageComponent {
       title: '',
       reviewDate: '',
       chairpersonId: '',
-      agenda: 'Review performance of the integrated management system.',
+      agenda: this.t('managementReview.messages.defaultAgenda'),
       auditResults: '',
       capaStatus: '',
       kpiPerformance: '',
@@ -1159,7 +1162,7 @@ export class ManagementReviewPageComponent {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Management review details could not be loaded.'));
+        this.error.set(this.readError(error, this.t('managementReview.messages.loadDetailsFailed')));
       }
     });
   }
@@ -1173,9 +1176,16 @@ export class ManagementReviewPageComponent {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Management reviews could not be loaded.'));
+        this.error.set(this.readError(error, this.t('managementReview.messages.loadListFailed')));
       }
     });
+  }
+
+  protected statusLabel(status: ReviewStatus | null) {
+    if (!status) {
+      return this.t('common.notSet');
+    }
+    return this.t(`managementReview.status.${status}`);
   }
 
   private loadUsers() {

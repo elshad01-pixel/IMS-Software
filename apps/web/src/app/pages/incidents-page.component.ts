@@ -433,6 +433,8 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
     if (!moduleKey || this.authStore.hasModule(moduleKey)) return null;
     return {
       title: link.title,
+      subtitle: link.subtitle,
+      statusLabel: link.status ? this.prettyStatus(link.status) : '',
       moduleLabel: this.linkModuleLabel(link.linkType),
       requiredTier: minimumPackageTierForModule(moduleKey)
     };

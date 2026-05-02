@@ -108,11 +108,13 @@ type ReturnNavigation = {
                 <div class="summary-strip top-space source-summary-strip">
                   <article class="summary-item">
                     <span>{{ t('actionTracker.focused.source') }}</span>
-                    <strong>{{ focused.sourceTitle }}</strong>
+                    <strong>{{ summary.sourceTitle }}</strong>
+                    <small>{{ summary.moduleLabel }}</small>
                   </article>
                   <article class="summary-item">
                     <span>Included from</span>
                     <strong>{{ packageTierLabel(summary.requiredTier) }}</strong>
+                    <small>{{ summary.moduleLabel }}</small>
                   </article>
                 </div>
               </div>
@@ -276,7 +278,7 @@ type ReturnNavigation = {
                         <a [routerLink]="route" class="table-link" (click)="$event.stopPropagation()">{{ t('actionTracker.actions.openSource') }}</a>
                       </small>
                       <small *ngIf="!sourceRoute(action) && sourcePackageSummary(action) as summary">
-                        Included from {{ packageTierLabel(summary.requiredTier) }}
+                        {{ summary.sourceTitle }} · {{ packageTierLabel(summary.requiredTier) }}
                       </small>
                     </div>
                   </td>
@@ -742,7 +744,8 @@ export class ActionsPageComponent {
     return {
       moduleKey,
       moduleLabel: this.sourceTypeLabel(action.sourceType),
-      requiredTier: minimumPackageTierForModule(moduleKey)
+      requiredTier: minimumPackageTierForModule(moduleKey),
+      sourceTitle: action.sourceTitle
     };
   }
 

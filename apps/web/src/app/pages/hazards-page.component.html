@@ -284,8 +284,10 @@
                   <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
                   <a *ngIf="canOpenLink(link)" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">Open</a>
                   <div *ngIf="!canOpenLink(link) && inaccessibleLinkSummary(link) as summary" class="package-link-note">
-                    <strong>Included from {{ packageTierLabel(summary.requiredTier) }}</strong>
-                    <small>{{ summary.moduleLabel }}</small>
+                    <span class="package-link-note__eyebrow">Included from {{ packageTierLabel(summary.requiredTier) }}</span>
+                    <strong>{{ summary.title }}</strong>
+                    <small *ngIf="summary.subtitle">{{ summary.subtitle }}</small>
+                    <small>{{ summary.moduleLabel }}<span *ngIf="summary.statusLabel"> · {{ summary.statusLabel }}</span></small>
                   </div>
                   <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">Remove</button>
                 </div>

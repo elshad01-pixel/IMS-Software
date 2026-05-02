@@ -293,18 +293,24 @@ type ReturnNavigation = { route: string[]; label: string };
             <div class="button-row top-space">
               <a *ngIf="firstLinkByType('RISK') as firstRisk" [routerLink]="linkRoute(firstRisk)" [queryParams]="linkQueryParams(firstRisk)" [state]="linkState(firstRisk)" class="button-link secondary">Open linked risk</a>
               <div *ngIf="!firstLinkByType('RISK') && inaccessibleFirstLinkByType('RISK') as firstRiskSummary" class="package-inline-summary">
-                <strong>Linked risk kept in {{ packageTierLabel(firstRiskSummary.requiredTier) }}</strong>
-                <small>{{ firstRiskSummary.title }}</small>
+                <span class="package-inline-summary__eyebrow">Included from {{ packageTierLabel(firstRiskSummary.requiredTier) }}</span>
+                <strong>{{ firstRiskSummary.title }}</strong>
+                <small *ngIf="firstRiskSummary.subtitle">{{ firstRiskSummary.subtitle }}</small>
+                <small>{{ firstRiskSummary.moduleLabel }}<span *ngIf="firstRiskSummary.statusLabel"> · {{ firstRiskSummary.statusLabel }}</span></small>
               </div>
               <a *ngIf="firstLinkByType('AUDIT') as firstAudit" [routerLink]="linkRoute(firstAudit)" [queryParams]="linkQueryParams(firstAudit)" [state]="linkState(firstAudit)" class="button-link secondary">Open linked audit</a>
               <div *ngIf="!firstLinkByType('AUDIT') && inaccessibleFirstLinkByType('AUDIT') as firstAuditSummary" class="package-inline-summary">
-                <strong>Linked audit kept in {{ packageTierLabel(firstAuditSummary.requiredTier) }}</strong>
-                <small>{{ firstAuditSummary.title }}</small>
+                <span class="package-inline-summary__eyebrow">Included from {{ packageTierLabel(firstAuditSummary.requiredTier) }}</span>
+                <strong>{{ firstAuditSummary.title }}</strong>
+                <small *ngIf="firstAuditSummary.subtitle">{{ firstAuditSummary.subtitle }}</small>
+                <small>{{ firstAuditSummary.moduleLabel }}<span *ngIf="firstAuditSummary.statusLabel"> · {{ firstAuditSummary.statusLabel }}</span></small>
               </div>
               <a *ngIf="firstLinkByType('NCR') as firstNcr" [routerLink]="linkRoute(firstNcr)" [queryParams]="linkQueryParams(firstNcr)" [state]="linkState(firstNcr)" class="button-link tertiary">Open linked NCR</a>
               <div *ngIf="!firstLinkByType('NCR') && inaccessibleFirstLinkByType('NCR') as firstNcrSummary" class="package-inline-summary">
-                <strong>Linked NCR kept in {{ packageTierLabel(firstNcrSummary.requiredTier) }}</strong>
-                <small>{{ firstNcrSummary.title }}</small>
+                <span class="package-inline-summary__eyebrow">Included from {{ packageTierLabel(firstNcrSummary.requiredTier) }}</span>
+                <strong>{{ firstNcrSummary.title }}</strong>
+                <small *ngIf="firstNcrSummary.subtitle">{{ firstNcrSummary.subtitle }}</small>
+                <small>{{ firstNcrSummary.moduleLabel }}<span *ngIf="firstNcrSummary.statusLabel"> · {{ firstNcrSummary.statusLabel }}</span></small>
               </div>
               <a *ngIf="firstLinkByType('ACTION') as firstAction" [routerLink]="linkRoute(firstAction)" [queryParams]="linkQueryParams(firstAction)" [state]="linkState(firstAction)" class="button-link tertiary">Open linked action</a>
             </div>
@@ -353,8 +359,10 @@ type ReturnNavigation = { route: string[]; label: string };
                         <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
                         <a *ngIf="link.path && !link.missing" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link secondary">Open</a>
                         <div *ngIf="!canOpenLink(link) && inaccessibleLinkSummary(link) as summary" class="package-link-note">
-                          <strong>Included from {{ packageTierLabel(summary.requiredTier) }}</strong>
-                          <small>{{ summary.moduleLabel }}</small>
+                          <span class="package-link-note__eyebrow">Included from {{ packageTierLabel(summary.requiredTier) }}</span>
+                          <strong>{{ summary.title }}</strong>
+                          <small *ngIf="summary.subtitle">{{ summary.subtitle }}</small>
+                          <small>{{ summary.moduleLabel }}<span *ngIf="summary.statusLabel"> · {{ summary.statusLabel }}</span></small>
                         </div>
                         <button *ngIf="canWrite()" type="button" class="button-link tertiary" (click)="removeLink(link.id)">Remove</button>
                       </div>
@@ -413,6 +421,14 @@ type ReturnNavigation = { route: string[]; label: string };
       border-radius: 999px;
       border: 1px solid var(--border-subtle);
       background: color-mix(in srgb, var(--surface-strong) 88%, white);
+    }
+    .package-inline-summary__eyebrow,
+    .package-link-note__eyebrow {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
     .package-inline-summary strong,
     .package-inline-summary small,
@@ -653,6 +669,8 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
 
     return {
       title: link.title,
+      subtitle: link.subtitle,
+      statusLabel: link.status ? this.prettyStatus(link.status) : '',
       moduleLabel: this.linkModuleLabel(link.linkType),
       requiredTier: minimumPackageTierForModule(moduleKey)
     };

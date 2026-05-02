@@ -24,6 +24,14 @@
   text-align: right;
 }
 
+.package-link-note__eyebrow {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .package-link-note strong,
 .package-link-note small {
   display: block;
