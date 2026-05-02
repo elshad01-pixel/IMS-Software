@@ -7,6 +7,7 @@ import { AuthStore } from '../core/auth.store';
 import { ApiService } from '../core/api.service';
 import { ContentLibraryResponse, ProcessTemplate } from '../core/content-library.models';
 import { ContentLibraryService } from '../core/content-library.service';
+import { I18nService } from '../core/i18n.service';
 import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
@@ -53,13 +54,13 @@ type ReturnNavigation = { route: string[]; label: string };
   imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent],
   template: `
     <section class="page-grid">
-      <iso-page-header [label]="'Process Register'" [title]="pageTitle()" [description]="pageDescription()" [breadcrumbs]="breadcrumbs()">
-        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">Back to Start Here</a>
-        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/process-register/new" class="button-link">+ New process</a>
-        <a *ngIf="mode() === 'detail' && selectedProcess() && canWrite()" [routerLink]="['/process-register', selectedId(), 'edit']" class="button-link">Edit process</a>
-        <button *ngIf="mode() === 'detail' && selectedProcess() && canDelete()" type="button" class="button-link danger" (click)="archiveProcess()">Archive</button>
-        <a *ngIf="returnNavigation()" [routerLink]="returnNavigation()!.route" class="button-link tertiary">Back to {{ returnNavigation()!.label }}</a>
-        <a *ngIf="mode() !== 'list'" routerLink="/process-register" class="button-link secondary">Back</a>
+      <iso-page-header [label]="t('processRegister.page.label')" [title]="pageTitle()" [description]="pageDescription()" [breadcrumbs]="breadcrumbs()">
+        <a *ngIf="showStartHereBackLink()" [routerLink]="['/implementation']" class="button-link secondary">{{ t('processRegister.actions.backToStartHere') }}</a>
+        <a *ngIf="mode() === 'list' && canWrite()" routerLink="/process-register/new" class="button-link">+ {{ t('processRegister.actions.new') }}</a>
+        <a *ngIf="mode() === 'detail' && selectedProcess() && canWrite()" [routerLink]="['/process-register', selectedId(), 'edit']" class="button-link">{{ t('processRegister.actions.edit') }}</a>
+        <button *ngIf="mode() === 'detail' && selectedProcess() && canDelete()" type="button" class="button-link danger" (click)="archiveProcess()">{{ t('processRegister.actions.archive') }}</button>
+        <a *ngIf="returnNavigation()" [routerLink]="returnNavigation()!.route" class="button-link tertiary">{{ t('processRegister.actions.backToLabel', { label: returnNavigation()!.label }) }}</a>
+        <a *ngIf="mode() !== 'list'" routerLink="/process-register" class="button-link secondary">{{ t('processRegister.actions.back') }}</a>
       </iso-page-header>
 
       <section *ngIf="mode() === 'list'" class="page-stack">
@@ -67,33 +68,33 @@ type ReturnNavigation = { route: string[]; label: string };
           <div class="toolbar">
             <div class="toolbar-meta">
               <div>
-                <p class="toolbar-title">Process filters</p>
-                <p class="toolbar-copy">A lightweight process registry linked to existing IMS records.</p>
+                <p class="toolbar-title">{{ t('processRegister.list.filtersTitle') }}</p>
+                <p class="toolbar-copy">{{ t('processRegister.list.copy') }}</p>
               </div>
               <div class="toolbar-stats">
-                <article class="toolbar-stat"><span>Total</span><strong>{{ processes().length }}</strong></article>
-                <article class="toolbar-stat"><span>Active</span><strong>{{ activeCount() }}</strong></article>
-                <article class="toolbar-stat"><span>Archived</span><strong>{{ archivedCount() }}</strong></article>
+                <article class="toolbar-stat"><span>{{ t('processRegister.list.stats.total') }}</span><strong>{{ processes().length }}</strong></article>
+                <article class="toolbar-stat"><span>{{ t('processRegister.list.stats.active') }}</span><strong>{{ activeCount() }}</strong></article>
+                <article class="toolbar-stat"><span>{{ t('processRegister.list.stats.archived') }}</span><strong>{{ archivedCount() }}</strong></article>
               </div>
             </div>
 
             <div class="filter-row standard-filter-grid">
               <label class="field compact-field search-field">
-                <span>Search</span>
-                <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Reference, process, department">
+                <span>{{ t('processRegister.list.filters.search') }}</span>
+                <input [value]="search()" (input)="search.set(readInputValue($event))" [placeholder]="t('processRegister.list.placeholders.search')">
               </label>
               <label class="field compact-field">
-                <span>Status</span>
+                <span>{{ t('processRegister.list.filters.status') }}</span>
                 <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
-                  <option value="">All</option>
-                  <option value="ACTIVE">Active</option>
-                  <option value="ARCHIVED">Archived</option>
+                  <option value="">{{ t('processRegister.list.filters.all') }}</option>
+                  <option value="ACTIVE">{{ t('processRegister.status.ACTIVE') }}</option>
+                  <option value="ARCHIVED">{{ t('processRegister.status.ARCHIVED') }}</option>
                 </select>
               </label>
               <label class="field compact-field">
-                <span>Owner</span>
+                <span>{{ t('processRegister.list.filters.owner') }}</span>
                 <select [value]="ownerFilter()" (change)="ownerFilter.set(readSelectValue($event))">
-                  <option value="">All</option>
+                  <option value="">{{ t('processRegister.list.filters.all') }}</option>
                   <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
                 </select>
               </label>
@@ -102,19 +103,19 @@ type ReturnNavigation = { route: string[]; label: string };
 
           <p class="feedback top-space" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
-          <div class="empty-state top-space" *ngIf="loading()"><strong>Loading process register</strong><span>Refreshing process definitions and linked record counts.</span></div>
-          <div class="empty-state top-space" *ngIf="!loading() && !filteredProcesses().length"><strong>No processes found</strong><span>Create the first process record to start using this register.</span></div>
+          <div class="empty-state top-space" *ngIf="loading()"><strong>{{ t('processRegister.list.loadingTitle') }}</strong><span>{{ t('processRegister.list.loadingCopy') }}</span></div>
+          <div class="empty-state top-space" *ngIf="!loading() && !filteredProcesses().length"><strong>{{ t('processRegister.list.emptyTitle') }}</strong><span>{{ t('processRegister.list.emptyCopy') }}</span></div>
 
           <div class="data-table-wrap top-space" *ngIf="!loading() && filteredProcesses().length">
             <table class="data-table">
               <thead>
-                <tr><th>Process</th><th>Owner</th><th>Status</th><th>Links</th><th>Updated</th></tr>
+                <tr><th>{{ t('processRegister.list.table.process') }}</th><th>{{ t('processRegister.list.table.owner') }}</th><th>{{ t('processRegister.list.table.status') }}</th><th>{{ t('processRegister.list.table.links') }}</th><th>{{ t('processRegister.list.table.updated') }}</th></tr>
               </thead>
               <tbody>
                 <tr *ngFor="let item of filteredProcesses()" [routerLink]="['/process-register', item.id]">
-                  <td><div class="table-title"><strong>{{ item.referenceNo || 'Uncoded' }} - {{ item.name }}</strong><small>{{ item.department || 'No department set' }}</small></div></td>
-                  <td>{{ item.owner ? personName(item.owner) : 'Unassigned' }}</td>
-                  <td><span class="status-badge" [ngClass]="item.status === 'ACTIVE' ? 'success' : 'neutral'">{{ item.status | titlecase }}</span></td>
+                  <td><div class="table-title"><strong>{{ item.referenceNo || t('processRegister.list.uncoded') }} - {{ item.name }}</strong><small>{{ item.department || t('processRegister.list.noDepartment') }}</small></div></td>
+                  <td>{{ item.owner ? personName(item.owner) : t('processRegister.common.unassigned') }}</td>
+                  <td><span class="status-badge" [ngClass]="item.status === 'ACTIVE' ? 'success' : 'neutral'">{{ statusLabel(item.status) }}</span></td>
                   <td>{{ item.linkCount || 0 }}</td>
                   <td>{{ item.updatedAt | date:'yyyy-MM-dd HH:mm' }}</td>
                 </tr>
@@ -129,12 +130,12 @@ type ReturnNavigation = { route: string[]; label: string };
           <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
           <section class="feedback next-steps-banner success" *ngIf="mode() === 'edit' && message() && !error()">
             <strong>{{ message() }}</strong>
-            <span>{{ processNextStepsCopy() }}</span>
-            <div class="button-row top-space">
-              <a *ngIf="selectedId()" [routerLink]="['/process-register', selectedId()]" class="button-link secondary">Review process</a>
-              <a routerLink="/process-register" class="button-link tertiary">Review register</a>
-            </div>
-          </section>
+                <span>{{ processNextStepsCopy() }}</span>
+                <div class="button-row top-space">
+                  <a *ngIf="selectedId()" [routerLink]="['/process-register', selectedId()]" class="button-link secondary">{{ t('processRegister.actions.reviewProcess') }}</a>
+                  <a routerLink="/process-register" class="button-link tertiary">{{ t('processRegister.actions.reviewRegister') }}</a>
+                </div>
+              </section>
 
           <section class="detail-section" *ngIf="mode() === 'create' && processTemplates().length">
             <h4>How do you want to start?</h4>
@@ -468,6 +469,7 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly contentLibrary = inject(ContentLibraryService);
+  private readonly i18n = inject(I18nService);
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -537,65 +539,35 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
 
   protected canWrite() { return this.authStore.hasPermission('processes.write'); }
   protected canDelete() { return this.authStore.hasPermission('admin.delete'); }
+  protected t(key: string, params?: Record<string, unknown>) { return this.i18n.t(key, params); }
   protected personName(user: UserSummary) { return `${user.firstName} ${user.lastName}`.trim(); }
   protected readInputValue(event: Event) { return (event.target as HTMLInputElement).value; }
   protected readSelectValue(event: Event) { return (event.target as HTMLSelectElement).value; }
   protected prettyStatus(value?: string | null) { return value ? value.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : ''; }
-  protected linkTypeLabel(type: LinkType) { return { DOCUMENT: 'Document', RISK: 'Risk', AUDIT: 'Audit', KPI: 'KPI', ACTION: 'Action', NCR: 'NCR', CONTEXT_ISSUE: 'Context issue' }[type]; }
-  protected sectionTitle(type: LinkType) { return { DOCUMENT: 'Linked Documents', RISK: 'Linked Risks', AUDIT: 'Linked Audits', KPI: 'Linked KPIs', ACTION: 'Linked Actions', NCR: 'Linked NCR / Issues', CONTEXT_ISSUE: 'Linked Context Issues' }[type]; }
+  protected statusLabel(status: ProcessStatus) { return this.t(`processRegister.status.${status}`); }
+  protected linkTypeLabel(type: LinkType) { return this.t(`processRegister.linkTypes.${type}`); }
+  protected sectionTitle(type: LinkType) { return this.t(`processRegister.sections.${type}.title`); }
   protected sectionDescription(type: LinkType) {
-    return {
-      DOCUMENT: 'Controlled documents that define or support this process.',
-      RISK: 'Risk records currently associated with this process.',
-      AUDIT: 'Audits that evaluate how this process is working.',
-      KPI: 'Performance indicators used to monitor this process.',
-      ACTION: 'Actions that are already being tracked elsewhere in the IMS.',
-      NCR: 'Nonconformances or issues raised against this process.',
-      CONTEXT_ISSUE: 'Internal or external issues from Clause 4 that influence this process.'
-    }[type];
+    return this.t(`processRegister.sections.${type}.copy`);
   }
   protected sectionEmptyTitle(type: LinkType) {
-    return {
-      DOCUMENT: 'No documents linked',
-      RISK: 'No risks linked',
-      AUDIT: 'No audits linked',
-      KPI: 'No KPIs linked',
-      ACTION: 'No actions linked',
-      NCR: 'No NCRs linked',
-      CONTEXT_ISSUE: 'No context issues linked'
-    }[type];
+    return this.t(`processRegister.sections.${type}.emptyTitle`);
   }
   protected sectionEmptyCopy(type: LinkType) {
-    return {
-      DOCUMENT: 'Link existing controlled documents to keep process context visible here.',
-      RISK: 'Link existing risks to show where this process is exposed.',
-      AUDIT: 'Link relevant audits so assurance activity is visible in one place.',
-      KPI: 'Link KPIs if you want to monitor this process from the register.',
-      ACTION: 'Link actions already tracked in the global action register.',
-      NCR: 'Link related nonconformances or issues for process-level visibility.',
-      CONTEXT_ISSUE: 'Link internal or external issues so process context is visible here.'
-    }[type];
+    return this.t(`processRegister.sections.${type}.emptyCopy`);
   }
   protected sectionPickerLabel(type: LinkType) {
-    return {
-      DOCUMENT: 'Document',
-      RISK: 'Risk',
-      AUDIT: 'Audit',
-      KPI: 'KPI',
-      ACTION: 'Action',
-      NCR: 'NCR / Issue',
-      CONTEXT_ISSUE: 'Context issue'
-    }[type];
+    return this.t(`processRegister.sectionPicker.${type}`);
   }
   protected processNextStepsCopy() {
     const process = this.selectedProcess();
     if (!process) {
-      return 'Next: review the saved process and start linking the existing IMS records that belong to it.';
+      return this.t('processRegister.nextSteps.noneSelected');
     }
     if (process.links?.length) {
-      return 'Next: review the linked records and add any missing risks, audits, documents, NCRs, actions, or context issues.';
+      return this.t('processRegister.nextSteps.hasLinks');
     }
-    return 'Next: link the first related record so this process becomes a useful hub instead of a standalone definition.';
+    return this.t('processRegister.nextSteps.noLinks');
   }
   protected hasMeaningfulText(value?: string | null) {
     return !!(value || '').trim();
@@ -603,22 +575,22 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
   protected processDefinitionGuidance() {
     const raw = this.form.getRawValue();
     if (raw.ownerUserId && this.hasMeaningfulText(raw.purpose) && this.hasMeaningfulText(raw.inputsText) && this.hasMeaningfulText(raw.outputsText)) {
-      return 'The process definition is taking shape as a controlled record with ownership and clear interfaces.';
+      return this.t('processRegister.guidance.definitionReady');
     }
-    return 'A useful process record should show who owns it, why it exists, and what inputs and outputs define the interface.';
+    return this.t('processRegister.guidance.definitionNeeded');
   }
   protected processAssuranceNarrative() {
     const process = this.selectedProcess();
     if (!process) {
-      return 'Save the process first, then link the risks, audits, documents, and actions that provide assurance around it.';
+      return this.t('processRegister.guidance.assuranceNone');
     }
     if ((process.links?.length || 0) === 0) {
-      return 'This process is defined, but it is not yet supported by linked evidence. Add risks, audits, documents, or NCRs so the process can be reviewed in context.';
+      return this.t('processRegister.guidance.assuranceNoLinks');
     }
     if (!this.linkCountByType('RISK') || !this.linkCountByType('DOCUMENT')) {
-      return 'The process already has some linkage, but it would benefit from both risk visibility and document control evidence.';
+      return this.t('processRegister.guidance.assurancePartial');
     }
-    return 'This process already has linked assurance records, making it more useful for audit and management review.';
+    return this.t('processRegister.guidance.assuranceReady');
   }
   protected processTemplates() {
     return this.library()?.processRegister.templates ?? [];
@@ -678,31 +650,31 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
 
   protected packageTierLabel(packageTier: TenantPackageTier) {
     return {
-      ASSURANCE: 'Assurance',
-      CORE_IMS: 'Core IMS',
-      QHSE_PRO: 'QHSE Pro'
+      ASSURANCE: this.t('packages.assurance'),
+      CORE_IMS: this.t('packages.coreIms'),
+      QHSE_PRO: this.t('packages.qhsePro')
     }[packageTier];
   }
 
   protected pageTitle() {
-    return { list: 'Process register', create: 'Create process', detail: this.selectedProcess()?.name || 'Process detail', edit: this.selectedProcess()?.name || 'Edit process' }[this.mode()];
+    return { list: this.t('processRegister.page.titles.list'), create: this.t('processRegister.page.titles.create'), detail: this.selectedProcess()?.name || this.t('processRegister.page.titles.detail'), edit: this.selectedProcess()?.name || this.t('processRegister.page.titles.edit') }[this.mode()];
   }
 
   protected pageDescription() {
     return {
-      list: 'A lightweight registry for business processes and their linked IMS records.',
-      create: 'Create a process definition without changing the existing compliance modules.',
-      detail: 'Review ownership, interfaces, and linked records for this process.',
-      edit: 'Update the process definition while keeping linked records in their original modules.'
+      list: this.t('processRegister.page.descriptions.list'),
+      create: this.t('processRegister.page.descriptions.create'),
+      detail: this.t('processRegister.page.descriptions.detail'),
+      edit: this.t('processRegister.page.descriptions.edit')
     }[this.mode()];
   }
 
   protected breadcrumbs() {
-      if (this.mode() === 'list') return [{ label: 'Process Register' }];
-      const base = [{ label: 'Process Register', link: '/process-register' }];
-      if (this.mode() === 'create') return [...base, { label: 'New process' }];
-      if (this.mode() === 'edit') return [...base, { label: this.selectedProcess()?.name || 'Process', link: `/process-register/${this.selectedId()}` }, { label: 'Edit' }];
-      return [...base, { label: this.selectedProcess()?.name || 'Process' }];
+      if (this.mode() === 'list') return [{ label: this.t('processRegister.page.label') }];
+      const base = [{ label: this.t('processRegister.page.label'), link: '/process-register' }];
+      if (this.mode() === 'create') return [...base, { label: this.t('processRegister.breadcrumbs.new') }];
+      if (this.mode() === 'edit') return [...base, { label: this.selectedProcess()?.name || this.t('processRegister.breadcrumbs.record'), link: `/process-register/${this.selectedId()}` }, { label: this.t('processRegister.breadcrumbs.edit') }];
+      return [...base, { label: this.selectedProcess()?.name || this.t('processRegister.breadcrumbs.record') }];
     }
 
     protected showStartHereBackLink() {
@@ -722,8 +694,8 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
   }
 
   protected save() {
-    if (!this.canWrite()) return this.error.set('You do not have permission to edit the process register.');
-    if (this.form.invalid) return this.error.set('Complete the required process fields.');
+    if (!this.canWrite()) return this.error.set(this.t('processRegister.messages.noPermissionWrite'));
+    if (this.form.invalid) return this.error.set(this.t('processRegister.messages.completeRequired'));
     this.saving.set(true);
     this.error.set('');
     const request = this.selectedId()
@@ -732,20 +704,20 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
     request.subscribe({
       next: (process) => {
         this.saving.set(false);
-        this.router.navigate(['/process-register', process.id], { state: { notice: 'Process saved successfully.' } });
+        this.router.navigate(['/process-register', process.id], { state: { notice: this.t('processRegister.messages.saved') } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Process save failed.'));
+        this.error.set(this.readError(error, this.t('processRegister.messages.saveFailed')));
       }
     });
   }
 
   protected archiveProcess() {
-    if (!this.selectedProcess() || !this.canDelete() || !window.confirm(`Archive process "${this.selectedProcess()?.name}"?`)) return;
+    if (!this.selectedProcess() || !this.canDelete() || !window.confirm(this.t('processRegister.messages.archiveConfirm', { name: this.selectedProcess()?.name }))) return;
     this.api.delete<{ success: boolean }>(`process-register/${this.selectedId()}`).subscribe({
-      next: () => this.router.navigate(['/process-register'], { state: { notice: 'Process archived successfully.' } }),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Process archive failed.'))
+      next: () => this.router.navigate(['/process-register'], { state: { notice: this.t('processRegister.messages.archived') } }),
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('processRegister.messages.archiveFailed')))
     });
   }
 
@@ -758,11 +730,11 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
         this.linkForm.patchValue({ linkedId: '', note: '' });
         this.activeLinkComposerType.set(null);
         this.fetchProcess(this.selectedId()!);
-        this.message.set('Linked record added.');
+        this.message.set(this.t('processRegister.messages.linkAdded'));
       },
       error: (error: HttpErrorResponse) => {
         this.linkSaving.set(false);
-        this.error.set(this.readError(error, 'Record link failed.'));
+        this.error.set(this.readError(error, this.t('processRegister.messages.linkFailed')));
       }
     });
   }
@@ -772,9 +744,9 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
     this.api.delete<{ success: boolean }>(`process-register/${this.selectedId()}/links/${linkId}`).subscribe({
       next: () => {
         this.fetchProcess(this.selectedId()!);
-        this.message.set('Linked record removed.');
+        this.message.set(this.t('processRegister.messages.linkRemoved'));
       },
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Link removal failed.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('processRegister.messages.linkRemoveFailed')))
     });
   }
 
@@ -812,7 +784,7 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
       inputsText: template.inputsText,
       outputsText: template.outputsText
     });
-    this.message.set(`Starter applied from ${template.name}. Review and customize the process before saving.`);
+    this.message.set(this.t('processRegister.messages.starterApplied', { name: template.name }));
   }
   protected clearTemplateSelection() {
     this.selectedTemplateId.set('');
@@ -860,7 +832,7 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
     this.loading.set(true);
     this.api.get<ProcessRow[]>('process-register').subscribe({
       next: (items) => { this.loading.set(false); this.processes.set(items); },
-      error: (error: HttpErrorResponse) => { this.loading.set(false); this.error.set(this.readError(error, 'Process register could not be loaded.')); }
+      error: (error: HttpErrorResponse) => { this.loading.set(false); this.error.set(this.readError(error, this.t('processRegister.messages.loadListFailed'))); }
     });
   }
 
@@ -883,7 +855,7 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
         });
         this.loadLinkCandidates(this.linkForm.getRawValue().linkType);
       },
-      error: (error: HttpErrorResponse) => { this.loading.set(false); this.error.set(this.readError(error, 'Process details could not be loaded.')); }
+      error: (error: HttpErrorResponse) => { this.loading.set(false); this.error.set(this.readError(error, this.t('processRegister.messages.loadDetailsFailed'))); }
     });
   }
 
@@ -902,20 +874,20 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
 
   private linkModuleLabel(linkType: LinkType) {
     return {
-      DOCUMENT: 'Documents',
-      RISK: 'Risks',
-      AUDIT: 'Audits',
-      KPI: 'KPIs',
-      ACTION: 'Actions',
-      NCR: 'NCR',
-      CONTEXT_ISSUE: 'Context'
+      DOCUMENT: this.t('shell.nav.documents.label'),
+      RISK: this.t('shell.nav.risks.label'),
+      AUDIT: this.t('shell.nav.audits.label'),
+      KPI: this.t('shell.nav.kpis.label'),
+      ACTION: this.t('shell.nav.actions.label'),
+      NCR: this.t('shell.nav.ncr.label'),
+      CONTEXT_ISSUE: this.t('shell.nav.context.label')
     }[linkType];
   }
 
   private loadOwners() {
     this.api.get<UserSummary[]>('users').subscribe({
       next: (users) => this.owners.set(users),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Process owners could not be loaded.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('processRegister.messages.loadOwnersFailed')))
     });
   }
 
@@ -950,7 +922,7 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
       case 'KPI': return item.name;
       case 'ACTION': return item.title;
       case 'NCR': return `${item.referenceNo} - ${item.title}`;
-      case 'CONTEXT_ISSUE': return `${item.type === 'INTERNAL' ? 'Internal' : 'External'} - ${item.title}`;
+      case 'CONTEXT_ISSUE': return `${item.type === 'INTERNAL' ? this.t('processRegister.candidate.internal') : this.t('processRegister.candidate.external')} - ${item.title}`;
     }
   }
 

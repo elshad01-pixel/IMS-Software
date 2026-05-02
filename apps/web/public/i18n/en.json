@@ -1523,6 +1523,329 @@
       "deleteFailed": "Action deletion failed."
     }
   },
+  "training": {
+    "page": {
+      "label": "Training",
+      "titles": {
+        "list": "Training courses",
+        "create": "Create training course",
+        "detail": "Training detail",
+        "edit": "Edit training course"
+      },
+      "descriptions": {
+        "list": "A focused training list for course setup, due dates, and completion progress.",
+        "create": "Create a course in a dedicated page instead of mixing course setup with assignments.",
+        "detail": "Review assignments, completion, and evidence in one clean course detail page.",
+        "edit": "Update the course definition without the noise of assignment management."
+      }
+    },
+    "actions": {
+      "new": "New course",
+      "edit": "Edit course",
+      "backToList": "Back to training",
+      "save": "Save course",
+      "saving": "Saving..."
+    },
+    "breadcrumbs": {
+      "new": "New course",
+      "record": "Course",
+      "edit": "Edit"
+    },
+    "common": {
+      "unassigned": "Unassigned",
+      "unspecified": "Unspecified",
+      "open": "Open"
+    },
+    "status": {
+      "ASSIGNED": "Assigned",
+      "IN_PROGRESS": "In progress",
+      "COMPLETED": "Completed",
+      "OVERDUE": "Overdue"
+    },
+    "list": {
+      "title": "Training courses",
+      "copy": "A focused list of courses with delivery method, due date, and overall completion.",
+      "loading": "Loading courses...",
+      "table": {
+        "title": "Title",
+        "method": "Method",
+        "due": "Due",
+        "completion": "Completion",
+        "followUp": "Follow-up"
+      }
+    },
+    "form": {
+      "createTitle": "Create course",
+      "editTitle": "Edit course",
+      "copy": "Keep the course definition separate from assignments and completion evidence.",
+      "guidanceTitle": "Competence planning",
+      "guidanceCopy": "Define the expected audience, delivery method, and due date so the course can be assigned and later evidenced as completed.",
+      "guidanceNote": "Training becomes audit-ready when assignment records clearly show due date, completion status, and evidence summary by person.",
+      "fields": {
+        "title": "Title",
+        "audience": "Audience",
+        "deliveryMethod": "Delivery method",
+        "description": "Description",
+        "owner": "Course owner",
+        "dueDate": "Course due date"
+      },
+      "placeholders": {
+        "title": "Internal auditor awareness",
+        "audience": "Quality team",
+        "deliveryMethod": "Workshop",
+        "description": "Course scope and expected competence"
+      }
+    },
+    "detail": {
+      "audienceNotSet": "Audience not set",
+      "completeSuffix": "complete",
+      "noDescription": "No description provided.",
+      "summary": {
+        "assigned": "Assigned",
+        "inProgress": "In progress",
+        "completed": "Completed",
+        "overdue": "Overdue"
+      },
+      "fields": {
+        "description": "Description",
+        "deliveryMethod": "Delivery method",
+        "dueDate": "Due date"
+      }
+    },
+    "assignments": {
+      "title": "Assignments",
+      "copy": "Assign training, track completion, and keep evidence of competence by user.",
+      "selectUser": "Select user",
+      "duePrefix": "due",
+      "assignAction": "Assign training",
+      "markComplete": "Mark complete",
+      "completedAction": "Completed",
+      "formNote": "When an assignment is marked complete, the evidence summary should explain what demonstrated competence: attendance, test result, observation, or signed record.",
+      "fields": {
+        "user": "User",
+        "dueDate": "Due date",
+        "status": "Status",
+        "notes": "Notes",
+        "evidenceSummary": "Evidence summary"
+      },
+      "placeholders": {
+        "notes": "Assignment notes",
+        "evidenceSummary": "Completion evidence or notes"
+      }
+    },
+    "followUp": {
+      "complete": "Complete",
+      "overdue": "Overdue follow-up",
+      "evidenceInProgress": "Evidence in progress",
+      "assignmentsOpen": "Assignments open",
+      "assignLearners": "Assign learners"
+    },
+    "readiness": {
+      "headlineDefault": "Training follow-up",
+      "headlineComplete": "Training completion is evidenced",
+      "headlineOverdue": "Training follow-up is overdue",
+      "headlineGathering": "Competence evidence is still being gathered",
+      "headlineAssigned": "Assignments are in place",
+      "narrativeDefault": "Assignments and evidence will appear once the course is saved.",
+      "narrativeComplete": "All current assignments are complete. Keep the evidence summaries clear enough to demonstrate competence during review or audit.",
+      "narrativeOverdue": "At least one learner is past due. Management follow-up should confirm whether the course is delayed, reassigned, or needs additional support.",
+      "narrativeGathering": "Learners are progressing through the course, but the record still needs completion evidence before competence can be treated as verified.",
+      "narrativeAssigned": "The course is defined, but ongoing evidence depends on assigning people and maintaining assignment updates.",
+      "hintDefault": "Save the course first, then assign people and record their evidence of completion.",
+      "hintComplete": "Next step: keep refresher timing and reassignment under control if this competence needs periodic renewal.",
+      "hintOverdue": "Next step: review the overdue learners and update due dates or status before the record falls behind further.",
+      "hintAssigned": "Next step: keep assignment notes and evidence summaries current so auditors can see how competence was confirmed."
+    },
+    "assignmentGuidance": {
+      "overdue": "Assignment is overdue. Update the learner status or due date and record the current follow-up.",
+      "completed": "Completion should be supported by a short evidence summary.",
+      "inProgress": "Record how the learner is progressing and what evidence is still expected.",
+      "assigned": "Assignment created. Add evidence once the learner completes the course."
+    },
+    "messages": {
+      "completeRequired": "Complete the required training fields.",
+      "saved": "Training course saved successfully.",
+      "saveFailed": "Training save failed.",
+      "assignmentAdded": "Training assignment added.",
+      "assignmentSaveFailed": "Training assignment save failed.",
+      "completedAndVerified": "Completed and verified",
+      "assignmentCompleted": "Training assignment completed.",
+      "assignmentUpdateFailed": "Training assignment update failed.",
+      "loadDetailsFailed": "Training details could not be loaded.",
+      "loadListFailed": "Training courses could not be loaded."
+    }
+  },
+  "packages": {
+    "assurance": "Assurance",
+    "coreIms": "Core IMS",
+    "qhsePro": "QHSE Pro"
+  },
+  "processRegister": {
+    "page": {
+      "label": "Process Register",
+      "titles": {
+        "list": "Process register",
+        "create": "Create process",
+        "detail": "Process detail",
+        "edit": "Edit process"
+      },
+      "descriptions": {
+        "list": "A lightweight registry for business processes and their linked IMS records.",
+        "create": "Create a process definition without changing the existing compliance modules.",
+        "detail": "Review ownership, interfaces, and linked records for this process.",
+        "edit": "Update the process definition while keeping linked records in their original modules."
+      }
+    },
+    "actions": {
+      "backToStartHere": "Back to Start Here",
+      "new": "New process",
+      "edit": "Edit process",
+      "archive": "Archive",
+      "back": "Back",
+      "backToLabel": "Back to {{label}}",
+      "reviewProcess": "Review process",
+      "reviewRegister": "Review register"
+    },
+    "breadcrumbs": {
+      "new": "New process",
+      "record": "Process",
+      "edit": "Edit"
+    },
+    "common": {
+      "unassigned": "Unassigned"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "ARCHIVED": "Archived"
+    },
+    "list": {
+      "filtersTitle": "Process filters",
+      "copy": "A lightweight process registry linked to existing IMS records.",
+      "stats": {
+        "total": "Total",
+        "active": "Active",
+        "archived": "Archived"
+      },
+      "filters": {
+        "search": "Search",
+        "status": "Status",
+        "owner": "Owner",
+        "all": "All"
+      },
+      "placeholders": {
+        "search": "Reference, process, department"
+      },
+      "loadingTitle": "Loading process register",
+      "loadingCopy": "Refreshing process definitions and linked record counts.",
+      "emptyTitle": "No processes found",
+      "emptyCopy": "Create the first process record to start using this register.",
+      "table": {
+        "process": "Process",
+        "owner": "Owner",
+        "status": "Status",
+        "links": "Links",
+        "updated": "Updated"
+      },
+      "uncoded": "Uncoded",
+      "noDepartment": "No department set"
+    },
+    "linkTypes": {
+      "DOCUMENT": "Document",
+      "RISK": "Risk",
+      "AUDIT": "Audit",
+      "KPI": "KPI",
+      "ACTION": "Action",
+      "NCR": "NCR",
+      "CONTEXT_ISSUE": "Context issue"
+    },
+    "sectionPicker": {
+      "DOCUMENT": "Document",
+      "RISK": "Risk",
+      "AUDIT": "Audit",
+      "KPI": "KPI",
+      "ACTION": "Action",
+      "NCR": "NCR / Issue",
+      "CONTEXT_ISSUE": "Context issue"
+    },
+    "sections": {
+      "DOCUMENT": {
+        "title": "Linked Documents",
+        "copy": "Controlled documents that define or support this process.",
+        "emptyTitle": "No documents linked",
+        "emptyCopy": "Link existing controlled documents to keep process context visible here."
+      },
+      "RISK": {
+        "title": "Linked Risks",
+        "copy": "Risk records currently associated with this process.",
+        "emptyTitle": "No risks linked",
+        "emptyCopy": "Link existing risks to show where this process is exposed."
+      },
+      "AUDIT": {
+        "title": "Linked Audits",
+        "copy": "Audits that evaluate how this process is working.",
+        "emptyTitle": "No audits linked",
+        "emptyCopy": "Link relevant audits so assurance activity is visible in one place."
+      },
+      "KPI": {
+        "title": "Linked KPIs",
+        "copy": "Performance indicators used to monitor this process.",
+        "emptyTitle": "No KPIs linked",
+        "emptyCopy": "Link KPIs if you want to monitor this process from the register."
+      },
+      "ACTION": {
+        "title": "Linked Actions",
+        "copy": "Actions that are already being tracked elsewhere in the IMS.",
+        "emptyTitle": "No actions linked",
+        "emptyCopy": "Link actions already tracked in the global action register."
+      },
+      "NCR": {
+        "title": "Linked NCR / Issues",
+        "copy": "Nonconformances or issues raised against this process.",
+        "emptyTitle": "No NCRs linked",
+        "emptyCopy": "Link related nonconformances or issues for process-level visibility."
+      },
+      "CONTEXT_ISSUE": {
+        "title": "Linked Context Issues",
+        "copy": "Internal or external issues from Clause 4 that influence this process.",
+        "emptyTitle": "No context issues linked",
+        "emptyCopy": "Link internal or external issues so process context is visible here."
+      }
+    },
+    "nextSteps": {
+      "noneSelected": "Next: review the saved process and start linking the existing IMS records that belong to it.",
+      "hasLinks": "Next: review the linked records and add any missing risks, audits, documents, NCRs, actions, or context issues.",
+      "noLinks": "Next: link the first related record so this process becomes a useful hub instead of a standalone definition."
+    },
+    "guidance": {
+      "definitionReady": "The process definition is taking shape as a controlled record with ownership and clear interfaces.",
+      "definitionNeeded": "A useful process record should show who owns it, why it exists, and what inputs and outputs define the interface.",
+      "assuranceNone": "Save the process first, then link the risks, audits, documents, and actions that provide assurance around it.",
+      "assuranceNoLinks": "This process is defined, but it is not yet supported by linked evidence. Add risks, audits, documents, or NCRs so the process can be reviewed in context.",
+      "assurancePartial": "The process already has some linkage, but it would benefit from both risk visibility and document control evidence.",
+      "assuranceReady": "This process already has linked assurance records, making it more useful for audit and management review."
+    },
+    "candidate": {
+      "internal": "Internal",
+      "external": "External"
+    },
+    "messages": {
+      "noPermissionWrite": "You do not have permission to edit the process register.",
+      "completeRequired": "Complete the required process fields.",
+      "saved": "Process saved successfully.",
+      "saveFailed": "Process save failed.",
+      "archiveConfirm": "Archive process \"{{name}}\"?",
+      "archived": "Process archived successfully.",
+      "archiveFailed": "Process archive failed.",
+      "linkAdded": "Linked record added.",
+      "linkFailed": "Record link failed.",
+      "linkRemoved": "Linked record removed.",
+      "linkRemoveFailed": "Link removal failed.",
+      "starterApplied": "Starter applied from {{name}}. Review and customize the process before saving.",
+      "loadListFailed": "Process register could not be loaded.",
+      "loadDetailsFailed": "Process details could not be loaded.",
+      "loadOwnersFailed": "Process owners could not be loaded."
+    }
+  },
   "managementReview": {
     "page": {
       "label": "Management Review",

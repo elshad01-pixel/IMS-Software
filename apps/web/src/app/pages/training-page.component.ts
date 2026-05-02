@@ -4,6 +4,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
+import { I18nService } from '../core/i18n.service';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
 type PageMode = 'list' | 'create' | 'detail' | 'edit';
@@ -46,41 +47,41 @@ type TrainingRecord = {
   template: `
     <section class="page-grid">
       <iso-page-header
-        [label]="'Training'"
+        [label]="t('training.page.label')"
         [title]="pageTitle()"
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
       >
-        <a *ngIf="mode() === 'list'" routerLink="/training/new" class="button-link">+ New course</a>
-        <a *ngIf="mode() === 'detail' && selectedTraining()" [routerLink]="['/training', selectedTraining()?.id, 'edit']" class="button-link">Edit course</a>
-        <a *ngIf="mode() !== 'list'" routerLink="/training" class="button-link secondary">Back to training</a>
+        <a *ngIf="mode() === 'list'" routerLink="/training/new" class="button-link">+ {{ t('training.actions.new') }}</a>
+        <a *ngIf="mode() === 'detail' && selectedTraining()" [routerLink]="['/training', selectedTraining()?.id, 'edit']" class="button-link">{{ t('training.actions.edit') }}</a>
+        <a *ngIf="mode() !== 'list'" routerLink="/training" class="button-link secondary">{{ t('training.actions.backToList') }}</a>
       </iso-page-header>
 
       <section *ngIf="mode() === 'list'" class="page-stack">
         <div class="card list-card">
           <div class="section-head">
             <div>
-              <h3>Training courses</h3>
-              <p class="subtle">A focused list of courses with delivery method, due date, and overall completion.</p>
+              <h3>{{ t('training.list.title') }}</h3>
+              <p class="subtle">{{ t('training.list.copy') }}</p>
             </div>
           </div>
 
-          <div class="empty-state" *ngIf="loading()">Loading courses...</div>
+          <div class="empty-state" *ngIf="loading()">{{ t('training.list.loading') }}</div>
           <table class="data-table" *ngIf="!loading()">
             <thead>
               <tr>
-                <th>Title</th>
-                <th>Method</th>
-                <th>Due</th>
-                <th>Completion</th>
-                <th>Follow-up</th>
+                <th>{{ t('training.list.table.title') }}</th>
+                <th>{{ t('training.list.table.method') }}</th>
+                <th>{{ t('training.list.table.due') }}</th>
+                <th>{{ t('training.list.table.completion') }}</th>
+                <th>{{ t('training.list.table.followUp') }}</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let item of trainings()" [routerLink]="['/training', item.id]">
                 <td><strong>{{ item.title }}</strong></td>
-                <td>{{ item.deliveryMethod || 'Unspecified' }}</td>
-                <td>{{ item.dueDate ? (item.dueDate | date:'yyyy-MM-dd') : 'Open' }}</td>
+                <td>{{ item.deliveryMethod || t('training.common.unspecified') }}</td>
+                <td>{{ item.dueDate ? (item.dueDate | date:'yyyy-MM-dd') : t('training.common.open') }}</td>
                 <td>{{ item.completion | number:'1.0-0' }}%</td>
                 <td>{{ trainingFollowUpLabel(item) }}</td>
               </tr>
@@ -93,39 +94,39 @@ type TrainingRecord = {
         <form class="card form-card page-stack" [formGroup]="trainingForm" (ngSubmit)="saveTraining()">
           <div class="section-head">
             <div>
-              <h3>{{ mode() === 'create' ? 'Create course' : 'Edit course' }}</h3>
-              <p class="subtle">Keep the course definition separate from assignments and completion evidence.</p>
+              <h3>{{ mode() === 'create' ? t('training.form.createTitle') : t('training.form.editTitle') }}</h3>
+              <p class="subtle">{{ t('training.form.copy') }}</p>
             </div>
           </div>
 
           <p class="feedback" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
           <section class="guidance-card">
-            <strong>Competence planning</strong>
-            <p>Define the expected audience, delivery method, and due date so the course can be assigned and later evidenced as completed.</p>
-            <small>Training becomes audit-ready when assignment records clearly show due date, completion status, and evidence summary by person.</small>
+            <strong>{{ t('training.form.guidanceTitle') }}</strong>
+            <p>{{ t('training.form.guidanceCopy') }}</p>
+            <small>{{ t('training.form.guidanceNote') }}</small>
           </section>
 
-          <label class="field"><span>Title</span><input formControlName="title" placeholder="Internal auditor awareness"></label>
+          <label class="field"><span>{{ t('training.form.fields.title') }}</span><input formControlName="title" [placeholder]="t('training.form.placeholders.title')"></label>
           <div class="form-grid-2">
-            <label class="field"><span>Audience</span><input formControlName="audience" placeholder="Quality team"></label>
-            <label class="field"><span>Delivery method</span><input formControlName="deliveryMethod" placeholder="Workshop"></label>
+            <label class="field"><span>{{ t('training.form.fields.audience') }}</span><input formControlName="audience" [placeholder]="t('training.form.placeholders.audience')"></label>
+            <label class="field"><span>{{ t('training.form.fields.deliveryMethod') }}</span><input formControlName="deliveryMethod" [placeholder]="t('training.form.placeholders.deliveryMethod')"></label>
           </div>
-          <label class="field"><span>Description</span><textarea rows="3" formControlName="description" placeholder="Course scope and expected competence"></textarea></label>
+          <label class="field"><span>{{ t('training.form.fields.description') }}</span><textarea rows="3" formControlName="description" [placeholder]="t('training.form.placeholders.description')"></textarea></label>
           <div class="form-grid-2">
             <label class="field">
-              <span>Course owner</span>
+              <span>{{ t('training.form.fields.owner') }}</span>
               <select formControlName="ownerId">
-                <option value="">Unassigned</option>
+                <option value="">{{ t('training.common.unassigned') }}</option>
                 <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
               </select>
             </label>
-            <label class="field"><span>Course due date</span><input type="date" formControlName="dueDate"></label>
+            <label class="field"><span>{{ t('training.form.fields.dueDate') }}</span><input type="date" formControlName="dueDate"></label>
           </div>
 
           <div class="button-row">
-            <button type="submit" [disabled]="trainingForm.invalid || saving()">{{ saving() ? 'Saving...' : 'Save course' }}</button>
-            <a [routerLink]="selectedId() ? ['/training', selectedId()] : ['/training']" class="button-link secondary">Cancel</a>
+            <button type="submit" [disabled]="trainingForm.invalid || saving()">{{ saving() ? t('training.actions.saving') : t('training.actions.save') }}</button>
+            <a [routerLink]="selectedId() ? ['/training', selectedId()] : ['/training']" class="button-link secondary">{{ t('common.cancel') }}</a>
           </div>
         </form>
 
@@ -137,26 +138,26 @@ type TrainingRecord = {
             <div class="section-head">
               <div>
                 <h3>{{ selectedTraining()?.title }}</h3>
-                <p class="subtle">{{ selectedTraining()?.audience || 'Audience not set' }}</p>
+                <p class="subtle">{{ selectedTraining()?.audience || t('training.detail.audienceNotSet') }}</p>
               </div>
-              <span class="status-badge success">{{ selectedTraining()?.completion | number:'1.0-0' }}% complete</span>
+              <span class="status-badge success">{{ selectedTraining()?.completion | number:'1.0-0' }}% {{ t('training.detail.completeSuffix') }}</span>
             </div>
 
             <section class="summary-strip top-space">
               <article class="summary-item">
-                <span>Assigned</span>
+                <span>{{ t('training.detail.summary.assigned') }}</span>
                 <strong>{{ assignmentCount('ASSIGNED') }}</strong>
               </article>
               <article class="summary-item">
-                <span>In progress</span>
+                <span>{{ t('training.detail.summary.inProgress') }}</span>
                 <strong>{{ assignmentCount('IN_PROGRESS') }}</strong>
               </article>
               <article class="summary-item">
-                <span>Completed</span>
+                <span>{{ t('training.detail.summary.completed') }}</span>
                 <strong>{{ assignmentCount('COMPLETED') }}</strong>
               </article>
               <article class="summary-item">
-                <span>Overdue</span>
+                <span>{{ t('training.detail.summary.overdue') }}</span>
                 <strong>{{ overdueAssignmentCount() }}</strong>
               </article>
             </section>
@@ -168,46 +169,46 @@ type TrainingRecord = {
             </section>
 
             <dl class="key-value top-space">
-              <dt>Description</dt>
-              <dd>{{ selectedTraining()?.description || 'No description provided.' }}</dd>
-              <dt>Delivery method</dt>
-              <dd>{{ selectedTraining()?.deliveryMethod || 'Not set' }}</dd>
-              <dt>Due date</dt>
-              <dd>{{ selectedTraining()?.dueDate ? (selectedTraining()?.dueDate | date:'yyyy-MM-dd') : 'Open' }}</dd>
+              <dt>{{ t('training.detail.fields.description') }}</dt>
+              <dd>{{ selectedTraining()?.description || t('training.detail.noDescription') }}</dd>
+              <dt>{{ t('training.detail.fields.deliveryMethod') }}</dt>
+              <dd>{{ selectedTraining()?.deliveryMethod || t('common.notSet') }}</dd>
+              <dt>{{ t('training.detail.fields.dueDate') }}</dt>
+              <dd>{{ selectedTraining()?.dueDate ? (selectedTraining()?.dueDate | date:'yyyy-MM-dd') : t('training.common.open') }}</dd>
             </dl>
           </section>
 
           <section class="card panel-card">
             <div class="section-head">
               <div>
-                <h3>Assignments</h3>
-                <p class="subtle">Assign training, track completion, and keep evidence of competence by user.</p>
+                <h3>{{ t('training.assignments.title') }}</h3>
+                <p class="subtle">{{ t('training.assignments.copy') }}</p>
               </div>
             </div>
 
             <form [formGroup]="assignmentForm" class="page-stack top-space" (ngSubmit)="addAssignment()">
               <div class="form-grid-3">
                 <label class="field">
-                  <span>User</span>
+                  <span>{{ t('training.assignments.fields.user') }}</span>
                   <select formControlName="userId">
-                    <option value="">Select user</option>
+                    <option value="">{{ t('training.assignments.selectUser') }}</option>
                     <option *ngFor="let user of users()" [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
                   </select>
                 </label>
-                <label class="field"><span>Due date</span><input type="date" formControlName="dueDate"></label>
+                <label class="field"><span>{{ t('training.assignments.fields.dueDate') }}</span><input type="date" formControlName="dueDate"></label>
                 <label class="field">
-                  <span>Status</span>
+                  <span>{{ t('training.assignments.fields.status') }}</span>
                   <select formControlName="status">
-                    <option>ASSIGNED</option>
-                    <option>IN_PROGRESS</option>
-                    <option>COMPLETED</option>
+                    <option value="ASSIGNED">{{ statusLabel('ASSIGNED') }}</option>
+                    <option value="IN_PROGRESS">{{ statusLabel('IN_PROGRESS') }}</option>
+                    <option value="COMPLETED">{{ statusLabel('COMPLETED') }}</option>
                   </select>
                 </label>
               </div>
-              <label class="field"><span>Notes</span><textarea rows="2" formControlName="notes" placeholder="Assignment notes"></textarea></label>
-              <label class="field"><span>Evidence summary</span><textarea rows="2" formControlName="evidenceSummary" placeholder="Completion evidence or notes"></textarea></label>
-              <p class="subtle form-note">When an assignment is marked complete, the evidence summary should explain what demonstrated competence: attendance, test result, observation, or signed record.</p>
-              <button type="submit" [disabled]="assignmentForm.invalid || saving()">Assign training</button>
+              <label class="field"><span>{{ t('training.assignments.fields.notes') }}</span><textarea rows="2" formControlName="notes" [placeholder]="t('training.assignments.placeholders.notes')"></textarea></label>
+              <label class="field"><span>{{ t('training.assignments.fields.evidenceSummary') }}</span><textarea rows="2" formControlName="evidenceSummary" [placeholder]="t('training.assignments.placeholders.evidenceSummary')"></textarea></label>
+              <p class="subtle form-note">{{ t('training.assignments.formNote') }}</p>
+              <button type="submit" [disabled]="assignmentForm.invalid || saving()">{{ t('training.assignments.assignAction') }}</button>
             </form>
 
             <div class="entity-list top-space">
@@ -215,10 +216,10 @@ type TrainingRecord = {
                 <div class="section-head">
                   <div>
                     <strong>{{ assignment.user?.firstName }} {{ assignment.user?.lastName }}</strong>
-                    <small>{{ assignment.displayStatus }}{{ assignment.dueDate ? ' | due ' + assignment.dueDate.slice(0, 10) : '' }}</small>
+                    <small>{{ assignmentStatusLine(assignment) }}</small>
                   </div>
                   <button type="button" class="secondary" [disabled]="assignment.status === 'COMPLETED' || saving()" (click)="markAssignmentComplete(assignment)">
-                    {{ assignment.status === 'COMPLETED' ? 'Completed' : 'Mark complete' }}
+                    {{ assignment.status === 'COMPLETED' ? t('training.assignments.completedAction') : t('training.assignments.markComplete') }}
                   </button>
                 </div>
                 <p class="subtle">{{ assignment.evidenceSummary || assignment.notes || assignmentGuidance(assignment) }}</p>
@@ -266,6 +267,7 @@ type TrainingRecord = {
 export class TrainingPageComponent {
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -278,6 +280,10 @@ export class TrainingPageComponent {
   protected readonly saving = signal(false);
   protected readonly message = signal((history.state?.notice as string) || '');
   protected readonly error = signal('');
+
+  protected t(key: string, params?: Record<string, unknown>) {
+    return this.i18n.t(key, params);
+  }
 
   protected readonly trainingForm = this.fb.nonNullable.group({
     title: ['', [Validators.required, Validators.maxLength(160)]],
@@ -307,33 +313,33 @@ export class TrainingPageComponent {
 
   protected pageTitle() {
     return {
-      list: 'Training courses',
-      create: 'Create training course',
-      detail: this.selectedTraining()?.title || 'Training detail',
-      edit: this.selectedTraining()?.title || 'Edit training course'
+      list: this.t('training.page.titles.list'),
+      create: this.t('training.page.titles.create'),
+      detail: this.selectedTraining()?.title || this.t('training.page.titles.detail'),
+      edit: this.selectedTraining()?.title || this.t('training.page.titles.edit')
     }[this.mode()];
   }
 
   protected pageDescription() {
     return {
-      list: 'A focused training list for course setup, due dates, and completion progress.',
-      create: 'Create a course in a dedicated page instead of mixing course setup with assignments.',
-      detail: 'Review assignments, completion, and evidence in one clean course detail page.',
-      edit: 'Update the course definition without the noise of assignment management.'
+      list: this.t('training.page.descriptions.list'),
+      create: this.t('training.page.descriptions.create'),
+      detail: this.t('training.page.descriptions.detail'),
+      edit: this.t('training.page.descriptions.edit')
     }[this.mode()];
   }
 
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: 'Training' }];
-    const base = [{ label: 'Training', link: '/training' }];
-    if (this.mode() === 'create') return [...base, { label: 'New course' }];
-    if (this.mode() === 'edit') return [...base, { label: this.selectedTraining()?.title || 'Course', link: `/training/${this.selectedId()}` }, { label: 'Edit' }];
-    return [...base, { label: this.selectedTraining()?.title || 'Course' }];
+    if (this.mode() === 'list') return [{ label: this.t('training.page.label') }];
+    const base = [{ label: this.t('training.page.label'), link: '/training' }];
+    if (this.mode() === 'create') return [...base, { label: this.t('training.breadcrumbs.new') }];
+    if (this.mode() === 'edit') return [...base, { label: this.selectedTraining()?.title || this.t('training.breadcrumbs.record'), link: `/training/${this.selectedId()}` }, { label: this.t('training.breadcrumbs.edit') }];
+    return [...base, { label: this.selectedTraining()?.title || this.t('training.breadcrumbs.record') }];
   }
 
   protected saveTraining() {
     if (this.trainingForm.invalid) {
-      this.error.set('Complete the required training fields.');
+      this.error.set(this.t('training.messages.completeRequired'));
       return;
     }
 
@@ -358,11 +364,11 @@ export class TrainingPageComponent {
     request.subscribe({
       next: (training) => {
         this.saving.set(false);
-        this.router.navigate(['/training', training.id], { state: { notice: 'Training course saved successfully.' } });
+        this.router.navigate(['/training', training.id], { state: { notice: this.t('training.messages.saved') } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Training save failed.'));
+        this.error.set(this.readError(error, this.t('training.messages.saveFailed')));
       }
     });
   }
@@ -382,14 +388,14 @@ export class TrainingPageComponent {
     }).subscribe({
       next: () => {
         this.saving.set(false);
-        this.message.set('Training assignment added.');
+        this.message.set(this.t('training.messages.assignmentAdded'));
         this.assignmentForm.reset({ userId: '', dueDate: '', status: 'ASSIGNED', notes: '', evidenceSummary: '' });
         this.fetchTraining(this.selectedId() as string);
         this.reload();
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Training assignment save failed.'));
+        this.error.set(this.readError(error, this.t('training.messages.assignmentSaveFailed')));
       }
     });
   }
@@ -398,35 +404,35 @@ export class TrainingPageComponent {
     this.saving.set(true);
     this.api.patch(`training/assignments/${assignment.id}`, {
       status: 'COMPLETED',
-      evidenceSummary: assignment.evidenceSummary || assignment.notes || 'Completed and verified'
+      evidenceSummary: assignment.evidenceSummary || assignment.notes || this.t('training.messages.completedAndVerified')
     }).subscribe({
       next: () => {
         this.saving.set(false);
-        this.message.set('Training assignment completed.');
+        this.message.set(this.t('training.messages.assignmentCompleted'));
         this.fetchTraining(this.selectedId() as string);
         this.reload();
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Training assignment update failed.'));
+        this.error.set(this.readError(error, this.t('training.messages.assignmentUpdateFailed')));
       }
     });
   }
 
   protected trainingFollowUpLabel(training: TrainingRecord) {
     if (training.completion >= 100) {
-      return 'Complete';
+      return this.t('training.followUp.complete');
     }
     if (training.assignments.some((assignment) => assignment.displayStatus === 'OVERDUE')) {
-      return 'Overdue follow-up';
+      return this.t('training.followUp.overdue');
     }
     if (training.assignments.some((assignment) => assignment.status === 'IN_PROGRESS')) {
-      return 'Evidence in progress';
+      return this.t('training.followUp.evidenceInProgress');
     }
     if (training.assignments.length) {
-      return 'Assignments open';
+      return this.t('training.followUp.assignmentsOpen');
     }
-    return 'Assign learners';
+    return this.t('training.followUp.assignLearners');
   }
 
   protected assignmentCount(status: TrainingAssignmentStatus) {
@@ -440,62 +446,77 @@ export class TrainingPageComponent {
   protected trainingReadinessHeadline() {
     const training = this.selectedTraining();
     if (!training) {
-      return 'Training follow-up';
+      return this.t('training.readiness.headlineDefault');
     }
     if (training.completion >= 100) {
-      return 'Training completion is evidenced';
+      return this.t('training.readiness.headlineComplete');
     }
     if (this.overdueAssignmentCount() > 0) {
-      return 'Training follow-up is overdue';
+      return this.t('training.readiness.headlineOverdue');
     }
     if (this.assignmentCount('IN_PROGRESS') > 0) {
-      return 'Competence evidence is still being gathered';
+      return this.t('training.readiness.headlineGathering');
     }
-    return 'Assignments are in place';
+    return this.t('training.readiness.headlineAssigned');
   }
 
   protected trainingReadinessNarrative() {
     const training = this.selectedTraining();
     if (!training) {
-      return 'Assignments and evidence will appear once the course is saved.';
+      return this.t('training.readiness.narrativeDefault');
     }
     if (training.completion >= 100) {
-      return 'All current assignments are complete. Keep the evidence summaries clear enough to demonstrate competence during review or audit.';
+      return this.t('training.readiness.narrativeComplete');
     }
     if (this.overdueAssignmentCount() > 0) {
-      return 'At least one learner is past due. Management follow-up should confirm whether the course is delayed, reassigned, or needs additional support.';
+      return this.t('training.readiness.narrativeOverdue');
     }
     if (this.assignmentCount('IN_PROGRESS') > 0) {
-      return 'Learners are progressing through the course, but the record still needs completion evidence before competence can be treated as verified.';
+      return this.t('training.readiness.narrativeGathering');
     }
-    return 'The course is defined, but ongoing evidence depends on assigning people and maintaining assignment updates.';
+    return this.t('training.readiness.narrativeAssigned');
   }
 
   protected trainingReadinessHint() {
     const training = this.selectedTraining();
     if (!training) {
-      return 'Save the course first, then assign people and record their evidence of completion.';
+      return this.t('training.readiness.hintDefault');
     }
     if (training.completion >= 100) {
-      return 'Next step: keep refresher timing and reassignment under control if this competence needs periodic renewal.';
+      return this.t('training.readiness.hintComplete');
     }
     if (this.overdueAssignmentCount() > 0) {
-      return 'Next step: review the overdue learners and update due dates or status before the record falls behind further.';
+      return this.t('training.readiness.hintOverdue');
     }
-    return 'Next step: keep assignment notes and evidence summaries current so auditors can see how competence was confirmed.';
+    return this.t('training.readiness.hintAssigned');
   }
 
   protected assignmentGuidance(assignment: TrainingAssignment) {
     if (assignment.displayStatus === 'OVERDUE') {
-      return 'Assignment is overdue. Update the learner status or due date and record the current follow-up.';
+      return this.t('training.assignmentGuidance.overdue');
     }
     if (assignment.status === 'COMPLETED') {
-      return 'Completion should be supported by a short evidence summary.';
+      return this.t('training.assignmentGuidance.completed');
     }
     if (assignment.status === 'IN_PROGRESS') {
-      return 'Record how the learner is progressing and what evidence is still expected.';
+      return this.t('training.assignmentGuidance.inProgress');
     }
-    return 'Assignment created. Add evidence once the learner completes the course.';
+    return this.t('training.assignmentGuidance.assigned');
+  }
+
+  protected statusLabel(status: TrainingAssignmentStatus | 'OVERDUE') {
+    if (status === 'OVERDUE') {
+      return this.t('training.status.OVERDUE');
+    }
+    return this.t(`training.status.${status}`);
+  }
+
+  protected assignmentStatusLine(assignment: TrainingAssignment) {
+    const base = this.statusLabel(assignment.displayStatus);
+    if (!assignment.dueDate) {
+      return base;
+    }
+    return `${base} | ${this.t('training.assignments.duePrefix')} ${assignment.dueDate.slice(0, 10)}`;
   }
 
   private handleRoute(params: ParamMap) {
@@ -557,7 +578,7 @@ export class TrainingPageComponent {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Training details could not be loaded.'));
+        this.error.set(this.readError(error, this.t('training.messages.loadDetailsFailed')));
       }
     });
   }
@@ -571,7 +592,7 @@ export class TrainingPageComponent {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Training courses could not be loaded.'));
+        this.error.set(this.readError(error, this.t('training.messages.loadListFailed')));
       }
     });
   }

@@ -1503,6 +1503,329 @@
       "deleteFailed": "Tapşırığı silmək mümkün olmadı."
     }
   },
+  "training": {
+    "page": {
+      "label": "Təlim",
+      "titles": {
+        "list": "Təlim kursları",
+        "create": "Təlim kursu yarat",
+        "detail": "Təlim detalı",
+        "edit": "Təlim kursunu redaktə et"
+      },
+      "descriptions": {
+        "list": "Kurs quruluşu, son tarixlər və tamamlanma irəliləyişi üçün fokuslanmış təlim siyahısı.",
+        "create": "Tapşırıqlarla qarışdırmadan kursu ayrıca səhifədə yaradın.",
+        "detail": "Tapşırıqları, tamamlanmanı və sübutları bir səliqəli kurs detal səhifəsində nəzərdən keçirin.",
+        "edit": "Tapşırıq idarəçiliyinin səs-küyü olmadan kurs tərifini yeniləyin."
+      }
+    },
+    "actions": {
+      "new": "Yeni kurs",
+      "edit": "Kursu redaktə et",
+      "backToList": "Təlimə qayıt",
+      "save": "Kursu yadda saxla",
+      "saving": "Yadda saxlanılır..."
+    },
+    "breadcrumbs": {
+      "new": "Yeni kurs",
+      "record": "Kurs",
+      "edit": "Redaktə et"
+    },
+    "common": {
+      "unassigned": "Təyin edilməyib",
+      "unspecified": "Qeyd edilməyib",
+      "open": "Açıqdır"
+    },
+    "status": {
+      "ASSIGNED": "Təyin edilib",
+      "IN_PROGRESS": "Davam edir",
+      "COMPLETED": "Tamamlanıb",
+      "OVERDUE": "Gecikib"
+    },
+    "list": {
+      "title": "Təlim kursları",
+      "copy": "Tədris üsulu, son tarix və ümumi tamamlanma ilə kursların fokuslanmış siyahısı.",
+      "loading": "Kurslar yüklənir...",
+      "table": {
+        "title": "Başlıq",
+        "method": "Metod",
+        "due": "Son tarix",
+        "completion": "Tamamlanma",
+        "followUp": "İzləmə"
+      }
+    },
+    "form": {
+      "createTitle": "Kurs yarat",
+      "editTitle": "Kursu redaktə et",
+      "copy": "Kurs tərifini tapşırıqlardan və tamamlanma sübutlarından ayrı saxlayın.",
+      "guidanceTitle": "Səriştə planlaşdırılması",
+      "guidanceCopy": "Gözlənilən auditoriyanı, tədris üsulunu və son tarixi müəyyən edin ki, kurs təyin olunsun və sonradan tamamlandığı sübut olunsun.",
+      "guidanceNote": "Tapşırıq qeydləri son tarix, tamamlanma statusu və şəxs üzrə sübut xülasəsini aydın göstərdikdə təlim auditə hazır olur.",
+      "fields": {
+        "title": "Başlıq",
+        "audience": "Auditoriya",
+        "deliveryMethod": "Tədris üsulu",
+        "description": "Təsvir",
+        "owner": "Kurs sahibi",
+        "dueDate": "Kursun son tarixi"
+      },
+      "placeholders": {
+        "title": "Daxili auditor məlumatlılığı",
+        "audience": "Keyfiyyət komandası",
+        "deliveryMethod": "Seminar",
+        "description": "Kursun əhatəsi və gözlənilən səriştə"
+      }
+    },
+    "detail": {
+      "audienceNotSet": "Auditoriya təyin edilməyib",
+      "completeSuffix": "tamamlanıb",
+      "noDescription": "Təsvir verilməyib.",
+      "summary": {
+        "assigned": "Təyin edilib",
+        "inProgress": "Davam edir",
+        "completed": "Tamamlanıb",
+        "overdue": "Gecikib"
+      },
+      "fields": {
+        "description": "Təsvir",
+        "deliveryMethod": "Tədris üsulu",
+        "dueDate": "Son tarix"
+      }
+    },
+    "assignments": {
+      "title": "Tapşırıqlar",
+      "copy": "Təlimi təyin edin, tamamlanmanı izləyin və istifadəçi üzrə səriştə sübutunu saxlayın.",
+      "selectUser": "İstifadəçi seçin",
+      "duePrefix": "son tarix",
+      "assignAction": "Təlimi təyin et",
+      "markComplete": "Tamamla",
+      "completedAction": "Tamamlanıb",
+      "formNote": "Tapşırıq tamamlandı kimi işarələndikdə, sübut xülasəsi səriştəni nəyin göstərdiyini izah etməlidir: iştirak, test nəticəsi, müşahidə və ya imzalı qeyd.",
+      "fields": {
+        "user": "İstifadəçi",
+        "dueDate": "Son tarix",
+        "status": "Status",
+        "notes": "Qeydlər",
+        "evidenceSummary": "Sübut xülasəsi"
+      },
+      "placeholders": {
+        "notes": "Tapşırıq qeydləri",
+        "evidenceSummary": "Tamamlanma sübutu və ya qeydlər"
+      }
+    },
+    "followUp": {
+      "complete": "Tamamlanıb",
+      "overdue": "Gecikmiş izləmə",
+      "evidenceInProgress": "Sübut hazırlanır",
+      "assignmentsOpen": "Tapşırıqlar açıqdır",
+      "assignLearners": "İştirakçı təyin edin"
+    },
+    "readiness": {
+      "headlineDefault": "Təlim izləməsi",
+      "headlineComplete": "Təlim tamamlanması sübut olunub",
+      "headlineOverdue": "Təlim izləməsi gecikib",
+      "headlineGathering": "Səriştə sübutu hələ toplanır",
+      "headlineAssigned": "Tapşırıqlar yerindədir",
+      "narrativeDefault": "Kurs yadda saxlandıqdan sonra tapşırıqlar və sübut görünəcək.",
+      "narrativeComplete": "Bütün cari tapşırıqlar tamamlanıb. Rəy və ya audit zamanı səriştəni göstərmək üçün sübut xülasələrini kifayət qədər aydın saxlayın.",
+      "narrativeOverdue": "Ən azı bir iştirakçının son tarixi keçib. Rəhbərlik izləməsi kursun gecikib-gecikmədiyini, yenidən təyin olunub-olunmadığını və ya əlavə dəstəyə ehtiyac olub-olmadığını təsdiqləməlidir.",
+      "narrativeGathering": "İştirakçılar kurs üzrə irəliləyirlər, lakin səriştənin təsdiqlənmiş hesab olunmasından əvvəl qeyd hələ tamamlanma sübutu tələb edir.",
+      "narrativeAssigned": "Kurs müəyyən edilib, lakin davamlı sübut insanların təyin edilməsindən və tapşırıq yeniləmələrinin saxlanmasından asılıdır.",
+      "hintDefault": "Əvvəlcə kursu yadda saxlayın, sonra insanları təyin edin və tamamlanma sübutlarını qeyd edin.",
+      "hintComplete": "Növbəti addım: bu səriştənin dövri yenilənməsi lazımdırsa, təkrarlama vaxtını və yenidən təyinatı nəzarətdə saxlayın.",
+      "hintOverdue": "Növbəti addım: gecikmiş iştirakçıları nəzərdən keçirin və qeyd daha da geridə qalmadan əvvəl son tarixləri və ya statusu yeniləyin.",
+      "hintAssigned": "Növbəti addım: auditorların səriştənin necə təsdiqləndiyini görə bilməsi üçün tapşırıq qeydlərini və sübut xülasələrini aktual saxlayın."
+    },
+    "assignmentGuidance": {
+      "overdue": "Tapşırığın son tarixi keçib. İştirakçının statusunu və ya son tarixini yeniləyin və cari izləməni qeyd edin.",
+      "completed": "Tamamlanma qısa sübut xülasəsi ilə dəstəklənməlidir.",
+      "inProgress": "İştirakçının necə irəlilədiyini və hələ hansı sübutun gözlənildiyini qeyd edin.",
+      "assigned": "Tapşırıq yaradıldı. İştirakçı kursu tamamladıqdan sonra sübut əlavə edin."
+    },
+    "messages": {
+      "completeRequired": "Tələb olunan təlim sahələrini tamamlayın.",
+      "saved": "Təlim kursu uğurla yadda saxlandı.",
+      "saveFailed": "Təlim yadda saxlanmadı.",
+      "assignmentAdded": "Təlim tapşırığı əlavə olundu.",
+      "assignmentSaveFailed": "Təlim tapşırığı yadda saxlanmadı.",
+      "completedAndVerified": "Tamamlanıb və təsdiqlənib",
+      "assignmentCompleted": "Təlim tapşırığı tamamlandı.",
+      "assignmentUpdateFailed": "Təlim tapşırığı yenilənmədi.",
+      "loadDetailsFailed": "Təlim detalları yüklənə bilmədi.",
+      "loadListFailed": "Təlim kursları yüklənə bilmədi."
+    }
+  },
+  "packages": {
+    "assurance": "Assurance",
+    "coreIms": "Core IMS",
+    "qhsePro": "QHSE Pro"
+  },
+  "processRegister": {
+    "page": {
+      "label": "Proses reyestri",
+      "titles": {
+        "list": "Proses reyestri",
+        "create": "Proses yarat",
+        "detail": "Proses detalı",
+        "edit": "Prosesi redaktə et"
+      },
+      "descriptions": {
+        "list": "Biznes prosesləri və onlara bağlı İMS qeydləri üçün yüngül reyestr.",
+        "create": "Mövcud uyğunluq modullarını dəyişmədən proses tərifi yaradın.",
+        "detail": "Bu proses üçün sahibliyi, interfeysləri və bağlı qeydləri nəzərdən keçirin.",
+        "edit": "Bağlı qeydləri öz ilkin modullarında saxlayaraq proses tərifini yeniləyin."
+      }
+    },
+    "actions": {
+      "backToStartHere": "Buradan başlayına qayıt",
+      "new": "Yeni proses",
+      "edit": "Prosesi redaktə et",
+      "archive": "Arxivlə",
+      "back": "Geri",
+      "backToLabel": "{{label}} bölməsinə qayıt",
+      "reviewProcess": "Prosesi nəzərdən keçirin",
+      "reviewRegister": "Reyestri nəzərdən keçirin"
+    },
+    "breadcrumbs": {
+      "new": "Yeni proses",
+      "record": "Proses",
+      "edit": "Redaktə et"
+    },
+    "common": {
+      "unassigned": "Təyin edilməyib"
+    },
+    "status": {
+      "ACTIVE": "Aktiv",
+      "ARCHIVED": "Arxivlənib"
+    },
+    "list": {
+      "filtersTitle": "Proses filtrləri",
+      "copy": "Mövcud İMS qeydlərinə bağlı yüngül proses reyestri.",
+      "stats": {
+        "total": "Cəmi",
+        "active": "Aktiv",
+        "archived": "Arxivlənib"
+      },
+      "filters": {
+        "search": "Axtarış",
+        "status": "Status",
+        "owner": "Sahib",
+        "all": "Hamısı"
+      },
+      "placeholders": {
+        "search": "Referans, proses, şöbə"
+      },
+      "loadingTitle": "Proses reyestri yüklənir",
+      "loadingCopy": "Proses tərifləri və bağlı qeyd sayları yenilənir.",
+      "emptyTitle": "Proses tapılmadı",
+      "emptyCopy": "Bu reyestrdən istifadə etməyə başlamaq üçün ilk proses qeydini yaradın.",
+      "table": {
+        "process": "Proses",
+        "owner": "Sahib",
+        "status": "Status",
+        "links": "Bağlantılar",
+        "updated": "Yenilənib"
+      },
+      "uncoded": "Kodsuz",
+      "noDepartment": "Şöbə təyin edilməyib"
+    },
+    "linkTypes": {
+      "DOCUMENT": "Sənəd",
+      "RISK": "Risk",
+      "AUDIT": "Audit",
+      "KPI": "KPI",
+      "ACTION": "Tapşırıq",
+      "NCR": "NCR",
+      "CONTEXT_ISSUE": "Kontekst məsələsi"
+    },
+    "sectionPicker": {
+      "DOCUMENT": "Sənəd",
+      "RISK": "Risk",
+      "AUDIT": "Audit",
+      "KPI": "KPI",
+      "ACTION": "Tapşırıq",
+      "NCR": "NCR / Məsələ",
+      "CONTEXT_ISSUE": "Kontekst məsələsi"
+    },
+    "sections": {
+      "DOCUMENT": {
+        "title": "Bağlı sənədlər",
+        "copy": "Bu prosesi müəyyən edən və ya dəstəkləyən nəzarətli sənədlər.",
+        "emptyTitle": "Bağlı sənəd yoxdur",
+        "emptyCopy": "Proses kontekstinin burada görünməsi üçün mövcud nəzarətli sənədləri bağlayın."
+      },
+      "RISK": {
+        "title": "Bağlı risklər",
+        "copy": "Hazırda bu proseslə əlaqəli risk qeydləri.",
+        "emptyTitle": "Bağlı risk yoxdur",
+        "emptyCopy": "Bu prosesin harada məruz qaldığını göstərmək üçün mövcud riskləri bağlayın."
+      },
+      "AUDIT": {
+        "title": "Bağlı auditlər",
+        "copy": "Bu prosesin necə işlədiyini qiymətləndirən auditlər.",
+        "emptyTitle": "Bağlı audit yoxdur",
+        "emptyCopy": "Təminat fəaliyyətinin bir yerdə görünməsi üçün uyğun auditləri bağlayın."
+      },
+      "KPI": {
+        "title": "Bağlı KPI-lar",
+        "copy": "Bu prosesi izləmək üçün istifadə olunan performans göstəriciləri.",
+        "emptyTitle": "Bağlı KPI yoxdur",
+        "emptyCopy": "Bu prosesi reyestrdən izləmək istəyirsinizsə KPI-ları bağlayın."
+      },
+      "ACTION": {
+        "title": "Bağlı tapşırıqlar",
+        "copy": "İMS-də artıq başqa yerdə izlənən tapşırıqlar.",
+        "emptyTitle": "Bağlı tapşırıq yoxdur",
+        "emptyCopy": "Qlobal tapşırıq reyestrində izlənən tapşırıqları bağlayın."
+      },
+      "NCR": {
+        "title": "Bağlı NCR / məsələlər",
+        "copy": "Bu prosesə qarşı qaldırılmış uyğunsuzluqlar və ya məsələlər.",
+        "emptyTitle": "Bağlı NCR yoxdur",
+        "emptyCopy": "Proses səviyyəsində görünürlük üçün əlaqəli uyğunsuzluqları və ya məsələləri bağlayın."
+      },
+      "CONTEXT_ISSUE": {
+        "title": "Bağlı kontekst məsələləri",
+        "copy": "Bu prosesə təsir edən 4-cü bənd üzrə daxili və ya xarici məsələlər.",
+        "emptyTitle": "Bağlı kontekst məsələsi yoxdur",
+        "emptyCopy": "Proses kontekstinin burada görünməsi üçün daxili və ya xarici məsələləri bağlayın."
+      }
+    },
+    "nextSteps": {
+      "noneSelected": "Növbəti addım: yadda saxlanmış prosesi nəzərdən keçirin və ona aid olan mövcud İMS qeydlərini bağlamağa başlayın.",
+      "hasLinks": "Növbəti addım: bağlı qeydləri nəzərdən keçirin və çatışmayan riskləri, auditləri, sənədləri, NCR-ləri, tapşırıqları və ya kontekst məsələlərini əlavə edin.",
+      "noLinks": "Növbəti addım: bu prosesin ayrıca tərif deyil, faydalı mərkəzə çevrilməsi üçün ilk əlaqəli qeydi bağlayın."
+    },
+    "guidance": {
+      "definitionReady": "Proses tərifi sahiblik və aydın interfeyslərlə nəzarətli qeyd kimi formalaşır.",
+      "definitionNeeded": "Faydalı proses qeydi onun kimə aid olduğunu, niyə mövcud olduğunu və interfeysi müəyyən edən giriş və çıxışları göstərməlidir.",
+      "assuranceNone": "Əvvəlcə prosesi yadda saxlayın, sonra onun ətrafında təminat yaradan riskləri, auditləri, sənədləri və tapşırıqları bağlayın.",
+      "assuranceNoLinks": "Bu proses müəyyən edilib, lakin hələ bağlı sübutlarla dəstəklənmir. Prosesi kontekstdə nəzərdən keçirmək üçün risklər, auditlər, sənədlər və ya NCR-lər əlavə edin.",
+      "assurancePartial": "Prosesi artıq müəyyən qədər əlaqə var, lakin həm risk görünürlüğü, həm də sənəd nəzarəti sübutundan faydalanar.",
+      "assuranceReady": "Bu proses artıq bağlı təminat qeydlərinə malikdir və bu onu audit və rəhbərlik təhlili üçün daha faydalı edir."
+    },
+    "candidate": {
+      "internal": "Daxili",
+      "external": "Xarici"
+    },
+    "messages": {
+      "noPermissionWrite": "Proses reyestrini redaktə etmək üçün icazəniz yoxdur.",
+      "completeRequired": "Tələb olunan proses sahələrini tamamlayın.",
+      "saved": "Proses uğurla yadda saxlandı.",
+      "saveFailed": "Proses yadda saxlanmadı.",
+      "archiveConfirm": "\"{{name}}\" prosesi arxivlənsin?",
+      "archived": "Proses uğurla arxivləndi.",
+      "archiveFailed": "Proses arxivlənmədi.",
+      "linkAdded": "Bağlı qeyd əlavə olundu.",
+      "linkFailed": "Qeyd bağlantısı uğursuz oldu.",
+      "linkRemoved": "Bağlı qeyd silindi.",
+      "linkRemoveFailed": "Bağlantının silinməsi uğursuz oldu.",
+      "starterApplied": "{{name}} şablonundan başlanğıc tətbiq olundu. Yadda saxlamazdan əvvəl prosesi nəzərdən keçirin və uyğunlaşdırın.",
+      "loadListFailed": "Proses reyestri yüklənə bilmədi.",
+      "loadDetailsFailed": "Proses detalları yüklənə bilmədi.",
+      "loadOwnersFailed": "Proses sahibləri yüklənə bilmədi."
+    }
+  },
   "managementReview": {
     "page": {
       "label": "Rəhbərliyin təhlili",
