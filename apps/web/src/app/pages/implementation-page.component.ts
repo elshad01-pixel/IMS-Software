@@ -8,7 +8,6 @@ import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 import { I18nService } from '../core/i18n.service';
 import { PackageModuleKey } from '../core/package-entitlements';
-import { PageHeaderComponent } from '../shared/page-header.component';
 
 type ImplementationChecklistItem = {
   id: string;
@@ -41,6 +40,13 @@ type PdcaCard = {
   modules: Array<{ label: string; route: string; hintKey: string; packageModule: PackageModuleKey }>;
 };
 
+type DiagramStage = {
+  phase: 'Plan' | 'Do' | 'Check' | 'Act';
+  titleKey: string;
+  copyKey: string;
+  modules: PackageModuleKey[];
+};
+
 type ReadinessChecklistCard = {
   id: string;
   labelKey: string;
@@ -61,15 +67,12 @@ const CHECKLIST_LABEL_KEYS: Record<string, string> = {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslatePipe],
   template: `
     <section class="page-grid">
-      <iso-page-header
-        [label]="pageHeader().label"
-        [title]="pageHeader().title"
-        [description]="pageHeader().description"
-        [breadcrumbs]="[{ label: pageHeader().breadcrumb }]"
-      />
+      <header class="implementation-page-head">
+        <h1>{{ 'implementation.page.label' | translate }}</h1>
+      </header>
 
       <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">
         {{ error() || message() }}
@@ -81,31 +84,78 @@ const CHECKLIST_LABEL_KEYS: Record<string, string> = {
       </div>
 
       <ng-container *ngIf="!loading() && config() as current">
-        <section class="card implementation-intro implementation-card">
+        <section class="card implementation-card implementation-diagram-card">
           <div class="section-head">
             <div>
-              <span class="section-eyebrow">{{ 'implementation.intro.eyebrow' | translate }}</span>
-              <h3>{{ 'implementation.intro.title' | translate }}</h3>
-              <p class="subtle">{{ 'implementation.intro.copy' | translate }}</p>
+              <span class="section-eyebrow">{{ 'implementation.diagram.eyebrow' | translate }}</span>
+              <h3>{{ 'implementation.diagram.title' | translate }}</h3>
+              <p class="subtle">{{ 'implementation.diagram.copy' | translate }}</p>
             </div>
           </div>
 
-          <div class="summary-strip implementation-summary">
-            <article class="summary-item">
-              <span>{{ 'implementation.summary.workspace' | translate }}</span>
-              <strong>{{ current.enabled ? ('common.enabled' | translate) : ('common.hidden' | translate) }}</strong>
-            </article>
-            <article class="summary-item">
-              <span>{{ 'implementation.summary.startingPoint' | translate }}</span>
-              <strong>{{ startingPointLabel(current.startingPoint) }}</strong>
-            </article>
-            <article class="summary-item">
-              <span>{{ 'implementation.summary.checklistProgress' | translate }}</span>
-              <strong>{{ completedChecklistCount() }}/{{ current.checklist.length }}</strong>
-            </article>
-            <article class="summary-item">
-              <span>{{ 'implementation.summary.objectiveStarter' | translate }}</span>
-              <strong>{{ objectiveReadinessLabel() }}</strong>
+          <div class="implementation-flow top-space">
+            <div class="implementation-ribbon">{{ 'implementation.diagram.improvementBar' | translate }}</div>
+
+            <aside class="implementation-side implementation-side--input">
+              <h4>{{ 'implementation.diagram.inputTitle' | translate }}</h4>
+              <div class="implementation-side__chips">
+                <a
+                  *ngFor="let module of diagramInputModules"
+                  class="pill diagram-module-chip"
+                  [routerLink]="[moduleDiagramRoute(module)]"
+                  [queryParams]="{ from: 'start-here' }"
+                >
+                  {{ moduleDiagramLabel(module) }}
+                </a>
+              </div>
+            </aside>
+
+            <aside class="implementation-side implementation-side--output">
+              <h4>{{ 'implementation.diagram.outputTitle' | translate }}</h4>
+              <div class="implementation-side__chips">
+                <a
+                  *ngFor="let module of diagramOutputModules"
+                  class="pill diagram-module-chip"
+                  [routerLink]="[moduleDiagramRoute(module)]"
+                  [queryParams]="{ from: 'start-here' }"
+                >
+                  {{ moduleDiagramLabel(module) }}
+                </a>
+              </div>
+            </aside>
+
+            <div class="implementation-oval" aria-hidden="true"></div>
+            <div class="implementation-line implementation-line--mid" aria-hidden="true"></div>
+            <div class="implementation-cycle implementation-cycle--act-plan" aria-hidden="true"></div>
+            <div class="implementation-cycle implementation-cycle--plan-do" aria-hidden="true"></div>
+            <div class="implementation-cycle implementation-cycle--do-check" aria-hidden="true"></div>
+            <div class="implementation-cycle implementation-cycle--check-act" aria-hidden="true"></div>
+
+            <div class="implementation-center">
+              <span class="implementation-core__label">{{ 'implementation.diagram.coreLabel' | translate }}</span>
+              <a class="implementation-core__link implementation-core__link--light" [routerLink]="['/process-register']" [queryParams]="{ from: 'start-here' }">
+                {{ 'shell.nav.processRegister.label' | translate }}
+              </a>
+            </div>
+
+            <article
+              *ngFor="let stage of visibleDiagramStages()"
+              [class]="'implementation-box implementation-box--' + stage.phase.toLowerCase()"
+            >
+              <div class="implementation-stage__head">
+                <span class="implementation-stage__eyebrow">{{ ('implementation.pdca.phases.' + stage.phase + '.label') | translate }}</span>
+                <h4>{{ stage.titleKey | translate }}</h4>
+              </div>
+              <div class="implementation-stage__chips">
+                <a
+                  *ngFor="let module of stage.modules"
+                  class="pill diagram-module-chip"
+                  [routerLink]="[moduleDiagramRoute(module)]"
+                  [queryParams]="{ from: 'start-here' }"
+                >
+                  {{ moduleDiagramLabel(module) }}
+                </a>
+              </div>
             </article>
           </div>
         </section>
@@ -349,14 +399,448 @@ const CHECKLIST_LABEL_KEYS: Record<string, string> = {
       padding: 1.35rem 1.45rem;
     }
 
-    .implementation-intro,
-    .implementation-summary {
-      display: grid;
-      gap: 1rem;
+    .implementation-page-head {
+      display: flex;
+      align-items: center;
+      min-height: 2rem;
+      margin-top: 0.2rem;
     }
 
-    .implementation-summary {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    .implementation-page-head h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .implementation-diagram-card {
+      overflow: hidden;
+      padding-bottom: 1.5rem;
+    }
+
+    .implementation-flow {
+      position: relative;
+      min-height: 50rem;
+      padding: 0.9rem 0 1rem;
+      isolation: isolate;
+    }
+
+    .implementation-ribbon {
+      position: absolute;
+      top: 0.15rem;
+      left: 10%;
+      right: 10%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 2.7rem;
+      padding: 0.35rem 1rem;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(189, 228, 223, 0.9), rgba(207, 236, 231, 0.96));
+      border: 1px solid rgba(20, 61, 43, 0.12);
+      color: #173b2f;
+      font-size: 1.05rem;
+      font-weight: 800;
+      text-align: center;
+      box-shadow: 0 14px 24px rgba(23, 44, 34, 0.08);
+      z-index: 3;
+    }
+
+    .implementation-side {
+      position: absolute;
+      top: 4.35rem;
+      bottom: 2rem;
+      width: 9.6rem;
+      display: grid;
+      align-content: center;
+      gap: 1rem;
+      padding: 1.25rem 0.95rem;
+      border-radius: 1.6rem;
+      color: #fff;
+      box-shadow: 0 22px 36px rgba(23, 44, 34, 0.12);
+      z-index: 2;
+    }
+
+    .implementation-side--input {
+      left: 0.75rem;
+      background: linear-gradient(180deg, #214f4e, #173b3d);
+    }
+
+    .implementation-side--output {
+      right: 0.75rem;
+      background: linear-gradient(180deg, #f0a21e, #dc8f12);
+      color: #24312c;
+    }
+
+    .implementation-side h4 {
+      margin: 0;
+      font-size: 0.98rem;
+      line-height: 1.35;
+      text-align: center;
+    }
+
+    .implementation-side__chips {
+      display: grid;
+      gap: 0.6rem;
+      justify-items: center;
+    }
+
+    .implementation-side__chips .pill {
+      justify-content: center;
+      width: 100%;
+      min-height: 2.05rem;
+      padding: 0.34rem 0.78rem;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 248, 245, 0.92));
+      border-color: rgba(20, 61, 43, 0.08);
+      color: #173b2f;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.82),
+        0 6px 12px rgba(23, 44, 34, 0.08);
+    }
+
+    .implementation-oval {
+      position: absolute;
+      inset: 3.45rem 11.7rem 0.75rem;
+      border-radius: 50%;
+      border: 1px solid rgba(20, 61, 43, 0.08);
+      background:
+        radial-gradient(circle at center, rgba(20, 61, 43, 0.045), rgba(255,255,255,0) 72%),
+        linear-gradient(180deg, rgba(248, 250, 248, 0.96), rgba(241, 245, 242, 0.92));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.7);
+      z-index: 0;
+    }
+
+    .implementation-line {
+      position: absolute;
+      background: rgba(31, 41, 51, 0.72);
+      z-index: 1;
+    }
+
+    .implementation-line::after {
+      content: '';
+      position: absolute;
+      width: 0.82rem;
+      height: 0.82rem;
+      background: rgba(31, 41, 51, 0.72);
+      clip-path: polygon(0 0, 100% 50%, 0 100%);
+    }
+
+    .implementation-line--top {
+      top: 9.55rem;
+      left: 24%;
+      right: 24%;
+      height: 1px;
+    }
+
+    .implementation-line--top::after {
+      right: 0;
+      top: 50%;
+      transform: translate(50%, -50%);
+    }
+
+    .implementation-line--mid {
+      top: calc(50% + 1.75rem);
+      left: 10.35rem;
+      right: 10.35rem;
+      height: 2px;
+      transform: translateY(-50%);
+    }
+
+    .implementation-line--mid::after {
+      right: 0;
+      top: 50%;
+      transform: translate(50%, -50%);
+    }
+
+    .implementation-cycle {
+      position: absolute;
+      z-index: 1;
+      pointer-events: none;
+      color: rgba(31, 41, 51, 0.72);
+      border-style: solid;
+      border-width: 0;
+      border-color: currentColor;
+    }
+
+    .implementation-cycle::after {
+      content: '';
+      position: absolute;
+      width: 0.9rem;
+      height: 0.9rem;
+      background: currentColor;
+      clip-path: polygon(0 0, 100% 50%, 0 100%);
+    }
+
+    .implementation-cycle--act-plan {
+      top: calc(50% - 14.35rem);
+      left: calc(50% - 18.6rem);
+      width: 9.6rem;
+      height: 8.1rem;
+      border-top-width: 3px;
+      border-left-width: 3px;
+      border-top-left-radius: 1.9rem;
+      color: rgba(97, 81, 162, 0.88);
+    }
+
+    .implementation-cycle--act-plan::after {
+      right: 0;
+      top: 0;
+      transform: translate(50%, -50%);
+    }
+
+    .implementation-cycle--plan-do {
+      top: calc(50% - 14.35rem);
+      right: calc(50% - 18.6rem);
+      width: 9.6rem;
+      height: 8.1rem;
+      border-top-width: 3px;
+      border-right-width: 3px;
+      border-top-right-radius: 1.9rem;
+      color: rgba(45, 106, 79, 0.9);
+    }
+
+    .implementation-cycle--plan-do::after {
+      right: 0;
+      bottom: 0;
+      transform: translate(50%, 50%) rotate(90deg);
+    }
+
+    .implementation-cycle--do-check {
+      right: calc(50% - 18.6rem);
+      bottom: calc(50% - 17.75rem);
+      width: 9.6rem;
+      height: 8.1rem;
+      border-right-width: 3px;
+      border-bottom-width: 3px;
+      border-bottom-right-radius: 1.9rem;
+      color: rgba(63, 109, 149, 0.88);
+    }
+
+    .implementation-cycle--do-check::after {
+      left: 0;
+      bottom: 0;
+      transform: translate(-50%, 50%) rotate(180deg);
+    }
+
+    .implementation-cycle--check-act {
+      left: calc(50% - 18.6rem);
+      bottom: calc(50% - 17.75rem);
+      width: 9.6rem;
+      height: 8.1rem;
+      border-left-width: 3px;
+      border-bottom-width: 3px;
+      border-bottom-left-radius: 1.9rem;
+      color: rgba(161, 110, 31, 0.9);
+    }
+
+    .implementation-cycle--check-act::after {
+      left: 0;
+      top: 0;
+      transform: translate(-50%, -50%) rotate(-90deg);
+    }
+
+    .implementation-center {
+      position: absolute;
+      top: calc(50% + 1.75rem);
+      left: 50%;
+      width: 11rem;
+      min-height: 11rem;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 0.3rem;
+      padding: 0.9rem;
+      border-radius: 50%;
+      border: 1px solid rgba(63, 109, 149, 0.18);
+      background:
+        radial-gradient(circle at 35% 30%, rgba(255,255,255,0.9), rgba(255,255,255,0) 34%),
+        radial-gradient(circle at center, rgba(234, 241, 255, 0.96), rgba(214, 230, 249, 0.96) 72%, rgba(190, 214, 238, 0.98) 100%);
+      box-shadow:
+        0 20px 34px rgba(34, 62, 91, 0.16),
+        inset 0 0 0 1px rgba(255,255,255,0.58);
+      transform: translate(-50%, -50%);
+      z-index: 3;
+    }
+
+    .implementation-center::before {
+      content: '';
+      position: absolute;
+      inset: -0.7rem;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(173, 204, 235, 0.18), rgba(173, 204, 235, 0.06) 58%, rgba(173, 204, 235, 0) 74%);
+      border: 2px solid rgba(173, 204, 235, 0.24);
+      z-index: -1;
+    }
+
+    .implementation-core__label {
+      color: #4b647f;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .implementation-core__link--light {
+      color: #173b2f;
+      font-size: 0.98rem;
+      font-weight: 800;
+      text-decoration: none;
+      text-align: center;
+      line-height: 1.15;
+      transition: transform 160ms ease, opacity 160ms ease;
+      transform-origin: center;
+    }
+
+    .implementation-core__link--light:hover {
+      transform: scale(1.04);
+      opacity: 0.9;
+    }
+
+    .implementation-box {
+      position: absolute;
+      width: 18.25rem;
+      min-height: 8.75rem;
+      display: grid;
+      gap: 0.55rem;
+      padding: 0.76rem 0.82rem 0.88rem;
+      border-radius: 1.2rem;
+      border: 1px solid var(--border-subtle);
+      background: color-mix(in srgb, var(--surface-strong) 95%, white);
+      box-shadow: 0 18px 32px rgba(23, 44, 34, 0.08);
+      z-index: 1;
+    }
+
+    .implementation-box::before {
+      content: '';
+      position: absolute;
+      left: 0.85rem;
+      right: 0.85rem;
+      top: 0;
+      height: 3px;
+      border-radius: 999px;
+    }
+
+    .implementation-box--plan {
+      top: calc(50% - 9rem);
+      left: 50%;
+      transform: translate(-50%, -100%);
+      background: linear-gradient(180deg, rgba(231, 243, 236, 0.98), rgba(255,255,255,0.98));
+    }
+
+    .implementation-box--plan::before {
+      background: #2d6a4f;
+    }
+
+    .implementation-box--do {
+      top: calc(50% + 1.75rem);
+      left: calc(50% + 12.25rem);
+      transform: translate(0, -50%);
+      background: linear-gradient(180deg, rgba(234, 241, 255, 0.96), rgba(255,255,255,0.98));
+    }
+
+    .implementation-box--do::before {
+      background: #3f6d95;
+    }
+
+    .implementation-box--check {
+      top: calc(50% + 12.5rem);
+      left: 50%;
+      right: auto;
+      transform: translate(-50%, 0);
+      background: linear-gradient(180deg, rgba(247, 239, 224, 0.96), rgba(255,255,255,0.98));
+    }
+
+    .implementation-box--check::before {
+      background: #a16e1f;
+    }
+
+    .implementation-box--act {
+      top: calc(50% + 1.75rem);
+      left: calc(50% - 12.25rem);
+      bottom: auto;
+      transform: translate(-100%, -50%);
+      background: linear-gradient(180deg, rgba(239, 239, 254, 0.97), rgba(255,255,255,0.98));
+    }
+
+    .implementation-box--act::before {
+      background: #6151a2;
+    }
+
+    .implementation-stage__head {
+      display: grid;
+      gap: 0.2rem;
+    }
+
+    .implementation-stage__eyebrow {
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .implementation-box h4 {
+      margin: 0;
+      font-size: 0.94rem;
+      color: var(--text);
+    }
+
+    .implementation-stage__chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+
+    .implementation-stage__chips .pill {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 248, 249, 0.94));
+      border-color: rgba(20, 61, 43, 0.12);
+      min-height: 1.95rem;
+      padding: 0.34rem 0.72rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.9),
+        0 5px 10px rgba(23, 44, 34, 0.08);
+    }
+
+    .diagram-module-chip {
+      text-decoration: none;
+      transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background 160ms ease;
+      transform-origin: center;
+      will-change: transform;
+    }
+
+    .diagram-module-chip:hover {
+      transform: translateY(-1px) scale(1.05);
+      box-shadow: 0 12px 18px rgba(23, 44, 34, 0.12);
+      border-color: rgba(20, 61, 43, 0.2);
+    }
+
+    .implementation-box--plan .pill {
+      background: rgba(255, 255, 255, 0.76);
+      border-color: rgba(45, 106, 79, 0.18);
+    }
+
+    .implementation-box--do .pill {
+      background: rgba(255, 255, 255, 0.74);
+      border-color: rgba(63, 109, 149, 0.18);
+    }
+
+    .implementation-box--check .pill {
+      background: rgba(255, 255, 255, 0.72);
+      border-color: rgba(161, 110, 31, 0.18);
+    }
+
+    .implementation-box--act .pill {
+      background: rgba(255, 255, 255, 0.72);
+      border-color: rgba(97, 81, 162, 0.18);
     }
 
     .readiness-grid {
@@ -519,6 +1003,45 @@ const CHECKLIST_LABEL_KEYS: Record<string, string> = {
       line-height: 1.55;
     }
 
+    @media (max-width: 1120px) {
+      .implementation-flow {
+        min-height: 44rem;
+      }
+
+      .implementation-oval {
+        inset-inline: 10.25rem;
+      }
+
+      .implementation-side {
+        width: 8.4rem;
+      }
+
+      .implementation-box--do {
+        left: calc(50% + 10rem);
+      }
+
+      .implementation-box--act {
+        left: calc(50% - 10rem);
+      }
+
+      .implementation-cycle--act-plan,
+      .implementation-cycle--plan-do,
+      .implementation-cycle--do-check,
+      .implementation-cycle--check-act {
+        width: 7.1rem;
+      }
+
+      .implementation-cycle--act-plan,
+      .implementation-cycle--check-act {
+        left: calc(50% - 17rem);
+      }
+
+      .implementation-cycle--plan-do,
+      .implementation-cycle--do-check {
+        right: calc(50% - 17rem);
+      }
+    }
+
     @media (max-width: 1180px) {
       .readiness-grid,
       .pdca-grid {
@@ -531,16 +1054,70 @@ const CHECKLIST_LABEL_KEYS: Record<string, string> = {
         padding: 1.1rem;
       }
 
-      .implementation-summary,
       .readiness-grid,
       .module-chip-grid {
         grid-template-columns: 1fr;
+      }
+
+      .implementation-flow {
+        min-height: auto;
+        display: grid;
+        gap: 1rem;
+        padding-top: 0.25rem;
+      }
+
+      .implementation-ribbon,
+      .implementation-side,
+      .implementation-oval,
+      .implementation-line,
+      .implementation-cycle {
+        display: none;
+      }
+
+      .implementation-center {
+        position: relative;
+        top: auto;
+        left: auto;
+        width: 100%;
+        max-width: none;
+        border-radius: 1.4rem;
+        transform: none;
+      }
+
+      .implementation-box {
+        position: relative;
+        inset: auto;
+        width: 100%;
+        transform: none;
+      }
+
+      .implementation-box::before {
+        left: 0.9rem;
+        right: 0.9rem;
       }
     }
 
     @media (min-width: 1180px) {
       .module-chip-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .implementation-box {
+        padding-inline: 0.9rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .diagram-module-chip,
+      .implementation-core__link {
+        transition: none;
+      }
+
+      .diagram-module-chip:hover,
+      .implementation-core__link:hover {
+        transform: none;
       }
     }
   `]
@@ -574,15 +1151,6 @@ export class ImplementationPageComponent {
     linkedModule: ['KPIs', Validators.required]
   });
 
-  protected readonly pageHeader = computed(() => {
-    this.i18n.language();
-    return {
-      label: this.i18n.t('implementation.page.label'),
-      title: this.i18n.t('implementation.page.title'),
-      description: this.i18n.t('implementation.page.description'),
-      breadcrumb: this.i18n.t('implementation.page.breadcrumb')
-    };
-  });
   protected readonly completedChecklistCount = computed(() => this.config()?.checklist.filter((item) => item.done).length ?? 0);
   protected readonly readinessChecklist = computed(() =>
     this.readinessCards.map((item) => ({
@@ -614,6 +1182,42 @@ export class ImplementationPageComponent {
     }
     return this.i18n.t('implementation.summary.needsSetup');
   });
+  protected readonly diagramInputModules: PackageModuleKey[] = ['context', 'compliance-obligations', 'risks'];
+  protected readonly diagramOutputModules: PackageModuleKey[] = ['kpis', 'audits', 'management-review'];
+  protected readonly diagramStages: DiagramStage[] = [
+    {
+      phase: 'Plan',
+      titleKey: 'implementation.diagram.stages.plan.title',
+      copyKey: 'implementation.diagram.stages.plan.copy',
+      modules: ['context', 'kpis', 'compliance-obligations', 'risks']
+    },
+    {
+      phase: 'Do',
+      titleKey: 'implementation.diagram.stages.do.title',
+      copyKey: 'implementation.diagram.stages.do.copy',
+      modules: ['documents', 'training', 'external-providers']
+    },
+    {
+      phase: 'Check',
+      titleKey: 'implementation.diagram.stages.check.title',
+      copyKey: 'implementation.diagram.stages.check.copy',
+      modules: ['audits', 'incidents', 'hazards', 'environmental-aspects']
+    },
+    {
+      phase: 'Act',
+      titleKey: 'implementation.diagram.stages.act.title',
+      copyKey: 'implementation.diagram.stages.act.copy',
+      modules: ['ncr', 'capa', 'actions', 'management-review']
+    }
+  ];
+  protected readonly visibleDiagramStages = computed(() =>
+    this.diagramStages
+      .map((stage) => ({
+        ...stage,
+        modules: stage.modules.filter((module) => this.authStore.hasModule(module))
+      }))
+      .filter((stage) => stage.modules.length > 0)
+  );
 
   protected readonly pdcaCards: PdcaCard[] = [
     {
@@ -675,6 +1279,64 @@ export class ImplementationPageComponent {
 
   protected canWrite() {
     return this.authStore.hasPermission('settings.write');
+  }
+
+  protected moduleDiagramLabel(module: PackageModuleKey) {
+    const mapping: Record<PackageModuleKey, string> = {
+      dashboard: 'shell.nav.dashboard.label',
+      implementation: 'shell.nav.startHere.label',
+      settings: 'shell.nav.settings.label',
+      users: 'shell.nav.users.label',
+      'activity-log': 'shell.nav.activityLog.label',
+      audits: 'shell.nav.audits.label',
+      ncr: 'shell.nav.ncr.label',
+      capa: 'shell.nav.capa.label',
+      actions: 'shell.nav.actions.label',
+      documents: 'shell.nav.documents.label',
+      risks: 'shell.nav.risks.label',
+      context: 'shell.nav.context.label',
+      'process-register': 'shell.nav.processRegister.label',
+      training: 'shell.nav.training.label',
+      'compliance-obligations': 'shell.nav.complianceObligations.label',
+      kpis: 'shell.nav.kpis.label',
+      'management-review': 'shell.nav.managementReview.label',
+      reports: 'shell.nav.reports.label',
+      incidents: 'shell.nav.incidents.label',
+      'environmental-aspects': 'shell.nav.environmentalAspects.label',
+      hazards: 'shell.nav.hazards.label',
+      'external-providers': 'shell.nav.externalProviders.label',
+      'change-management': 'shell.nav.changeManagement.label'
+    };
+    return this.i18n.t(mapping[module]);
+  }
+
+  protected moduleDiagramRoute(module: PackageModuleKey) {
+    const routes: Record<PackageModuleKey, string> = {
+      dashboard: '/dashboard',
+      implementation: '/start-here',
+      settings: '/settings',
+      users: '/users',
+      'activity-log': '/activity-log',
+      audits: '/audits',
+      ncr: '/ncr',
+      capa: '/capa',
+      actions: '/actions',
+      documents: '/documents',
+      risks: '/risks',
+      context: '/context',
+      'process-register': '/process-register',
+      training: '/training',
+      'compliance-obligations': '/compliance-obligations',
+      kpis: '/kpis',
+      'management-review': '/management-review',
+      reports: '/reports',
+      incidents: '/incidents',
+      'environmental-aspects': '/environmental-aspects',
+      hazards: '/hazards',
+      'external-providers': '/external-providers',
+      'change-management': '/change-management'
+    };
+    return routes[module];
   }
 
   protected startingPointLabel(value: string) {

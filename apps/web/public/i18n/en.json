@@ -165,6 +165,34 @@
       "readyToDeploy": "Ready to deploy",
       "needsSetup": "Needs setup"
     },
+    "diagram": {
+      "eyebrow": "System map",
+      "title": "How the modules interact across the IMS",
+      "copy": "Use this diagram as the quickest orientation view. The process register stays at the centre, planning modules shape the system, operational modules run it, assurance modules test it, and improvement modules close the loop.",
+      "improvementBar": "Continual improvement across the integrated management system",
+      "inputTitle": "Requirements and planning inputs",
+      "outputTitle": "Results, evidence, and review outputs",
+      "coreLabel": "Core process",
+      "coreCopy": "Use the process register as the shared reference point for ownership, interfaces, linked evidence, and cross-module follow-up.",
+      "stages": {
+        "plan": {
+          "title": "Plan the system",
+          "copy": "Set context, obligations, risks, and measures before daily operation starts."
+        },
+        "do": {
+          "title": "Run the process",
+          "copy": "Use documents, process controls, training, and supplier inputs to operate consistently."
+        },
+        "check": {
+          "title": "Check performance",
+          "copy": "Test the system through audits, incidents, hazards, and environmental assurance records."
+        },
+        "act": {
+          "title": "Improve and decide",
+          "copy": "Turn findings into NCR, CAPA, actions, and management review decisions."
+        }
+      }
+    },
     "readiness": {
       "eyebrow": "Readiness",
       "title": "Core setup checklist",
@@ -1403,17 +1431,17 @@
       "unassigned": "Unassigned",
       "notSet": "Not set"
     },
-      "focused": {
-        "eyebrow": "Selected action",
-        "copy": "Review the action details above, then update status or return to the source record.",
-        "description": "Description",
-        "noDescription": "No description provided.",
-        "source": "Source record",
-        "updateStatus": "Update status",
-        "packageSummaryTitle": "Source record kept in a higher package",
-        "packageSummaryCopy": "This action stays linked to {{module}}. The full source module is included from {{package}} upward, so this summary stays visible here without breaking the action workflow.",
-        "includedIn": "Included from"
-      },
+    "focused": {
+      "eyebrow": "Selected action",
+      "copy": "Review the action details above, then update status or return to the source record.",
+      "description": "Description",
+      "noDescription": "No description provided.",
+      "source": "Source record",
+      "updateStatus": "Update status",
+      "packageSummaryTitle": "Source record kept in a higher package",
+      "packageSummaryCopy": "This action stays linked to {{module}}. The full source module is included from {{package}} upward, so this summary stays visible here without breaking the action workflow.",
+      "includedIn": "Included from"
+    },
     "register": {
       "eyebrow": "Action tracker",
       "title": "Assigned follow-up",
@@ -1466,17 +1494,17 @@
       "noneTitle": "No actions match the current filters",
       "noneCopy": "Adjust the filters or open a source record to create a new action."
     },
-      "table": {
-        "action": "Action",
-        "source": "Source",
-        "owner": "Owner",
-        "dueDate": "Due date",
-        "status": "Status",
-        "admin": "Admin",
-        "noDescription": "No description provided.",
-        "openedAbove": "Opened above",
-        "includedIn": "Included from {{package}}"
-      },
+    "table": {
+      "action": "Action",
+      "source": "Source",
+      "owner": "Owner",
+      "dueDate": "Due date",
+      "status": "Status",
+      "admin": "Admin",
+      "noDescription": "No description provided.",
+      "openedAbove": "Opened above",
+      "includedIn": "Included from {{package}}"
+    },
     "guidance": {
       "headlines": {
         "overdue": "Some assigned follow-up is overdue",
@@ -1703,6 +1731,8 @@
       "archive": "Archive",
       "back": "Back",
       "backToLabel": "Back to {{label}}",
+      "save": "Save process",
+      "saving": "Saving...",
       "reviewProcess": "Review process",
       "reviewRegister": "Review register"
     },
@@ -1824,6 +1854,120 @@
       "assurancePartial": "The process already has some linkage, but it would benefit from both risk visibility and document control evidence.",
       "assuranceReady": "This process already has linked assurance records, making it more useful for audit and management review."
     },
+    "create": {
+      "start": {
+        "title": "How do you want to start?",
+        "ariaLabel": "Process creation mode",
+        "templateMode": "Use a starter template",
+        "customMode": "Start from scratch",
+        "templateCopy": "Choose a standard process, preview it, then apply it to the form and edit every field before saving.",
+        "customCopy": "Use the blank form for processes that are unique to your organization. You can still switch back to a starter later.",
+        "templateField": "Starter template",
+        "templatePlaceholder": "Choose a starter process",
+        "useBlank": "Use blank form",
+        "applyStarter": "Apply starter",
+        "previewCopy": "This only pre-fills the form. You can change every field before saving."
+      },
+      "preview": {
+        "purpose": "Purpose",
+        "scope": "Scope",
+        "inputs": "Inputs",
+        "outputs": "Outputs"
+      },
+      "positionTitle": "Process-control position",
+      "summary": {
+        "owner": "Owner",
+        "purpose": "Purpose",
+        "interfaces": "Interfaces",
+        "assigned": "Assigned",
+        "needed": "Needed",
+        "recorded": "Recorded",
+        "defined": "Defined",
+        "clarify": "Clarify"
+      },
+      "coreDefinition": "Core definition",
+      "ownershipTitle": "Ownership and interfaces",
+      "fields": {
+        "reference": "Reference",
+        "status": "Status",
+        "name": "Process name",
+        "purpose": "Purpose",
+        "owner": "Owner",
+        "department": "Department",
+        "scope": "Scope",
+        "inputs": "Inputs",
+        "outputs": "Outputs"
+      },
+      "placeholders": {
+        "reference": "PR-001",
+        "name": "Document Control",
+        "department": "Quality"
+      }
+    },
+    "detail": {
+      "eyebrow": "Process detail",
+      "noPurpose": "No purpose recorded yet.",
+      "summary": {
+        "owner": "Owner",
+        "department": "Department",
+        "linkedRecords": "Linked records"
+      },
+      "assuranceTitle": "Process assurance position",
+      "assurance": {
+        "risks": "Risks",
+        "documents": "Documents",
+        "auditsNcr": "Audits / NCR"
+      },
+      "nextSteps": {
+        "addAnotherLink": "Add another link",
+        "linkFirstRecord": "Link first record"
+      },
+      "empty": {
+        "scope": "No scope recorded.",
+        "inputs": "No inputs recorded.",
+        "outputs": "No outputs recorded.",
+        "reference": "No reference assigned."
+      }
+    },
+    "traceability": {
+      "eyebrow": "Traceability",
+      "title": "At a glance",
+      "copy": "Use this process as a review hub for the records already linked to it, without changing their original workflows.",
+      "includedFrom": "Included from {{tier}}",
+      "summary": {
+        "risks": "Risks",
+        "audits": "Audits",
+        "ncrs": "NCRs",
+        "actions": "Actions"
+      },
+      "actions": {
+        "openRisk": "Open linked risk",
+        "openAudit": "Open linked audit",
+        "openNcr": "Open linked NCR",
+        "openAction": "Open linked action"
+      }
+    },
+    "links": {
+      "eyebrow": "Linked records",
+      "title": "Process linkage hub",
+      "copy": "View and connect existing IMS records without changing their original workflows.",
+      "emptyTitle": "No linked records yet",
+      "emptyCopy": "Link the risks, audits, documents, NCRs, or actions that belong to this process.",
+      "openComposer": "+ Link",
+      "closeComposer": "Close",
+      "remove": "Remove"
+    },
+    "linkComposer": {
+      "selectRecord": "Select a record",
+      "note": "Context note",
+      "notePlaceholder": "Optional note about this link",
+      "loadingTitle": "Loading available records",
+      "loadingCopy": "Fetching existing {{section}} in this tenant.",
+      "emptyTitle": "No records available",
+      "emptyCopy": "There are no existing {{section}} to link yet.",
+      "linking": "Linking...",
+      "addLink": "Add link"
+    },
     "candidate": {
       "internal": "Internal",
       "external": "External"
@@ -1844,6 +1988,35 @@
       "loadListFailed": "Process register could not be loaded.",
       "loadDetailsFailed": "Process details could not be loaded.",
       "loadOwnersFailed": "Process owners could not be loaded."
+    },
+    "lifecycle": {
+      "eyebrow": "Process lifecycle",
+      "title": "How processes interact across the IMS",
+      "copy": "Use the process register as the spine. Planning modules define the process, operational modules run it, assurance modules test it, and improvement modules close the loop.",
+      "improvementBar": "Continual improvement across the integrated management system",
+      "inputTitle": "Requirements and planning inputs",
+      "outputTitle": "Results, evidence, and review outputs",
+      "processCoreLabel": "Core register",
+      "processCoreCopy": "Each process remains the reference point for ownership, scope, interfaces, and linked evidence across the IMS.",
+      "stageLabel": "{{stage}} stage",
+      "stages": {
+        "plan": {
+          "title": "Plan",
+          "copy": "Define why the process exists, what risks surround it, which obligations apply, and how success will be measured."
+        },
+        "do": {
+          "title": "Do",
+          "copy": "Run the process with controlled documents, training, provider controls, and managed change."
+        },
+        "check": {
+          "title": "Check",
+          "copy": "Use assurance records to test whether the process performs as intended and where issues are emerging."
+        },
+        "act": {
+          "title": "Act",
+          "copy": "Turn findings and trends into corrective action, follow-up tasks, and management decisions."
+        }
+      }
     }
   },
   "managementReview": {

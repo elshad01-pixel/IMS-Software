@@ -165,6 +165,34 @@
       "readyToDeploy": "Tətbiqə hazırdır",
       "needsSetup": "Sazlama tələb olunur"
     },
+    "diagram": {
+      "eyebrow": "Sistem xÉ™ritÉ™si",
+      "title": "ModullarÄ±n VÄ°S boyunca necÉ™ qarÅŸÄ±lÄ±qlÄ± iÅŸlÉ™diyi",
+      "copy": "Bunu É™n sÃ¼rÉ™tli orientasiya gÃ¶rÃ¼nÃ¼ÅŸÃ¼ kimi istifadÉ™ edin. Proses reyestri mÉ™rkÉ™zdÉ™ qalÄ±r, planlaÅŸdÄ±rma modullarÄ± sistemi formalaÅŸdÄ±rÄ±r, É™mÉ™liyyat modullarÄ± onu iÅŸlÉ™dir, tÉ™minat modullarÄ± yoxlayÄ±r, tÉ™kmillÉ™ÅŸdirmÉ™ modullarÄ± isÉ™ dÃ¶vrÉ™ni baÄŸlayÄ±r.",
+      "improvementBar": "Vahid idarÉ™etmÉ™ sistemi Ã¼zrÉ™ davamli tÉ™kmillÉ™ÅŸdirmÉ™",
+      "inputTitle": "TÉ™lÉ™blÉ™r vÉ™ planlaÅŸdÄ±rma giriÅŸlÉ™ri",
+      "outputTitle": "NÉ™ticÉ™lÉ™r, sÃ¼butlar vÉ™ baxÄ±ÅŸ Ã§Ä±xÄ±ÅŸlarÄ±",
+      "coreLabel": "Əsas proses",
+      "coreCopy": "Sahiblik, interfeyslÉ™r, baÄŸli sÃ¼butlar vÉ™ modullararasÄ± izlÉ™mÉ™ Ã¼Ã§Ã¼n ortaq istinad nÃ¶qtÉ™si kimi proses reyestrindÉ™n istifadÉ™ edin.",
+      "stages": {
+        "plan": {
+          "title": "Sistemi planlaÅŸdÄ±rÄ±n",
+          "copy": "GÃ¼ndÉ™lik É™mÉ™liyyat baÅŸlamazdan É™vvÉ™l konteksti, Ã¶hdÉ™liklÉ™ri, risklÉ™ri vÉ™ Ã¶lÃ§Ã¼lÉ™ri mÃ¼É™yyÉ™n edin."
+        },
+        "do": {
+          "title": "Prosesi icra edin",
+          "copy": "ArdÄ±cÄ±l iÅŸlÉ™mÉ™k Ã¼Ã§Ã¼n sÉ™nÉ™dlÉ™rdÉ™n, proses nÉ™zarÉ™tlÉ™rindÉ™n, tÉ™limdÉ™n vÉ™ tÉ™chizatÃ§Ä± giriÅŸlÉ™rindÉ™n istifadÉ™ edin."
+        },
+        "check": {
+          "title": "Performansi yoxlayin",
+          "copy": "Sistemi auditlÉ™r, hadisÉ™lÉ™r, tÉ™hlÃ¼kÉ™lÉ™r vÉ™ ekoloji tÉ™minat qeydlÉ™ri ilÉ™ yoxlayÄ±n."
+        },
+        "act": {
+          "title": "TÉ™kmillÉ™ÅŸdirin vÉ™ qÉ™rar verin",
+          "copy": "TapÄ±ntÄ±larÄ± uyÄŸunsuzluq, dÃ¼zÉ™ldici tÉ™dbir, tapÅŸÄ±rÄ±q vÉ™ rÉ™hbÉ™rliyin tÉ™hlili qÉ™rarlarÄ±na Ã§evirin."
+        }
+      }
+    },
     "readiness": {
       "eyebrow": "Hazırlıq",
       "title": "Əsas sazlama siyahısı",
@@ -1684,7 +1712,9 @@
       "back": "Geri",
       "backToLabel": "{{label}} bölməsinə qayıt",
       "reviewProcess": "Prosesi nəzərdən keçirin",
-      "reviewRegister": "Reyestri nəzərdən keçirin"
+      "reviewRegister": "Reyestri nəzərdən keçirin",
+      "save": "Prosesi yadda saxla",
+      "saving": "Yadda saxlan?r..."
     },
     "breadcrumbs": {
       "new": "Yeni proses",
@@ -1804,6 +1834,120 @@
       "assurancePartial": "Prosesi artıq müəyyən qədər əlaqə var, lakin həm risk görünürlüğü, həm də sənəd nəzarəti sübutundan faydalanar.",
       "assuranceReady": "Bu proses artıq bağlı təminat qeydlərinə malikdir və bu onu audit və rəhbərlik təhlili üçün daha faydalı edir."
     },
+    "create": {
+      "start": {
+        "title": "Necə başlamaq istəyirsiniz?",
+        "ariaLabel": "Proses yaratma rejimi",
+        "templateMode": "Başlanğıc şablondan istifadə edin",
+        "customMode": "Sıfırdan başlayın",
+        "templateCopy": "Standart prosesi seçin, öncə baxın, sonra formaya tətbiq edin və yadda saxlamazdan öncə hər sahəni redaktə edin.",
+        "customCopy": "Təşkilatınıza xas proseslər üçün boş formadan istifadə edin. Sonradan yenə də başlanğıc şablona keçə bilərsiniz.",
+        "templateField": "Başlanğıc şablon",
+        "templatePlaceholder": "Başlanğıc proses seçin",
+        "useBlank": "Boş formadan istifadə et",
+        "applyStarter": "Başlanğıcı tətbiq et",
+        "previewCopy": "Bu yalnız formaya ilkin məlumat doldurur. Yadda saxlamazdan öncə hər sahəni dəyişə bilərsiniz."
+      },
+      "preview": {
+        "purpose": "Məqsəd",
+        "scope": "Əhatə dairəsi",
+        "inputs": "Girişlər",
+        "outputs": "Çıxışlar"
+      },
+      "positionTitle": "Proses nəzarət mövqeyi",
+      "summary": {
+        "owner": "Sahib",
+        "purpose": "Məqsəd",
+        "interfaces": "İnterfeyslər",
+        "assigned": "Təyin olunub",
+        "needed": "Lazımdır",
+        "recorded": "Qeyd olunub",
+        "defined": "Müəyyən edilib",
+        "clarify": "Dəqiqləşdirin"
+      },
+      "coreDefinition": "Əsas tərif",
+      "ownershipTitle": "Sahiblik və interfeyslər",
+      "fields": {
+        "reference": "Referans",
+        "status": "Status",
+        "name": "Proses adı",
+        "purpose": "Məqsəd",
+        "owner": "Sahib",
+        "department": "Şöbə",
+        "scope": "Əhatə dairəsi",
+        "inputs": "Girişlər",
+        "outputs": "Çıxışlar"
+      },
+      "placeholders": {
+        "reference": "PR-001",
+        "name": "Sənəd nəzarəti",
+        "department": "Keyfiyyət"
+      }
+    },
+    "detail": {
+      "eyebrow": "Proses detalı",
+      "noPurpose": "Hələ məqsəd qeyd olunmayıb.",
+      "summary": {
+        "owner": "Sahib",
+        "department": "Şöbə",
+        "linkedRecords": "Bağlı qeydlər"
+      },
+      "assuranceTitle": "Prosesin təminat mövqeyi",
+      "assurance": {
+        "risks": "Risklər",
+        "documents": "Sənədlər",
+        "auditsNcr": "Auditlər / NCR"
+      },
+      "nextSteps": {
+        "addAnotherLink": "Başqa bağlantı əlavə et",
+        "linkFirstRecord": "İlk qeydi bağla"
+      },
+      "empty": {
+        "scope": "Əhatə dairəsi qeyd olunmayıb.",
+        "inputs": "Girişlər qeyd olunmayıb.",
+        "outputs": "Çıxışlar qeyd olunmayıb.",
+        "reference": "Referans təyin edilməyib."
+      }
+    },
+    "traceability": {
+      "eyebrow": "İzləniləbilənlik",
+      "title": "Qısa baxış",
+      "copy": "Orijinal iş axınlarını dəyişmədən, artıq bağlanmış qeydləri bu proses üçün baxış mərkəzi kimi istifadə edin.",
+      "includedFrom": "{{tier}} paketində daxildir",
+      "summary": {
+        "risks": "Risklər",
+        "audits": "Auditlər",
+        "ncrs": "NCR-lər",
+        "actions": "Tapşırıqlar"
+      },
+      "actions": {
+        "openRisk": "Bağlı riski aç",
+        "openAudit": "Bağlı auditi aç",
+        "openNcr": "Bağlı NCR-i aç",
+        "openAction": "Bağlı tapşırığı aç"
+      }
+    },
+    "links": {
+      "eyebrow": "Bağlı qeydlər",
+      "title": "Proses bağlantı mərkəzi",
+      "copy": "Orijinal iş axınlarını dəyişmədən mövcud İMS qeydlərinə baxın və onları bağlayın.",
+      "emptyTitle": "Hələ bağlı qeyd yoxdur",
+      "emptyCopy": "Bu prosesə aid olan riskləri, auditləri, sənədləri, NCR-ləri və ya tapşırıqları bağlayın.",
+      "openComposer": "+ Bağla",
+      "closeComposer": "Bağla",
+      "remove": "Sil"
+    },
+    "linkComposer": {
+      "selectRecord": "Qeyd seçin",
+      "note": "Kontekst qeydi",
+      "notePlaceholder": "Bu bağlantı ilə bağlı istəyə bağlı qeyd",
+      "loadingTitle": "Mövcud qeydlər yüklənir",
+      "loadingCopy": "Bu tenant üçün mövcud {{section}} qeydləri alınır.",
+      "emptyTitle": "Mövcud qeyd yoxdur",
+      "emptyCopy": "Hələ bağlamaq üçün mövcud {{section}} qeydi yoxdur.",
+      "linking": "Bağlanır...",
+      "addLink": "Bağlantı əlavə et"
+    },
     "candidate": {
       "internal": "Daxili",
       "external": "Xarici"
@@ -1824,6 +1968,35 @@
       "loadListFailed": "Proses reyestri yüklənə bilmədi.",
       "loadDetailsFailed": "Proses detalları yüklənə bilmədi.",
       "loadOwnersFailed": "Proses sahibləri yüklənə bilmədi."
+    },
+    "lifecycle": {
+      "eyebrow": "Proses h?yat d?vr?",
+      "title": "Prosesl?r IMS boyunca nec? qar??l?ql? i?l?yir",
+      "copy": "Proses reyestrini ?sas s?tun kimi istifad? edin. Planla?d?rma modullar? prosesi m??yy?n edir, ?m?liyyat modullar? onu icra edir, t?minat modullar? yoxlay?r, t?kmill??dirm? modullar? is? d?vr?ni ba?lay?r.",
+      "improvementBar": "Vahid idarəetmə sistemi üzrə davamlı təkmilləşdirmə",
+      "inputTitle": "Tələblər və planlaşdırma girişləri",
+      "outputTitle": "Nəticələr, sübutlar və baxış çıxışları",
+      "processCoreLabel": "?sas reyestr",
+      "processCoreCopy": "H?r proses sahiblik, ?hat? dair?si, interfeysl?r v? ba?l? s?butlar ?zr? ?MS-d? ?sas istinad n?qt?si olaraq qal?r.",
+      "stageLabel": "{{stage}} m?rh?l?si",
+      "stages": {
+        "plan": {
+          "title": "Planla?d?r",
+          "copy": "Prosesin niy? m?vcud oldu?unu, ?traf?ndak? riskl?ri, hans? ?hd?likl?rin t?tbiq olundu?unu v? u?urun nec? ?l??l?c?yini m??yy?n edin."
+        },
+        "do": {
+          "title": "?cra et",
+          "copy": "Prosesi n?zar?tli s?n?dl?r, t?lim, t?chizat?? n?zar?ti v? idar? olunan d?yi?iklikl?rl? i?l?din."
+        },
+        "check": {
+          "title": "Yoxla",
+          "copy": "Prosesin g?zl?nildiyi kimi i?l?yib-i?l?m?diyini v? harada probleml?rin yarand???n? t?minat qeydl?ri il? yoxlay?n."
+        },
+        "act": {
+          "title": "T?dbir g?r",
+          "copy": "Tap?nt?lar? v? trendl?ri d?z?ldici t?dbirl?r?, izl?m? tap??r?qlar?na v? r?hb?rlik q?rarlar?na ?evirin."
+        }
+      }
     }
   },
   "managementReview": {

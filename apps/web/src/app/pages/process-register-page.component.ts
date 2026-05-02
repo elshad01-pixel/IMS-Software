@@ -138,30 +138,30 @@ type ReturnNavigation = { route: string[]; label: string };
               </section>
 
           <section class="detail-section" *ngIf="mode() === 'create' && processTemplates().length">
-            <h4>How do you want to start?</h4>
-            <div class="segmented-control top-space" role="group" aria-label="Process creation mode">
-              <button type="button" [class.active]="startMode() === 'template'" (click)="setStartMode('template')">Use a starter template</button>
-              <button type="button" [class.active]="startMode() === 'custom'" (click)="setStartMode('custom')">Start from scratch</button>
+            <h4>{{ t('processRegister.create.start.title') }}</h4>
+            <div class="segmented-control top-space" role="group" [attr.aria-label]="t('processRegister.create.start.ariaLabel')">
+              <button type="button" [class.active]="startMode() === 'template'" (click)="setStartMode('template')">{{ t('processRegister.create.start.templateMode') }}</button>
+              <button type="button" [class.active]="startMode() === 'custom'" (click)="setStartMode('custom')">{{ t('processRegister.create.start.customMode') }}</button>
             </div>
 
             <p class="subtle top-space" *ngIf="startMode() === 'template'">
-              Choose a standard process, preview it, then apply it to the form and edit every field before saving.
+              {{ t('processRegister.create.start.templateCopy') }}
             </p>
             <p class="subtle top-space" *ngIf="startMode() === 'custom'">
-              Use the blank form for processes that are unique to your organization. You can still switch back to a starter later.
+              {{ t('processRegister.create.start.customCopy') }}
             </p>
 
             <div class="form-grid-2 top-space" *ngIf="startMode() === 'template'">
               <label class="field">
-                <span>Starter template</span>
+                <span>{{ t('processRegister.create.start.templateField') }}</span>
                 <select [value]="selectedTemplateId()" (change)="selectedTemplateId.set(readSelectValue($event))">
-                  <option value="">Choose a starter process</option>
+                  <option value="">{{ t('processRegister.create.start.templatePlaceholder') }}</option>
                   <option *ngFor="let template of processTemplates()" [value]="template.id">{{ template.name }}</option>
                 </select>
               </label>
               <div class="button-row align-end">
-                <button type="button" class="secondary" (click)="setStartMode('custom')">Use blank form</button>
-                <button type="button" [disabled]="!selectedTemplate()" (click)="applyTemplate()">Apply starter</button>
+                <button type="button" class="secondary" (click)="setStartMode('custom')">{{ t('processRegister.create.start.useBlank') }}</button>
+                <button type="button" [disabled]="!selectedTemplate()" (click)="applyTemplate()">{{ t('processRegister.create.start.applyStarter') }}</button>
               </div>
             </div>
 
@@ -169,58 +169,44 @@ type ReturnNavigation = { route: string[]; label: string };
               <div class="section-head compact-head">
                 <div>
                   <h4>{{ template.name }}</h4>
-                  <p class="subtle">This only pre-fills the form. You can change every field before saving.</p>
+                  <p class="subtle">{{ t('processRegister.create.start.previewCopy') }}</p>
                 </div>
               </div>
               <div class="section-grid-2 top-space">
-                <section class="detail-section"><h4>Purpose</h4><p>{{ template.purpose }}</p></section>
-                <section class="detail-section"><h4>Scope</h4><p>{{ template.scope }}</p></section>
-                <section class="detail-section"><h4>Inputs</h4><p>{{ template.inputsText }}</p></section>
-                <section class="detail-section"><h4>Outputs</h4><p>{{ template.outputsText }}</p></section>
+                <section class="detail-section"><h4>{{ t('processRegister.create.preview.purpose') }}</h4><p>{{ template.purpose }}</p></section>
+                <section class="detail-section"><h4>{{ t('processRegister.create.preview.scope') }}</h4><p>{{ template.scope }}</p></section>
+                <section class="detail-section"><h4>{{ t('processRegister.create.preview.inputs') }}</h4><p>{{ template.inputsText }}</p></section>
+                <section class="detail-section"><h4>{{ t('processRegister.create.preview.outputs') }}</h4><p>{{ template.outputsText }}</p></section>
               </div>
             </div>
           </section>
 
-          <section class="content-guidance">
-            <div class="section-head compact-head">
-              <div>
-                <h4>Process-control position</h4>
-                <p class="subtle">{{ processDefinitionGuidance() }}</p>
-              </div>
+          <section class="detail-section">
+            <h4>{{ t('processRegister.create.coreDefinition') }}</h4>
+            <div class="form-grid-2 top-space">
+              <label class="field"><span>{{ t('processRegister.create.fields.reference') }}</span><input formControlName="referenceNo" [placeholder]="t('processRegister.create.placeholders.reference')"></label>
+              <label class="field"><span>{{ t('processRegister.create.fields.status') }}</span><select formControlName="status"><option value="ACTIVE">{{ t('processRegister.status.ACTIVE') }}</option><option value="ARCHIVED">{{ t('processRegister.status.ARCHIVED') }}</option></select></label>
             </div>
-            <div class="summary-strip top-space">
-              <article class="summary-item"><span>Owner</span><strong>{{ form.getRawValue().ownerUserId ? 'Assigned' : 'Needed' }}</strong></article>
-              <article class="summary-item"><span>Purpose</span><strong>{{ hasMeaningfulText(form.getRawValue().purpose) ? 'Recorded' : 'Needed' }}</strong></article>
-              <article class="summary-item"><span>Interfaces</span><strong>{{ hasMeaningfulText(form.getRawValue().inputsText) && hasMeaningfulText(form.getRawValue().outputsText) ? 'Defined' : 'Clarify' }}</strong></article>
-            </div>
+            <label class="field top-space"><span>{{ t('processRegister.create.fields.name') }}</span><input formControlName="name" [placeholder]="t('processRegister.create.placeholders.name')"></label>
+            <label class="field top-space"><span>{{ t('processRegister.create.fields.purpose') }}</span><textarea formControlName="purpose" rows="4"></textarea></label>
           </section>
 
           <section class="detail-section">
-            <h4>Core definition</h4>
+            <h4>{{ t('processRegister.create.ownershipTitle') }}</h4>
             <div class="form-grid-2 top-space">
-              <label class="field"><span>Reference</span><input formControlName="referenceNo" placeholder="PR-001"></label>
-              <label class="field"><span>Status</span><select formControlName="status"><option value="ACTIVE">Active</option><option value="ARCHIVED">Archived</option></select></label>
+              <label class="field"><span>{{ t('processRegister.create.fields.owner') }}</span><select formControlName="ownerUserId"><option value="">{{ t('processRegister.common.unassigned') }}</option><option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option></select></label>
+              <label class="field"><span>{{ t('processRegister.create.fields.department') }}</span><input formControlName="department" [placeholder]="t('processRegister.create.placeholders.department')"></label>
             </div>
-            <label class="field top-space"><span>Process name</span><input formControlName="name" placeholder="Document Control"></label>
-            <label class="field top-space"><span>Purpose</span><textarea formControlName="purpose" rows="4"></textarea></label>
-          </section>
-
-          <section class="detail-section">
-            <h4>Ownership and interfaces</h4>
+            <label class="field top-space"><span>{{ t('processRegister.create.fields.scope') }}</span><textarea formControlName="scope" rows="3"></textarea></label>
             <div class="form-grid-2 top-space">
-              <label class="field"><span>Owner</span><select formControlName="ownerUserId"><option value="">Unassigned</option><option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option></select></label>
-              <label class="field"><span>Department</span><input formControlName="department" placeholder="Quality"></label>
-            </div>
-            <label class="field top-space"><span>Scope</span><textarea formControlName="scope" rows="3"></textarea></label>
-            <div class="form-grid-2 top-space">
-              <label class="field"><span>Inputs</span><textarea formControlName="inputsText" rows="5"></textarea></label>
-              <label class="field"><span>Outputs</span><textarea formControlName="outputsText" rows="5"></textarea></label>
+              <label class="field"><span>{{ t('processRegister.create.fields.inputs') }}</span><textarea formControlName="inputsText" rows="5"></textarea></label>
+              <label class="field"><span>{{ t('processRegister.create.fields.outputs') }}</span><textarea formControlName="outputsText" rows="5"></textarea></label>
             </div>
           </section>
 
           <div class="button-row">
-            <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save process' }}</button>
-            <a [routerLink]="selectedId() ? ['/process-register', selectedId()] : ['/process-register']" class="button-link secondary">Cancel</a>
+            <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? t('processRegister.actions.saving') : t('processRegister.actions.save') }}</button>
+            <a [routerLink]="selectedId() ? ['/process-register', selectedId()] : ['/process-register']" class="button-link secondary">{{ t('common.cancel') }}</a>
           </div>
         </form>
 
@@ -231,30 +217,30 @@ type ReturnNavigation = { route: string[]; label: string };
           <section class="card detail-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Process detail</span>
-                <h3>{{ selectedProcess()?.referenceNo || 'Uncoded' }} - {{ selectedProcess()?.name }}</h3>
-                <p class="subtle">{{ selectedProcess()?.purpose || 'No purpose recorded yet.' }}</p>
+                <span class="section-eyebrow">{{ t('processRegister.detail.eyebrow') }}</span>
+                <h3>{{ selectedProcess()?.referenceNo || t('processRegister.list.uncoded') }} - {{ selectedProcess()?.name }}</h3>
+                <p class="subtle">{{ selectedProcess()?.purpose || t('processRegister.detail.noPurpose') }}</p>
               </div>
-              <span class="status-badge" [ngClass]="selectedProcess()?.status === 'ACTIVE' ? 'success' : 'neutral'">{{ selectedProcess()?.status | titlecase }}</span>
+              <span class="status-badge" [ngClass]="selectedProcess()?.status === 'ACTIVE' ? 'success' : 'neutral'">{{ selectedProcess()?.status ? statusLabel(selectedProcess()!.status) : '' }}</span>
             </div>
 
             <div class="summary-strip top-space">
-              <article class="summary-item"><span>Owner</span><strong>{{ selectedProcess()?.owner ? personName(selectedProcess()!.owner!) : 'Unassigned' }}</strong></article>
-              <article class="summary-item"><span>Department</span><strong>{{ selectedProcess()?.department || 'Not set' }}</strong></article>
-              <article class="summary-item"><span>Linked records</span><strong>{{ selectedProcess()?.links?.length || 0 }}</strong></article>
+              <article class="summary-item"><span>{{ t('processRegister.detail.summary.owner') }}</span><strong>{{ selectedProcess()?.owner ? personName(selectedProcess()!.owner!) : t('processRegister.common.unassigned') }}</strong></article>
+              <article class="summary-item"><span>{{ t('processRegister.detail.summary.department') }}</span><strong>{{ selectedProcess()?.department || t('common.notSet') }}</strong></article>
+              <article class="summary-item"><span>{{ t('processRegister.detail.summary.linkedRecords') }}</span><strong>{{ selectedProcess()?.links?.length || 0 }}</strong></article>
             </div>
 
             <section class="content-guidance top-space">
               <div class="section-head compact-head">
                 <div>
-                  <h4>Process assurance position</h4>
+                  <h4>{{ t('processRegister.detail.assuranceTitle') }}</h4>
                   <p class="subtle">{{ processAssuranceNarrative() }}</p>
                 </div>
               </div>
               <div class="summary-strip top-space">
-                <article class="summary-item"><span>Risks</span><strong>{{ linkCountByType('RISK') }}</strong></article>
-                <article class="summary-item"><span>Documents</span><strong>{{ linkCountByType('DOCUMENT') }}</strong></article>
-                <article class="summary-item"><span>Audits / NCR</span><strong>{{ linkCountByType('AUDIT') + linkCountByType('NCR') }}</strong></article>
+                <article class="summary-item"><span>{{ t('processRegister.detail.assurance.risks') }}</span><strong>{{ linkCountByType('RISK') }}</strong></article>
+                <article class="summary-item"><span>{{ t('processRegister.detail.assurance.documents') }}</span><strong>{{ linkCountByType('DOCUMENT') }}</strong></article>
+                <article class="summary-item"><span>{{ t('processRegister.detail.assurance.auditsNcr') }}</span><strong>{{ linkCountByType('AUDIT') + linkCountByType('NCR') }}</strong></article>
               </div>
             </section>
 
@@ -262,73 +248,73 @@ type ReturnNavigation = { route: string[]; label: string };
               <strong>{{ message() }}</strong>
               <span>{{ processNextStepsCopy() }}</span>
               <div class="button-row top-space">
-                <button *ngIf="canWrite()" type="button" (click)="openSuggestedLinkComposer()">{{ selectedProcess()?.links?.length ? 'Add another link' : 'Link first record' }}</button>
-                <a routerLink="/process-register" class="button-link tertiary">Review register</a>
+                <button *ngIf="canWrite()" type="button" (click)="openSuggestedLinkComposer()">{{ selectedProcess()?.links?.length ? t('processRegister.detail.nextSteps.addAnotherLink') : t('processRegister.detail.nextSteps.linkFirstRecord') }}</button>
+                <a routerLink="/process-register" class="button-link tertiary">{{ t('processRegister.actions.reviewRegister') }}</a>
               </div>
             </section>
 
             <div class="section-grid-2 top-space">
-              <section class="detail-section"><h4>Scope</h4><p>{{ selectedProcess()?.scope || 'No scope recorded.' }}</p></section>
-              <section class="detail-section"><h4>Inputs</h4><p>{{ selectedProcess()?.inputsText || 'No inputs recorded.' }}</p></section>
-              <section class="detail-section"><h4>Outputs</h4><p>{{ selectedProcess()?.outputsText || 'No outputs recorded.' }}</p></section>
-              <section class="detail-section"><h4>Reference</h4><p>{{ selectedProcess()?.referenceNo || 'No reference assigned.' }}</p></section>
+              <section class="detail-section"><h4>{{ t('processRegister.create.fields.scope') }}</h4><p>{{ selectedProcess()?.scope || t('processRegister.detail.empty.scope') }}</p></section>
+              <section class="detail-section"><h4>{{ t('processRegister.create.fields.inputs') }}</h4><p>{{ selectedProcess()?.inputsText || t('processRegister.detail.empty.inputs') }}</p></section>
+              <section class="detail-section"><h4>{{ t('processRegister.create.fields.outputs') }}</h4><p>{{ selectedProcess()?.outputsText || t('processRegister.detail.empty.outputs') }}</p></section>
+              <section class="detail-section"><h4>{{ t('processRegister.create.fields.reference') }}</h4><p>{{ selectedProcess()?.referenceNo || t('processRegister.detail.empty.reference') }}</p></section>
             </div>
           </section>
 
           <section class="card detail-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Traceability</span>
-                <h3>At a glance</h3>
-                <p class="subtle">Use this process as a review hub for the records already linked to it, without changing their original workflows.</p>
+                <span class="section-eyebrow">{{ t('processRegister.traceability.eyebrow') }}</span>
+                <h3>{{ t('processRegister.traceability.title') }}</h3>
+                <p class="subtle">{{ t('processRegister.traceability.copy') }}</p>
               </div>
             </div>
 
             <div class="summary-strip top-space">
-              <article class="summary-item"><span>Risks</span><strong>{{ linkCountByType('RISK') }}</strong></article>
-              <article class="summary-item"><span>Audits</span><strong>{{ linkCountByType('AUDIT') }}</strong></article>
-              <article class="summary-item"><span>NCRs</span><strong>{{ linkCountByType('NCR') }}</strong></article>
-              <article class="summary-item"><span>Actions</span><strong>{{ linkCountByType('ACTION') }}</strong></article>
+              <article class="summary-item"><span>{{ t('processRegister.traceability.summary.risks') }}</span><strong>{{ linkCountByType('RISK') }}</strong></article>
+              <article class="summary-item"><span>{{ t('processRegister.traceability.summary.audits') }}</span><strong>{{ linkCountByType('AUDIT') }}</strong></article>
+              <article class="summary-item"><span>{{ t('processRegister.traceability.summary.ncrs') }}</span><strong>{{ linkCountByType('NCR') }}</strong></article>
+              <article class="summary-item"><span>{{ t('processRegister.traceability.summary.actions') }}</span><strong>{{ linkCountByType('ACTION') }}</strong></article>
             </div>
 
             <div class="button-row top-space">
-              <a *ngIf="firstLinkByType('RISK') as firstRisk" [routerLink]="linkRoute(firstRisk)" [queryParams]="linkQueryParams(firstRisk)" [state]="linkState(firstRisk)" class="button-link secondary">Open linked risk</a>
+              <a *ngIf="firstLinkByType('RISK') as firstRisk" [routerLink]="linkRoute(firstRisk)" [queryParams]="linkQueryParams(firstRisk)" [state]="linkState(firstRisk)" class="button-link secondary">{{ t('processRegister.traceability.actions.openRisk') }}</a>
               <div *ngIf="!firstLinkByType('RISK') && inaccessibleFirstLinkByType('RISK') as firstRiskSummary" class="package-inline-summary">
-                <span class="package-inline-summary__eyebrow">Included from {{ packageTierLabel(firstRiskSummary.requiredTier) }}</span>
+                <span class="package-inline-summary__eyebrow">{{ t('processRegister.traceability.includedFrom', { tier: packageTierLabel(firstRiskSummary.requiredTier) }) }}</span>
                 <strong>{{ firstRiskSummary.title }}</strong>
                 <small *ngIf="firstRiskSummary.subtitle">{{ firstRiskSummary.subtitle }}</small>
                 <small>{{ firstRiskSummary.moduleLabel }}<span *ngIf="firstRiskSummary.statusLabel"> · {{ firstRiskSummary.statusLabel }}</span></small>
               </div>
-              <a *ngIf="firstLinkByType('AUDIT') as firstAudit" [routerLink]="linkRoute(firstAudit)" [queryParams]="linkQueryParams(firstAudit)" [state]="linkState(firstAudit)" class="button-link secondary">Open linked audit</a>
+              <a *ngIf="firstLinkByType('AUDIT') as firstAudit" [routerLink]="linkRoute(firstAudit)" [queryParams]="linkQueryParams(firstAudit)" [state]="linkState(firstAudit)" class="button-link secondary">{{ t('processRegister.traceability.actions.openAudit') }}</a>
               <div *ngIf="!firstLinkByType('AUDIT') && inaccessibleFirstLinkByType('AUDIT') as firstAuditSummary" class="package-inline-summary">
-                <span class="package-inline-summary__eyebrow">Included from {{ packageTierLabel(firstAuditSummary.requiredTier) }}</span>
+                <span class="package-inline-summary__eyebrow">{{ t('processRegister.traceability.includedFrom', { tier: packageTierLabel(firstAuditSummary.requiredTier) }) }}</span>
                 <strong>{{ firstAuditSummary.title }}</strong>
                 <small *ngIf="firstAuditSummary.subtitle">{{ firstAuditSummary.subtitle }}</small>
                 <small>{{ firstAuditSummary.moduleLabel }}<span *ngIf="firstAuditSummary.statusLabel"> · {{ firstAuditSummary.statusLabel }}</span></small>
               </div>
-              <a *ngIf="firstLinkByType('NCR') as firstNcr" [routerLink]="linkRoute(firstNcr)" [queryParams]="linkQueryParams(firstNcr)" [state]="linkState(firstNcr)" class="button-link tertiary">Open linked NCR</a>
+              <a *ngIf="firstLinkByType('NCR') as firstNcr" [routerLink]="linkRoute(firstNcr)" [queryParams]="linkQueryParams(firstNcr)" [state]="linkState(firstNcr)" class="button-link tertiary">{{ t('processRegister.traceability.actions.openNcr') }}</a>
               <div *ngIf="!firstLinkByType('NCR') && inaccessibleFirstLinkByType('NCR') as firstNcrSummary" class="package-inline-summary">
-                <span class="package-inline-summary__eyebrow">Included from {{ packageTierLabel(firstNcrSummary.requiredTier) }}</span>
+                <span class="package-inline-summary__eyebrow">{{ t('processRegister.traceability.includedFrom', { tier: packageTierLabel(firstNcrSummary.requiredTier) }) }}</span>
                 <strong>{{ firstNcrSummary.title }}</strong>
                 <small *ngIf="firstNcrSummary.subtitle">{{ firstNcrSummary.subtitle }}</small>
                 <small>{{ firstNcrSummary.moduleLabel }}<span *ngIf="firstNcrSummary.statusLabel"> · {{ firstNcrSummary.statusLabel }}</span></small>
               </div>
-              <a *ngIf="firstLinkByType('ACTION') as firstAction" [routerLink]="linkRoute(firstAction)" [queryParams]="linkQueryParams(firstAction)" [state]="linkState(firstAction)" class="button-link tertiary">Open linked action</a>
+              <a *ngIf="firstLinkByType('ACTION') as firstAction" [routerLink]="linkRoute(firstAction)" [queryParams]="linkQueryParams(firstAction)" [state]="linkState(firstAction)" class="button-link tertiary">{{ t('processRegister.traceability.actions.openAction') }}</a>
             </div>
           </section>
 
           <section class="card detail-card">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Linked records</span>
-                <h3>Process linkage hub</h3>
-                <p class="subtle">View and connect existing IMS records without changing their original workflows.</p>
+                <span class="section-eyebrow">{{ t('processRegister.links.eyebrow') }}</span>
+                <h3>{{ t('processRegister.links.title') }}</h3>
+                <p class="subtle">{{ t('processRegister.links.copy') }}</p>
               </div>
             </div>
 
             <div class="empty-state top-space" *ngIf="!selectedProcess()?.links?.length">
-              <strong>No linked records yet</strong>
-              <span>Link the risks, audits, documents, NCRs, or actions that belong to this process.</span>
+              <strong>{{ t('processRegister.links.emptyTitle') }}</strong>
+              <span>{{ t('processRegister.links.emptyCopy') }}</span>
             </div>
 
             <div class="page-stack top-space">
@@ -339,7 +325,7 @@ type ReturnNavigation = { route: string[]; label: string };
                     <p class="subtle">{{ sectionDescription(type) }}</p>
                   </div>
                   <button *ngIf="canWrite()" type="button" class="button-link secondary" (click)="openLinkComposer(type)">
-                    {{ activeLinkComposerType() === type ? 'Close' : '+ Link' }}
+                    {{ activeLinkComposerType() === type ? t('processRegister.links.closeComposer') : t('processRegister.links.openComposer') }}
                   </button>
                 </div>
 
@@ -358,14 +344,14 @@ type ReturnNavigation = { route: string[]; label: string };
                       </div>
                       <div class="route-context">
                         <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
-                        <a *ngIf="link.path && !link.missing" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link secondary">Open</a>
+                        <a *ngIf="link.path && !link.missing" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link secondary">{{ t('common.open') }}</a>
                         <div *ngIf="!canOpenLink(link) && inaccessibleLinkSummary(link) as summary" class="package-link-note">
-                          <span class="package-link-note__eyebrow">Included from {{ packageTierLabel(summary.requiredTier) }}</span>
+                          <span class="package-link-note__eyebrow">{{ t('processRegister.traceability.includedFrom', { tier: packageTierLabel(summary.requiredTier) }) }}</span>
                           <strong>{{ summary.title }}</strong>
                           <small *ngIf="summary.subtitle">{{ summary.subtitle }}</small>
                           <small>{{ summary.moduleLabel }}<span *ngIf="summary.statusLabel"> · {{ summary.statusLabel }}</span></small>
                         </div>
-                        <button *ngIf="canWrite()" type="button" class="button-link tertiary" (click)="removeLink(link.id)">Remove</button>
+                        <button *ngIf="canWrite()" type="button" class="button-link tertiary" (click)="removeLink(link.id)">{{ t('processRegister.links.remove') }}</button>
                       </div>
                     </div>
                   </div>
@@ -376,26 +362,26 @@ type ReturnNavigation = { route: string[]; label: string };
                     <label class="field">
                       <span>{{ sectionPickerLabel(type) }}</span>
                       <select formControlName="linkedId">
-                        <option value="">Select a record</option>
+                        <option value="">{{ t('processRegister.linkComposer.selectRecord') }}</option>
                         <option *ngFor="let item of linkCandidates()" [value]="item.id">{{ item.label }}</option>
                       </select>
                     </label>
                     <label class="field">
-                      <span>Context note</span>
-                      <input formControlName="note" placeholder="Optional note about this link">
+                      <span>{{ t('processRegister.linkComposer.note') }}</span>
+                      <input formControlName="note" [placeholder]="t('processRegister.linkComposer.notePlaceholder')">
                     </label>
                   </div>
                   <div class="empty-state compact-empty" *ngIf="linkCandidatesLoading()">
-                    <strong>Loading available records</strong>
-                    <span>Fetching existing {{ sectionTitle(type).toLowerCase() }} in this tenant.</span>
+                    <strong>{{ t('processRegister.linkComposer.loadingTitle') }}</strong>
+                    <span>{{ t('processRegister.linkComposer.loadingCopy', { section: sectionTitle(type).toLowerCase() }) }}</span>
                   </div>
                   <div class="empty-state compact-empty" *ngIf="!linkCandidatesLoading() && !linkCandidates().length">
-                    <strong>No records available</strong>
-                    <span>There are no existing {{ sectionTitle(type).toLowerCase() }} to link yet.</span>
+                    <strong>{{ t('processRegister.linkComposer.emptyTitle') }}</strong>
+                    <span>{{ t('processRegister.linkComposer.emptyCopy', { section: sectionTitle(type).toLowerCase() }) }}</span>
                   </div>
                   <div class="button-row">
-                    <button type="submit" [disabled]="linkForm.invalid || linkSaving() || !linkCandidates().length">{{ linkSaving() ? 'Linking...' : 'Add link' }}</button>
-                    <button type="button" class="button-link secondary" (click)="closeLinkComposer()">Cancel</button>
+                    <button type="submit" [disabled]="linkForm.invalid || linkSaving() || !linkCandidates().length">{{ linkSaving() ? t('processRegister.linkComposer.linking') : t('processRegister.linkComposer.addLink') }}</button>
+                    <button type="button" class="button-link secondary" (click)="closeLinkComposer()">{{ t('common.cancel') }}</button>
                   </div>
                 </form>
               </section>
@@ -571,13 +557,6 @@ export class ProcessRegisterPageComponent implements OnInit, OnChanges {
   }
   protected hasMeaningfulText(value?: string | null) {
     return !!(value || '').trim();
-  }
-  protected processDefinitionGuidance() {
-    const raw = this.form.getRawValue();
-    if (raw.ownerUserId && this.hasMeaningfulText(raw.purpose) && this.hasMeaningfulText(raw.inputsText) && this.hasMeaningfulText(raw.outputsText)) {
-      return this.t('processRegister.guidance.definitionReady');
-    }
-    return this.t('processRegister.guidance.definitionNeeded');
   }
   protected processAssuranceNarrative() {
     const process = this.selectedProcess();
