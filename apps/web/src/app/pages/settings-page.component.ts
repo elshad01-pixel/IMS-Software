@@ -6,7 +6,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
-import { getEnabledModules, PackageModuleKey, TenantPackageTier } from '../core/package-entitlements';
+import { getEnabledModules, PackageModuleKey, TenantPackageTier, TenantScope } from '../core/package-entitlements';
 import { TenantAddOns } from '../core/tenant-addons';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
@@ -54,6 +54,7 @@ type SettingsConfig = {
   };
   subscription: {
     packageTier: TenantPackageTier;
+    scope: TenantScope;
     addOns: TenantAddOns;
   };
   notifications: {
@@ -270,9 +271,9 @@ const packageModulePresentation: Record<PackageModuleKey, { label: string; copy:
           <small>Green, warning, breach</small>
         </article>
         <article class="summary-item">
-          <span>Package</span>
+          <span>Package / Scope</span>
           <strong>{{ packageTierLabel(current.subscription.packageTier) }}</strong>
-          <small>{{ enabledAddOnCount(current.subscription.addOns) }} add-on{{ enabledAddOnCount(current.subscription.addOns) === 1 ? '' : 's' }} enabled</small>
+          <small>{{ scopeLabel(current.subscription.scope) }} · {{ enabledAddOnCount(current.subscription.addOns) }} add-on{{ enabledAddOnCount(current.subscription.addOns) === 1 ? '' : 's' }} enabled</small>
         </article>
       </section>
 
@@ -308,8 +309,8 @@ const packageModulePresentation: Record<PackageModuleKey, { label: string; copy:
               <small>Default threshold bands for new KPIs</small>
             </button>
             <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'subscription'" (click)="activeSection.set('subscription')">
-              <span>Package</span>
-              <small>Choose which module bundle is active for this tenant</small>
+              <span>Package & Scope</span>
+              <small>Choose the commercial tier and active management-system scope</small>
             </button>
             <button type="button" class="ghost nav-button nav-card" [class.active]="activeSection() === 'notifications'" (click)="activeSection.set('notifications')">
               <span>Notifications</span>
@@ -561,9 +562,9 @@ const packageModulePresentation: Record<PackageModuleKey, { label: string; copy:
           <section class="card form-card page-stack" *ngIf="activeSection() === 'subscription'">
             <div class="section-head">
               <div>
-                <span class="section-eyebrow">Package</span>
-                <h3>Tenant package</h3>
-                <p class="subtle">Select the commercial package for this tenant. The app will hide and block modules that are outside the selected bundle.</p>
+                <span class="section-eyebrow">Package & Scope</span>
+                <h3>Tenant subscription model</h3>
+                <p class="subtle">Select the commercial package and the management-system scope for this tenant. The app will hide and block modules that are outside the selected combination.</p>
               </div>
             </div>
 
@@ -592,21 +593,51 @@ const packageModulePresentation: Record<PackageModuleKey, { label: string; copy:
             </div>
 
             <form [formGroup]="subscriptionForm" class="page-stack" (ngSubmit)="saveSection('subscription')">
-              <label class="field">
-                <span>Package tier</span>
-                <select formControlName="packageTier">
-                  <option value="ASSURANCE">Assurance</option>
-                  <option value="CORE_IMS">Core IMS</option>
-                  <option value="QHSE_PRO">QHSE Pro</option>
-                </select>
-              </label>
+              <div class="form-grid-2">
+                <label class="field">
+                  <span>Package tier</span>
+                  <select formControlName="packageTier">
+                    <option value="ASSURANCE">Assurance</option>
+                    <option value="CORE_IMS">Core IMS</option>
+                    <option value="QHSE_PRO">QHSE Pro</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>Scope</span>
+                  <select formControlName="scope">
+                    <option value="QMS">Quality Management (ISO 9001)</option>
+                    <option value="EMS">Environmental Management (ISO 14001)</option>
+                    <option value="OHSMS">Occupational Health & Safety (ISO 45001)</option>
+                    <option value="IMS">Integrated Management System</option>
+                    <option value="FSMS">Food Safety (ISO 22000)</option>
+                  </select>
+                </label>
+              </div>
+
+              <section class="detail-section">
+                <div class="section-head">
+                  <div>
+                    <span class="section-eyebrow">Scope model</span>
+                    <h4>What the scope changes</h4>
+                    <p class="subtle">Scope adjusts which domain modules stay visible for the tenant and which language model the workspace should follow.</p>
+                  </div>
+                </div>
+
+                <div class="entity-list compact-entity-list top-space">
+                  <div class="entity-item">
+                    <strong>{{ scopeLabel(subscriptionForm.getRawValue().scope) }}</strong>
+                    <small>{{ scopeDescription(subscriptionForm.getRawValue().scope) }}</small>
+                  </div>
+                </div>
+              </section>
 
               <section class="detail-section">
                 <div class="section-head">
                   <div>
                     <span class="section-eyebrow">Included modules</span>
-                    <h4>Package scope preview</h4>
-                    <p class="subtle">These modules will stay visible and functional for the tenant after the package is saved.</p>
+                    <h4>Package and scope preview</h4>
+                    <p class="subtle">These modules will stay visible and functional for the tenant after this package and scope combination is saved.</p>
                   </div>
                 </div>
 
@@ -652,7 +683,7 @@ const packageModulePresentation: Record<PackageModuleKey, { label: string; copy:
 
               <div class="button-row">
                 <button type="submit" [disabled]="subscriptionForm.invalid || savingSection() === 'subscription' || !canWrite()">
-                  {{ savingSection() === 'subscription' ? 'Saving...' : 'Save package' }}
+                  {{ savingSection() === 'subscription' ? 'Saving...' : 'Save package and scope' }}
                 </button>
               </div>
             </form>
@@ -1095,6 +1126,7 @@ export class SettingsPageComponent {
 
   protected readonly subscriptionForm = this.fb.nonNullable.group({
     packageTier: ['QHSE_PRO' as TenantPackageTier, Validators.required],
+    scope: ['IMS' as TenantScope, Validators.required],
     aiAssistant: [true],
     customerFeedback: [true]
   });
@@ -1186,6 +1218,7 @@ export class SettingsPageComponent {
         : section === 'subscription'
           ? {
               packageTier: this.subscriptionForm.getRawValue().packageTier,
+              scope: this.subscriptionForm.getRawValue().scope,
               addOns: {
                 aiAssistant: this.subscriptionForm.getRawValue().aiAssistant,
                 customerFeedback: this.subscriptionForm.getRawValue().customerFeedback
@@ -1200,7 +1233,7 @@ export class SettingsPageComponent {
         this.applyConfig(config as SettingsConfig);
         if (section === 'subscription') {
           const subscription = (config as SettingsConfig).subscription;
-          this.authStore.updateEntitlements(subscription.packageTier, subscription.addOns);
+          this.authStore.updateEntitlements(subscription.packageTier, subscription.scope, subscription.addOns);
           this.authStore.refreshSession();
         }
         if (section === 'ai') {
@@ -1262,12 +1295,33 @@ export class SettingsPageComponent {
     }[packageTier];
   }
 
+  protected scopeLabel(scope: TenantScope) {
+    return {
+      QMS: 'Quality Management (ISO 9001)',
+      EMS: 'Environmental Management (ISO 14001)',
+      OHSMS: 'Occupational Health & Safety (ISO 45001)',
+      IMS: 'Integrated Management System',
+      FSMS: 'Food Safety (ISO 22000)'
+    }[scope];
+  }
+
+  protected scopeDescription(scope: TenantScope) {
+    return {
+      QMS: 'Quality-first workspace with shared IMS modules and no environmental or OH&S-specific operational registers.',
+      EMS: 'Environmental workspace that adds environmental aspects and incident follow-up to the shared IMS core.',
+      OHSMS: 'Occupational health and safety workspace that adds hazards and incidents to the shared IMS core.',
+      IMS: 'Integrated workspace that combines quality, environmental, and OH&S modules in one operating model.',
+      FSMS: 'Food-safety-ready workspace using the shared IMS core until ISO 22000-specific modules are added.'
+    }[scope];
+  }
+
   protected enabledAddOnCount(addOns: TenantAddOns) {
     return Object.values(addOns).filter(Boolean).length;
   }
 
   protected selectedPackageModules() {
-    return getEnabledModules(this.subscriptionForm.getRawValue().packageTier).map((moduleKey) => packageModulePresentation[moduleKey]);
+    const { packageTier, scope } = this.subscriptionForm.getRawValue();
+    return getEnabledModules(packageTier, scope).map((moduleKey) => packageModulePresentation[moduleKey]);
   }
 
   protected hasAiAddOn() {
@@ -1314,6 +1368,7 @@ export class SettingsPageComponent {
     });
     this.subscriptionForm.reset({
       packageTier: config.subscription.packageTier,
+      scope: config.subscription.scope,
       aiAssistant: config.subscription.addOns.aiAssistant,
       customerFeedback: config.subscription.addOns.customerFeedback
     });

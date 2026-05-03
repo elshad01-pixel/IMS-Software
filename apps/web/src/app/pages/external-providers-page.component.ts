@@ -6,7 +6,7 @@ import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 import { I18nService } from '../core/i18n.service';
-import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
+import { PackageModuleKey, TenantPackageTier, TenantScope, minimumPackageTierForModule } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
 
@@ -447,29 +447,112 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
   }
 
   protected pageTitle() {
+    const label = this.pageLabel();
     return {
-      list: this.t('externalProviders.page.titles.list'),
+      list: label,
       create: this.t('externalProviders.page.titles.create'),
       detail: this.selectedRecord()?.providerName || this.t('externalProviders.page.titles.detail'),
       edit: this.selectedRecord()?.providerName || this.t('externalProviders.page.titles.edit')
     }[this.mode()];
   }
 
+  protected pageLabel() {
+    return this.scopeText({
+      QMS: { en: 'External providers', az: 'Xarici təminatçılar', ru: 'Внешние поставщики' },
+      EMS: { en: 'Environmental providers', az: 'Ekoloji təminatçılar', ru: 'Экологические поставщики и подрядчики' },
+      OHSMS: { en: 'Contractors & providers', az: 'Podratçılar və təminatçılar', ru: 'Подрядчики и поставщики' },
+      IMS: { en: this.t('externalProviders.page.label'), az: this.t('externalProviders.page.label'), ru: this.t('externalProviders.page.label') },
+      FSMS: { en: 'Food chain providers', az: 'Qida zənciri təminatçıları', ru: 'Поставщики пищевой цепочки' }
+    });
+  }
+
   protected pageDescription() {
-    return {
-      list: this.t('externalProviders.page.descriptions.list'),
-      create: this.t('externalProviders.page.descriptions.create'),
-      detail: this.t('externalProviders.page.descriptions.detail'),
-      edit: this.t('externalProviders.page.descriptions.edit')
-    }[this.mode()];
+    if (this.mode() === 'list') {
+      return this.scopeText({
+        QMS: {
+          en: 'Review supplier and service-provider performance, annual evaluation, and follow-up in one place.',
+          az: 'Təchizatçı və xidmət təminatçılarının fəaliyyətini, illik qiymətləndirməsini və sonrakı tədbirlərini bir yerdə izləyin.',
+          ru: 'Отслеживайте результативность поставщиков и подрядчиков, ежегодную оценку и последующие действия в одном месте.'
+        },
+        EMS: {
+          en: 'Review providers that affect environmental performance, compliance, and follow-up in one place.',
+          az: 'Ekoloji göstəricilərə təsir edən təminatçıları, uyğunluğu və sonrakı tədbirləri bir yerdə izləyin.',
+          ru: 'Отслеживайте поставщиков, влияющих на экологические показатели, соблюдение требований и последующие действия в одном месте.'
+        },
+        OHSMS: {
+          en: 'Review contractor and provider performance for OH&S control, competence, and follow-up in one place.',
+          az: 'Əməyin mühafizəsi nəzarəti, səriştə və sonrakı tədbirlər üçün podratçı və təminatçı fəaliyyətini bir yerdə izləyin.',
+          ru: 'Отслеживайте результативность подрядчиков и поставщиков для контроля ОТиЗ, компетентности и последующих действий в одном месте.'
+        },
+        IMS: {
+          en: this.t('externalProviders.page.descriptions.list'),
+          az: this.t('externalProviders.page.descriptions.list'),
+          ru: this.t('externalProviders.page.descriptions.list')
+        },
+        FSMS: {
+          en: 'Review food-chain suppliers and service providers, annual assurance, and follow-up in one place.',
+          az: 'Qida zənciri təchizatçılarını və xidmət təminatçılarını, illik təminatı və sonrakı tədbirləri bir yerdə izləyin.',
+          ru: 'Отслеживайте поставщиков и подрядчиков пищевой цепочки, ежегодное обеспечение и последующие действия в одном месте.'
+        }
+      });
+    }
+
+    if (this.mode() === 'create') {
+      return this.t('externalProviders.page.descriptions.create');
+    }
+    if (this.mode() === 'detail') {
+      return this.t('externalProviders.page.descriptions.detail');
+    }
+    return this.t('externalProviders.page.descriptions.edit');
   }
 
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: this.t('externalProviders.page.label') }];
-    const base = [{ label: this.t('externalProviders.page.label'), link: '/external-providers' }];
+    const label = this.pageLabel();
+    if (this.mode() === 'list') return [{ label }];
+    const base = [{ label, link: '/external-providers' }];
     if (this.mode() === 'create') return [...base, { label: this.t('externalProviders.breadcrumbs.new') }];
     if (this.mode() === 'edit') return [...base, { label: this.selectedRecord()?.providerName || this.t('externalProviders.breadcrumbs.record'), link: `/external-providers/${this.selectedId()}` }, { label: this.t('externalProviders.breadcrumbs.edit') }];
     return [...base, { label: this.selectedRecord()?.providerName || this.t('externalProviders.breadcrumbs.record') }];
+  }
+
+  protected listTitle() {
+    return this.scopeText({
+      QMS: { en: 'Provider filters', az: 'Təminatçı filtrləri', ru: 'Фильтры поставщиков' },
+      EMS: { en: 'Environmental provider filters', az: 'Ekoloji təminatçı filtrləri', ru: 'Фильтры экологических поставщиков' },
+      OHSMS: { en: 'Contractor filters', az: 'Podratçı filtrləri', ru: 'Фильтры подрядчиков' },
+      IMS: { en: this.t('externalProviders.list.filtersTitle'), az: this.t('externalProviders.list.filtersTitle'), ru: this.t('externalProviders.list.filtersTitle') },
+      FSMS: { en: 'Food chain provider filters', az: 'Qida zənciri təminatçı filtrləri', ru: 'Фильтры поставщиков пищевой цепочки' }
+    });
+  }
+
+  protected listCopy() {
+    return this.scopeText({
+      QMS: {
+        en: 'Review supplier control, performance, and annual evaluations in one calm register.',
+        az: 'Təchizatçı nəzarətini, fəaliyyətini və illik qiymətləndirmələri bir sakit reyestrdə izləyin.',
+        ru: 'Просматривайте контроль поставщиков, результативность и ежегодные оценки в одном реестре.'
+      },
+      EMS: {
+        en: 'Review providers that influence environmental compliance and performance in one calm register.',
+        az: 'Ekoloji uyğunluq və nəticələrə təsir edən təminatçıları bir sakit reyestrdə izləyin.',
+        ru: 'Просматривайте поставщиков, влияющих на экологическое соблюдение требований и показатели, в одном реестре.'
+      },
+      OHSMS: {
+        en: 'Review contractor control, OH&S assurance, and follow-up in one calm register.',
+        az: 'Podratçı nəzarətini, əməyin mühafizəsi təminatını və sonrakı tədbirləri bir sakit reyestrdə izləyin.',
+        ru: 'Просматривайте контроль подрядчиков, обеспечение ОТиЗ и последующие действия в одном реестре.'
+      },
+      IMS: {
+        en: this.t('externalProviders.list.copy'),
+        az: this.t('externalProviders.list.copy'),
+        ru: this.t('externalProviders.list.copy')
+      },
+      FSMS: {
+        en: 'Review food-chain supplier assurance and annual evaluations in one calm register.',
+        az: 'Qida zənciri təchizatçılarının təminatını və illik qiymətləndirmələrini bir sakit reyestrdə izləyin.',
+        ru: 'Просматривайте обеспечение поставщиков пищевой цепочки и ежегодные оценки в одном реестре.'
+      }
+    });
   }
 
   protected guidance() {
@@ -808,6 +891,12 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
     const today = new Date();
     const delta = (today.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24);
     return delta > days;
+  }
+
+  private scopeText(content: Record<TenantScope, { en: string; az: string; ru: string }>) {
+    const scope = this.authStore.scope();
+    const language = this.i18n.language();
+    return content[scope][language];
   }
 }
 

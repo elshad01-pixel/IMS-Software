@@ -1,6 +1,6 @@
 <section class="page-grid">
   <iso-page-header
-    [label]="t('incidents.page.label')"
+    [label]="pageLabel()"
     [title]="pageTitle()"
     [description]="pageDescription()"
     [breadcrumbs]="breadcrumbs()"
@@ -17,8 +17,8 @@
       <div class="toolbar">
         <div class="toolbar-meta">
           <div>
-            <p class="toolbar-title">{{ t('incidents.list.filtersTitle') }}</p>
-            <p class="toolbar-copy">{{ t('incidents.list.copy') }}</p>
+            <p class="toolbar-title">{{ listTitle() }}</p>
+            <p class="toolbar-copy">{{ listCopy() }}</p>
           </div>
           <div class="toolbar-stats">
             <article class="toolbar-stat"><span>{{ t('incidents.list.stats.total') }}</span><strong>{{ incidents().length }}</strong></article>

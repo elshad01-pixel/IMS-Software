@@ -1,6 +1,6 @@
 <section class="page-grid">
   <iso-page-header
-    [label]="t('externalProviders.page.label')"
+    [label]="pageLabel()"
     [title]="pageTitle()"
     [description]="pageDescription()"
     [breadcrumbs]="breadcrumbs()"
@@ -16,8 +16,8 @@
       <div class="toolbar">
         <div class="toolbar-meta">
           <div>
-            <p class="toolbar-title">{{ t('externalProviders.list.filtersTitle') }}</p>
-            <p class="toolbar-copy">{{ t('externalProviders.list.copy') }}</p>
+            <p class="toolbar-title">{{ listTitle() }}</p>
+            <p class="toolbar-copy">{{ listCopy() }}</p>
           </div>
           <div class="toolbar-stats">
             <article class="toolbar-stat"><span>{{ t('externalProviders.list.stats.total') }}</span><strong>{{ records().length }}</strong></article>

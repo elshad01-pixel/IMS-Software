@@ -10,6 +10,7 @@ import { ContentLibraryResponse } from '../core/content-library.models';
 import { ContentLibraryService } from '../core/content-library.service';
 import { ContextApiService } from '../core/context-api.service';
 import { I18nService } from '../core/i18n.service';
+import { TenantScope } from '../core/package-entitlements';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
@@ -80,7 +81,7 @@ type SourceContextNavigation = {
   template: `
     <section class="page-grid">
       <iso-page-header
-        [label]="t('risks.page.label')"
+        [label]="pageLabel()"
         [title]="pageTitle()"
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
@@ -98,16 +99,16 @@ type SourceContextNavigation = {
           <div class="section-head">
             <div>
               <span class="section-eyebrow">{{ 'risks.list.eyebrow' | translate }}</span>
-              <h3>{{ 'risks.list.title' | translate }}</h3>
-              <p class="subtle">{{ 'risks.list.copy' | translate }}</p>
+              <h3>{{ listTitle() }}</h3>
+              <p class="subtle">{{ listCopy() }}</p>
             </div>
           </div>
 
           <div class="toolbar top-space">
             <div class="toolbar-meta">
               <div>
-                <p class="toolbar-title">{{ 'risks.list.filtersTitle' | translate }}</p>
-                <p class="toolbar-copy">{{ 'risks.list.filtersCopy' | translate }}</p>
+                <p class="toolbar-title">{{ filtersTitle() }}</p>
+                <p class="toolbar-copy">{{ filtersCopy() }}</p>
               </div>
               <div class="toolbar-stats">
                 <article class="toolbar-stat">
@@ -807,33 +808,154 @@ export class RisksPageComponent implements OnInit, OnChanges {
   }
 
   protected pageTitle() {
-    this.i18n.language();
+    const label = this.pageLabel();
     return {
-      list: this.t('risks.page.titles.list'),
+      list: label,
       create: this.t('risks.page.titles.create'),
       detail: this.selectedRisk()?.title || this.t('risks.page.titles.detail'),
       edit: this.selectedRisk()?.title || this.t('risks.page.titles.edit')
     }[this.mode()];
   }
 
+  protected pageLabel() {
+    return this.scopeVariant({
+      QMS: { en: 'Quality risks & opportunities', az: 'Keyfiyyət riskləri və imkanları', ru: 'Риски и возможности качества' },
+      EMS: { en: 'Environmental risks & opportunities', az: 'Ekoloji risklər və imkanlar', ru: 'Экологические риски и возможности' },
+      OHSMS: { en: 'OH&S risks & opportunities', az: 'Əməyin mühafizəsi riskləri və imkanları', ru: 'Риски и возможности по ОТиЗ' },
+      IMS: { en: this.t('risks.page.label'), az: this.t('risks.page.label'), ru: this.t('risks.page.label') },
+      FSMS: { en: 'Food safety risks & opportunities', az: 'Qida təhlükəsizliyi riskləri və imkanları', ru: 'Риски и возможности пищевой безопасности' }
+    });
+  }
+
   protected pageDescription() {
-    this.i18n.language();
-    return {
-      list: this.t('risks.page.descriptions.list'),
-      create: this.t('risks.page.descriptions.create'),
-      detail: this.t('risks.page.descriptions.detail'),
-      edit: this.t('risks.page.descriptions.edit')
-    }[this.mode()];
+    if (this.mode() === 'list') {
+      return this.scopeVariant({
+        QMS: {
+          en: 'Assess quality risks and opportunities, track treatment, and keep ownership visible.',
+          az: 'Keyfiyyət risk və imkanlarını qiymətləndirin, tədbirləri izləyin və cavabdehliyi görünən saxlayın.',
+          ru: 'Оценивайте риски и возможности качества, отслеживайте меры и сохраняйте видимость ответственности.'
+        },
+        EMS: {
+          en: 'Assess environmental risks and opportunities, track treatment, and keep ownership visible.',
+          az: 'Ekoloji risk və imkanları qiymətləndirin, tədbirləri izləyin və cavabdehliyi görünən saxlayın.',
+          ru: 'Оценивайте экологические риски и возможности, отслеживайте меры и сохраняйте видимость ответственности.'
+        },
+        OHSMS: {
+          en: 'Assess OH&S risks and opportunities, track treatment, and keep ownership visible.',
+          az: 'Əməyin mühafizəsi risk və imkanlarını qiymətləndirin, tədbirləri izləyin və cavabdehliyi görünən saxlayın.',
+          ru: 'Оценивайте риски и возможности по ОТиЗ, отслеживайте меры и сохраняйте видимость ответственности.'
+        },
+        IMS: {
+          en: this.t('risks.page.descriptions.list'),
+          az: this.t('risks.page.descriptions.list'),
+          ru: this.t('risks.page.descriptions.list')
+        },
+        FSMS: {
+          en: 'Assess food safety risks and opportunities, track treatment, and keep ownership visible.',
+          az: 'Qida təhlükəsizliyi risk və imkanlarını qiymətləndirin, tədbirləri izləyin və cavabdehliyi görünən saxlayın.',
+          ru: 'Оценивайте риски и возможности пищевой безопасности, отслеживайте меры и сохраняйте видимость ответственности.'
+        }
+      });
+    }
+
+    if (this.mode() === 'create') {
+      return this.t('risks.page.descriptions.create');
+    }
+    if (this.mode() === 'detail') {
+      return this.t('risks.page.descriptions.detail');
+    }
+    return this.t('risks.page.descriptions.edit');
   }
 
   protected breadcrumbs() {
+    const label = this.pageLabel();
     if (this.mode() === 'list') {
-      return [{ label: this.t('risks.page.label') }];
+      return [{ label }];
     }
-    const base = [{ label: this.t('risks.page.label'), link: '/risks' }];
+    const base = [{ label, link: '/risks' }];
     if (this.mode() === 'create') return [...base, { label: this.t('risks.page.breadcrumbs.new') }];
     if (this.mode() === 'edit') return [...base, { label: this.selectedRisk()?.title || this.t('risks.page.breadcrumbs.record'), link: `/risks/${this.selectedId()}` }, { label: this.t('risks.page.breadcrumbs.edit') }];
     return [...base, { label: this.selectedRisk()?.title || this.t('risks.page.breadcrumbs.record') }];
+  }
+
+  protected listTitle() {
+    return this.scopeVariant({
+      QMS: { en: 'Quality risk register', az: 'Keyfiyyət risk reyestri', ru: 'Реестр рисков качества' },
+      EMS: { en: 'Environmental risk register', az: 'Ekoloji risk reyestri', ru: 'Реестр экологических рисков' },
+      OHSMS: { en: 'OH&S risk register', az: 'Əməyin mühafizəsi risk reyestri', ru: 'Реестр рисков ОТиЗ' },
+      IMS: { en: this.t('risks.list.title'), az: this.t('risks.list.title'), ru: this.t('risks.list.title') },
+      FSMS: { en: 'Food safety risk register', az: 'Qida təhlükəsizliyi risk reyestri', ru: 'Реестр рисков пищевой безопасности' }
+    });
+  }
+
+  protected listCopy() {
+    return this.scopeVariant({
+      QMS: {
+        en: 'Use one register for quality risks, opportunities, treatment, and follow-up.',
+        az: 'Keyfiyyət riskləri, imkanları, tədbirləri və sonrakı izləməni bir reyestrdə idarə edin.',
+        ru: 'Ведите риски качества, возможности, меры и последующие действия в одном реестре.'
+      },
+      EMS: {
+        en: 'Use one register for environmental risks, opportunities, treatment, and follow-up.',
+        az: 'Ekoloji riskləri, imkanları, tədbirləri və sonrakı izləməni bir reyestrdə idarə edin.',
+        ru: 'Ведите экологические риски, возможности, меры и последующие действия в одном реестре.'
+      },
+      OHSMS: {
+        en: 'Use one register for OH&S risks, opportunities, treatment, and follow-up.',
+        az: 'Əməyin mühafizəsi risklərini, imkanlarını, tədbirləri və sonrakı izləməni bir reyestrdə idarə edin.',
+        ru: 'Ведите риски и возможности по ОТиЗ, меры и последующие действия в одном реестре.'
+      },
+      IMS: {
+        en: this.t('risks.list.copy'),
+        az: this.t('risks.list.copy'),
+        ru: this.t('risks.list.copy')
+      },
+      FSMS: {
+        en: 'Use one register for food safety risks, opportunities, treatment, and follow-up.',
+        az: 'Qida təhlükəsizliyi risklərini, imkanlarını, tədbirləri və sonrakı izləməni bir reyestrdə idarə edin.',
+        ru: 'Ведите риски и возможности пищевой безопасности, меры и последующие действия в одном реестре.'
+      }
+    });
+  }
+
+  protected filtersTitle() {
+    return this.scopeVariant({
+      QMS: { en: 'Quality risk filters', az: 'Keyfiyyət risk filtrləri', ru: 'Фильтры рисков качества' },
+      EMS: { en: 'Environmental risk filters', az: 'Ekoloji risk filtrləri', ru: 'Фильтры экологических рисков' },
+      OHSMS: { en: 'OH&S risk filters', az: 'Əməyin mühafizəsi risk filtrləri', ru: 'Фильтры рисков ОТиЗ' },
+      IMS: { en: this.t('risks.list.filtersTitle'), az: this.t('risks.list.filtersTitle'), ru: this.t('risks.list.filtersTitle') },
+      FSMS: { en: 'Food safety risk filters', az: 'Qida təhlükəsizliyi risk filtrləri', ru: 'Фильтры рисков пищевой безопасности' }
+    });
+  }
+
+  protected filtersCopy() {
+    return this.scopeVariant({
+      QMS: {
+        en: 'Focus the register on the quality records that need review first.',
+        az: 'Əvvəl baxış tələb edən keyfiyyət qeydlərinə reyestri fokuslayın.',
+        ru: 'Сфокусируйте реестр на записях качества, которые требуют первоочередного анализа.'
+      },
+      EMS: {
+        en: 'Focus the register on the environmental records that need review first.',
+        az: 'Əvvəl baxış tələb edən ekoloji qeydlərə reyestri fokuslayın.',
+        ru: 'Сфокусируйте реестр на экологических записях, которые требуют первоочередного анализа.'
+      },
+      OHSMS: {
+        en: 'Focus the register on the OH&S records that need review first.',
+        az: 'Əvvəl baxış tələb edən əməyin mühafizəsi qeydlərinə reyestri fokuslayın.',
+        ru: 'Сфокусируйте реестр на записях ОТиЗ, которые требуют первоочередного анализа.'
+      },
+      IMS: {
+        en: this.t('risks.list.filtersCopy'),
+        az: this.t('risks.list.filtersCopy'),
+        ru: this.t('risks.list.filtersCopy')
+      },
+      FSMS: {
+        en: 'Focus the register on the food safety records that need review first.',
+        az: 'Əvvəl baxış tələb edən qida təhlükəsizliyi qeydlərinə reyestri fokuslayın.',
+        ru: 'Сфокусируйте реестр на записях пищевой безопасности, которые требуют первоочередного анализа.'
+      }
+    });
   }
 
   protected filteredRisks() {
@@ -1681,6 +1803,12 @@ export class RisksPageComponent implements OnInit, OnChanges {
 
   protected t(key: string, params?: Record<string, unknown>) {
     return this.i18n.t(key, params);
+  }
+
+  private scopeVariant(content: Record<TenantScope, { en: string; az: string; ru: string }>) {
+    const scope = this.authStore.scope();
+    const language = this.i18n.language();
+    return content[scope][language];
   }
 }
 

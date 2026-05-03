@@ -6,7 +6,7 @@ import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 import { I18nService } from '../core/i18n.service';
-import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
+import { PackageModuleKey, TenantPackageTier, TenantScope, minimumPackageTierForModule } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
 
@@ -193,29 +193,112 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
   }
 
   protected pageTitle() {
+    const label = this.pageLabel();
     return {
-      list: this.t('complianceObligations.page.titles.list'),
+      list: label,
       create: this.t('complianceObligations.page.titles.create'),
       detail: this.selectedObligation()?.title || this.t('complianceObligations.page.titles.detail'),
       edit: this.selectedObligation()?.title || this.t('complianceObligations.page.titles.edit')
     }[this.mode()];
   }
 
+  protected pageLabel() {
+    return this.scopeText({
+      QMS: { en: 'Requirements & obligations', az: 'Tələblər və öhdəliklər', ru: 'Требования и обязательства' },
+      EMS: { en: 'Environmental obligations', az: 'Ekoloji öhdəliklər', ru: 'Экологические обязательства' },
+      OHSMS: { en: 'OH&S obligations', az: 'Əməyin mühafizəsi öhdəlikləri', ru: 'Обязательства по ОТиЗ' },
+      IMS: { en: this.t('complianceObligations.page.label'), az: this.t('complianceObligations.page.label'), ru: this.t('complianceObligations.page.label') },
+      FSMS: { en: 'Food safety obligations', az: 'Qida təhlükəsizliyi öhdəlikləri', ru: 'Обязательства по пищевой безопасности' }
+    });
+  }
+
   protected pageDescription() {
-    return {
-      list: this.t('complianceObligations.page.descriptions.list'),
-      create: this.t('complianceObligations.page.descriptions.create'),
-      detail: this.t('complianceObligations.page.descriptions.detail'),
-      edit: this.t('complianceObligations.page.descriptions.edit')
-    }[this.mode()];
+    if (this.mode() === 'list') {
+      return this.scopeText({
+        QMS: {
+          en: 'Track quality-related legal, customer, and external obligations in one controlled register.',
+          az: 'Keyfiyyətlə bağlı hüquqi, müştəri və xarici öhdəlikləri bir idarə olunan reyestrdə izləyin.',
+          ru: 'Отслеживайте связанные с качеством правовые, клиентские и внешние обязательства в одном контролируемом реестре.'
+        },
+        EMS: {
+          en: 'Track environmental legal and other compliance obligations in one controlled register.',
+          az: 'Ekoloji hüquqi və digər uyğunluq öhdəliklərini bir idarə olunan reyestrdə izləyin.',
+          ru: 'Отслеживайте экологические правовые и иные обязательства по соблюдению в одном контролируемом реестре.'
+        },
+        OHSMS: {
+          en: 'Track OH&S legal and other compliance obligations in one controlled register.',
+          az: 'Əməyin mühafizəsi üzrə hüquqi və digər uyğunluq öhdəliklərini bir idarə olunan reyestrdə izləyin.',
+          ru: 'Отслеживайте обязательства по охране труда и иные требования соблюдения в одном контролируемом реестре.'
+        },
+        IMS: {
+          en: this.t('complianceObligations.page.descriptions.list'),
+          az: this.t('complianceObligations.page.descriptions.list'),
+          ru: this.t('complianceObligations.page.descriptions.list')
+        },
+        FSMS: {
+          en: 'Track food safety legal, customer, and regulatory obligations in one controlled register.',
+          az: 'Qida təhlükəsizliyi üzrə hüquqi, müştəri və tənzimləyici öhdəlikləri bir idarə olunan reyestrdə izləyin.',
+          ru: 'Отслеживайте правовые, клиентские и регуляторные обязательства по пищевой безопасности в одном контролируемом реестре.'
+        }
+      });
+    }
+
+    if (this.mode() === 'create') {
+      return this.t('complianceObligations.page.descriptions.create');
+    }
+    if (this.mode() === 'detail') {
+      return this.t('complianceObligations.page.descriptions.detail');
+    }
+    return this.t('complianceObligations.page.descriptions.edit');
   }
 
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: this.t('complianceObligations.page.label') }];
-    const base = [{ label: this.t('complianceObligations.page.label'), link: '/compliance-obligations' }];
+    const label = this.pageLabel();
+    if (this.mode() === 'list') return [{ label }];
+    const base = [{ label, link: '/compliance-obligations' }];
     if (this.mode() === 'create') return [...base, { label: this.t('complianceObligations.breadcrumbs.new') }];
     if (this.mode() === 'edit') return [...base, { label: this.selectedObligation()?.title || this.t('complianceObligations.breadcrumbs.record'), link: `/compliance-obligations/${this.selectedId()}` }, { label: this.t('complianceObligations.breadcrumbs.edit') }];
     return [...base, { label: this.selectedObligation()?.title || this.t('complianceObligations.breadcrumbs.record') }];
+  }
+
+  protected listTitle() {
+    return this.scopeText({
+      QMS: { en: 'Requirement filters', az: 'Tələb filtrləri', ru: 'Фильтры требований' },
+      EMS: { en: 'Environmental obligation filters', az: 'Ekoloji öhdəlik filtrləri', ru: 'Фильтры экологических обязательств' },
+      OHSMS: { en: 'OH&S obligation filters', az: 'Əməyin mühafizəsi öhdəlik filtrləri', ru: 'Фильтры обязательств по ОТиЗ' },
+      IMS: { en: this.t('complianceObligations.list.filtersTitle'), az: this.t('complianceObligations.list.filtersTitle'), ru: this.t('complianceObligations.list.filtersTitle') },
+      FSMS: { en: 'Food safety obligation filters', az: 'Qida təhlükəsizliyi öhdəlik filtrləri', ru: 'Фильтры обязательств по пищевой безопасности' }
+    });
+  }
+
+  protected listCopy() {
+    return this.scopeText({
+      QMS: {
+        en: 'Review quality-related obligations, review dates, and follow-up in one calm register.',
+        az: 'Keyfiyyətlə bağlı öhdəlikləri, baxış tarixlərini və sonrakı tədbirləri bir sakit reyestrdə izləyin.',
+        ru: 'Просматривайте связанные с качеством обязательства, даты пересмотра и последующие действия в одном реестре.'
+      },
+      EMS: {
+        en: 'Review environmental obligations, review dates, and follow-up in one calm register.',
+        az: 'Ekoloji öhdəlikləri, baxış tarixlərini və sonrakı tədbirləri bir sakit reyestrdə izləyin.',
+        ru: 'Просматривайте экологические обязательства, даты пересмотра и последующие действия в одном реестре.'
+      },
+      OHSMS: {
+        en: 'Review OH&S obligations, review dates, and follow-up in one calm register.',
+        az: 'Əməyin mühafizəsi öhdəliklərini, baxış tarixlərini və sonrakı tədbirləri bir sakit reyestrdə izləyin.',
+        ru: 'Просматривайте обязательства по ОТиЗ, даты пересмотра и последующие действия в одном реестре.'
+      },
+      IMS: {
+        en: this.t('complianceObligations.list.copy'),
+        az: this.t('complianceObligations.list.copy'),
+        ru: this.t('complianceObligations.list.copy')
+      },
+      FSMS: {
+        en: 'Review food safety obligations, review dates, and follow-up in one calm register.',
+        az: 'Qida təhlükəsizliyi öhdəliklərini, baxış tarixlərini və sonrakı tədbirləri bir sakit reyestrdə izləyin.',
+        ru: 'Просматривайте обязательства по пищевой безопасности, даты пересмотра и последующие действия в одном реестре.'
+      }
+    });
   }
 
   protected obligationGuidance() {
@@ -618,6 +701,12 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
     const today = new Date();
     const delta = (today.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24);
     return delta > days;
+  }
+
+  private scopeText(content: Record<TenantScope, { en: string; az: string; ru: string }>) {
+    const scope = this.authStore.scope();
+    const language = this.i18n.language();
+    return content[scope][language];
   }
 }
 

@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 import { I18nService } from '../core/i18n.service';
-import { PackageModuleKey } from '../core/package-entitlements';
+import { PackageModuleKey, TenantScope } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 
 type DashboardResponse = {
@@ -45,7 +45,19 @@ type ContextDashboardResponse = {
   };
 };
 
-type DashboardModule = 'risks' | 'capa' | 'actions' | 'audits' | 'context' | 'feedback';
+type DashboardModule =
+  | 'risks'
+  | 'capa'
+  | 'actions'
+  | 'audits'
+  | 'context'
+  | 'feedback'
+  | 'incidents'
+  | 'hazards'
+  | 'aspects'
+  | 'obligations'
+  | 'training'
+  | 'providers';
 type DashboardRange = 'month' | 'quarter' | 'year';
 type DashboardChartType = 'bar' | 'line' | 'pie' | 'donut';
 
@@ -71,6 +83,94 @@ type ProviderSummaryRow = {
 type ObligationSummaryRow = { id: string; status: string; nextReviewDate?: string | null };
 type HazardSummaryRow = { id: string; status: string; severity: string };
 type AspectSummaryRow = { id: string; status: string; significance: string };
+
+type DashboardModuleOption = {
+  value: DashboardModule;
+  labelKey: string;
+  packageModule: PackageModuleKey;
+  requiredAddOn?: 'customerFeedback';
+};
+
+type DashboardScopeProfile = {
+  moduleOrder: DashboardModuleOption[];
+  summaryCardOrder: Array<'risks' | 'capa' | 'audits' | 'actions' | 'kpis' | 'feedback' | 'incidents' | 'hazards' | 'aspects' | 'obligations' | 'training' | 'providers'>;
+  watchlistItems: Array<'incidents' | 'providers' | 'obligations' | 'hazards' | 'aspects' | 'training'>;
+};
+
+type SummaryCard = {
+  label: string;
+  value: number | string;
+  copy: string;
+  link: string;
+  packageModule: PackageModuleKey;
+  requiredAddOn?: 'customerFeedback';
+  accent: string;
+  surface: string;
+  queryParams?: Record<string, string>;
+};
+
+const DASHBOARD_SCOPE_PROFILES: Record<TenantScope, DashboardScopeProfile> = {
+  QMS: {
+    moduleOrder: [
+      { value: 'risks', labelKey: 'dashboard.modules.risks', packageModule: 'risks' },
+      { value: 'capa', labelKey: 'dashboard.modules.capa', packageModule: 'capa' },
+      { value: 'actions', labelKey: 'dashboard.modules.actions', packageModule: 'actions' },
+      { value: 'audits', labelKey: 'dashboard.modules.audits', packageModule: 'audits' },
+      { value: 'context', labelKey: 'dashboard.modules.context', packageModule: 'context' },
+      { value: 'feedback', labelKey: 'dashboard.modules.feedback', packageModule: 'context', requiredAddOn: 'customerFeedback' }
+    ],
+    summaryCardOrder: ['risks', 'capa', 'audits', 'actions', 'kpis', 'feedback'],
+    watchlistItems: ['providers', 'obligations']
+  },
+  EMS: {
+    moduleOrder: [
+      { value: 'risks', labelKey: 'dashboard.modules.risks', packageModule: 'risks' },
+      { value: 'incidents', labelKey: 'shell.nav.incidents.label', packageModule: 'incidents' },
+      { value: 'aspects', labelKey: 'shell.nav.environmentalAspects.label', packageModule: 'environmental-aspects' },
+      { value: 'audits', labelKey: 'dashboard.modules.audits', packageModule: 'audits' },
+      { value: 'obligations', labelKey: 'shell.nav.complianceObligations.label', packageModule: 'compliance-obligations' },
+      { value: 'actions', labelKey: 'dashboard.modules.actions', packageModule: 'actions' }
+    ],
+    summaryCardOrder: ['obligations', 'incidents', 'audits', 'actions', 'aspects', 'kpis'],
+    watchlistItems: ['incidents', 'obligations', 'aspects', 'providers']
+  },
+  OHSMS: {
+    moduleOrder: [
+      { value: 'risks', labelKey: 'dashboard.modules.risks', packageModule: 'risks' },
+      { value: 'incidents', labelKey: 'shell.nav.incidents.label', packageModule: 'incidents' },
+      { value: 'hazards', labelKey: 'shell.nav.hazards.label', packageModule: 'hazards' },
+      { value: 'audits', labelKey: 'dashboard.modules.audits', packageModule: 'audits' },
+      { value: 'training', labelKey: 'shell.nav.training.label', packageModule: 'training' },
+      { value: 'actions', labelKey: 'dashboard.modules.actions', packageModule: 'actions' }
+    ],
+    summaryCardOrder: ['hazards', 'incidents', 'audits', 'actions', 'training', 'kpis'],
+    watchlistItems: ['incidents', 'hazards', 'training', 'obligations']
+  },
+  IMS: {
+    moduleOrder: [
+      { value: 'risks', labelKey: 'dashboard.modules.risks', packageModule: 'risks' },
+      { value: 'capa', labelKey: 'dashboard.modules.capa', packageModule: 'capa' },
+      { value: 'actions', labelKey: 'dashboard.modules.actions', packageModule: 'actions' },
+      { value: 'audits', labelKey: 'dashboard.modules.audits', packageModule: 'audits' },
+      { value: 'context', labelKey: 'dashboard.modules.context', packageModule: 'context' },
+      { value: 'feedback', labelKey: 'dashboard.modules.feedback', packageModule: 'context', requiredAddOn: 'customerFeedback' }
+    ],
+    summaryCardOrder: ['risks', 'capa', 'audits', 'actions', 'kpis', 'feedback'],
+    watchlistItems: ['incidents', 'providers', 'obligations', 'hazards', 'aspects']
+  },
+  FSMS: {
+    moduleOrder: [
+      { value: 'risks', labelKey: 'dashboard.modules.risks', packageModule: 'risks' },
+      { value: 'providers', labelKey: 'shell.nav.externalProviders.label', packageModule: 'external-providers' },
+      { value: 'actions', labelKey: 'dashboard.modules.actions', packageModule: 'actions' },
+      { value: 'audits', labelKey: 'dashboard.modules.audits', packageModule: 'audits' },
+      { value: 'training', labelKey: 'shell.nav.training.label', packageModule: 'training' },
+      { value: 'obligations', labelKey: 'shell.nav.complianceObligations.label', packageModule: 'compliance-obligations' }
+    ],
+    summaryCardOrder: ['providers', 'audits', 'actions', 'training', 'obligations', 'kpis'],
+    watchlistItems: ['providers', 'obligations', 'training']
+  }
+};
 
 @Component({
   standalone: true,
@@ -751,25 +851,12 @@ export class DashboardPageComponent {
   protected readonly selectedModule = signal<DashboardModule>('risks');
   protected readonly selectedTimeRange = signal<DashboardRange>('quarter');
   protected readonly selectedChartType = signal<DashboardChartType>('donut');
+  protected readonly scope = computed(() => this.authStore.scope());
+  protected readonly scopeProfile = computed(() => DASHBOARD_SCOPE_PROFILES[this.scope()]);
   protected readonly availableModules = computed(() =>
-    ([
-      { value: 'risks' as DashboardModule, labelKey: 'dashboard.modules.risks', packageModule: 'risks' },
-      { value: 'capa' as DashboardModule, labelKey: 'dashboard.modules.capa', packageModule: 'capa' },
-      { value: 'actions' as DashboardModule, labelKey: 'dashboard.modules.actions', packageModule: 'actions' },
-      { value: 'audits' as DashboardModule, labelKey: 'dashboard.modules.audits', packageModule: 'audits' },
-      { value: 'context' as DashboardModule, labelKey: 'dashboard.modules.context', packageModule: 'context' },
-      {
-        value: 'feedback' as DashboardModule,
-        labelKey: 'dashboard.modules.feedback',
-        packageModule: 'context',
-        requiredAddOn: 'customerFeedback'
-      }
-    ] as Array<{
-      value: DashboardModule;
-      labelKey: string;
-      packageModule: PackageModuleKey;
-      requiredAddOn?: 'customerFeedback';
-    }>).filter((item) => this.authStore.hasModule(item.packageModule) && (!item.requiredAddOn || this.authStore.hasAddOn(item.requiredAddOn)))
+    this.scopeProfile().moduleOrder.filter(
+      (item) => this.authStore.hasModule(item.packageModule) && (!item.requiredAddOn || this.authStore.hasAddOn(item.requiredAddOn))
+    )
   );
 
   constructor() {
@@ -824,8 +911,8 @@ export class DashboardPageComponent {
 
   protected summaryCards() {
     const metrics = this.data().metrics;
-    return ([
-      {
+    const cards: Record<string, SummaryCard> = {
+      risks: {
         label: this.t('dashboard.metrics.openRisks.label'),
         value: this.data().riskSummary.open + this.data().riskSummary.inTreatment,
         copy: this.t('dashboard.metrics.openRisks.copy'),
@@ -834,7 +921,7 @@ export class DashboardPageComponent {
         accent: '#8B5E16',
         surface: '#E7D7B7'
       },
-      {
+      capa: {
         label: this.t('dashboard.metrics.openCapa.label'),
         value: metrics['openCapas'] ?? 0,
         copy: this.t('dashboard.metrics.openCapa.copy'),
@@ -843,7 +930,7 @@ export class DashboardPageComponent {
         accent: '#1E467F',
         surface: '#DCE6F3'
       },
-      {
+      audits: {
         label: this.t('dashboard.metrics.activeAudits.label'),
         value: metrics['openAudits'] ?? 0,
         copy: this.t('dashboard.metrics.activeAudits.copy'),
@@ -852,7 +939,7 @@ export class DashboardPageComponent {
         accent: '#344150',
         surface: '#DDE4EA'
       },
-      {
+      actions: {
         label: this.t('dashboard.metrics.overdueActions.label'),
         value: metrics['overdueActions'] ?? 0,
         copy: this.t('dashboard.metrics.overdueActions.copy'),
@@ -862,7 +949,7 @@ export class DashboardPageComponent {
         accent: '#94401B',
         surface: '#EDD7CC'
       },
-      {
+      kpis: {
         label: this.t('dashboard.metrics.kpiBreaches.label'),
         value: this.data().kpiSummary.length,
         copy: this.t('dashboard.metrics.kpiBreaches.copy'),
@@ -871,7 +958,7 @@ export class DashboardPageComponent {
         accent: '#18543F',
         surface: '#D8E7DF'
       },
-      {
+      feedback: {
         label: this.t('dashboard.metrics.customerFeedback.label'),
         value: this.data().feedbackSummary.averageScore != null ? `${this.data().feedbackSummary.averageScore}/10` : this.t('dashboard.metrics.customerFeedback.noData'),
         copy:
@@ -883,18 +970,91 @@ export class DashboardPageComponent {
         requiredAddOn: 'customerFeedback' as const,
         accent: '#474B8C',
         surface: '#DDDEF2'
+      },
+      incidents: {
+        label: this.scopeText({ en: 'Open incidents', az: 'Açıq insidentlər', ru: 'Открытые инциденты' }),
+        value: this.incidents().filter((item) => item.status !== 'CLOSED' && item.status !== 'ARCHIVED').length,
+        copy: this.scopeText({
+          en: 'Events and investigations that still need follow-up.',
+          az: 'Hələ də izləmə tələb edən hadisələr və araşdırmalar.',
+          ru: 'События и расследования, по которым ещё нужен контроль.'
+        }),
+        link: '/incidents',
+        packageModule: 'incidents',
+        accent: '#9B4939',
+        surface: '#EAD7D1'
+      },
+      hazards: {
+        label: this.scopeText({ en: 'High hazards', az: 'Yüksək təhlükələr', ru: 'Высокие опасности' }),
+        value: this.hazards().filter((item) => item.status !== 'OBSOLETE' && item.severity === 'HIGH').length,
+        copy: this.scopeText({
+          en: 'Hazards that currently need stronger operational control.',
+          az: 'Hazırda daha güclü əməliyyat nəzarəti tələb edən təhlükələr.',
+          ru: 'Опасности, которым сейчас нужен более сильный операционный контроль.'
+        }),
+        link: '/hazards',
+        packageModule: 'hazards',
+        accent: '#8B433A',
+        surface: '#E9D4D0'
+      },
+      aspects: {
+        label: this.scopeText({ en: 'Significant aspects', az: 'Əhəmiyyətli aspektlər', ru: 'Значимые аспекты' }),
+        value: this.aspects().filter((item) => item.status !== 'OBSOLETE' && item.significance === 'HIGH').length,
+        copy: this.scopeText({
+          en: 'Environmental aspects with higher significance or review need.',
+          az: 'Daha yüksək əhəmiyyətə və ya baxış ehtiyacına malik ekoloji aspektlər.',
+          ru: 'Экологические аспекты с более высокой значимостью или потребностью в пересмотре.'
+        }),
+        link: '/environmental-aspects',
+        packageModule: 'environmental-aspects',
+        accent: '#2E6A58',
+        surface: '#D7E5DE'
+      },
+      obligations: {
+        label: this.scopeText({ en: 'Reviews due', az: 'Baxışı yaxın öhdəliklər', ru: 'Проверки к сроку' }),
+        value: this.obligations().filter((item) => item.status === 'UNDER_REVIEW' || this.isOverdue(item.nextReviewDate ?? undefined)).length,
+        copy: this.scopeText({
+          en: 'Obligations that are under review or already overdue.',
+          az: 'Hazırda baxışda olan və ya artıq gecikmiş öhdəliklər.',
+          ru: 'Обязательства, которые находятся на проверке или уже просрочены.'
+        }),
+        link: '/compliance-obligations',
+        packageModule: 'compliance-obligations',
+        accent: '#486E91',
+        surface: '#DCE7F1'
+      },
+      training: {
+        label: this.scopeText({ en: 'Training due', az: 'Gözləyən təlimlər', ru: 'Обучение к выполнению' }),
+        value: this.data().trainingSummaryCounts.assigned + this.data().trainingSummaryCounts.inProgress,
+        copy: this.scopeText({
+          en: 'Assigned or in-progress competence work for the selected scope.',
+          az: 'Seçilmiş scope üçün təyin edilmiş və ya icrada olan səriştə işləri.',
+          ru: 'Назначенное или выполняемое обучение для выбранного scope.'
+        }),
+        link: '/training',
+        packageModule: 'training',
+        accent: '#4E5C86',
+        surface: '#DEE1EE'
+      },
+      providers: {
+        label: this.scopeText({ en: 'Provider reviews', az: 'Təchizatçı baxışları', ru: 'Проверки поставщиков' }),
+        value: this.providers().filter((item) => item.status === 'UNDER_REVIEW' || item.evaluationOutcome === 'ESCALATED' || item.evaluationOutcome === 'DISQUALIFIED' || (!!item.supplierAuditRequired && !item.supplierAuditLinked)).length,
+        copy: this.scopeText({
+          en: 'External providers that need assurance review or escalation.',
+          az: 'Təminat baxışı və ya eskalasiya tələb edən xarici təchizatçılar.',
+          ru: 'Внешние поставщики, которым нужен обзор по обеспечению или эскалация.'
+        }),
+        link: '/external-providers',
+        packageModule: 'external-providers',
+        accent: '#8A6427',
+        surface: '#E8DBBF'
       }
-    ] as Array<{
-      label: string;
-      value: number | string;
-      copy: string;
-      link: string;
-      packageModule: PackageModuleKey;
-      requiredAddOn?: 'customerFeedback';
-      accent: string;
-      surface: string;
-      queryParams?: Record<string, string>;
-    }>).filter((item) => this.authStore.hasModule(item.packageModule) && (!item.requiredAddOn || this.authStore.hasAddOn(item.requiredAddOn)));
+    };
+
+    return this.scopeProfile().summaryCardOrder
+      .map((key) => cards[key])
+      .filter((item) => !!item)
+      .filter((item) => this.authStore.hasModule(item.packageModule) && (!item.requiredAddOn || this.authStore.hasAddOn(item.requiredAddOn)));
   }
 
   protected currentModuleLabel() {
@@ -905,7 +1065,13 @@ export class DashboardPageComponent {
       actions: this.t('dashboard.modules.actions'),
       audits: this.t('dashboard.modules.audits'),
       context: this.t('dashboard.modules.context'),
-      feedback: this.t('dashboard.modules.feedback')
+      feedback: this.t('dashboard.modules.feedback'),
+      incidents: this.t('shell.nav.incidents.label'),
+      hazards: this.t('shell.nav.hazards.label'),
+      aspects: this.t('shell.nav.environmentalAspects.label'),
+      obligations: this.t('shell.nav.complianceObligations.label'),
+      training: this.t('shell.nav.training.label'),
+      providers: this.t('shell.nav.externalProviders.label')
     }[this.selectedModule()];
   }
 
@@ -923,7 +1089,8 @@ export class DashboardPageComponent {
   }
 
   protected summaryTitle() {
-    return this.dashboardCopy().summaryTitle;
+    const language = this.i18n.language();
+    return this.scopeTitle(language === 'az' ? 'az' : language === 'ru' ? 'ru' : 'en');
   }
 
   protected filterModuleLabel() {
@@ -945,7 +1112,13 @@ export class DashboardPageComponent {
       actions: '/actions',
       audits: '/audits',
       context: '/context',
-      feedback: '/context/interested-parties'
+      feedback: '/context/interested-parties',
+      incidents: '/incidents',
+      hazards: '/hazards',
+      aspects: '/environmental-aspects',
+      obligations: '/compliance-obligations',
+      training: '/training',
+      providers: '/external-providers'
     }[this.selectedModule()];
   }
 
@@ -1009,43 +1182,52 @@ export class DashboardPageComponent {
   }
 
   protected watchlistPoints(): DashboardPoint[] {
-    const raw = [
-      {
+    const items = {
+      incidents: {
         label: this.t('dashboard.watchlist.items.incidents'),
         value: this.incidents().filter((item) => item.status !== 'CLOSED' && item.status !== 'ARCHIVED').length,
         color: '#b45a47',
         link: '/incidents',
         packageModule: 'incidents' as PackageModuleKey
       },
-      {
+      providers: {
         label: this.t('dashboard.watchlist.items.providers'),
         value: this.providers().filter((item) => item.status === 'UNDER_REVIEW' || item.evaluationOutcome === 'ESCALATED' || item.evaluationOutcome === 'DISQUALIFIED' || (!!item.supplierAuditRequired && !item.supplierAuditLinked)).length,
         color: '#9a6e2d',
         link: '/external-providers',
         packageModule: 'external-providers' as PackageModuleKey
       },
-      {
+      obligations: {
         label: this.t('dashboard.watchlist.items.obligations'),
         value: this.obligations().filter((item) => item.status === 'UNDER_REVIEW' || this.isOverdue(item.nextReviewDate ?? undefined)).length,
         color: '#446d8e',
         link: '/compliance-obligations',
         packageModule: 'compliance-obligations' as PackageModuleKey
       },
-      {
+      hazards: {
         label: this.t('dashboard.watchlist.items.hazards'),
         value: this.hazards().filter((item) => item.status !== 'OBSOLETE' && item.severity === 'HIGH').length,
         color: '#8c3f36',
         link: '/hazards',
         packageModule: 'hazards' as PackageModuleKey
       },
-      {
+      aspects: {
         label: this.t('dashboard.watchlist.items.aspects'),
         value: this.aspects().filter((item) => item.status !== 'OBSOLETE' && item.significance === 'HIGH').length,
         color: '#3f6f59',
         link: '/environmental-aspects',
         packageModule: 'environmental-aspects' as PackageModuleKey
+      },
+      training: {
+        label: this.scopeText({ en: 'Training due', az: 'Gözləyən təlimlər', ru: 'Обучение к выполнению' }),
+        value: this.data().trainingSummaryCounts.assigned + this.data().trainingSummaryCounts.inProgress,
+        color: '#5b5e96',
+        link: '/training',
+        packageModule: 'training' as PackageModuleKey
       }
-    ];
+    } satisfies Record<'incidents' | 'providers' | 'obligations' | 'hazards' | 'aspects' | 'training', Omit<DashboardPoint, 'width'>>;
+
+    const raw = this.scopeProfile().watchlistItems.map((key) => items[key]);
     const filtered = raw.filter((item) => !item.packageModule || this.authStore.hasModule(item.packageModule));
     const total = Math.max(filtered.reduce((sum, item) => sum + item.value, 0), 1);
     return filtered.map((item) => ({ ...item, width: (item.value / total) * 100 }));
@@ -1070,7 +1252,13 @@ export class DashboardPageComponent {
       actions: this.t('dashboard.mainMetrics.actions'),
       audits: this.t('dashboard.mainMetrics.audits'),
       context: this.t('dashboard.mainMetrics.context'),
-      feedback: this.t('dashboard.mainMetrics.feedback')
+      feedback: this.t('dashboard.mainMetrics.feedback'),
+      incidents: this.scopeText({ en: 'incidents', az: 'insidentlər', ru: 'инциденты' }),
+      hazards: this.scopeText({ en: 'hazards', az: 'təhlükələr', ru: 'опасности' }),
+      aspects: this.scopeText({ en: 'aspects', az: 'aspektlər', ru: 'аспекты' }),
+      obligations: this.scopeText({ en: 'obligations', az: 'öhdəliklər', ru: 'обязательства' }),
+      training: this.scopeText({ en: 'training records', az: 'təlim qeydləri', ru: 'записи обучения' }),
+      providers: this.scopeText({ en: 'provider reviews', az: 'təchizatçı baxışları', ru: 'проверки поставщиков' })
     }[this.selectedModule()];
   }
 
@@ -1098,7 +1286,7 @@ export class DashboardPageComponent {
             audits: `${count} aktiv audit`,
             context: `${count} kontekst qeydi`,
             feedback: `${count} rəy cavabı`
-          } satisfies Record<DashboardModule, string>)[module]
+          } as Record<string, string>)[module]
       };
     }
 
@@ -1119,7 +1307,7 @@ export class DashboardPageComponent {
             audits: `${count} активных аудитов`,
             context: `${count} записей контекста`,
             feedback: `${count} ответов`
-          } satisfies Record<DashboardModule, string>)[module]
+          } as Record<string, string>)[module]
       };
     }
 
@@ -1139,7 +1327,7 @@ export class DashboardPageComponent {
           audits: `${count} active audits`,
           context: `${count} context items`,
           feedback: `${count} feedback responses`
-        } satisfies Record<DashboardModule, string>)[module]
+        } as Record<string, string>)[module]
     };
   }
 
@@ -1190,6 +1378,42 @@ export class DashboardPageComponent {
           { label: this.t('dashboard.feedback.high'), value: this.data().feedbackSummary.highScoreCount, color: '#3f6f59', link: '/context/interested-parties' },
           { label: this.t('dashboard.feedback.openLinks'), value: this.data().feedbackSummary.openRequestCount, color: '#446d8e', link: '/context/interested-parties' }
         ];
+      case 'incidents':
+        return [
+          { label: this.t('dashboard.riskLevels.low'), value: this.incidents().filter((item) => item.status !== 'CLOSED' && item.status !== 'ARCHIVED' && item.severity === 'LOW').length, color: '#6f9d7f', link: '/incidents' },
+          { label: this.t('dashboard.riskLevels.medium'), value: this.incidents().filter((item) => item.status !== 'CLOSED' && item.status !== 'ARCHIVED' && item.severity === 'MEDIUM').length, color: '#c39545', link: '/incidents' },
+          { label: this.t('dashboard.riskLevels.high'), value: this.incidents().filter((item) => item.status !== 'CLOSED' && item.status !== 'ARCHIVED' && item.severity === 'HIGH').length, color: '#b45a47', link: '/incidents' }
+        ];
+      case 'hazards':
+        return [
+          { label: this.t('dashboard.riskLevels.low'), value: this.hazards().filter((item) => item.status !== 'OBSOLETE' && item.severity === 'LOW').length, color: '#6f9d7f', link: '/hazards' },
+          { label: this.t('dashboard.riskLevels.medium'), value: this.hazards().filter((item) => item.status !== 'OBSOLETE' && item.severity === 'MEDIUM').length, color: '#c39545', link: '/hazards' },
+          { label: this.t('dashboard.riskLevels.high'), value: this.hazards().filter((item) => item.status !== 'OBSOLETE' && item.severity === 'HIGH').length, color: '#b45a47', link: '/hazards' }
+        ];
+      case 'aspects':
+        return [
+          { label: this.t('dashboard.riskLevels.low'), value: this.aspects().filter((item) => item.status !== 'OBSOLETE' && item.significance === 'LOW').length, color: '#6f9d7f', link: '/environmental-aspects' },
+          { label: this.t('dashboard.riskLevels.medium'), value: this.aspects().filter((item) => item.status !== 'OBSOLETE' && item.significance === 'MEDIUM').length, color: '#c39545', link: '/environmental-aspects' },
+          { label: this.t('dashboard.riskLevels.high'), value: this.aspects().filter((item) => item.status !== 'OBSOLETE' && item.significance === 'HIGH').length, color: '#b45a47', link: '/environmental-aspects' }
+        ];
+      case 'obligations':
+        return [
+          { label: this.t('dashboard.status.open'), value: this.obligations().filter((item) => item.status === 'ACTIVE').length, color: '#446d8e', link: '/compliance-obligations' },
+          { label: this.t('dashboard.status.inProgress'), value: this.obligations().filter((item) => item.status === 'UNDER_REVIEW').length, color: '#c39545', link: '/compliance-obligations' },
+          { label: this.t('dashboard.status.overdue'), value: this.obligations().filter((item) => this.isOverdue(item.nextReviewDate ?? undefined)).length, color: '#b45a47', link: '/compliance-obligations' }
+        ];
+      case 'training':
+        return [
+          { label: this.t('dashboard.status.open'), value: this.data().trainingSummaryCounts.assigned, color: '#446d8e', link: '/training' },
+          { label: this.t('dashboard.status.inProgress'), value: this.data().trainingSummaryCounts.inProgress, color: '#c39545', link: '/training' },
+          { label: this.t('dashboard.status.completed'), value: this.data().trainingSummaryCounts.completed, color: '#3f6f59', link: '/training' }
+        ];
+      case 'providers':
+        return [
+          { label: this.t('dashboard.status.open'), value: this.providers().filter((item) => item.status === 'APPROVED').length, color: '#446d8e', link: '/external-providers' },
+          { label: this.t('dashboard.status.inProgress'), value: this.providers().filter((item) => item.status === 'UNDER_REVIEW').length, color: '#c39545', link: '/external-providers' },
+          { label: this.t('dashboard.status.overdue'), value: this.providers().filter((item) => item.evaluationOutcome === 'ESCALATED' || item.evaluationOutcome === 'DISQUALIFIED' || (!!item.supplierAuditRequired && !item.supplierAuditLinked)).length, color: '#b45a47', link: '/external-providers' }
+        ];
       case 'risks':
       default:
         return [
@@ -1207,6 +1431,45 @@ export class DashboardPageComponent {
   private actionPlannedCount() {
     const openCapas = this.data().metrics['openCapas'] ?? 0;
     return Math.max(openCapas - this.data().capaSummary.investigating - this.data().capaSummary.inProgress - this.data().capaSummary.verified, 0);
+  }
+
+  private scopeTitle(language: 'en' | 'az' | 'ru') {
+    const titles = {
+      en: {
+        QMS: 'Quality management overview',
+        EMS: 'Environmental management overview',
+        OHSMS: 'Occupational health & safety overview',
+        IMS: 'Integrated management overview',
+        FSMS: 'Food safety management overview'
+      },
+      az: {
+        QMS: 'Keyfiyyət idarəetməsi icmalı',
+        EMS: 'Ekoloji idarəetmə icmalı',
+        OHSMS: 'Əməyin mühafizəsi və sağlamlıq icmalı',
+        IMS: 'İnteqrasiya olunmuş idarəetmə icmalı',
+        FSMS: 'Qida təhlükəsizliyi idarəetməsi icmalı'
+      },
+      ru: {
+        QMS: 'Обзор системы менеджмента качества',
+        EMS: 'Обзор экологического менеджмента',
+        OHSMS: 'Обзор охраны труда и безопасности',
+        IMS: 'Обзор интегрированной системы менеджмента',
+        FSMS: 'Обзор менеджмента безопасности пищевой продукции'
+      }
+    };
+
+    return titles[language][this.scope()];
+  }
+
+  private scopeText(copy: { en: string; az: string; ru: string }) {
+    const language = this.i18n.language();
+    if (language === 'az') {
+      return copy.az;
+    }
+    if (language === 'ru') {
+      return copy.ru;
+    }
+    return copy.en;
   }
 
   private isOverdue(dueDate?: string) {

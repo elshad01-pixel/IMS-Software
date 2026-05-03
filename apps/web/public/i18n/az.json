@@ -2297,6 +2297,278 @@
       "defaultDraftDescription": "{{title}} üçün illik təchizatçı baxışını izləyin."
     }
   },
+  "changeManagement": {
+    "page": {
+      "label": "Dəyişikliklərin idarə edilməsi",
+      "titles": {
+        "list": "Dəyişikliklərin idarə edilməsi",
+        "create": "Dəyişiklik sorğusu yarat",
+        "detail": "Dəyişiklik sorğusu detalı",
+        "edit": "Dəyişiklik sorğusunu redaktə et"
+      },
+      "descriptions": {
+        "list": "Planlaşdırılmış dəyişiklikləri, baxışı və əlaqəli proses, risk, sənəd və təchizatçı nəzarətlərini görünən saxlayın.",
+        "create": "Nəyin dəyişdiyini, bunun niyə vacib olduğunu, baxışa kimin cavabdeh olduğunu və hansı mövcud nəzarətlərin bağlı qalmalı olduğunu qeyd edin.",
+        "detail": "Dəyişiklik vəziyyətini, tətbiq hədəfini, baxış sahibliyini və əlaqəli İİS qeydlərini nəzərdən keçirin.",
+        "edit": "Riskləri, prosesləri, sənədləri və tədbirləri öz modullarında saxlayaraq dəyişiklik sorğusunu yeniləyin."
+      }
+    },
+    "actions": {
+      "new": "+ Yeni dəyişiklik sorğusu",
+      "edit": "Dəyişiklik sorğusunu redaktə et",
+      "archive": "Arxivləşdir",
+      "back": "Geri",
+      "save": "Dəyişiklik sorğusunu saxla",
+      "saving": "Saxlanılır..."
+    },
+    "breadcrumbs": {
+      "new": "Yeni dəyişiklik sorğusu",
+      "record": "Dəyişiklik sorğusu",
+      "edit": "Redaktə"
+    },
+    "common": {
+      "uncoded": "Kodsuz",
+      "unassigned": "Təyin edilməyib"
+    },
+    "changeType": {
+      "PROCESS": "Proses",
+      "PRODUCT": "Məhsul",
+      "EQUIPMENT": "Avadanlıq",
+      "MATERIAL": "Material",
+      "ORGANIZATIONAL": "Təşkilati",
+      "DOCUMENTATION": "Sənədləşmə",
+      "FACILITY": "Obyekt",
+      "OTHER": "Digər"
+    },
+    "status": {
+      "PROPOSED": "Təklif olunub",
+      "REVIEWING": "Baxışda",
+      "APPROVED": "Təsdiqlənib",
+      "IMPLEMENTING": "Tətbiq olunur",
+      "VERIFIED": "Yoxlanılıb",
+      "CLOSED": "Bağlanıb",
+      "REJECTED": "Rədd edilib"
+    },
+    "list": {
+      "filtersTitle": "Reyestr filtrləri",
+      "copy": "Planlaşdırılmış dəyişiklikləri, tətbiq sahibliyini və əlaqəli proses, risk, sənəd və təchizatçı kontekstini izləyin.",
+      "stats": {
+        "total": "Cəmi",
+        "proposedReviewing": "Təklif / baxış",
+        "approvedImplementing": "Təsdiq / tətbiq",
+        "verifiedClosed": "Yoxlanıb / bağlanıb"
+      },
+      "filters": {
+        "search": "Axtarış",
+        "status": "Status",
+        "owner": "Məsul",
+        "all": "Hamısı"
+      },
+      "placeholders": {
+        "search": "İstinad, başlıq, sahə, təklif edilən dəyişiklik"
+      },
+      "loadingTitle": "Dəyişiklik sorğuları yüklənir",
+      "loadingCopy": "Planlaşdırılmış dəyişikliklər, məsullar və əlaqəli nəzarət konteksti yenilənir.",
+      "emptyTitle": "Dəyişiklik sorğusu tapılmadı",
+      "emptyCopy": "Tətbiq qeyri-formal baş verməzdən əvvəl planlaşdırılmış dəyişiklikləri görünən saxlamaq üçün ilk sorğunu yaradın.",
+      "table": {
+        "change": "Dəyişiklik",
+        "type": "Növ",
+        "affectedArea": "Təsirlənən sahə",
+        "status": "Status",
+        "owner": "Məsul",
+        "targetDate": "Hədəf tarix",
+        "attention": "Diqqət",
+        "links": "Əlaqələr"
+      }
+    },
+    "form": {
+      "positionTitle": "Dəyişiklik vəziyyəti",
+      "summary": {
+        "reason": "Səbəb",
+        "proposedChange": "Təklif edilən dəyişiklik",
+        "owner": "Məsul",
+        "defined": "Müəyyən edilib",
+        "recorded": "Qeyd edilib",
+        "assigned": "Təyin edilib",
+        "needed": "Lazımdır"
+      },
+      "definitionTitle": "Dəyişiklik tərifi",
+      "reviewTitle": "Baxış və nəzarət",
+      "fields": {
+        "reference": "İstinad",
+        "type": "Növ",
+        "status": "Status",
+        "title": "Başlıq",
+        "reason": "Dəyişiklik səbəbi",
+        "affectedArea": "Təsirlənən sahə",
+        "proposedChange": "Təklif edilən dəyişiklik",
+        "impactSummary": "Təsir xülasəsi",
+        "controlSummary": "Nəzarət xülasəsi",
+        "owner": "Məsul",
+        "targetImplementationDate": "Hədəf tətbiq tarixi",
+        "reviewDate": "Baxış tarixi"
+      },
+      "placeholders": {
+        "reference": "MOC-001",
+        "title": "Kritik idarəetmə plataları üçün ikinci təchizatçının əlavə edilməsi",
+        "reason": "Dəyişiklik niyə indi lazımdır?",
+        "affectedArea": "Satınalma, istehsalata buraxılış, anbar nəzarətləri",
+        "proposedChange": "Praktikada nəyin dəyişəcəyini xülasə edin.",
+        "impactSummary": "Keyfiyyət, əməliyyat, müştəri, təhlükəsizlik və ya uyğunluq təsirini xülasə edin.",
+        "controlSummary": "Tətbiqdən əvvəl lazım olan nəzarətləri, təsdiqləri və yoxlamaları xülasə edin."
+      }
+    },
+    "guidance": {
+      "structured": "Bu dəyişiklik sorğusu artıq nəyin dəyişdiyini, bunun niyə lazım olduğunu və tətbiqdən əvvəl baxışa kimin cavabdeh olduğunu göstərir.",
+      "default": "Planlaşdırılmış dəyişikliyi, bunun niyə lazım olduğunu, hansı sahənin təsirləndiyini və nəzarətli baxış və tətbiqə kimin cavabdeh olduğunu qeyd edin."
+    },
+    "review": {
+      "noRecord": "Əvvəlcə dəyişiklik sorğusunu saxlayın, sonra canlı nəzarət sübutunu daşıyan mövcud proses, risk, tədbir, sənəd, öhdəlik və ya provayder qeydlərini bağlayın.",
+      "unlinked": "Bu dəyişiklik qeyd edilib, amma dəstəkləyən proses, risk, sənəd və provayder konteksti hələ əlaqəli qeydlərdə görünmür.",
+      "partial": "Bu dəyişiklikdə bəzi izlenebilirlik var, amma məsul proses və əlaqəli risk bağlandıqdan sonra baxış daha aydın olacaq.",
+      "documentNeeded": "Dəyişiklikdə əməliyyat izlenebilirliyi var, amma idarə olunan təlimatlar təsirlənirsə dəstəkləyən sənəd və ya prosedur əlaqəsi də lazımdır.",
+      "strong": "Bu dəyişiklik sorğusu artıq harada idarə olunduğunu, nəyin təsirlənə biləcəyini və tətbiqi hansı təqib qeydlərinin dəstəklədiyini göstərir."
+    },
+    "attention": {
+      "title": "Rəhbərlik diqqəti",
+      "underControl": "Nəzarət altındadır",
+      "multi": "{{first}} +{{count}}",
+      "headline": {
+        "needsAttention": "Bu dəyişiklik sorğusu hazırda rəhbərlik diqqəti tələb edir.",
+        "underControl": "Bu dəyişiklik sorğusu hazırda nəzarət altındadır."
+      },
+      "copy": {
+        "unsaved": "Diqqət üzrə istiqamət dəyişiklik sorğusu saxlanıldıqdan sonra görünür.",
+        "underControl": "Sahiblik, vaxt və cari mərhələ rutin dəyişiklik nəzarəti üçün kifayət qədər idarə olunur.",
+        "needsAttention": "Diqqət buna görə lazımdır: {{reasons}}."
+      },
+      "reasons": {
+        "OWNER_NEEDED": "Məsul lazımdır",
+        "REVIEW_DATE_NEEDED": "Baxış tarixi lazımdır",
+        "REVIEW_OVERDUE": "Baxış gecikib",
+        "REVIEW_DUE_SOON": "Baxış tarixi yaxındır",
+        "IMPLEMENTATION_OVERDUE": "Tətbiq gecikib",
+        "IMPLEMENTATION_DUE_SOON": "Tətbiq tarixi yaxındır",
+        "STALE": "Köhnəlib"
+      }
+    },
+    "stageNarrative": {
+      "default": "Dəyişikliklər adətən təklifdən başlayır, baxış və təsdiqdən keçərək tətbiqə, sonra yoxlama və bağlanışa gedir.",
+      "PROPOSED": "Bu dəyişiklik hələ müəyyənləşdirilir. Baxışa keçməzdən əvvəl səbəbi, təsirlənən sahəni və gözlənilən təsiri dəqiqləşdirin.",
+      "REVIEWING": "Bu dəyişiklik rəsmi baxışdadır. Proses sahibliyini, risk təsirini və lazım olan sənəd yeniləmələrini təsdiqləmək üçün əlaqəli qeydlərdən istifadə edin.",
+      "APPROVED": "Bu dəyişiklik təsdiqlənib. Növbəti addım tələb olunan tədbir və ya sənəd yeniləmələri görünən olmaqla nəzarətli tətbiqdir.",
+      "IMPLEMENTING": "Bu dəyişiklik tətbiq olunur. Nəticə yoxlanılana qədər təqib tədbirləri və sübutları görünən saxlayın.",
+      "VERIFIED": "Tətbiq tamamlanıb və nəticə yoxlanılıb. Əlavə təqib lazım deyilsə sorğunu bağlayın.",
+      "CLOSED": "Bu dəyişiklik bağlanıb və indi baxıla bilən dəyişiklik tarixçəsi qeydi kimi qalır.",
+      "REJECTED": "Bu dəyişiklik rədd edilib və baxış qərarı kimi qeyd olunub."
+    },
+    "detail": {
+      "eyebrow": "Dəyişiklik sorğusu",
+      "noSummary": "Təklif edilən dəyişiklik xülasəsi hələ qeyd edilməyib.",
+      "summary": {
+        "affectedArea": "Təsirlənən sahə",
+        "owner": "Məsul",
+        "targetDate": "Hədəf tarix",
+        "linkedRecords": "Əlaqəli qeydlər"
+      },
+      "stageTitle": "Mərhələ izahı",
+      "stageSummary": {
+        "processes": "Proseslər",
+        "risks": "Risklər",
+        "documents": "Sənədlər",
+        "providers": "Provayderlər"
+      },
+      "fields": {
+        "reason": "Dəyişiklik səbəbi",
+        "impactSummary": "Təsir xülasəsi",
+        "controlSummary": "Nəzarət xülasəsi",
+        "reviewDate": "Baxış tarixi"
+      },
+      "empty": {
+        "reason": "Səbəb qeyd edilməyib.",
+        "impactSummary": "Təsir xülasəsi qeyd edilməyib.",
+        "controlSummary": "Nəzarət xülasəsi qeyd edilməyib.",
+        "reviewDate": "Baxış tarixi qeyd edilməyib."
+      }
+    },
+    "nextSteps": {
+      "title": "Növbəti addımlar",
+      "headline": {
+        "default": "Növbəti addımlar dəyişiklik sorğusu saxlanıldıqdan sonra görünür.",
+        "proposed": "Tətbiqdən əvvəl formal baxışı başladın.",
+        "reviewing": "Təsdiqdən əvvəl baxış kontekstini tamamlayın.",
+        "action": "Növbəti olaraq tətbiq üzrə təqib tədbiri hazırlayın.",
+        "verified": "Dəyişikliyi tamamlanmış saymazdan əvvəl son tədbirləri və izlenebilirliyi nəzərdən keçirin.",
+        "ready": "Bu dəyişiklik sorğusu tətbiqi dəstəkləyən əsas nəzarətlərlə əlaqəlidir."
+      },
+      "copy": {
+        "default": "Əvvəlcə dəyişiklik sorğusunu saxlayın, sonra növbəti addımın baxış, izlenebilirliyin tamamlanması və ya tətbiq təqibi olduğunu müəyyən edin.",
+        "proposed": "Səbəb, təsir, məsul və təsirlənən sahə formal baxış üçün kifayət qədər aydın olana qədər dəyişikliyi təklif mərhələsində saxlayın.",
+        "reviewing": "Baxış zamanı məsul prosesi, əlaqəli riski və təsirlənən idarə olunan sənədi bağlayın ki, təsdiq qərarı tam mənzərəyə əsaslansın.",
+        "action": "Dəyişiklik icra nəzarəti üçün hazırdır. Tətbiq məsuliyyəti və tarixlər Actions izləyicisində görünən qalsın deyə təqib tədbiri hazırlayın.",
+        "verified": "Dəyişiklik nəticəsi yoxlanılıb. Son bağlanışdan əvvəl açıq heç nə qalmadığını təsdiqləmək üçün əlaqəli tədbirlər və izlenebilirlikdən istifadə edin.",
+        "ready": "Dəyişiklik sorğusu artıq dəyişikliyin niyə mövcud olduğunu, harada tətbiq edildiyini və baxışla tətbiqi hansı əlaqəli qeydlərin dəstəklədiyini göstərir."
+      },
+      "summary": {
+        "processReview": "Proses baxışı",
+        "riskReview": "Risk baxışı",
+        "followUpAction": "Təqib tədbiri",
+        "linked": "Əlaqələndirilib",
+        "needed": "Lazımdır",
+        "prepareBelow": "Aşağıda hazırlayın"
+      }
+    },
+    "links": {
+      "eyebrow": "Əlaqəli qeydlər",
+      "title": "İzlenebilirlik mərkəzi",
+      "openComposer": "+ Əlaqə",
+      "closeComposer": "Bağla",
+      "remove": "Sil",
+      "emptyTitle": "Əlaqəli qeyd yoxdur",
+      "includedFrom": "{{tier}} paketinə daxildir",
+      "types": {
+        "PROCESS": "Proses",
+        "RISK": "Risk",
+        "ACTION": "Tədbir",
+        "DOCUMENT": "Sənəd",
+        "OBLIGATION": "Öhdəlik",
+        "PROVIDER": "Provayder"
+      },
+      "sections": {
+        "PROCESS": { "title": "Əlaqəli proseslər", "copy": "Bu planlaşdırılmış dəyişikliyə sahib olan və ya ondan təsirlənən proseslər.", "empty": "Dəyişikliyə sahib olan və ya ilk təsiri hiss edəcək prosesi bağlayın." },
+        "RISK": { "title": "Əlaqəli risklər", "copy": "Tətbiqdən əvvəl nəyin səhv gedə biləcəyini və ya hansı tədbirin lazım olduğunu qiymətləndirən risklər.", "empty": "Bu dəyişiklikdən yaranan məruz qalmanı rəsmi qiymətləndirən riski bağlayın." },
+        "ACTION": { "title": "Əlaqəli tədbirlər", "copy": "Qlobal tədbirlər reyestrində artıq izlənən təqib tədbirləri.", "empty": "Planlaşdırma, tətbiq və ya yoxlama üçün artıq izlənən tədbirləri bağlayın." },
+        "DOCUMENT": { "title": "Əlaqəli sənədlər", "copy": "Dəyişiklik çərçivəsində baxış tələb edən idarə olunan prosedurlar, təlimatlar və ya qeydlər.", "empty": "Dəyişiklik səbəbilə yenilənməli, baxılmalı və ya yoxlanmalı olan idarə olunan sənədi bağlayın." },
+        "OBLIGATION": { "title": "Əlaqəli öhdəliklər", "copy": "Dəyişikliyin təsir edə biləcəyi müştəri, hüquqi və ya uyğunluq öhdəlikləri.", "empty": "Dəyişiklik müştəri, hüquqi və ya tənzimləyici tələblərə təsir edirsə öhdəlikləri bağlayın." },
+        "PROVIDER": { "title": "Əlaqəli provayderlər", "copy": "Planlaşdırılmış dəyişiklikdə iştirak edən və ya ondan təsirlənən xarici provayderlər.", "empty": "Dəyişiklik xarici təchizatçı və ya xidmətdən asılıdırsa və ya ona təsir edirsə provayderi bağlayın." }
+      }
+    },
+    "linkComposer": {
+      "chooseExisting": "Mövcud {{section}} seçin",
+      "note": "Qeyd",
+      "notePlaceholder": "Bu əlaqə üçün əlavə kontekst",
+      "linking": "Əlaqələndirilir...",
+      "addLink": "Əlaqə əlavə et"
+    },
+    "messages": {
+      "noPermissionWrite": "Dəyişiklik sorğularını redaktə etmək üçün icazəniz yoxdur.",
+      "completeRequired": "Tələb olunan dəyişiklik idarəetmə sahələrini tamamlayın.",
+      "saved": "Dəyişiklik sorğusu uğurla saxlanıldı.",
+      "saveFailed": "Dəyişiklik sorğusunu saxlamaq mümkün olmadı.",
+      "archiveConfirm": "\"{{title}}\" dəyişiklik sorğusu arxivləşdirilsin?",
+      "archived": "Dəyişiklik sorğusu uğurla arxivləşdirildi.",
+      "archiveFailed": "Dəyişiklik sorğusunu arxivləşdirmək mümkün olmadı.",
+      "linkAdded": "Əlaqəli qeyd əlavə edildi.",
+      "linkFailed": "Qeydi əlaqələndirmək mümkün olmadı.",
+      "linkRemoved": "Əlaqə silindi.",
+      "linkRemoveFailed": "Əlaqəni silmək mümkün olmadı.",
+      "loadListFailed": "Dəyişiklik sorğularını yükləmək mümkün olmadı.",
+      "loadDetailsFailed": "Dəyişiklik sorğusunun detallarını yükləmək mümkün olmadı.",
+      "loadOwnersFailed": "Dəyişiklik sorğusu məsullarını yükləmək mümkün olmadı.",
+      "actionDraftTitle": "Dəyişiklik təqibi: {{title}}"
+    }
+  },
   "hazards": {
     "page": {
       "label": "Təhlükələrin müəyyənləşdirilməsi",

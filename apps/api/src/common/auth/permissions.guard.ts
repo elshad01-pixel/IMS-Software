@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { DEFAULT_PACKAGE_TIER, isModuleIncluded, PackageModuleKey, TenantPackageTier } from './package-entitlements';
+import { DEFAULT_PACKAGE_TIER, DEFAULT_SCOPE, isModuleIncluded, PackageModuleKey, TenantPackageTier, TenantScope } from './package-entitlements';
 import { PACKAGE_MODULE_KEY } from './package-module.decorator';
 import { DEFAULT_TENANT_ADD_ONS, normalizeTenantAddOns, TenantAddOnKey } from './tenant-addons';
 import { TENANT_ADD_ON_KEY } from './tenant-addon.decorator';
@@ -41,7 +41,7 @@ export class PermissionsGuard implements CanActivate {
       return false;
     }
 
-    const [dbUser, tenantPackage, tenantAddOns] = await Promise.all([
+    const [dbUser, tenantPackage, tenantScope, tenantAddOns] = await Promise.all([
       this.prisma.user.findFirst({
         where: { id: userId, tenantId, isActive: true },
         select: {
@@ -71,6 +71,17 @@ export class PermissionsGuard implements CanActivate {
             select: { value: true }
           })
         : Promise.resolve(null),
+      requiredPackageModule
+        ? this.prisma.tenantSetting.findUnique({
+            where: {
+              tenantId_key: {
+                tenantId,
+                key: 'subscription.scope'
+              }
+            },
+            select: { value: true }
+          })
+        : Promise.resolve(null),
       requiredAddOn
         ? this.prisma.tenantSetting.findUnique({
             where: {
@@ -94,7 +105,8 @@ export class PermissionsGuard implements CanActivate {
 
     if (requiredPackageModule) {
       const packageTier = this.readPackageTier(tenantPackage?.value);
-      if (!isModuleIncluded(packageTier, requiredPackageModule)) {
+      const scope = this.readScope(tenantScope?.value);
+      if (!isModuleIncluded(packageTier, scope, requiredPackageModule)) {
         return false;
       }
     }
@@ -108,6 +120,10 @@ export class PermissionsGuard implements CanActivate {
 
   private readPackageTier(value?: string | null): TenantPackageTier {
     return value === 'ASSURANCE' || value === 'CORE_IMS' || value === 'QHSE_PRO' ? value : DEFAULT_PACKAGE_TIER;
+  }
+
+  private readScope(value?: string | null): TenantScope {
+    return value === 'QMS' || value === 'EMS' || value === 'OHSMS' || value === 'IMS' || value === 'FSMS' ? value : DEFAULT_SCOPE;
   }
 
   private readAddOns(value?: string | null) {

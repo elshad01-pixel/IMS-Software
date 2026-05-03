@@ -6,6 +6,7 @@ import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 import { I18nService } from '../core/i18n.service';
+import { TenantScope } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
 
@@ -94,7 +95,7 @@ type ReviewRecord = {
   template: `
     <section class="page-grid">
       <iso-page-header
-        [label]="t('managementReview.page.label')"
+        [label]="pageLabel()"
         [title]="pageTitle()"
         [description]="pageDescription()"
         [breadcrumbs]="breadcrumbs()"
@@ -117,8 +118,8 @@ type ReviewRecord = {
           <div class="section-head">
             <div>
               <span class="section-eyebrow">Meetings</span>
-              <h3>{{ t('managementReview.list.title') }}</h3>
-              <p class="subtle">{{ t('managementReview.list.copy') }}</p>
+              <h3>{{ listTitle() }}</h3>
+              <p class="subtle">{{ listCopy() }}</p>
             </div>
           </div>
 
@@ -636,29 +637,112 @@ export class ManagementReviewPageComponent {
   }
 
   protected pageTitle() {
+    const label = this.pageLabel();
     return {
-      list: this.t('managementReview.page.titles.list'),
+      list: label,
       create: this.t('managementReview.page.titles.create'),
       detail: this.selectedReview()?.title || this.t('managementReview.page.titles.detail'),
       edit: this.selectedReview()?.title || this.t('managementReview.page.titles.edit')
     }[this.mode()];
   }
 
+  protected pageLabel() {
+    return this.scopeText({
+      QMS: { en: 'Quality management review', az: 'Keyfiyyət üzrə rəhbərlik baxışı', ru: 'Анализ со стороны руководства по качеству' },
+      EMS: { en: 'Environmental management review', az: 'Ekoloji rəhbərlik baxışı', ru: 'Анализ со стороны руководства по экологии' },
+      OHSMS: { en: 'OH&S management review', az: 'Əməyin mühafizəsi üzrə rəhbərlik baxışı', ru: 'Анализ со стороны руководства по ОТиЗ' },
+      IMS: { en: this.t('managementReview.page.label'), az: this.t('managementReview.page.label'), ru: this.t('managementReview.page.label') },
+      FSMS: { en: 'Food safety management review', az: 'Qida təhlükəsizliyi üzrə rəhbərlik baxışı', ru: 'Анализ со стороны руководства по пищевой безопасности' }
+    });
+  }
+
   protected pageDescription() {
-    return {
-      list: this.t('managementReview.page.descriptions.list'),
-      create: this.t('managementReview.page.descriptions.create'),
-      detail: this.t('managementReview.page.descriptions.detail'),
-      edit: this.t('managementReview.page.descriptions.edit')
-    }[this.mode()];
+    if (this.mode() === 'list') {
+      return this.scopeText({
+        QMS: {
+          en: 'Review quality performance, actions, and system direction in one leadership record.',
+          az: 'Keyfiyyət nəticələrini, tədbirləri və sistem istiqamətini bir rəhbərlik qeydində nəzərdən keçirin.',
+          ru: 'Рассматривайте результаты качества, действия и направление системы в одной записи руководства.'
+        },
+        EMS: {
+          en: 'Review environmental performance, actions, and system direction in one leadership record.',
+          az: 'Ekoloji nəticələri, tədbirləri və sistem istiqamətini bir rəhbərlik qeydində nəzərdən keçirin.',
+          ru: 'Рассматривайте экологические результаты, действия и направление системы в одной записи руководства.'
+        },
+        OHSMS: {
+          en: 'Review OH&S performance, actions, and system direction in one leadership record.',
+          az: 'Əməyin mühafizəsi nəticələrini, tədbirləri və sistem istiqamətini bir rəhbərlik qeydində nəzərdən keçirin.',
+          ru: 'Рассматривайте результаты по ОТиЗ, действия и направление системы в одной записи руководства.'
+        },
+        IMS: {
+          en: this.t('managementReview.page.descriptions.list'),
+          az: this.t('managementReview.page.descriptions.list'),
+          ru: this.t('managementReview.page.descriptions.list')
+        },
+        FSMS: {
+          en: 'Review food safety performance, actions, and system direction in one leadership record.',
+          az: 'Qida təhlükəsizliyi nəticələrini, tədbirləri və sistem istiqamətini bir rəhbərlik qeydində nəzərdən keçirin.',
+          ru: 'Рассматривайте результаты пищевой безопасности, действия и направление системы в одной записи руководства.'
+        }
+      });
+    }
+
+    if (this.mode() === 'create') {
+      return this.t('managementReview.page.descriptions.create');
+    }
+    if (this.mode() === 'detail') {
+      return this.t('managementReview.page.descriptions.detail');
+    }
+    return this.t('managementReview.page.descriptions.edit');
   }
 
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: this.t('managementReview.page.label') }];
-    const base = [{ label: this.t('managementReview.page.label'), link: '/management-review' }];
+    const label = this.pageLabel();
+    if (this.mode() === 'list') return [{ label }];
+    const base = [{ label, link: '/management-review' }];
     if (this.mode() === 'create') return [...base, { label: this.t('managementReview.breadcrumbs.new') }];
     if (this.mode() === 'edit') return [...base, { label: this.selectedReview()?.title || this.t('managementReview.breadcrumbs.record'), link: `/management-review/${this.selectedId()}` }, { label: this.t('managementReview.breadcrumbs.edit') }];
     return [...base, { label: this.selectedReview()?.title || this.t('managementReview.breadcrumbs.record') }];
+  }
+
+  protected listTitle() {
+    return this.scopeText({
+      QMS: { en: 'Quality review meetings', az: 'Keyfiyyət baxış iclasları', ru: 'Совещания по анализу качества' },
+      EMS: { en: 'Environmental review meetings', az: 'Ekoloji baxış iclasları', ru: 'Совещания по экологическому анализу' },
+      OHSMS: { en: 'OH&S review meetings', az: 'Əməyin mühafizəsi baxış iclasları', ru: 'Совещания по анализу ОТиЗ' },
+      IMS: { en: this.t('managementReview.list.title'), az: this.t('managementReview.list.title'), ru: this.t('managementReview.list.title') },
+      FSMS: { en: 'Food safety review meetings', az: 'Qida təhlükəsizliyi baxış iclasları', ru: 'Совещания по анализу пищевой безопасности' }
+    });
+  }
+
+  protected listCopy() {
+    return this.scopeText({
+      QMS: {
+        en: 'Track leadership reviews of quality performance, actions, and system direction.',
+        az: 'Keyfiyyət nəticələri, tədbirlər və sistem istiqaməti üzrə rəhbərlik baxışlarını izləyin.',
+        ru: 'Отслеживайте анализ со стороны руководства по результатам качества, действиям и направлению системы.'
+      },
+      EMS: {
+        en: 'Track leadership reviews of environmental performance, actions, and system direction.',
+        az: 'Ekoloji nəticələr, tədbirlər və sistem istiqaməti üzrə rəhbərlik baxışlarını izləyin.',
+        ru: 'Отслеживайте анализ со стороны руководства по экологическим результатам, действиям и направлению системы.'
+      },
+      OHSMS: {
+        en: 'Track leadership reviews of OH&S performance, actions, and system direction.',
+        az: 'Əməyin mühafizəsi nəticələri, tədbirlər və sistem istiqaməti üzrə rəhbərlik baxışlarını izləyin.',
+        ru: 'Отслеживайте анализ со стороны руководства по результатам ОТиЗ, действиям и направлению системы.'
+      },
+      IMS: {
+        en: this.t('managementReview.list.copy'),
+        az: this.t('managementReview.list.copy'),
+        ru: this.t('managementReview.list.copy')
+      },
+      FSMS: {
+        en: 'Track leadership reviews of food safety performance, actions, and system direction.',
+        az: 'Qida təhlükəsizliyi nəticələri, tədbirlər və sistem istiqaməti üzrə rəhbərlik baxışlarını izləyin.',
+        ru: 'Отслеживайте анализ со стороны руководства по результатам пищевой безопасности, действиям и направлению системы.'
+      }
+    });
   }
 
   protected reviewSections() {
@@ -1249,6 +1333,12 @@ export class ManagementReviewPageComponent {
 
   private hasExistingInputContent() {
     return this.countFilledValues(this.inputValues(this.reviewForm.getRawValue())) > 0;
+  }
+
+  private scopeText(content: Record<TenantScope, { en: string; az: string; ru: string }>) {
+    const scope = this.authStore.scope();
+    const language = this.i18n.language();
+    return content[scope][language];
   }
 
 }

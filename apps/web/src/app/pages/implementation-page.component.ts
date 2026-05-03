@@ -7,7 +7,7 @@ import { RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 import { I18nService } from '../core/i18n.service';
-import { PackageModuleKey } from '../core/package-entitlements';
+import { PackageModuleKey, TenantScope } from '../core/package-entitlements';
 
 type ImplementationChecklistItem = {
   id: string;
@@ -49,11 +49,16 @@ type DiagramStage = {
 
 type ReadinessChecklistCard = {
   id: string;
-  labelKey: string;
-  hintKey: string;
   route: string;
   permission: string;
   packageModule: PackageModuleKey;
+};
+
+type ImplementationScopeProfile = {
+  inputModules: PackageModuleKey[];
+  outputModules: PackageModuleKey[];
+  diagramStages: Array<{ phase: 'Plan' | 'Do' | 'Check' | 'Act'; modules: PackageModuleKey[] }>;
+  readinessOrder: string[];
 };
 
 const CHECKLIST_LABEL_KEYS: Record<string, string> = {
@@ -65,6 +70,64 @@ const CHECKLIST_LABEL_KEYS: Record<string, string> = {
   'audit-review': 'implementation.checklist.items.auditReview'
 };
 
+const IMPLEMENTATION_SCOPE_PROFILES: Record<TenantScope, ImplementationScopeProfile> = {
+  QMS: {
+    inputModules: ['context', 'kpis', 'risks'],
+    outputModules: ['kpis', 'audits', 'management-review'],
+    diagramStages: [
+      { phase: 'Plan', modules: ['context', 'kpis', 'compliance-obligations', 'risks'] },
+      { phase: 'Do', modules: ['documents', 'process-register', 'training', 'change-management'] },
+      { phase: 'Check', modules: ['audits', 'ncr', 'capa', 'actions'] },
+      { phase: 'Act', modules: ['ncr', 'capa', 'actions', 'management-review'] }
+    ],
+    readinessOrder: ['companyProfile', 'usersRoles', 'processMap', 'controlledDocuments', 'risks', 'audits', 'ncrCapaActions', 'kpis', 'managementReview']
+  },
+  EMS: {
+    inputModules: ['context', 'compliance-obligations', 'environmental-aspects'],
+    outputModules: ['audits', 'kpis', 'management-review'],
+    diagramStages: [
+      { phase: 'Plan', modules: ['context', 'compliance-obligations', 'risks', 'environmental-aspects'] },
+      { phase: 'Do', modules: ['documents', 'process-register', 'training', 'change-management'] },
+      { phase: 'Check', modules: ['audits', 'incidents', 'environmental-aspects', 'external-providers'] },
+      { phase: 'Act', modules: ['ncr', 'capa', 'actions', 'management-review'] }
+    ],
+    readinessOrder: ['companyProfile', 'usersRoles', 'processMap', 'controlledDocuments', 'obligations', 'aspects', 'incidents', 'audits', 'actions', 'managementReview']
+  },
+  OHSMS: {
+    inputModules: ['context', 'compliance-obligations', 'hazards'],
+    outputModules: ['audits', 'kpis', 'management-review'],
+    diagramStages: [
+      { phase: 'Plan', modules: ['context', 'compliance-obligations', 'risks', 'hazards'] },
+      { phase: 'Do', modules: ['documents', 'process-register', 'training', 'change-management'] },
+      { phase: 'Check', modules: ['audits', 'incidents', 'hazards', 'training'] },
+      { phase: 'Act', modules: ['ncr', 'capa', 'actions', 'management-review'] }
+    ],
+    readinessOrder: ['companyProfile', 'usersRoles', 'processMap', 'controlledDocuments', 'obligations', 'hazards', 'incidents', 'training', 'audits', 'actions', 'managementReview']
+  },
+  IMS: {
+    inputModules: ['context', 'compliance-obligations', 'risks'],
+    outputModules: ['kpis', 'audits', 'management-review'],
+    diagramStages: [
+      { phase: 'Plan', modules: ['context', 'kpis', 'compliance-obligations', 'risks'] },
+      { phase: 'Do', modules: ['documents', 'process-register', 'training', 'external-providers'] },
+      { phase: 'Check', modules: ['audits', 'incidents', 'hazards', 'environmental-aspects'] },
+      { phase: 'Act', modules: ['ncr', 'capa', 'actions', 'management-review'] }
+    ],
+    readinessOrder: ['companyProfile', 'usersRoles', 'processMap', 'controlledDocuments', 'risks', 'obligations', 'hazards', 'aspects', 'audits', 'ncrCapaActions', 'kpis', 'managementReview']
+  },
+  FSMS: {
+    inputModules: ['context', 'compliance-obligations', 'external-providers'],
+    outputModules: ['audits', 'kpis', 'management-review'],
+    diagramStages: [
+      { phase: 'Plan', modules: ['context', 'kpis', 'compliance-obligations', 'risks'] },
+      { phase: 'Do', modules: ['documents', 'process-register', 'training', 'external-providers'] },
+      { phase: 'Check', modules: ['audits', 'external-providers', 'actions', 'management-review'] },
+      { phase: 'Act', modules: ['ncr', 'capa', 'actions', 'management-review'] }
+    ],
+    readinessOrder: ['companyProfile', 'usersRoles', 'processMap', 'controlledDocuments', 'training', 'providers', 'audits', 'ncrCapaActions', 'kpis', 'managementReview']
+  }
+};
+
 @Component({
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslatePipe],
@@ -72,6 +135,7 @@ const CHECKLIST_LABEL_KEYS: Record<string, string> = {
     <section class="page-grid">
       <header class="implementation-page-head">
         <h1>{{ 'implementation.page.label' | translate }}</h1>
+        <p>{{ startHereIntro() }}</p>
       </header>
 
       <p class="feedback" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">
@@ -88,8 +152,8 @@ const CHECKLIST_LABEL_KEYS: Record<string, string> = {
           <div class="section-head">
             <div>
               <span class="section-eyebrow">{{ 'implementation.diagram.eyebrow' | translate }}</span>
-              <h3>{{ 'implementation.diagram.title' | translate }}</h3>
-              <p class="subtle">{{ 'implementation.diagram.copy' | translate }}</p>
+              <h3>{{ systemMapTitle() }}</h3>
+              <p class="subtle">{{ systemMapCopy() }}</p>
             </div>
           </div>
 
@@ -100,7 +164,7 @@ const CHECKLIST_LABEL_KEYS: Record<string, string> = {
               <h4>{{ 'implementation.diagram.inputTitle' | translate }}</h4>
               <div class="implementation-side__chips">
                 <a
-                  *ngFor="let module of diagramInputModules"
+                  *ngFor="let module of diagramInputModules()"
                   class="pill diagram-module-chip"
                   [routerLink]="[moduleDiagramRoute(module)]"
                   [queryParams]="{ from: 'start-here' }"
@@ -114,7 +178,7 @@ const CHECKLIST_LABEL_KEYS: Record<string, string> = {
               <h4>{{ 'implementation.diagram.outputTitle' | translate }}</h4>
               <div class="implementation-side__chips">
                 <a
-                  *ngFor="let module of diagramOutputModules"
+                  *ngFor="let module of diagramOutputModules()"
                   class="pill diagram-module-chip"
                   [routerLink]="[moduleDiagramRoute(module)]"
                   [queryParams]="{ from: 'start-here' }"
@@ -164,8 +228,8 @@ const CHECKLIST_LABEL_KEYS: Record<string, string> = {
           <div class="section-head">
             <div>
               <span class="section-eyebrow">{{ 'implementation.readiness.eyebrow' | translate }}</span>
-              <h3>{{ 'implementation.readiness.title' | translate }}</h3>
-              <p class="subtle">{{ 'implementation.readiness.copy' | translate }}</p>
+              <h3>{{ readinessTitle() }}</h3>
+              <p class="subtle">{{ readinessCopy() }}</p>
             </div>
           </div>
 
@@ -173,9 +237,9 @@ const CHECKLIST_LABEL_KEYS: Record<string, string> = {
             <article class="readiness-card" *ngFor="let item of readinessChecklist()">
               <div class="readiness-card__top">
                 <span class="phase-pill readiness-pill">{{ 'implementation.readiness.setupPill' | translate }}</span>
-                <strong>{{ item.labelKey | translate }}</strong>
+                <strong>{{ readinessCardLabel(item) }}</strong>
               </div>
-              <p>{{ item.hintKey | translate }}</p>
+              <p>{{ readinessCardHint(item) }}</p>
               <a *ngIf="item.accessible; else lockedReadiness" class="readiness-link" [routerLink]="[item.route]" [queryParams]="{ from: 'start-here' }">{{ 'common.open' | translate }}</a>
               <ng-template #lockedReadiness>
                 <span class="readiness-state">{{ 'common.needsAccess' | translate }}</span>
@@ -185,8 +249,8 @@ const CHECKLIST_LABEL_KEYS: Record<string, string> = {
         </section>
 
         <section class="card guidance-card implementation-card">
-          <strong>{{ 'implementation.guidance.flowTitle' | translate }}</strong>
-          <p>{{ 'implementation.guidance.flowCopy' | translate }}</p>
+          <strong>{{ flowGuidanceTitle() }}</strong>
+          <p>{{ flowGuidanceCopy() }}</p>
         </section>
 
         <section class="card guidance-card implementation-card" *ngIf="!current.enabled">
@@ -1152,11 +1216,17 @@ export class ImplementationPageComponent {
   });
 
   protected readonly completedChecklistCount = computed(() => this.config()?.checklist.filter((item) => item.done).length ?? 0);
+  protected readonly scope = computed(() => this.authStore.scope());
+  protected readonly scopeProfile = computed(() => IMPLEMENTATION_SCOPE_PROFILES[this.scope()]);
   protected readonly readinessChecklist = computed(() =>
-    this.readinessCards.map((item) => ({
-      ...item,
-      accessible: this.authStore.hasPermission(item.permission) && this.authStore.hasModule(item.packageModule)
-    })).filter((item) => this.authStore.hasModule(item.packageModule))
+    this.scopeProfile().readinessOrder
+      .map((id) => this.readinessCards.find((item) => item.id === id))
+      .filter((item): item is ReadinessChecklistCard => !!item)
+      .map((item) => ({
+        ...item,
+        accessible: this.authStore.hasPermission(item.permission) && this.authStore.hasModule(item.packageModule)
+      }))
+      .filter((item) => this.authStore.hasModule(item.packageModule))
   );
   protected readonly visiblePdcaCards = computed(() =>
     this.pdcaCards
@@ -1182,8 +1252,12 @@ export class ImplementationPageComponent {
     }
     return this.i18n.t('implementation.summary.needsSetup');
   });
-  protected readonly diagramInputModules: PackageModuleKey[] = ['context', 'compliance-obligations', 'risks'];
-  protected readonly diagramOutputModules: PackageModuleKey[] = ['kpis', 'audits', 'management-review'];
+  protected readonly diagramInputModules = computed(() =>
+    this.scopeProfile().inputModules.filter((module) => this.authStore.hasModule(module))
+  );
+  protected readonly diagramOutputModules = computed(() =>
+    this.scopeProfile().outputModules.filter((module) => this.authStore.hasModule(module))
+  );
   protected readonly diagramStages: DiagramStage[] = [
     {
       phase: 'Plan',
@@ -1214,7 +1288,10 @@ export class ImplementationPageComponent {
     this.diagramStages
       .map((stage) => ({
         ...stage,
-        modules: stage.modules.filter((module) => this.authStore.hasModule(module))
+        modules:
+          this.scopeProfile().diagramStages.find((scopeStage) => scopeStage.phase === stage.phase)?.modules.filter((module) =>
+            this.authStore.hasModule(module)
+          ) ?? []
       }))
       .filter((stage) => stage.modules.length > 0)
   );
@@ -1262,15 +1339,22 @@ export class ImplementationPageComponent {
     }
   ];
   private readonly readinessCards: ReadinessChecklistCard[] = [
-    { id: 'companyProfile', labelKey: 'implementation.readiness.items.companyProfile.label', hintKey: 'implementation.readiness.items.companyProfile.hint', route: '/settings', permission: 'settings.read', packageModule: 'settings' },
-    { id: 'usersRoles', labelKey: 'implementation.readiness.items.usersRoles.label', hintKey: 'implementation.readiness.items.usersRoles.hint', route: '/users', permission: 'users.read', packageModule: 'users' },
-    { id: 'processMap', labelKey: 'implementation.readiness.items.processMap.label', hintKey: 'implementation.readiness.items.processMap.hint', route: '/process-register', permission: 'processes.read', packageModule: 'process-register' },
-    { id: 'controlledDocuments', labelKey: 'implementation.readiness.items.controlledDocuments.label', hintKey: 'implementation.readiness.items.controlledDocuments.hint', route: '/documents', permission: 'documents.read', packageModule: 'documents' },
-    { id: 'risks', labelKey: 'implementation.readiness.items.risks.label', hintKey: 'implementation.readiness.items.risks.hint', route: '/risks', permission: 'risks.read', packageModule: 'risks' },
-    { id: 'audits', labelKey: 'implementation.readiness.items.audits.label', hintKey: 'implementation.readiness.items.audits.hint', route: '/audits', permission: 'audits.read', packageModule: 'audits' },
-    { id: 'ncrCapaActions', labelKey: 'implementation.readiness.items.ncrCapaActions.label', hintKey: 'implementation.readiness.items.ncrCapaActions.hint', route: '/actions', permission: 'action-items.read', packageModule: 'actions' },
-    { id: 'kpis', labelKey: 'implementation.readiness.items.kpis.label', hintKey: 'implementation.readiness.items.kpis.hint', route: '/kpis', permission: 'kpis.read', packageModule: 'kpis' },
-    { id: 'managementReview', labelKey: 'implementation.readiness.items.managementReview.label', hintKey: 'implementation.readiness.items.managementReview.hint', route: '/management-review', permission: 'management-review.read', packageModule: 'management-review' }
+    { id: 'companyProfile', route: '/settings', permission: 'settings.read', packageModule: 'settings' },
+    { id: 'usersRoles', route: '/users', permission: 'users.read', packageModule: 'users' },
+    { id: 'processMap', route: '/process-register', permission: 'processes.read', packageModule: 'process-register' },
+    { id: 'controlledDocuments', route: '/documents', permission: 'documents.read', packageModule: 'documents' },
+    { id: 'risks', route: '/risks', permission: 'risks.read', packageModule: 'risks' },
+    { id: 'audits', route: '/audits', permission: 'audits.read', packageModule: 'audits' },
+    { id: 'ncrCapaActions', route: '/actions', permission: 'action-items.read', packageModule: 'actions' },
+    { id: 'kpis', route: '/kpis', permission: 'kpis.read', packageModule: 'kpis' },
+    { id: 'managementReview', route: '/management-review', permission: 'management-review.read', packageModule: 'management-review' },
+    { id: 'obligations', route: '/compliance-obligations', permission: 'obligations.read', packageModule: 'compliance-obligations' },
+    { id: 'aspects', route: '/environmental-aspects', permission: 'aspects.read', packageModule: 'environmental-aspects' },
+    { id: 'incidents', route: '/incidents', permission: 'incidents.read', packageModule: 'incidents' },
+    { id: 'hazards', route: '/hazards', permission: 'hazards.read', packageModule: 'hazards' },
+    { id: 'training', route: '/training', permission: 'training.read', packageModule: 'training' },
+    { id: 'providers', route: '/external-providers', permission: 'providers.read', packageModule: 'external-providers' },
+    { id: 'actions', route: '/actions', permission: 'action-items.read', packageModule: 'actions' }
   ];
 
   constructor() {
@@ -1279,6 +1363,156 @@ export class ImplementationPageComponent {
 
   protected canWrite() {
     return this.authStore.hasPermission('settings.write');
+  }
+
+  protected startHereIntro() {
+    return this.scopeVariant({
+      QMS: {
+        en: 'Use Start Here to orient the quality workspace, confirm the core setup path, and move quickly into process, audit, and improvement work.',
+        az: 'Start Here səhifəsindən keyfiyyət iş məkanını yönləndirmək, əsas quruluş yolunu təsdiqləmək və proses, audit, təkmilləşdirmə işlərinə sürətlə keçmək üçün istifadə edin.',
+        ru: 'Используйте Start Here, чтобы сориентироваться в рабочем пространстве качества, подтвердить базовый путь настройки и быстро перейти к процессам, аудитам и улучшениям.'
+      },
+      EMS: {
+        en: 'Use Start Here to orient the environmental workspace, confirm the core setup path, and move quickly into obligations, aspects, and assurance work.',
+        az: 'Start Here səhifəsindən ekoloji iş məkanını yönləndirmək, əsas quruluş yolunu təsdiqləmək və öhdəliklər, aspektlər, təminat işlərinə sürətlə keçmək üçün istifadə edin.',
+        ru: 'Используйте Start Here, чтобы сориентироваться в экологическом рабочем пространстве, подтвердить базовый путь настройки и быстро перейти к обязательствам, аспектам и проверкам.'
+      },
+      OHSMS: {
+        en: 'Use Start Here to orient the OH&S workspace, confirm the core setup path, and move quickly into hazards, incidents, competence, and assurance work.',
+        az: 'Start Here səhifəsindən əməyin mühafizəsi iş məkanını yönləndirmək, əsas quruluş yolunu təsdiqləmək və təhlükələr, hadisələr, səriştə, təminat işlərinə sürətlə keçmək üçün istifadə edin.',
+        ru: 'Используйте Start Here, чтобы сориентироваться в рабочем пространстве ОТиЗ, подтвердить базовый путь настройки и быстро перейти к опасностям, инцидентам, компетентности и проверкам.'
+      },
+      IMS: {
+        en: 'Use Start Here to orient the integrated workspace, confirm the core setup path, and move quickly into planning, operations, assurance, and review.',
+        az: 'Start Here səhifəsindən inteqrə olunmuş iş məkanını yönləndirmək, əsas quruluş yolunu təsdiqləmək və planlaşdırma, əməliyyat, təminat və baxışa sürətlə keçmək üçün istifadə edin.',
+        ru: 'Используйте Start Here, чтобы сориентироваться в интегрированном рабочем пространстве, подтвердить базовый путь настройки и быстро перейти к планированию, операциям, проверкам и анализу.'
+      },
+      FSMS: {
+        en: 'Use Start Here to orient the food safety workspace, confirm the core setup path, and move quickly into provider, training, assurance, and review work.',
+        az: 'Start Here səhifəsindən qida təhlükəsizliyi iş məkanını yönləndirmək, əsas quruluş yolunu təsdiqləmək və təminatçı, təlim, təminat, baxış işlərinə sürətlə keçmək üçün istifadə edin.',
+        ru: 'Используйте Start Here, чтобы сориентироваться в рабочем пространстве пищевой безопасности, подтвердить базовый путь настройки и быстро перейти к поставщикам, обучению, проверкам и анализу.'
+      }
+    });
+  }
+
+  protected systemMapTitle() {
+    return this.scopeVariant({
+      QMS: { en: 'How quality modules interact', az: 'Keyfiyyət modulları necə qarşılıqlı işləyir', ru: 'Как взаимодействуют модули качества' },
+      EMS: { en: 'How environmental modules interact', az: 'Ekoloji modullar necə qarşılıqlı işləyir', ru: 'Как взаимодействуют экологические модули' },
+      OHSMS: { en: 'How OH&S modules interact', az: 'Əməyin mühafizəsi modulları necə qarşılıqlı işləyir', ru: 'Как взаимодействуют модули ОТиЗ' },
+      IMS: { en: this.i18n.t('implementation.diagram.title'), az: this.i18n.t('implementation.diagram.title'), ru: this.i18n.t('implementation.diagram.title') },
+      FSMS: { en: 'How food safety modules interact', az: 'Qida təhlükəsizliyi modulları necə qarşılıqlı işləyir', ru: 'Как взаимодействуют модули пищевой безопасности' }
+    });
+  }
+
+  protected systemMapCopy() {
+    return this.scopeVariant({
+      QMS: {
+        en: 'Use this map as the quickest orientation view for quality planning, control, assurance, and improvement.',
+        az: 'Bu xəritədən keyfiyyət planlaşdırması, nəzarəti, təminatı və təkmilləşdirilməsi üçün ən sürətli istiqamətləndirmə görünüşü kimi istifadə edin.',
+        ru: 'Используйте эту схему как самый быстрый обзор для планирования, контроля, обеспечения и улучшения качества.'
+      },
+      EMS: {
+        en: 'Use this map as the quickest orientation view for environmental planning, control, assurance, and improvement.',
+        az: 'Bu xəritədən ekoloji planlaşdırma, nəzarət, təminat və təkmilləşdirmə üçün ən sürətli istiqamətləndirmə görünüşü kimi istifadə edin.',
+        ru: 'Используйте эту схему как самый быстрый обзор для экологического планирования, контроля, обеспечения и улучшения.'
+      },
+      OHSMS: {
+        en: 'Use this map as the quickest orientation view for OH&S planning, control, assurance, and improvement.',
+        az: 'Bu xəritədən əməyin mühafizəsi planlaşdırması, nəzarəti, təminatı və təkmilləşdirilməsi üçün ən sürətli istiqamətləndirmə görünüşü kimi istifadə edin.',
+        ru: 'Используйте эту схему как самый быстрый обзор для планирования, контроля, обеспечения и улучшения ОТиЗ.'
+      },
+      IMS: {
+        en: this.i18n.t('implementation.diagram.copy'),
+        az: this.i18n.t('implementation.diagram.copy'),
+        ru: this.i18n.t('implementation.diagram.copy')
+      },
+      FSMS: {
+        en: 'Use this map as the quickest orientation view for food safety planning, control, assurance, and improvement.',
+        az: 'Bu xəritədən qida təhlükəsizliyi planlaşdırması, nəzarəti, təminatı və təkmilləşdirilməsi üçün ən sürətli istiqamətləndirmə görünüşü kimi istifadə edin.',
+        ru: 'Используйте эту схему как самый быстрый обзор для планирования, контроля, обеспечения и улучшения пищевой безопасности.'
+      }
+    });
+  }
+
+  protected readinessTitle() {
+    return this.scopeVariant({
+      QMS: { en: 'Quality readiness path', az: 'Keyfiyyət hazırlıq yolu', ru: 'Путь готовности по качеству' },
+      EMS: { en: 'Environmental readiness path', az: 'Ekoloji hazırlıq yolu', ru: 'Путь экологической готовности' },
+      OHSMS: { en: 'OH&S readiness path', az: 'Əməyin mühafizəsi hazırlıq yolu', ru: 'Путь готовности по ОТиЗ' },
+      IMS: { en: this.i18n.t('implementation.readiness.title'), az: this.i18n.t('implementation.readiness.title'), ru: this.i18n.t('implementation.readiness.title') },
+      FSMS: { en: 'Food safety readiness path', az: 'Qida təhlükəsizliyi hazırlıq yolu', ru: 'Путь готовности по пищевой безопасности' }
+    });
+  }
+
+  protected readinessCopy() {
+    return this.scopeVariant({
+      QMS: {
+        en: 'Use these launch points to confirm the quality system is ready to run with clear ownership and evidence.',
+        az: 'Keyfiyyət sisteminin aydın cavabdehlik və sübutlarla işləməyə hazır olduğunu təsdiqləmək üçün bu başlanğıc nöqtələrindən istifadə edin.',
+        ru: 'Используйте эти стартовые точки, чтобы подтвердить готовность системы качества к работе с ясной ответственностью и доказательствами.'
+      },
+      EMS: {
+        en: 'Use these launch points to confirm the environmental system is ready to run with clear ownership and evidence.',
+        az: 'Ekoloji sistemin aydın cavabdehlik və sübutlarla işləməyə hazır olduğunu təsdiqləmək üçün bu başlanğıc nöqtələrindən istifadə edin.',
+        ru: 'Используйте эти стартовые точки, чтобы подтвердить готовность экологической системы к работе с ясной ответственностью и доказательствами.'
+      },
+      OHSMS: {
+        en: 'Use these launch points to confirm the OH&S system is ready to run with clear ownership and evidence.',
+        az: 'Əməyin mühafizəsi sisteminin aydın cavabdehlik və sübutlarla işləməyə hazır olduğunu təsdiqləmək üçün bu başlanğıc nöqtələrindən istifadə edin.',
+        ru: 'Используйте эти стартовые точки, чтобы подтвердить готовность системы ОТиЗ к работе с ясной ответственностью и доказательствами.'
+      },
+      IMS: {
+        en: this.i18n.t('implementation.readiness.copy'),
+        az: this.i18n.t('implementation.readiness.copy'),
+        ru: this.i18n.t('implementation.readiness.copy')
+      },
+      FSMS: {
+        en: 'Use these launch points to confirm the food safety system is ready to run with clear ownership and evidence.',
+        az: 'Qida təhlükəsizliyi sisteminin aydın cavabdehlik və sübutlarla işləməyə hazır olduğunu təsdiqləmək üçün bu başlanğıc nöqtələrindən istifadə edin.',
+        ru: 'Используйте эти стартовые точки, чтобы подтвердить готовность системы пищевой безопасности к работе с ясной ответственностью и доказательствами.'
+      }
+    });
+  }
+
+  protected flowGuidanceTitle() {
+    return this.scopeVariant({
+      QMS: { en: 'Quality flow', az: 'Keyfiyyət axını', ru: 'Поток качества' },
+      EMS: { en: 'Environmental flow', az: 'Ekoloji axın', ru: 'Экологический поток' },
+      OHSMS: { en: 'OH&S flow', az: 'Əməyin mühafizəsi axını', ru: 'Поток ОТиЗ' },
+      IMS: { en: this.i18n.t('implementation.guidance.flowTitle'), az: this.i18n.t('implementation.guidance.flowTitle'), ru: this.i18n.t('implementation.guidance.flowTitle') },
+      FSMS: { en: 'Food safety flow', az: 'Qida təhlükəsizliyi axını', ru: 'Поток пищевой безопасности' }
+    });
+  }
+
+  protected flowGuidanceCopy() {
+    return this.scopeVariant({
+      QMS: {
+        en: 'Start with process structure, controlled documents, risks, and audit follow-up so the quality system becomes usable quickly.',
+        az: 'Keyfiyyət sisteminin sürətlə işlək olması üçün proses quruluşu, idarə olunan sənədlər, risklər və audit izləməsi ilə başlayın.',
+        ru: 'Начните со структуры процессов, управляемых документов, рисков и последующих действий по аудитам, чтобы система качества быстро стала рабочей.'
+      },
+      EMS: {
+        en: 'Start with obligations, aspects, operational controls, and audit follow-up so the environmental system becomes usable quickly.',
+        az: 'Ekoloji sistemin sürətlə işlək olması üçün öhdəliklər, aspektlər, əməliyyat nəzarətləri və audit izləməsi ilə başlayın.',
+        ru: 'Начните с обязательств, аспектов, операционных мер контроля и последующих действий по аудитам, чтобы экологическая система быстро стала рабочей.'
+      },
+      OHSMS: {
+        en: 'Start with hazards, incidents, competence, and audit follow-up so the OH&S system becomes usable quickly.',
+        az: 'Əməyin mühafizəsi sisteminin sürətlə işlək olması üçün təhlükələr, hadisələr, səriştə və audit izləməsi ilə başlayın.',
+        ru: 'Начните с опасностей, инцидентов, компетентности и последующих действий по аудитам, чтобы система ОТиЗ быстро стала рабочей.'
+      },
+      IMS: {
+        en: this.i18n.t('implementation.guidance.flowCopy'),
+        az: this.i18n.t('implementation.guidance.flowCopy'),
+        ru: this.i18n.t('implementation.guidance.flowCopy')
+      },
+      FSMS: {
+        en: 'Start with providers, training, obligations, and assurance so the food safety system becomes usable quickly.',
+        az: 'Qida təhlükəsizliyi sisteminin sürətlə işlək olması üçün təminatçılar, təlim, öhdəliklər və təminat ilə başlayın.',
+        ru: 'Начните с поставщиков, обучения, обязательств и проверок, чтобы система пищевой безопасности быстро стала рабочей.'
+      }
+    });
   }
 
   protected moduleDiagramLabel(module: PackageModuleKey) {
@@ -1353,6 +1587,120 @@ export class ImplementationPageComponent {
     this.i18n.language();
     const key = CHECKLIST_LABEL_KEYS[item.id];
     return key ? this.i18n.t(key) : item.label;
+  }
+
+  protected readinessCardLabel(item: ReadinessChecklistCard) {
+    this.i18n.language();
+    const existingLabels: Partial<Record<ReadinessChecklistCard['id'], string>> = {
+      companyProfile: this.i18n.t('implementation.readiness.items.companyProfile.label'),
+      usersRoles: this.i18n.t('implementation.readiness.items.usersRoles.label'),
+      processMap: this.i18n.t('implementation.readiness.items.processMap.label'),
+      controlledDocuments: this.i18n.t('implementation.readiness.items.controlledDocuments.label'),
+      risks: this.i18n.t('implementation.readiness.items.risks.label'),
+      audits: this.i18n.t('implementation.readiness.items.audits.label'),
+      ncrCapaActions: this.i18n.t('implementation.readiness.items.ncrCapaActions.label'),
+      kpis: this.i18n.t('implementation.readiness.items.kpis.label'),
+      managementReview: this.i18n.t('implementation.readiness.items.managementReview.label')
+    };
+
+    if (existingLabels[item.id]) {
+      return existingLabels[item.id]!;
+    }
+
+    return {
+      obligations: this.scopeText({
+        en: 'Compliance obligations',
+        az: 'Uyğunluq öhdəlikləri',
+        ru: 'Обязательства по соблюдению требований'
+      }),
+      aspects: this.scopeText({
+        en: 'Environmental aspects',
+        az: 'Ekoloji aspektlər',
+        ru: 'Экологические аспекты'
+      }),
+      incidents: this.scopeText({
+        en: 'Incidents',
+        az: 'İnsidentlər',
+        ru: 'Инциденты'
+      }),
+      hazards: this.scopeText({
+        en: 'Hazards',
+        az: 'Təhlükələr',
+        ru: 'Опасности'
+      }),
+      training: this.scopeText({
+        en: 'Training',
+        az: 'Təlim',
+        ru: 'Обучение'
+      }),
+      providers: this.scopeText({
+        en: 'External providers',
+        az: 'Xarici təchizatçılar',
+        ru: 'Внешние поставщики'
+      }),
+      actions: this.scopeText({
+        en: 'Actions',
+        az: 'Tapşırıqlar',
+        ru: 'Действия'
+      })
+    }[item.id];
+  }
+
+  protected readinessCardHint(item: ReadinessChecklistCard) {
+    this.i18n.language();
+    const existingHints: Partial<Record<ReadinessChecklistCard['id'], string>> = {
+      companyProfile: this.i18n.t('implementation.readiness.items.companyProfile.hint'),
+      usersRoles: this.i18n.t('implementation.readiness.items.usersRoles.hint'),
+      processMap: this.i18n.t('implementation.readiness.items.processMap.hint'),
+      controlledDocuments: this.i18n.t('implementation.readiness.items.controlledDocuments.hint'),
+      risks: this.i18n.t('implementation.readiness.items.risks.hint'),
+      audits: this.i18n.t('implementation.readiness.items.audits.hint'),
+      ncrCapaActions: this.i18n.t('implementation.readiness.items.ncrCapaActions.hint'),
+      kpis: this.i18n.t('implementation.readiness.items.kpis.hint'),
+      managementReview: this.i18n.t('implementation.readiness.items.managementReview.hint')
+    };
+
+    if (existingHints[item.id]) {
+      return existingHints[item.id]!;
+    }
+
+    return {
+      obligations: this.scopeText({
+        en: 'Track legal, regulatory, and external requirements that shape this scope.',
+        az: 'Bu scope-u formalaşdıran hüquqi, normativ və xarici tələbləri izləyin.',
+        ru: 'Отслеживайте правовые, нормативные и внешние требования для этого scope.'
+      }),
+      aspects: this.scopeText({
+        en: 'Record significant environmental aspects, lifecycle view, and required controls.',
+        az: 'Əhəmiyyətli ekoloji aspektləri, həyat dövrü baxışını və tələb olunan nəzarətləri qeyd edin.',
+        ru: 'Фиксируйте значимые экологические аспекты, взгляд по жизненному циклу и требуемые меры контроля.'
+      }),
+      incidents: this.scopeText({
+        en: 'Capture events, investigations, and resulting follow-up that feeds assurance and review.',
+        az: 'Hadisələri, araşdırmaları və təminatla rəhbərlik baxışına ötürülən izləmə tədbirlərini qeyd edin.',
+        ru: 'Фиксируйте события, расследования и последующие действия для проверок и анализа руководством.'
+      }),
+      hazards: this.scopeText({
+        en: 'Maintain the hazard register, harm view, and control needs for OH&S operations.',
+        az: 'Əməyin mühafizəsi əməliyyatları üçün təhlükə reyestrini, zərər baxışını və nəzarət ehtiyaclarını saxlayın.',
+        ru: 'Ведите реестр опасностей, оценку вреда и потребности в мерах контроля для OHS.'
+      }),
+      training: this.scopeText({
+        en: 'Assign competence and awareness activities that support safe and consistent operation.',
+        az: 'Təhlükəsiz və ardıcıl fəaliyyət üçün səriştə və maarifləndirmə tədbirlərini təyin edin.',
+        ru: 'Назначайте обучение и мероприятия по осведомлённости для безопасной и стабильной работы.'
+      }),
+      providers: this.scopeText({
+        en: 'Review external providers, supplier assurance, and outsourced process support.',
+        az: 'Xarici təchizatçıları, təchizatçı təminatını və autsors proses dəstəyini nəzərdən keçirin.',
+        ru: 'Проверяйте внешних поставщиков, поставочное обеспечение и поддержку аутсорсинговых процессов.'
+      }),
+      actions: this.scopeText({
+        en: 'Track follow-up owners, due dates, and overdue work across the selected scope.',
+        az: 'Seçilmiş scope üzrə cavabdehləri, son tarixləri və gecikmiş işləri izləyin.',
+        ru: 'Отслеживайте владельцев, сроки и просроченные действия в рамках выбранного scope.'
+      })
+    }[item.id];
   }
 
   protected readCheckbox(event: Event) {
@@ -1463,5 +1811,22 @@ export class ImplementationPageComponent {
   private readError(error: HttpErrorResponse, fallback: string) {
     const message = error.error?.message;
     return Array.isArray(message) ? message.join(', ') : (message as string) || fallback;
+  }
+
+  private scopeText(copy: { en: string; az: string; ru: string }) {
+    const language = this.i18n.language();
+    if (language === 'az') {
+      return copy.az;
+    }
+    if (language === 'ru') {
+      return copy.ru;
+    }
+    return copy.en;
+  }
+
+  private scopeVariant(content: Record<TenantScope, { en: string; az: string; ru: string }>) {
+    const scope = this.authStore.scope();
+    const language = this.i18n.language();
+    return content[scope][language];
   }
 }

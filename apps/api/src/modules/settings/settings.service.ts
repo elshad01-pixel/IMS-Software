@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { DEFAULT_PACKAGE_TIER, TenantPackageTier } from '../../common/auth/package-entitlements';
+import { DEFAULT_PACKAGE_TIER, DEFAULT_SCOPE, TenantPackageTier, TenantScope } from '../../common/auth/package-entitlements';
 import { DEFAULT_TENANT_ADD_ONS, normalizeTenantAddOns, TenantAddOns } from '../../common/auth/tenant-addons';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
@@ -28,6 +28,7 @@ const settingsDefaults = {
   },
   subscription: {
     packageTier: DEFAULT_PACKAGE_TIER,
+    scope: DEFAULT_SCOPE,
     addOns: { ...DEFAULT_TENANT_ADD_ONS }
   },
   ai: {
@@ -140,6 +141,7 @@ export class SettingsService {
       },
       subscription: {
         packageTier: this.readPackageTierSetting(map, 'subscription.packageTier', settingsDefaults.subscription.packageTier),
+        scope: this.readScopeSetting(map, 'subscription.scope', settingsDefaults.subscription.scope),
         addOns: this.readAddOnsSetting(map, 'subscription.addOns', settingsDefaults.subscription.addOns)
       },
       notifications: {
@@ -214,6 +216,11 @@ export class SettingsService {
       const packageTier = values['packageTier'];
       if (packageTier !== 'ASSURANCE' && packageTier !== 'CORE_IMS' && packageTier !== 'QHSE_PRO') {
         throw new BadRequestException('Unsupported package tier');
+      }
+
+      const scope = values['scope'];
+      if (scope !== 'QMS' && scope !== 'EMS' && scope !== 'OHSMS' && scope !== 'IMS' && scope !== 'FSMS') {
+        throw new BadRequestException('Unsupported scope');
       }
 
       values['addOns'] = normalizeTenantAddOns(values['addOns']);
@@ -319,6 +326,11 @@ export class SettingsService {
   private readPackageTierSetting(map: Map<string, string>, key: string, fallback: TenantPackageTier) {
     const value = map.get(key);
     return value === 'ASSURANCE' || value === 'CORE_IMS' || value === 'QHSE_PRO' ? value : fallback;
+  }
+
+  private readScopeSetting(map: Map<string, string>, key: string, fallback: TenantScope) {
+    const value = map.get(key);
+    return value === 'QMS' || value === 'EMS' || value === 'OHSMS' || value === 'IMS' || value === 'FSMS' ? value : fallback;
   }
 
   private readAddOnsSetting(map: Map<string, string>, key: string, fallback: TenantAddOns) {

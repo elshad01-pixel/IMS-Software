@@ -2,7 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { catchError, of, tap } from 'rxjs';
-import { DEFAULT_PACKAGE_TIER, PackageModuleKey, TenantPackageTier, getEnabledModules } from './package-entitlements';
+import { DEFAULT_PACKAGE_TIER, DEFAULT_SCOPE, PackageModuleKey, TenantPackageTier, TenantScope, getEnabledModules } from './package-entitlements';
 import { DEFAULT_TENANT_ADD_ONS, TenantAddOnKey, TenantAddOns, normalizeTenantAddOns } from './tenant-addons';
 
 type Session = {
@@ -15,6 +15,7 @@ type Session = {
     roleId?: string;
     roleName?: string;
     packageTier: TenantPackageTier;
+    scope: TenantScope;
     enabledModules: PackageModuleKey[];
     enabledAddOns: TenantAddOns;
   };
@@ -37,7 +38,8 @@ export class AuthStore {
   readonly tenantSlug = computed(() => this.sessionState()?.tenantSlug ?? null);
   readonly permissions = computed(() => this.sessionState()?.user.permissions ?? []);
   readonly packageTier = computed(() => this.sessionState()?.user.packageTier ?? DEFAULT_PACKAGE_TIER);
-  readonly enabledModules = computed(() => this.sessionState()?.user.enabledModules ?? getEnabledModules(DEFAULT_PACKAGE_TIER));
+  readonly scope = computed(() => this.sessionState()?.user.scope ?? DEFAULT_SCOPE);
+  readonly enabledModules = computed(() => this.sessionState()?.user.enabledModules ?? getEnabledModules(DEFAULT_PACKAGE_TIER, DEFAULT_SCOPE));
   readonly enabledAddOns = computed(() => this.sessionState()?.user.enabledAddOns ?? { ...DEFAULT_TENANT_ADD_ONS });
   readonly roleLabel = computed(() => {
     const explicit = this.sessionState()?.user.roleName;
@@ -98,6 +100,7 @@ export class AuthStore {
         tenantId: string;
         email: string;
         packageTier: TenantPackageTier;
+        scope: TenantScope;
         enabledModules: PackageModuleKey[];
         enabledAddOns: TenantAddOns;
         role?: {
@@ -119,6 +122,7 @@ export class AuthStore {
               roleName: me.role?.name,
               permissions: me.role?.permissions.map((entry) => entry.permission.key) ?? [],
               packageTier: me.packageTier,
+              scope: me.scope,
               enabledModules: me.enabledModules,
               enabledAddOns: normalizeTenantAddOns(me.enabledAddOns)
             }
@@ -131,7 +135,7 @@ export class AuthStore {
       .subscribe();
   }
 
-  updateEntitlements(packageTier: TenantPackageTier, enabledAddOns: TenantAddOns) {
+  updateEntitlements(packageTier: TenantPackageTier, scope: TenantScope, enabledAddOns: TenantAddOns) {
     const current = this.sessionState();
     if (!current) {
       return;
@@ -142,7 +146,8 @@ export class AuthStore {
       user: {
         ...current.user,
         packageTier,
-        enabledModules: getEnabledModules(packageTier),
+        scope,
+        enabledModules: getEnabledModules(packageTier, scope),
         enabledAddOns: normalizeTenantAddOns(enabledAddOns)
       }
     };
@@ -167,6 +172,8 @@ export class AuthStore {
       ...parsed,
       user: {
         ...parsed.user,
+        scope: parsed.user.scope ?? DEFAULT_SCOPE,
+        enabledModules: parsed.user.enabledModules ?? getEnabledModules(parsed.user.packageTier ?? DEFAULT_PACKAGE_TIER, parsed.user.scope ?? DEFAULT_SCOPE),
         enabledAddOns: normalizeTenantAddOns(parsed.user.enabledAddOns)
       }
     };

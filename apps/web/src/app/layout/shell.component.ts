@@ -4,7 +4,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthStore } from '../core/auth.store';
 import { AppLanguage, I18nService } from '../core/i18n.service';
-import { PackageModuleKey } from '../core/package-entitlements';
+import { PackageModuleKey, TenantScope } from '../core/package-entitlements';
 
 type NavItem = {
   path: string;
@@ -82,12 +82,12 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
               [routerLink]="item.path"
               routerLinkActive="active"
               [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
-              [attr.aria-label]="item.labelKey | translate"
+              [attr.aria-label]="navLabel(item)"
             >
               <span class="nav-icon">{{ item.icon }}</span>
               <span class="nav-copy" *ngIf="sidebarExpanded()">
-                <span class="nav-label">{{ item.labelKey | translate }}</span>
-                <small>{{ item.hintKey | translate }}</small>
+                <span class="nav-label">{{ navLabel(item) }}</span>
+                <small>{{ navHint(item) }}</small>
               </span>
             </a>
           </section>
@@ -901,6 +901,173 @@ export class ShellComponent {
       .join(' ');
   }
 
+  protected navLabel(item: NavItem) {
+    const scope = this.authStore.scope();
+    const language = this.i18n.language();
+
+    if (item.packageModule === 'incidents') {
+      return this.scopeText(scope, language, {
+        QMS: { en: 'Quality Events', az: 'Keyfiyyət hadisələri', ru: 'События качества' },
+        EMS: { en: 'Environmental Incidents', az: 'Ekoloji hadisələr', ru: 'Экологические инциденты' },
+        OHSMS: { en: 'Incidents & Near Misses', az: 'Hadisələr və az qala qəzalar', ru: 'Инциденты и потенциальные происшествия' },
+        IMS: { en: 'Incidents', az: 'Hadisələr', ru: 'Инциденты' },
+        FSMS: { en: 'Food Safety Events', az: 'Qida təhlükəsizliyi hadisələri', ru: 'События пищевой безопасности' }
+      });
+    }
+
+    return this.translate(item.labelKey);
+  }
+
+  protected navHint(item: NavItem) {
+    const scope = this.authStore.scope();
+    const language = this.i18n.language();
+
+    switch (item.packageModule) {
+      case 'risks':
+        return this.scopeText(scope, language, {
+          QMS: {
+            en: 'Track quality risks, opportunities, and controls.',
+            az: 'Keyfiyyət risklərini, imkanlarını və nəzarətləri izləyin.',
+            ru: 'Отслеживайте риски качества, возможности и меры контроля.'
+          },
+          EMS: {
+            en: 'Track environmental risks, opportunities, and controls.',
+            az: 'Ekoloji riskləri, imkanları və nəzarətləri izləyin.',
+            ru: 'Отслеживайте экологические риски, возможности и меры контроля.'
+          },
+          OHSMS: {
+            en: 'Track OH&S risks, opportunities, and controls.',
+            az: 'Əməyin mühafizəsi risklərini, imkanlarını və nəzarətləri izləyin.',
+            ru: 'Отслеживайте риски по ОТиЗ, возможности и меры контроля.'
+          },
+          IMS: {
+            en: 'Track integrated risks, opportunities, and controls.',
+            az: 'İnteqrə olunmuş riskləri, imkanları və nəzarətləri izləyin.',
+            ru: 'Отслеживайте интегрированные риски, возможности и меры контроля.'
+          },
+          FSMS: {
+            en: 'Track food safety risks, opportunities, and controls.',
+            az: 'Qida təhlükəsizliyi risklərini, imkanlarını və nəzarətləri izləyin.',
+            ru: 'Отслеживайте риски пищевой безопасности, возможности и меры контроля.'
+          }
+        });
+      case 'compliance-obligations':
+        return this.scopeText(scope, language, {
+          QMS: {
+            en: 'Manage quality-related legal, customer, and other requirements.',
+            az: 'Keyfiyyətlə bağlı hüquqi, müştəri və digər tələbləri idarə edin.',
+            ru: 'Управляйте требованиями по качеству: правовыми, клиентскими и иными.'
+          },
+          EMS: {
+            en: 'Manage environmental legal and other compliance obligations.',
+            az: 'Ekoloji hüquqi və digər uyğunluq öhdəliklərini idarə edin.',
+            ru: 'Управляйте экологическими правовыми и иными обязательствами по соблюдению.'
+          },
+          OHSMS: {
+            en: 'Manage OH&S legal and other compliance obligations.',
+            az: 'Əməyin mühafizəsi üzrə hüquqi və digər uyğunluq öhdəliklərini idarə edin.',
+            ru: 'Управляйте обязательствами по охране труда и иными требованиями соблюдения.'
+          },
+          IMS: {
+            en: 'Manage legal and other compliance obligations across the IMS.',
+            az: 'İMS üzrə hüquqi və digər uyğunluq öhdəliklərini idarə edin.',
+            ru: 'Управляйте правовыми и иными обязательствами по соблюдению в ИМС.'
+          },
+          FSMS: {
+            en: 'Manage food safety legal, customer, and regulatory obligations.',
+            az: 'Qida təhlükəsizliyi üzrə hüquqi, müştəri və tənzimləyici öhdəlikləri idarə edin.',
+            ru: 'Управляйте правовыми, клиентскими и регуляторными обязательствами по пищевой безопасности.'
+          }
+        });
+      case 'external-providers':
+        return this.scopeText(scope, language, {
+          QMS: {
+            en: 'Review supplier and service provider performance.',
+            az: 'Təchizatçı və xidmət təminatçılarının fəaliyyətini izləyin.',
+            ru: 'Отслеживайте результативность поставщиков и подрядчиков.'
+          },
+          EMS: {
+            en: 'Review providers that affect environmental performance.',
+            az: 'Ekoloji göstəricilərə təsir edən təminatçıları izləyin.',
+            ru: 'Отслеживайте поставщиков, влияющих на экологические показатели.'
+          },
+          OHSMS: {
+            en: 'Review contractor and provider performance for OH&S control.',
+            az: 'Əməyin mühafizəsi nəzarəti üçün podratçı və təminatçı fəaliyyətini izləyin.',
+            ru: 'Отслеживайте подрядчиков и поставщиков с точки зрения контроля ОТиЗ.'
+          },
+          IMS: {
+            en: 'Review supplier and contractor performance across the IMS.',
+            az: 'İMS üzrə təchizatçı və podratçı fəaliyyətini izləyin.',
+            ru: 'Отслеживайте результативность поставщиков и подрядчиков по ИМС.'
+          },
+          FSMS: {
+            en: 'Review food chain suppliers and service providers.',
+            az: 'Qida zənciri təchizatçılarını və xidmət təminatçılarını izləyin.',
+            ru: 'Отслеживайте поставщиков и подрядчиков пищевой цепочки.'
+          }
+        });
+      case 'incidents':
+        return this.scopeText(scope, language, {
+          QMS: {
+            en: 'Capture complaints, escapes, and quality events.',
+            az: 'Şikayətləri, buraxılışları və keyfiyyət hadisələrini qeyd edin.',
+            ru: 'Фиксируйте жалобы, ускользнувшие несоответствия и события качества.'
+          },
+          EMS: {
+            en: 'Capture spills, breaches, and environmental incidents.',
+            az: 'Dağılmaları, pozuntuları və ekoloji hadisələri qeyd edin.',
+            ru: 'Фиксируйте разливы, нарушения и экологические инциденты.'
+          },
+          OHSMS: {
+            en: 'Capture incidents, injuries, and near misses.',
+            az: 'Hadisələri, xəsarətləri və az qala qəzaları qeyd edin.',
+            ru: 'Фиксируйте инциденты, травмы и потенциальные происшествия.'
+          },
+          IMS: {
+            en: 'Capture incidents and significant events across the IMS.',
+            az: 'İMS üzrə hadisələri və əhəmiyyətli olayları qeyd edin.',
+            ru: 'Фиксируйте инциденты и значимые события по ИМС.'
+          },
+          FSMS: {
+            en: 'Capture food safety events, deviations, and incidents.',
+            az: 'Qida təhlükəsizliyi hadisələrini, yayınmaları və insidentləri qeyd edin.',
+            ru: 'Фиксируйте события, отклонения и инциденты пищевой безопасности.'
+          }
+        });
+      case 'management-review':
+        return this.scopeText(scope, language, {
+          QMS: {
+            en: 'Review quality performance, actions, and system direction.',
+            az: 'Keyfiyyət nəticələrini, tədbirləri və sistem istiqamətini nəzərdən keçirin.',
+            ru: 'Рассматривайте результаты качества, действия и направление системы.'
+          },
+          EMS: {
+            en: 'Review environmental performance, actions, and system direction.',
+            az: 'Ekoloji nəticələri, tədbirləri və sistem istiqamətini nəzərdən keçirin.',
+            ru: 'Рассматривайте экологические результаты, действия и направление системы.'
+          },
+          OHSMS: {
+            en: 'Review OH&S performance, actions, and system direction.',
+            az: 'Əməyin mühafizəsi nəticələrini, tədbirləri və sistem istiqamətini nəzərdən keçirin.',
+            ru: 'Рассматривайте результаты по ОТиЗ, действия и направление системы.'
+          },
+          IMS: {
+            en: 'Review integrated performance, actions, and system direction.',
+            az: 'İnteqrə olunmuş nəticələri, tədbirləri və sistem istiqamətini nəzərdən keçirin.',
+            ru: 'Рассматривайте интегрированные результаты, действия и направление системы.'
+          },
+          FSMS: {
+            en: 'Review food safety performance, actions, and system direction.',
+            az: 'Qida təhlükəsizliyi nəticələrini, tədbirləri və sistem istiqamətini nəzərdən keçirin.',
+            ru: 'Рассматривайте результаты пищевой безопасности, действия и направление системы.'
+          }
+        });
+      default:
+        return this.translate(item.hintKey);
+    }
+  }
+
   protected logout() {
     this.menuOpen.set(false);
     this.authStore.logout();
@@ -959,5 +1126,17 @@ export class ShellComponent {
 
   private readCompactViewport() {
     return typeof window !== 'undefined' ? window.innerWidth <= 960 : false;
+  }
+
+  private translate(key: string) {
+    return this.i18n.t(key);
+  }
+
+  private scopeText(
+    scope: TenantScope,
+    language: AppLanguage,
+    content: Record<TenantScope, { en: string; az: string; ru: string }>
+  ) {
+    return content[scope][language];
   }
 }

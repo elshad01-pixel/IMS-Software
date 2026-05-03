@@ -6,7 +6,7 @@ import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 import { I18nService } from '../core/i18n.service';
-import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
+import { PackageModuleKey, TenantPackageTier, TenantScope, minimumPackageTierForModule } from '../core/package-entitlements';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
@@ -256,29 +256,112 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
   }
 
   protected pageTitle() {
+    const label = this.pageLabel();
     return {
-      list: this.t('incidents.page.titles.list'),
+      list: label,
       create: this.t('incidents.page.titles.create'),
       detail: this.selectedIncident()?.title || this.t('incidents.page.titles.detail'),
       edit: this.selectedIncident()?.title || this.t('incidents.page.titles.edit')
     }[this.mode()];
   }
 
+  protected pageLabel() {
+    return this.scopeText({
+      QMS: { en: 'Quality events', az: 'Keyfiyyət hadisələri', ru: 'События качества' },
+      EMS: { en: 'Environmental incidents', az: 'Ekoloji hadisələr', ru: 'Экологические инциденты' },
+      OHSMS: { en: 'Incidents & near misses', az: 'Hadisələr və az qala qəzalar', ru: 'Инциденты и потенциальные происшествия' },
+      IMS: { en: this.t('incidents.page.label'), az: this.t('incidents.page.label'), ru: this.t('incidents.page.label') },
+      FSMS: { en: 'Food safety events', az: 'Qida təhlükəsizliyi hadisələri', ru: 'События пищевой безопасности' }
+    });
+  }
+
   protected pageDescription() {
-    return {
-      list: this.t('incidents.page.descriptions.list'),
-      create: this.t('incidents.page.descriptions.create'),
-      detail: this.t('incidents.page.descriptions.detail'),
-      edit: this.t('incidents.page.descriptions.edit')
-    }[this.mode()];
+    if (this.mode() === 'list') {
+      return this.scopeText({
+        QMS: {
+          en: 'Capture complaints, escapes, and quality events that need investigation or follow-up.',
+          az: 'Araşdırma və ya sonrakı tədbir tələb edən şikayətləri, buraxılışları və keyfiyyət hadisələrini qeyd edin.',
+          ru: 'Фиксируйте жалобы, ускользнувшие несоответствия и события качества, требующие расследования или последующих действий.'
+        },
+        EMS: {
+          en: 'Capture spills, breaches, and environmental incidents that need investigation or follow-up.',
+          az: 'Araşdırma və ya sonrakı tədbir tələb edən dağılmaları, pozuntuları və ekoloji hadisələri qeyd edin.',
+          ru: 'Фиксируйте разливы, нарушения и экологические инциденты, требующие расследования или последующих действий.'
+        },
+        OHSMS: {
+          en: 'Capture incidents, injuries, and near misses that need investigation or corrective action.',
+          az: 'Araşdırma və ya düzəldici tədbir tələb edən hadisələri, xəsarətləri və az qala qəzaları qeyd edin.',
+          ru: 'Фиксируйте инциденты, травмы и потенциальные происшествия, требующие расследования или корректирующих действий.'
+        },
+        IMS: {
+          en: this.t('incidents.page.descriptions.list'),
+          az: this.t('incidents.page.descriptions.list'),
+          ru: this.t('incidents.page.descriptions.list')
+        },
+        FSMS: {
+          en: 'Capture food safety events, deviations, and incidents that need investigation or follow-up.',
+          az: 'Araşdırma və ya sonrakı tədbir tələb edən qida təhlükəsizliyi hadisələrini, yayınmaları və insidentləri qeyd edin.',
+          ru: 'Фиксируйте события, отклонения и инциденты пищевой безопасности, требующие расследования или последующих действий.'
+        }
+      });
+    }
+
+    if (this.mode() === 'create') {
+      return this.t('incidents.page.descriptions.create');
+    }
+    if (this.mode() === 'detail') {
+      return this.t('incidents.page.descriptions.detail');
+    }
+    return this.t('incidents.page.descriptions.edit');
   }
 
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: this.t('incidents.page.label') }];
-    const base = [{ label: this.t('incidents.page.label'), link: '/incidents' }];
+    const label = this.pageLabel();
+    if (this.mode() === 'list') return [{ label }];
+    const base = [{ label, link: '/incidents' }];
     if (this.mode() === 'create') return [...base, { label: this.t('incidents.breadcrumbs.new') }];
     if (this.mode() === 'edit') return [...base, { label: this.selectedIncident()?.title || this.t('incidents.breadcrumbs.record'), link: `/incidents/${this.selectedId()}` }, { label: this.t('incidents.breadcrumbs.edit') }];
     return [...base, { label: this.selectedIncident()?.title || this.t('incidents.breadcrumbs.record') }];
+  }
+
+  protected listTitle() {
+    return this.scopeText({
+      QMS: { en: 'Quality event filters', az: 'Keyfiyyət hadisəsi filtrləri', ru: 'Фильтры событий качества' },
+      EMS: { en: 'Environmental incident filters', az: 'Ekoloji hadisə filtrləri', ru: 'Фильтры экологических инцидентов' },
+      OHSMS: { en: 'Incident filters', az: 'Hadisə filtrləri', ru: 'Фильтры инцидентов' },
+      IMS: { en: this.t('incidents.list.filtersTitle'), az: this.t('incidents.list.filtersTitle'), ru: this.t('incidents.list.filtersTitle') },
+      FSMS: { en: 'Food safety event filters', az: 'Qida təhlükəsizliyi hadisəsi filtrləri', ru: 'Фильтры событий пищевой безопасности' }
+    });
+  }
+
+  protected listCopy() {
+    return this.scopeText({
+      QMS: {
+        en: 'Review complaints, escapes, and quality events in one calm register.',
+        az: 'Şikayətləri, buraxılışları və keyfiyyət hadisələrini bir sakit reyestrdə izləyin.',
+        ru: 'Просматривайте жалобы, ускользнувшие несоответствия и события качества в одном реестре.'
+      },
+      EMS: {
+        en: 'Review spills, breaches, and environmental incidents in one calm register.',
+        az: 'Dağılmaları, pozuntuları və ekoloji hadisələri bir sakit reyestrdə izləyin.',
+        ru: 'Просматривайте разливы, нарушения и экологические инциденты в одном реестре.'
+      },
+      OHSMS: {
+        en: 'Review incidents, injuries, and near misses in one calm register.',
+        az: 'Hadisələri, xəsarətləri və az qala qəzaları bir sakit reyestrdə izləyin.',
+        ru: 'Просматривайте инциденты, травмы и потенциальные происшествия в одном реестре.'
+      },
+      IMS: {
+        en: this.t('incidents.list.copy'),
+        az: this.t('incidents.list.copy'),
+        ru: this.t('incidents.list.copy')
+      },
+      FSMS: {
+        en: 'Review food safety events, deviations, and incidents in one calm register.',
+        az: 'Qida təhlükəsizliyi hadisələrini, yayınmaları və insidentləri bir sakit reyestrdə izləyin.',
+        ru: 'Просматривайте события, отклонения и инциденты пищевой безопасности в одном реестре.'
+      }
+    });
   }
 
   protected incidentGuidance() {
@@ -729,6 +812,12 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
     }
 
     return '';
+  }
+
+  private scopeText(content: Record<TenantScope, { en: string; az: string; ru: string }>) {
+    const scope = this.authStore.scope();
+    const language = this.i18n.language();
+    return content[scope][language];
   }
 }
 

@@ -1,9 +1,9 @@
 <section class="page-grid">
-  <iso-page-header [label]="'Change Management'" [title]="pageTitle()" [description]="pageDescription()" [breadcrumbs]="breadcrumbs()">
-    <a *ngIf="mode() === 'list' && canWrite()" routerLink="/change-management/new" class="button-link">+ New change request</a>
-    <a *ngIf="mode() === 'detail' && selectedRecord() && canWrite()" [routerLink]="['/change-management', selectedId(), 'edit']" class="button-link">Edit change request</a>
-    <button *ngIf="mode() === 'detail' && selectedRecord() && canDelete()" type="button" class="button-link danger" (click)="archiveRecord()">Archive</button>
-    <a *ngIf="mode() !== 'list'" routerLink="/change-management" class="button-link secondary">Back</a>
+  <iso-page-header [label]="t('changeManagement.page.label')" [title]="pageTitle()" [description]="pageDescription()" [breadcrumbs]="breadcrumbs()">
+    <a *ngIf="mode() === 'list' && canWrite()" routerLink="/change-management/new" class="button-link">{{ t('changeManagement.actions.new') }}</a>
+    <a *ngIf="mode() === 'detail' && selectedRecord() && canWrite()" [routerLink]="['/change-management', selectedId(), 'edit']" class="button-link">{{ t('changeManagement.actions.edit') }}</a>
+    <button *ngIf="mode() === 'detail' && selectedRecord() && canDelete()" type="button" class="button-link danger" (click)="archiveRecord()">{{ t('changeManagement.actions.archive') }}</button>
+    <a *ngIf="mode() !== 'list'" routerLink="/change-management" class="button-link secondary">{{ t('changeManagement.actions.back') }}</a>
   </iso-page-header>
 
   <section *ngIf="mode() === 'list'" class="page-stack">
@@ -11,39 +11,39 @@
       <div class="toolbar">
         <div class="toolbar-meta">
           <div>
-            <p class="toolbar-title">Register filters</p>
-            <p class="toolbar-copy">Track planned changes, implementation ownership, and the supporting process, risk, document, and supplier context.</p>
+            <p class="toolbar-title">{{ t('changeManagement.list.filtersTitle') }}</p>
+            <p class="toolbar-copy">{{ t('changeManagement.list.copy') }}</p>
           </div>
           <div class="toolbar-stats">
-            <article class="toolbar-stat"><span>Total</span><strong>{{ records().length }}</strong></article>
-            <article class="toolbar-stat"><span>Proposed / reviewing</span><strong>{{ proposedCount() }}</strong></article>
-            <article class="toolbar-stat"><span>Approved / implementing</span><strong>{{ liveCount() }}</strong></article>
-            <article class="toolbar-stat"><span>Verified / closed</span><strong>{{ verifiedCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('changeManagement.list.stats.total') }}</span><strong>{{ records().length }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('changeManagement.list.stats.proposedReviewing') }}</span><strong>{{ proposedCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('changeManagement.list.stats.approvedImplementing') }}</span><strong>{{ liveCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('changeManagement.list.stats.verifiedClosed') }}</span><strong>{{ verifiedCount() }}</strong></article>
           </div>
         </div>
 
         <div class="filter-row standard-filter-grid">
           <label class="field compact-field search-field">
-            <span>Search</span>
-            <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Reference, title, area, proposed change">
+            <span>{{ t('changeManagement.list.filters.search') }}</span>
+            <input [value]="search()" (input)="search.set(readInputValue($event))" [placeholder]="t('changeManagement.list.placeholders.search')">
           </label>
           <label class="field compact-field">
-            <span>Status</span>
+            <span>{{ t('changeManagement.list.filters.status') }}</span>
             <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
-              <option value="">All</option>
-              <option value="PROPOSED">Proposed</option>
-              <option value="REVIEWING">Reviewing</option>
-              <option value="APPROVED">Approved</option>
-              <option value="IMPLEMENTING">Implementing</option>
-              <option value="VERIFIED">Verified</option>
-              <option value="CLOSED">Closed</option>
-              <option value="REJECTED">Rejected</option>
+              <option value="">{{ t('changeManagement.list.filters.all') }}</option>
+              <option value="PROPOSED">{{ changeStatusLabel('PROPOSED') }}</option>
+              <option value="REVIEWING">{{ changeStatusLabel('REVIEWING') }}</option>
+              <option value="APPROVED">{{ changeStatusLabel('APPROVED') }}</option>
+              <option value="IMPLEMENTING">{{ changeStatusLabel('IMPLEMENTING') }}</option>
+              <option value="VERIFIED">{{ changeStatusLabel('VERIFIED') }}</option>
+              <option value="CLOSED">{{ changeStatusLabel('CLOSED') }}</option>
+              <option value="REJECTED">{{ changeStatusLabel('REJECTED') }}</option>
             </select>
           </label>
           <label class="field compact-field">
-            <span>Owner</span>
+            <span>{{ t('changeManagement.list.filters.owner') }}</span>
             <select [value]="ownerFilter()" (change)="ownerFilter.set(readSelectValue($event))">
-              <option value="">All</option>
+              <option value="">{{ t('changeManagement.list.filters.all') }}</option>
               <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
             </select>
           </label>
@@ -53,43 +53,43 @@
       <p class="feedback top-space" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
       <div class="empty-state top-space" *ngIf="loading()">
-        <strong>Loading change requests</strong>
-        <span>Refreshing planned changes, owners, and linked control context.</span>
+        <strong>{{ t('changeManagement.list.loadingTitle') }}</strong>
+        <span>{{ t('changeManagement.list.loadingCopy') }}</span>
       </div>
 
       <div class="empty-state top-space" *ngIf="!loading() && !filteredRecords().length">
-        <strong>No change requests found</strong>
-        <span>Create the first change request to keep planned changes visible before implementation happens informally.</span>
+        <strong>{{ t('changeManagement.list.emptyTitle') }}</strong>
+        <span>{{ t('changeManagement.list.emptyCopy') }}</span>
       </div>
 
       <div class="data-table-wrap top-space" *ngIf="!loading() && filteredRecords().length">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Change</th>
-              <th>Type</th>
-              <th>Affected area</th>
-              <th>Status</th>
-              <th>Owner</th>
-              <th>Target date</th>
-              <th>Attention</th>
-              <th>Links</th>
+              <th>{{ t('changeManagement.list.table.change') }}</th>
+              <th>{{ t('changeManagement.list.table.type') }}</th>
+              <th>{{ t('changeManagement.list.table.affectedArea') }}</th>
+              <th>{{ t('changeManagement.list.table.status') }}</th>
+              <th>{{ t('changeManagement.list.table.owner') }}</th>
+              <th>{{ t('changeManagement.list.table.targetDate') }}</th>
+              <th>{{ t('changeManagement.list.table.attention') }}</th>
+              <th>{{ t('changeManagement.list.table.links') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let item of filteredRecords()" [routerLink]="['/change-management', item.id]">
               <td>
                 <div class="table-title">
-                  <strong>{{ item.referenceNo || 'Uncoded' }} - {{ item.title }}</strong>
+                  <strong>{{ item.referenceNo || t('changeManagement.common.uncoded') }} - {{ item.title }}</strong>
                   <small>{{ item.proposedChange }}</small>
                   <small class="attention-copy" *ngIf="attentionSummary(item) as attention">{{ attention }}</small>
                 </div>
               </td>
-              <td>{{ prettyStatus(item.changeType) }}</td>
+              <td>{{ changeTypeLabel(item.changeType) }}</td>
               <td>{{ item.affectedArea }}</td>
-              <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ prettyStatus(item.status) }}</span></td>
-              <td>{{ item.owner ? personName(item.owner) : 'Unassigned' }}</td>
-              <td>{{ item.targetImplementationDate ? (item.targetImplementationDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
+              <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ changeStatusLabel(item.status) }}</span></td>
+              <td>{{ item.owner ? personName(item.owner) : t('changeManagement.common.unassigned') }}</td>
+              <td>{{ item.targetImplementationDate ? (item.targetImplementationDate | date:'yyyy-MM-dd') : t('common.notSet') }}</td>
               <td><span class="status-badge" [ngClass]="attentionClass(item)">{{ attentionLabel(item) }}</span></td>
               <td>{{ item.linkCount || 0 }}</td>
             </tr>
@@ -106,75 +106,75 @@
       <section class="content-guidance">
         <div class="section-head compact-head">
           <div>
-            <h4>Change position</h4>
+            <h4>{{ t('changeManagement.form.positionTitle') }}</h4>
             <p class="subtle">{{ changeGuidance() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Reason</span><strong>{{ form.getRawValue().reason ? 'Defined' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Proposed change</span><strong>{{ form.getRawValue().proposedChange ? 'Recorded' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Owner</span><strong>{{ form.getRawValue().ownerUserId ? 'Assigned' : 'Needed' }}</strong></article>
+          <article class="summary-item"><span>{{ t('changeManagement.form.summary.reason') }}</span><strong>{{ form.getRawValue().reason ? t('changeManagement.form.summary.defined') : t('changeManagement.form.summary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('changeManagement.form.summary.proposedChange') }}</span><strong>{{ form.getRawValue().proposedChange ? t('changeManagement.form.summary.recorded') : t('changeManagement.form.summary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('changeManagement.form.summary.owner') }}</span><strong>{{ form.getRawValue().ownerUserId ? t('changeManagement.form.summary.assigned') : t('changeManagement.form.summary.needed') }}</strong></article>
         </div>
       </section>
 
       <section class="detail-section">
-        <h4>Change definition</h4>
+        <h4>{{ t('changeManagement.form.definitionTitle') }}</h4>
         <div class="form-grid-3 top-space">
-          <label class="field"><span>Reference</span><input formControlName="referenceNo" placeholder="MOC-001"></label>
+          <label class="field"><span>{{ t('changeManagement.form.fields.reference') }}</span><input formControlName="referenceNo" [placeholder]="t('changeManagement.form.placeholders.reference')"></label>
           <label class="field">
-            <span>Type</span>
+            <span>{{ t('changeManagement.form.fields.type') }}</span>
             <select formControlName="changeType">
-              <option value="PROCESS">Process</option>
-              <option value="PRODUCT">Product</option>
-              <option value="EQUIPMENT">Equipment</option>
-              <option value="MATERIAL">Material</option>
-              <option value="ORGANIZATIONAL">Organizational</option>
-              <option value="DOCUMENTATION">Documentation</option>
-              <option value="FACILITY">Facility</option>
-              <option value="OTHER">Other</option>
+              <option value="PROCESS">{{ changeTypeLabel('PROCESS') }}</option>
+              <option value="PRODUCT">{{ changeTypeLabel('PRODUCT') }}</option>
+              <option value="EQUIPMENT">{{ changeTypeLabel('EQUIPMENT') }}</option>
+              <option value="MATERIAL">{{ changeTypeLabel('MATERIAL') }}</option>
+              <option value="ORGANIZATIONAL">{{ changeTypeLabel('ORGANIZATIONAL') }}</option>
+              <option value="DOCUMENTATION">{{ changeTypeLabel('DOCUMENTATION') }}</option>
+              <option value="FACILITY">{{ changeTypeLabel('FACILITY') }}</option>
+              <option value="OTHER">{{ changeTypeLabel('OTHER') }}</option>
             </select>
           </label>
           <label class="field">
-            <span>Status</span>
+            <span>{{ t('changeManagement.form.fields.status') }}</span>
             <select formControlName="status">
-              <option value="PROPOSED">Proposed</option>
-              <option value="REVIEWING">Reviewing</option>
-              <option value="APPROVED">Approved</option>
-              <option value="IMPLEMENTING">Implementing</option>
-              <option value="VERIFIED">Verified</option>
-              <option value="CLOSED">Closed</option>
-              <option value="REJECTED">Rejected</option>
+              <option value="PROPOSED">{{ changeStatusLabel('PROPOSED') }}</option>
+              <option value="REVIEWING">{{ changeStatusLabel('REVIEWING') }}</option>
+              <option value="APPROVED">{{ changeStatusLabel('APPROVED') }}</option>
+              <option value="IMPLEMENTING">{{ changeStatusLabel('IMPLEMENTING') }}</option>
+              <option value="VERIFIED">{{ changeStatusLabel('VERIFIED') }}</option>
+              <option value="CLOSED">{{ changeStatusLabel('CLOSED') }}</option>
+              <option value="REJECTED">{{ changeStatusLabel('REJECTED') }}</option>
             </select>
           </label>
         </div>
-        <label class="field top-space"><span>Title</span><input formControlName="title" placeholder="Introduce secondary supplier for critical control boards"></label>
-        <label class="field top-space"><span>Reason for change</span><textarea formControlName="reason" rows="4" placeholder="Why is the change needed now?"></textarea></label>
-        <label class="field top-space"><span>Affected area</span><input formControlName="affectedArea" placeholder="Procurement, production release, warehouse controls"></label>
-        <label class="field top-space"><span>Proposed change</span><textarea formControlName="proposedChange" rows="4" placeholder="Summarize what will change in practice."></textarea></label>
+        <label class="field top-space"><span>{{ t('changeManagement.form.fields.title') }}</span><input formControlName="title" [placeholder]="t('changeManagement.form.placeholders.title')"></label>
+        <label class="field top-space"><span>{{ t('changeManagement.form.fields.reason') }}</span><textarea formControlName="reason" rows="4" [placeholder]="t('changeManagement.form.placeholders.reason')"></textarea></label>
+        <label class="field top-space"><span>{{ t('changeManagement.form.fields.affectedArea') }}</span><input formControlName="affectedArea" [placeholder]="t('changeManagement.form.placeholders.affectedArea')"></label>
+        <label class="field top-space"><span>{{ t('changeManagement.form.fields.proposedChange') }}</span><textarea formControlName="proposedChange" rows="4" [placeholder]="t('changeManagement.form.placeholders.proposedChange')"></textarea></label>
       </section>
 
       <section class="detail-section">
-        <h4>Review and control</h4>
+        <h4>{{ t('changeManagement.form.reviewTitle') }}</h4>
         <div class="form-grid-2 top-space">
-          <label class="field"><span>Impact summary</span><textarea formControlName="impactSummary" rows="4" placeholder="Summarize quality, operational, customer, safety, or compliance impact."></textarea></label>
-          <label class="field"><span>Control summary</span><textarea formControlName="controlSummary" rows="4" placeholder="Summarize controls, approvals, checks, or prerequisites before implementation."></textarea></label>
+          <label class="field"><span>{{ t('changeManagement.form.fields.impactSummary') }}</span><textarea formControlName="impactSummary" rows="4" [placeholder]="t('changeManagement.form.placeholders.impactSummary')"></textarea></label>
+          <label class="field"><span>{{ t('changeManagement.form.fields.controlSummary') }}</span><textarea formControlName="controlSummary" rows="4" [placeholder]="t('changeManagement.form.placeholders.controlSummary')"></textarea></label>
         </div>
         <div class="form-grid-3 top-space">
           <label class="field">
-            <span>Owner</span>
+            <span>{{ t('changeManagement.form.fields.owner') }}</span>
             <select formControlName="ownerUserId">
-              <option value="">Unassigned</option>
+              <option value="">{{ t('changeManagement.common.unassigned') }}</option>
               <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
             </select>
           </label>
-          <label class="field"><span>Target implementation date</span><input formControlName="targetImplementationDate" type="date"></label>
-          <label class="field"><span>Review date</span><input formControlName="reviewDate" type="date"></label>
+          <label class="field"><span>{{ t('changeManagement.form.fields.targetImplementationDate') }}</span><input formControlName="targetImplementationDate" type="date"></label>
+          <label class="field"><span>{{ t('changeManagement.form.fields.reviewDate') }}</span><input formControlName="reviewDate" type="date"></label>
         </div>
       </section>
 
       <div class="button-row">
-        <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save change request' }}</button>
-        <a [routerLink]="selectedId() ? ['/change-management', selectedId()] : ['/change-management']" class="button-link secondary">Cancel</a>
+        <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? t('changeManagement.actions.saving') : t('changeManagement.actions.save') }}</button>
+        <a [routerLink]="selectedId() ? ['/change-management', selectedId()] : ['/change-management']" class="button-link secondary">{{ t('common.cancel') }}</a>
       </div>
     </form>
   </section>
@@ -183,27 +183,27 @@
     <section class="card detail-card">
       <div class="section-head">
         <div>
-          <span class="section-eyebrow">Change request</span>
-          <h3>{{ selectedRecord()?.referenceNo || 'Uncoded' }} - {{ selectedRecord()?.title }}</h3>
-          <p class="subtle">{{ selectedRecord()?.proposedChange || 'No proposed change summary recorded yet.' }}</p>
+          <span class="section-eyebrow">{{ t('changeManagement.detail.eyebrow') }}</span>
+          <h3>{{ selectedRecord()?.referenceNo || t('changeManagement.common.uncoded') }} - {{ selectedRecord()?.title }}</h3>
+          <p class="subtle">{{ selectedRecord()?.proposedChange || t('changeManagement.detail.noSummary') }}</p>
         </div>
         <div class="route-context">
-          <span class="status-badge neutral">{{ prettyStatus(selectedRecord()?.changeType) }}</span>
-          <span class="status-badge" [ngClass]="statusClass(selectedRecord()?.status || 'PROPOSED')">{{ prettyStatus(selectedRecord()?.status) }}</span>
+          <span class="status-badge neutral">{{ changeTypeLabel(selectedRecord()?.changeType) }}</span>
+          <span class="status-badge" [ngClass]="statusClass(selectedRecord()?.status || 'PROPOSED')">{{ changeStatusLabel(selectedRecord()?.status || 'PROPOSED') }}</span>
         </div>
       </div>
 
       <div class="summary-strip top-space">
-        <article class="summary-item"><span>Affected area</span><strong>{{ selectedRecord()?.affectedArea }}</strong></article>
-        <article class="summary-item"><span>Owner</span><strong>{{ selectedRecord()?.owner ? personName(selectedRecord()!.owner!) : 'Unassigned' }}</strong></article>
-        <article class="summary-item"><span>Target date</span><strong>{{ selectedRecord()?.targetImplementationDate ? (selectedRecord()?.targetImplementationDate | date:'yyyy-MM-dd') : 'Not set' }}</strong></article>
-        <article class="summary-item"><span>Linked records</span><strong>{{ selectedRecord()?.links?.length || 0 }}</strong></article>
+        <article class="summary-item"><span>{{ t('changeManagement.detail.summary.affectedArea') }}</span><strong>{{ selectedRecord()?.affectedArea }}</strong></article>
+        <article class="summary-item"><span>{{ t('changeManagement.detail.summary.owner') }}</span><strong>{{ selectedRecord()?.owner ? personName(selectedRecord()!.owner!) : t('changeManagement.common.unassigned') }}</strong></article>
+        <article class="summary-item"><span>{{ t('changeManagement.detail.summary.targetDate') }}</span><strong>{{ selectedRecord()?.targetImplementationDate ? (selectedRecord()?.targetImplementationDate | date:'yyyy-MM-dd') : t('common.notSet') }}</strong></article>
+        <article class="summary-item"><span>{{ t('changeManagement.detail.summary.linkedRecords') }}</span><strong>{{ selectedRecord()?.links?.length || 0 }}</strong></article>
       </div>
 
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Management attention</h4>
+            <h4>{{ t('changeManagement.attention.title') }}</h4>
             <p class="subtle">{{ attentionHeadline() }}</p>
           </div>
         </div>
@@ -213,49 +213,49 @@
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Stage narrative</h4>
+            <h4>{{ t('changeManagement.detail.stageTitle') }}</h4>
             <p class="subtle">{{ stageNarrative() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Processes</span><strong>{{ linkCountByType('PROCESS') }}</strong></article>
-          <article class="summary-item"><span>Risks</span><strong>{{ linkCountByType('RISK') }}</strong></article>
-          <article class="summary-item"><span>Documents</span><strong>{{ linkCountByType('DOCUMENT') }}</strong></article>
-          <article class="summary-item"><span>Providers</span><strong>{{ linkCountByType('PROVIDER') }}</strong></article>
+          <article class="summary-item"><span>{{ t('changeManagement.detail.stageSummary.processes') }}</span><strong>{{ linkCountByType('PROCESS') }}</strong></article>
+          <article class="summary-item"><span>{{ t('changeManagement.detail.stageSummary.risks') }}</span><strong>{{ linkCountByType('RISK') }}</strong></article>
+          <article class="summary-item"><span>{{ t('changeManagement.detail.stageSummary.documents') }}</span><strong>{{ linkCountByType('DOCUMENT') }}</strong></article>
+          <article class="summary-item"><span>{{ t('changeManagement.detail.stageSummary.providers') }}</span><strong>{{ linkCountByType('PROVIDER') }}</strong></article>
         </div>
       </section>
 
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Next steps</h4>
+            <h4>{{ t('changeManagement.nextSteps.title') }}</h4>
             <p class="subtle">{{ nextStepHeadline() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Process review</span><strong>{{ linkCountByType('PROCESS') ? 'Linked' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Risk review</span><strong>{{ linkCountByType('RISK') ? 'Linked' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Follow-up action</span><strong>{{ linkCountByType('ACTION') ? 'Linked' : 'Prepare below' }}</strong></article>
+          <article class="summary-item"><span>{{ t('changeManagement.nextSteps.summary.processReview') }}</span><strong>{{ linkCountByType('PROCESS') ? t('changeManagement.nextSteps.summary.linked') : t('changeManagement.nextSteps.summary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('changeManagement.nextSteps.summary.riskReview') }}</span><strong>{{ linkCountByType('RISK') ? t('changeManagement.nextSteps.summary.linked') : t('changeManagement.nextSteps.summary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('changeManagement.nextSteps.summary.followUpAction') }}</span><strong>{{ linkCountByType('ACTION') ? t('changeManagement.nextSteps.summary.linked') : t('changeManagement.nextSteps.summary.prepareBelow') }}</strong></article>
         </div>
         <p class="top-space">{{ nextStepNarrative() }}</p>
       </section>
 
       <div class="section-grid-2 top-space">
         <section class="detail-section">
-          <h4>Reason for change</h4>
-          <p>{{ selectedRecord()?.reason || 'No reason recorded.' }}</p>
+          <h4>{{ t('changeManagement.detail.fields.reason') }}</h4>
+          <p>{{ selectedRecord()?.reason || t('changeManagement.detail.empty.reason') }}</p>
         </section>
         <section class="detail-section">
-          <h4>Impact summary</h4>
-          <p>{{ selectedRecord()?.impactSummary || 'No impact summary recorded.' }}</p>
+          <h4>{{ t('changeManagement.detail.fields.impactSummary') }}</h4>
+          <p>{{ selectedRecord()?.impactSummary || t('changeManagement.detail.empty.impactSummary') }}</p>
         </section>
         <section class="detail-section">
-          <h4>Control summary</h4>
-          <p>{{ selectedRecord()?.controlSummary || 'No control summary recorded.' }}</p>
+          <h4>{{ t('changeManagement.detail.fields.controlSummary') }}</h4>
+          <p>{{ selectedRecord()?.controlSummary || t('changeManagement.detail.empty.controlSummary') }}</p>
         </section>
         <section class="detail-section">
-          <h4>Review date</h4>
-          <p>{{ selectedRecord()?.reviewDate ? (selectedRecord()?.reviewDate | date:'yyyy-MM-dd') : 'No review date recorded.' }}</p>
+          <h4>{{ t('changeManagement.detail.fields.reviewDate') }}</h4>
+          <p>{{ selectedRecord()?.reviewDate ? (selectedRecord()?.reviewDate | date:'yyyy-MM-dd') : t('changeManagement.detail.empty.reviewDate') }}</p>
         </section>
       </div>
     </section>
@@ -271,8 +271,8 @@
     <section class="card detail-card">
       <div class="section-head">
         <div>
-          <span class="section-eyebrow">Linked records</span>
-          <h3>Traceability hub</h3>
+          <span class="section-eyebrow">{{ t('changeManagement.links.eyebrow') }}</span>
+          <h3>{{ t('changeManagement.links.title') }}</h3>
           <p class="subtle">{{ reviewNarrative() }}</p>
         </div>
       </div>
@@ -285,12 +285,12 @@
               <p class="subtle">{{ sectionDescription(type) }}</p>
             </div>
             <button *ngIf="canWrite()" type="button" class="button-link secondary" (click)="openLinkComposer(type)">
-              {{ activeLinkComposerType() === type ? 'Close' : '+ Link' }}
+              {{ activeLinkComposerType() === type ? t('changeManagement.links.closeComposer') : t('changeManagement.links.openComposer') }}
             </button>
           </div>
 
           <div class="empty-state compact-empty top-space" *ngIf="!linksByType(type).length">
-            <strong>No linked records</strong>
+            <strong>{{ t('changeManagement.links.emptyTitle') }}</strong>
             <span>{{ sectionEmptyCopy(type) }}</span>
           </div>
 
@@ -304,14 +304,14 @@
                 </div>
                 <div class="route-context">
                   <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
-                  <a *ngIf="canOpenLink(link)" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">Open</a>
+                  <a *ngIf="canOpenLink(link)" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">{{ t('common.open') }}</a>
                   <div *ngIf="!canOpenLink(link) && inaccessibleLinkSummary(link) as summary" class="package-link-note">
-                    <span class="package-link-note__eyebrow">Included from {{ packageTierLabel(summary.requiredTier) }}</span>
+                    <span class="package-link-note__eyebrow">{{ t('changeManagement.links.includedFrom', { tier: packageTierLabel(summary.requiredTier) }) }}</span>
                     <strong>{{ summary.title }}</strong>
                     <small *ngIf="summary.subtitle">{{ summary.subtitle }}</small>
                     <small>{{ summary.moduleLabel }}<span *ngIf="summary.statusLabel"> · {{ summary.statusLabel }}</span></small>
                   </div>
-                  <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">Remove</button>
+                  <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">{{ t('changeManagement.links.remove') }}</button>
                 </div>
               </div>
             </div>
@@ -322,13 +322,13 @@
             <label class="field">
               <span>{{ sectionPickerLabel(type) }}</span>
               <select formControlName="linkedId">
-                <option value="">Choose existing {{ sectionPickerLabel(type).toLowerCase() }}</option>
+                <option value="">{{ t('changeManagement.linkComposer.chooseExisting', { section: sectionPickerLabel(type).toLowerCase() }) }}</option>
                 <option *ngFor="let candidate of linkCandidates()" [value]="candidate.id">{{ candidate.label }}</option>
               </select>
             </label>
-            <label class="field"><span>Note</span><input formControlName="note" placeholder="Optional context for this link"></label>
+            <label class="field"><span>{{ t('changeManagement.linkComposer.note') }}</span><input formControlName="note" [placeholder]="t('changeManagement.linkComposer.notePlaceholder')"></label>
             <div class="button-row">
-              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? 'Linking...' : 'Save link' }}</button>
+              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? t('changeManagement.linkComposer.linking') : t('changeManagement.linkComposer.addLink') }}</button>
             </div>
           </form>
         </section>

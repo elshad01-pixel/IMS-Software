@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { I18nService } from '../core/i18n.service';
 import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
@@ -13,6 +14,7 @@ type PageMode = 'list' | 'create' | 'detail' | 'edit';
 type ChangeType = 'PROCESS' | 'PRODUCT' | 'EQUIPMENT' | 'MATERIAL' | 'ORGANIZATIONAL' | 'DOCUMENTATION' | 'FACILITY' | 'OTHER';
 type ChangeStatus = 'PROPOSED' | 'REVIEWING' | 'APPROVED' | 'IMPLEMENTING' | 'VERIFIED' | 'CLOSED' | 'REJECTED';
 type LinkType = 'PROCESS' | 'RISK' | 'ACTION' | 'DOCUMENT' | 'OBLIGATION' | 'PROVIDER';
+type ChangeAttentionReason = 'OWNER_NEEDED' | 'REVIEW_DATE_NEEDED' | 'REVIEW_OVERDUE' | 'REVIEW_DUE_SOON' | 'IMPLEMENTATION_OVERDUE' | 'IMPLEMENTATION_DUE_SOON' | 'STALE';
 type UserSummary = { id: string; firstName: string; lastName: string; email: string };
 type LinkCandidate = { id: string; label: string };
 type ReturnNavigation = { route: string[]; label: string };
@@ -64,6 +66,7 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -131,7 +134,10 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
   protected personName(user?: UserSummary | null) { return user ? `${user.firstName} ${user.lastName}`.trim() : ''; }
   protected readInputValue(event: Event) { return (event.target as HTMLInputElement).value; }
   protected readSelectValue(event: Event) { return (event.target as HTMLSelectElement).value; }
+  protected t(key: string, params?: Record<string, string | number>) { return this.i18n.t(key, params); }
   protected prettyStatus(value?: string | null) { return value ? value.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (part) => part.toUpperCase()) : ''; }
+  protected changeTypeLabel(value?: ChangeType | null) { return value ? this.t(`changeManagement.changeType.${value}`) : ''; }
+  protected changeStatusLabel(value?: ChangeStatus | null) { return value ? this.t(`changeManagement.status.${value}`) : ''; }
   protected statusClass(value: ChangeStatus) { return value === 'CLOSED' || value === 'VERIFIED' ? 'success' : value === 'APPROVED' || value === 'IMPLEMENTING' ? 'warn' : value === 'REJECTED' ? 'danger' : 'neutral'; }
   protected proposedCount() { return this.records().filter((item) => item.status === 'PROPOSED' || item.status === 'REVIEWING').length; }
   protected liveCount() { return this.records().filter((item) => item.status === 'APPROVED' || item.status === 'IMPLEMENTING').length; }
@@ -150,78 +156,78 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
     });
   }
 
-  protected pageTitle() { return { list: 'Change management', create: 'Create change request', detail: this.selectedRecord()?.title || 'Change request detail', edit: this.selectedRecord()?.title || 'Edit change request' }[this.mode()]; }
-  protected pageDescription() { return { list: 'Keep planned changes visible, reviewed, and linked to the existing process, risk, document, and supplier controls.', create: 'Record what is changing, why it matters, who owns the review, and what existing controls should stay connected.', detail: 'Review the change position, implementation target, review ownership, and linked IMS records.', edit: 'Update the change request while keeping risks, processes, documents, and actions in their original modules.' }[this.mode()]; }
+  protected pageTitle() { return { list: this.t('changeManagement.page.titles.list'), create: this.t('changeManagement.page.titles.create'), detail: this.selectedRecord()?.title || this.t('changeManagement.page.titles.detail'), edit: this.selectedRecord()?.title || this.t('changeManagement.page.titles.edit') }[this.mode()]; }
+  protected pageDescription() { return { list: this.t('changeManagement.page.descriptions.list'), create: this.t('changeManagement.page.descriptions.create'), detail: this.t('changeManagement.page.descriptions.detail'), edit: this.t('changeManagement.page.descriptions.edit') }[this.mode()]; }
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: 'Change Management' }];
-    const base = [{ label: 'Change Management', link: '/change-management' }];
-    if (this.mode() === 'create') return [...base, { label: 'New change request' }];
-    if (this.mode() === 'edit') return [...base, { label: this.selectedRecord()?.title || 'Change request', link: `/change-management/${this.selectedId()}` }, { label: 'Edit' }];
-    return [...base, { label: this.selectedRecord()?.title || 'Change request' }];
+    if (this.mode() === 'list') return [{ label: this.t('changeManagement.page.label') }];
+    const base = [{ label: this.t('changeManagement.page.label'), link: '/change-management' }];
+    if (this.mode() === 'create') return [...base, { label: this.t('changeManagement.breadcrumbs.new') }];
+    if (this.mode() === 'edit') return [...base, { label: this.selectedRecord()?.title || this.t('changeManagement.breadcrumbs.record'), link: `/change-management/${this.selectedId()}` }, { label: this.t('changeManagement.breadcrumbs.edit') }];
+    return [...base, { label: this.selectedRecord()?.title || this.t('changeManagement.breadcrumbs.record') }];
   }
 
   protected changeGuidance() {
     const raw = this.form.getRawValue();
     if (raw.title && raw.reason && raw.proposedChange && raw.ownerUserId) {
-      return 'This change request already shows what is changing, why it is needed, and who owns the review before implementation.';
+      return this.t('changeManagement.guidance.structured');
     }
-    return 'Record the planned change, why it is needed, which area is affected, and who is responsible for controlled review and implementation.';
+    return this.t('changeManagement.guidance.default');
   }
 
   protected reviewNarrative() {
     const record = this.selectedRecord();
-    if (!record) return 'Save the change request first, then link the existing process, risk, action, document, obligation, or provider records that already carry the live control evidence.';
-    if (!record.links?.length) return 'This change is recorded, but the supporting process, risk, document, and provider context is not yet visible through linked records.';
-    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('RISK')) return 'This change has some traceability, but it will be much easier to review once the owning process and the related risk are both linked.';
-    if (!this.linkCountByType('DOCUMENT')) return 'The change has operational traceability, but it still needs the supporting document or procedure link if controlled instructions are affected.';
-    return 'This change request already shows where it is controlled, what could be affected, and which follow-up records support implementation.';
+    if (!record) return this.t('changeManagement.review.noRecord');
+    if (!record.links?.length) return this.t('changeManagement.review.unlinked');
+    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('RISK')) return this.t('changeManagement.review.partial');
+    if (!this.linkCountByType('DOCUMENT')) return this.t('changeManagement.review.documentNeeded');
+    return this.t('changeManagement.review.strong');
   }
 
   protected stageNarrative() {
     const record = this.selectedRecord();
-    if (!record) return 'Changes usually move from proposal, through review and approval, into implementation, then verification and closure.';
-    if (record.status === 'PROPOSED') return 'This change is still being defined. Confirm the reason, the affected area, and the expected impact before moving it into review.';
-    if (record.status === 'REVIEWING') return 'This change is under formal review. Use the linked records to confirm process ownership, risk impact, and any required document updates.';
-    if (record.status === 'APPROVED') return 'This change has been approved. The next step is controlled implementation with any required actions or document updates visible.';
-    if (record.status === 'IMPLEMENTING') return 'This change is being implemented. Keep follow-up actions and evidence visible until the result is verified.';
-    if (record.status === 'VERIFIED') return 'Implementation is complete and the result has been checked. Close the request once no further follow-up is needed.';
-    if (record.status === 'CLOSED') return 'This change is closed and now acts as a reviewable change-history record.';
-    return 'This change was rejected and remains as a recorded review decision.';
+    if (!record) return this.t('changeManagement.stageNarrative.default');
+    if (record.status === 'PROPOSED') return this.t('changeManagement.stageNarrative.PROPOSED');
+    if (record.status === 'REVIEWING') return this.t('changeManagement.stageNarrative.REVIEWING');
+    if (record.status === 'APPROVED') return this.t('changeManagement.stageNarrative.APPROVED');
+    if (record.status === 'IMPLEMENTING') return this.t('changeManagement.stageNarrative.IMPLEMENTING');
+    if (record.status === 'VERIFIED') return this.t('changeManagement.stageNarrative.VERIFIED');
+    if (record.status === 'CLOSED') return this.t('changeManagement.stageNarrative.CLOSED');
+    return this.t('changeManagement.stageNarrative.REJECTED');
   }
   protected nextStepHeadline() {
     const record = this.selectedRecord();
-    if (!record) return 'Next steps appear after the change request is saved.';
-    if (record.status === 'PROPOSED') return 'Start the formal review before implementation.';
+    if (!record) return this.t('changeManagement.nextSteps.headline.default');
+    if (record.status === 'PROPOSED') return this.t('changeManagement.nextSteps.headline.proposed');
     if (record.status === 'REVIEWING' && (!this.linkCountByType('PROCESS') || !this.linkCountByType('RISK') || !this.linkCountByType('DOCUMENT'))) {
-      return 'Complete the review context before approval.';
+      return this.t('changeManagement.nextSteps.headline.reviewing');
     }
     if (!this.linkCountByType('ACTION') && (record.status === 'APPROVED' || record.status === 'IMPLEMENTING')) {
-      return 'Prepare an implementation follow-up action next.';
+      return this.t('changeManagement.nextSteps.headline.action');
     }
-    if (record.status === 'VERIFIED' || record.status === 'CLOSED') return 'Review final actions and traceability before treating the change as complete.';
-    return 'This change request is connected to the main controls that support implementation.';
+    if (record.status === 'VERIFIED' || record.status === 'CLOSED') return this.t('changeManagement.nextSteps.headline.verified');
+    return this.t('changeManagement.nextSteps.headline.ready');
   }
   protected nextStepNarrative() {
     const record = this.selectedRecord();
-    if (!record) return 'Save the change request first, then decide whether the immediate next step is review, traceability completion, or implementation follow-up.';
+    if (!record) return this.t('changeManagement.nextSteps.copy.default');
     if (record.status === 'PROPOSED') {
-      return 'Keep the change in proposal until the reason, impact, owner, and affected area are clear enough for formal review.';
+      return this.t('changeManagement.nextSteps.copy.proposed');
     }
     if (record.status === 'REVIEWING' && (!this.linkCountByType('PROCESS') || !this.linkCountByType('RISK') || !this.linkCountByType('DOCUMENT'))) {
-      return 'During review, link the owning process, related risk, and affected controlled document so approval decisions are based on the full change picture.';
+      return this.t('changeManagement.nextSteps.copy.reviewing');
     }
     if (!this.linkCountByType('ACTION') && (record.status === 'APPROVED' || record.status === 'IMPLEMENTING')) {
-      return 'The change is ready for execution control. Prepare a follow-up action so implementation ownership and due dates stay visible in the Actions tracker.';
+      return this.t('changeManagement.nextSteps.copy.action');
     }
     if (record.status === 'VERIFIED' || record.status === 'CLOSED') {
-      return 'The change result has been verified. Use linked actions and traceability to confirm nothing is still open before final closure.';
+      return this.t('changeManagement.nextSteps.copy.verified');
     }
-    return 'The change request already shows why the change exists, where it applies, and which linked records support review and implementation.';
+    return this.t('changeManagement.nextSteps.copy.ready');
   }
   protected changeDraftTitle() {
     const record = this.selectedRecord();
     if (!record) return null;
-    return `Change follow-up: ${record.title}`;
+    return this.t('changeManagement.messages.actionDraftTitle', { title: record.title });
   }
   protected changeDraftDescription() {
     const record = this.selectedRecord();
@@ -230,39 +236,39 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
   }
   protected changeReturnNavigation(): ReturnNavigation | null {
     const id = this.selectedId();
-    return id ? { route: ['/change-management', id], label: 'change request' } : null;
+    return id ? { route: ['/change-management', id], label: this.t('changeManagement.page.label') } : null;
   }
 
   protected attentionHeadline() {
     const record = this.selectedRecord();
     return record && this.changeAttentionReasons(record).length
-      ? 'This change request currently needs management attention.'
-      : 'This change request is currently under control.';
+      ? this.t('changeManagement.attention.headline.needsAttention')
+      : this.t('changeManagement.attention.headline.underControl');
   }
 
   protected attentionNarrative() {
     const record = this.selectedRecord();
     if (!record) {
-      return 'Attention guidance appears after the change request is saved.';
+      return this.t('changeManagement.attention.copy.unsaved');
     }
     const reasons = this.changeAttentionReasons(record);
     if (!reasons.length) {
-      return 'Ownership, timing, and current stage are controlled enough for routine change oversight.';
+      return this.t('changeManagement.attention.copy.underControl');
     }
-    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+    return this.t('changeManagement.attention.copy.needsAttention', { reasons: reasons.map((reason) => this.attentionReasonLabel(reason).toLowerCase()).join(', ') });
   }
 
   protected attentionSummary(item: ChangeRow) {
     const reasons = this.changeAttentionReasons(item);
-    return reasons.length ? reasons.join(' | ') : '';
+    return reasons.length ? reasons.map((reason) => this.attentionReasonLabel(reason)).join(' | ') : '';
   }
 
   protected attentionLabel(item: ChangeRow) {
     const reasons = this.changeAttentionReasons(item);
     if (!reasons.length) {
-      return 'Under control';
+      return this.t('changeManagement.attention.underControl');
     }
-    return reasons.length > 1 ? `${reasons[0]} +${reasons.length - 1}` : reasons[0];
+    return reasons.length > 1 ? this.t('changeManagement.attention.multi', { first: this.attentionReasonLabel(reasons[0]), count: reasons.length - 1 }) : this.attentionReasonLabel(reasons[0]);
   }
 
   protected attentionClass(item: ChangeRow) {
@@ -270,16 +276,16 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
     if (!reasons.length) {
       return 'success';
     }
-    if (reasons.includes('Review overdue') || reasons.includes('Implementation overdue')) {
+    if (reasons.includes('REVIEW_OVERDUE') || reasons.includes('IMPLEMENTATION_OVERDUE')) {
       return 'danger';
     }
     return 'warn';
   }
-
-  protected sectionTitle(type: LinkType) { return { PROCESS: 'Linked Processes', RISK: 'Linked Risks', ACTION: 'Linked Actions', DOCUMENT: 'Linked Documents', OBLIGATION: 'Linked Obligations', PROVIDER: 'Linked Providers' }[type]; }
-  protected sectionDescription(type: LinkType) { return { PROCESS: 'Processes that own or are affected by this planned change.', RISK: 'Risks used to assess what could go wrong or what needs treatment before implementation.', ACTION: 'Follow-up actions already tracked in the global action register.', DOCUMENT: 'Controlled procedures, instructions, or records that need review as part of the change.', OBLIGATION: 'Customer, legal, or compliance obligations that the change could affect.', PROVIDER: 'External providers involved in or impacted by the planned change.' }[type]; }
-  protected sectionEmptyCopy(type: LinkType) { return { PROCESS: 'Link the process that owns the change or will feel its effect first.', RISK: 'Link the risk that formally assesses the exposure created by this change.', ACTION: 'Link actions already being tracked for planning, implementation, or verification.', DOCUMENT: 'Link any controlled document that must be updated, reviewed, or checked because of the change.', OBLIGATION: 'Link obligations if the change could affect customer, legal, or regulatory requirements.', PROVIDER: 'Link providers when the change depends on or impacts an external supplier or service.' }[type]; }
-  protected sectionPickerLabel(type: LinkType) { return { PROCESS: 'Process', RISK: 'Risk', ACTION: 'Action', DOCUMENT: 'Document', OBLIGATION: 'Obligation', PROVIDER: 'Provider' }[type]; }
+  private attentionReasonLabel(reason: ChangeAttentionReason) { return this.t(`changeManagement.attention.reasons.${reason}`); }
+  protected sectionTitle(type: LinkType) { return this.t(`changeManagement.links.sections.${type}.title`); }
+  protected sectionDescription(type: LinkType) { return this.t(`changeManagement.links.sections.${type}.copy`); }
+  protected sectionEmptyCopy(type: LinkType) { return this.t(`changeManagement.links.sections.${type}.empty`); }
+  protected sectionPickerLabel(type: LinkType) { return this.t(`changeManagement.links.types.${type}`); }
   protected linksByType(type: LinkType) { return (this.selectedRecord()?.links || []).filter((link) => link.linkType === type); }
   protected linkCountByType(type: LinkType) { return this.linksByType(type).length; }
   protected linkRoute(link: ChangeLink) { return link.path || '/change-management'; }
@@ -303,35 +309,35 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
   }
   protected packageTierLabel(packageTier: TenantPackageTier) {
     return {
-      ASSURANCE: 'Assurance',
-      CORE_IMS: 'Core IMS',
-      QHSE_PRO: 'QHSE Pro'
+      ASSURANCE: this.t('packages.assurance'),
+      CORE_IMS: this.t('packages.coreIms'),
+      QHSE_PRO: this.t('packages.qhsePro')
     }[packageTier];
   }
 
   protected save() {
-    if (!this.canWrite()) return this.error.set('You do not have permission to edit change requests.');
-    if (this.form.invalid) return this.error.set('Complete the required change-management fields.');
+    if (!this.canWrite()) return this.error.set(this.t('changeManagement.messages.noPermissionWrite'));
+    if (this.form.invalid) return this.error.set(this.t('changeManagement.messages.completeRequired'));
     this.saving.set(true);
     this.error.set('');
     const request = this.selectedId() ? this.api.patch<ChangeRow>(`change-management/${this.selectedId()}`, this.form.getRawValue()) : this.api.post<ChangeRow>('change-management', this.form.getRawValue());
     request.subscribe({
       next: (record) => {
         this.saving.set(false);
-        this.router.navigate(['/change-management', record.id], { state: { notice: 'Change request saved successfully.' } });
+        this.router.navigate(['/change-management', record.id], { state: { notice: this.t('changeManagement.messages.saved') } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Change request save failed.'));
+        this.error.set(this.readError(error, this.t('changeManagement.messages.saveFailed')));
       }
     });
   }
 
   protected archiveRecord() {
-    if (!this.selectedRecord() || !this.canDelete() || !window.confirm(`Archive change request "${this.selectedRecord()?.title}"?`)) return;
+    if (!this.selectedRecord() || !this.canDelete() || !window.confirm(this.t('changeManagement.messages.archiveConfirm', { title: this.selectedRecord()?.title || '' }))) return;
     this.api.delete<{ success: boolean }>(`change-management/${this.selectedId()}`).subscribe({
-      next: () => this.router.navigate(['/change-management'], { state: { notice: 'Change request archived successfully.' } }),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Change request archive failed.'))
+      next: () => this.router.navigate(['/change-management'], { state: { notice: this.t('changeManagement.messages.archived') } }),
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('changeManagement.messages.archiveFailed')))
     });
   }
 
@@ -357,11 +363,11 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
         this.linkForm.patchValue({ linkedId: '', note: '' });
         this.activeLinkComposerType.set(null);
         this.fetchRecord(this.selectedId()!);
-        this.message.set('Linked record added.');
+        this.message.set(this.t('changeManagement.messages.linkAdded'));
       },
       error: (error: HttpErrorResponse) => {
         this.linkSaving.set(false);
-        this.error.set(this.readError(error, 'Record link failed.'));
+        this.error.set(this.readError(error, this.t('changeManagement.messages.linkFailed')));
       }
     });
   }
@@ -371,9 +377,9 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
     this.api.delete<{ success: boolean }>(`change-management/${this.selectedId()}/links/${linkId}`).subscribe({
       next: () => {
         this.fetchRecord(this.selectedId()!);
-        this.message.set('Linked record removed.');
+        this.message.set(this.t('changeManagement.messages.linkRemoved'));
       },
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Link removal failed.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('changeManagement.messages.linkRemoveFailed')))
     });
   }
 
@@ -408,7 +414,7 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Change requests could not be loaded.'));
+        this.error.set(this.readError(error, this.t('changeManagement.messages.loadListFailed')));
       }
     });
   }
@@ -436,7 +442,7 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Change request details could not be loaded.'));
+        this.error.set(this.readError(error, this.t('changeManagement.messages.loadDetailsFailed')));
       }
     });
   }
@@ -444,7 +450,7 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
   private loadOwners() {
     this.api.get<UserSummary[]>('users').subscribe({
       next: (users) => this.owners.set(users),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Change request owners could not be loaded.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('changeManagement.messages.loadOwnersFailed')))
     });
   }
 
@@ -457,11 +463,11 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
   }
 
   private toCandidateLabel(type: LinkType, item: any) {
-    if (type === 'PROCESS') return `${item.referenceNo || 'Uncoded'} - ${item.name}`;
+    if (type === 'PROCESS') return `${item.referenceNo || this.t('changeManagement.common.uncoded')} - ${item.name}`;
     if (type === 'RISK') return item.title;
-    if (type === 'DOCUMENT') return `${item.code || 'Uncoded'} - ${item.title}`;
-    if (type === 'OBLIGATION') return `${item.referenceNo || 'Uncoded'} - ${item.title}`;
-    if (type === 'PROVIDER') return `${item.referenceNo || 'Uncoded'} - ${item.providerName}`;
+    if (type === 'DOCUMENT') return `${item.code || this.t('changeManagement.common.uncoded')} - ${item.title}`;
+    if (type === 'OBLIGATION') return `${item.referenceNo || this.t('changeManagement.common.uncoded')} - ${item.title}`;
+    if (type === 'PROVIDER') return `${item.referenceNo || this.t('changeManagement.common.uncoded')} - ${item.providerName}`;
     return item.title;
   }
 
@@ -479,12 +485,12 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
 
   private linkModuleLabel(linkType: LinkType) {
     return {
-      PROCESS: 'Process Register',
-      RISK: 'Risks',
-      ACTION: 'Actions',
-      DOCUMENT: 'Documents',
-      OBLIGATION: 'Compliance Obligations',
-      PROVIDER: 'External Providers'
+      PROCESS: this.t('shell.nav.processRegister.label'),
+      RISK: this.t('shell.nav.risks.label'),
+      ACTION: this.t('shell.nav.actions.label'),
+      DOCUMENT: this.t('shell.nav.documents.label'),
+      OBLIGATION: this.t('shell.nav.complianceObligations.label'),
+      PROVIDER: this.t('shell.nav.externalProviders.label')
     }[linkType];
   }
 
@@ -493,32 +499,32 @@ export class ChangeManagementPageComponent implements OnInit, OnChanges {
     return Array.isArray(message) ? message.join(', ') : (message as string) || fallback;
   }
 
-  private changeAttentionReasons(item: ChangeRow) {
+  private changeAttentionReasons(item: ChangeRow): ChangeAttentionReason[] {
     if (item.status === 'CLOSED' || item.status === 'REJECTED') {
       return [];
     }
-    const reasons: string[] = [];
+    const reasons: ChangeAttentionReason[] = [];
     if (!item.ownerUserId) {
-      reasons.push('Owner needed');
+      reasons.push('OWNER_NEEDED');
     }
     if (item.status === 'REVIEWING') {
       if (!item.reviewDate) {
-        reasons.push('Review date needed');
+        reasons.push('REVIEW_DATE_NEEDED');
       } else if (this.isPastDate(item.reviewDate)) {
-        reasons.push('Review overdue');
+        reasons.push('REVIEW_OVERDUE');
       } else if (this.isDateWithinDays(item.reviewDate, 14)) {
-        reasons.push('Review due soon');
+        reasons.push('REVIEW_DUE_SOON');
       }
     }
     if ((item.status === 'APPROVED' || item.status === 'IMPLEMENTING') && item.targetImplementationDate) {
       if (this.isPastDate(item.targetImplementationDate)) {
-        reasons.push('Implementation overdue');
+        reasons.push('IMPLEMENTATION_OVERDUE');
       } else if (this.isDateWithinDays(item.targetImplementationDate, 14)) {
-        reasons.push('Implementation due soon');
+        reasons.push('IMPLEMENTATION_DUE_SOON');
       }
     }
     if (this.isStale(item.updatedAt, 45)) {
-      reasons.push('Stale');
+      reasons.push('STALE');
     }
     return reasons;
   }

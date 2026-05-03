@@ -2317,6 +2317,278 @@
       "defaultDraftDescription": "Follow up annual provider review for {{title}}."
     }
   },
+  "changeManagement": {
+    "page": {
+      "label": "Change Management",
+      "titles": {
+        "list": "Change management",
+        "create": "Create change request",
+        "detail": "Change request detail",
+        "edit": "Edit change request"
+      },
+      "descriptions": {
+        "list": "Keep planned changes visible, reviewed, and linked to the existing process, risk, document, and supplier controls.",
+        "create": "Record what is changing, why it matters, who owns the review, and what existing controls should stay connected.",
+        "detail": "Review the change position, implementation target, review ownership, and linked IMS records.",
+        "edit": "Update the change request while keeping risks, processes, documents, and actions in their original modules."
+      }
+    },
+    "actions": {
+      "new": "+ New change request",
+      "edit": "Edit change request",
+      "archive": "Archive",
+      "back": "Back",
+      "save": "Save change request",
+      "saving": "Saving..."
+    },
+    "breadcrumbs": {
+      "new": "New change request",
+      "record": "Change request",
+      "edit": "Edit"
+    },
+    "common": {
+      "uncoded": "Uncoded",
+      "unassigned": "Unassigned"
+    },
+    "changeType": {
+      "PROCESS": "Process",
+      "PRODUCT": "Product",
+      "EQUIPMENT": "Equipment",
+      "MATERIAL": "Material",
+      "ORGANIZATIONAL": "Organizational",
+      "DOCUMENTATION": "Documentation",
+      "FACILITY": "Facility",
+      "OTHER": "Other"
+    },
+    "status": {
+      "PROPOSED": "Proposed",
+      "REVIEWING": "Reviewing",
+      "APPROVED": "Approved",
+      "IMPLEMENTING": "Implementing",
+      "VERIFIED": "Verified",
+      "CLOSED": "Closed",
+      "REJECTED": "Rejected"
+    },
+    "list": {
+      "filtersTitle": "Register filters",
+      "copy": "Track planned changes, implementation ownership, and the supporting process, risk, document, and supplier context.",
+      "stats": {
+        "total": "Total",
+        "proposedReviewing": "Proposed / reviewing",
+        "approvedImplementing": "Approved / implementing",
+        "verifiedClosed": "Verified / closed"
+      },
+      "filters": {
+        "search": "Search",
+        "status": "Status",
+        "owner": "Owner",
+        "all": "All"
+      },
+      "placeholders": {
+        "search": "Reference, title, area, proposed change"
+      },
+      "loadingTitle": "Loading change requests",
+      "loadingCopy": "Refreshing planned changes, owners, and linked control context.",
+      "emptyTitle": "No change requests found",
+      "emptyCopy": "Create the first change request to keep planned changes visible before implementation happens informally.",
+      "table": {
+        "change": "Change",
+        "type": "Type",
+        "affectedArea": "Affected area",
+        "status": "Status",
+        "owner": "Owner",
+        "targetDate": "Target date",
+        "attention": "Attention",
+        "links": "Links"
+      }
+    },
+    "form": {
+      "positionTitle": "Change position",
+      "summary": {
+        "reason": "Reason",
+        "proposedChange": "Proposed change",
+        "owner": "Owner",
+        "defined": "Defined",
+        "recorded": "Recorded",
+        "assigned": "Assigned",
+        "needed": "Needed"
+      },
+      "definitionTitle": "Change definition",
+      "reviewTitle": "Review and control",
+      "fields": {
+        "reference": "Reference",
+        "type": "Type",
+        "status": "Status",
+        "title": "Title",
+        "reason": "Reason for change",
+        "affectedArea": "Affected area",
+        "proposedChange": "Proposed change",
+        "impactSummary": "Impact summary",
+        "controlSummary": "Control summary",
+        "owner": "Owner",
+        "targetImplementationDate": "Target implementation date",
+        "reviewDate": "Review date"
+      },
+      "placeholders": {
+        "reference": "MOC-001",
+        "title": "Introduce secondary supplier for critical control boards",
+        "reason": "Why is the change needed now?",
+        "affectedArea": "Procurement, production release, warehouse controls",
+        "proposedChange": "Summarize what will change in practice.",
+        "impactSummary": "Summarize quality, operational, customer, safety, or compliance impact.",
+        "controlSummary": "Summarize controls, approvals, checks, or prerequisites before implementation."
+      }
+    },
+    "guidance": {
+      "structured": "This change request already shows what is changing, why it is needed, and who owns the review before implementation.",
+      "default": "Record the planned change, why it is needed, which area is affected, and who is responsible for controlled review and implementation."
+    },
+    "review": {
+      "noRecord": "Save the change request first, then link the existing process, risk, action, document, obligation, or provider records that already carry the live control evidence.",
+      "unlinked": "This change is recorded, but the supporting process, risk, document, and provider context is not yet visible through linked records.",
+      "partial": "This change has some traceability, but it will be much easier to review once the owning process and the related risk are both linked.",
+      "documentNeeded": "The change has operational traceability, but it still needs the supporting document or procedure link if controlled instructions are affected.",
+      "strong": "This change request already shows where it is controlled, what could be affected, and which follow-up records support implementation."
+    },
+    "attention": {
+      "title": "Management attention",
+      "underControl": "Under control",
+      "multi": "{{first}} +{{count}}",
+      "headline": {
+        "needsAttention": "This change request currently needs management attention.",
+        "underControl": "This change request is currently under control."
+      },
+      "copy": {
+        "unsaved": "Attention guidance appears after the change request is saved.",
+        "underControl": "Ownership, timing, and current stage are controlled enough for routine change oversight.",
+        "needsAttention": "Attention is needed because {{reasons}}."
+      },
+      "reasons": {
+        "OWNER_NEEDED": "Owner needed",
+        "REVIEW_DATE_NEEDED": "Review date needed",
+        "REVIEW_OVERDUE": "Review overdue",
+        "REVIEW_DUE_SOON": "Review due soon",
+        "IMPLEMENTATION_OVERDUE": "Implementation overdue",
+        "IMPLEMENTATION_DUE_SOON": "Implementation due soon",
+        "STALE": "Stale"
+      }
+    },
+    "stageNarrative": {
+      "default": "Changes usually move from proposal, through review and approval, into implementation, then verification and closure.",
+      "PROPOSED": "This change is still being defined. Confirm the reason, the affected area, and the expected impact before moving it into review.",
+      "REVIEWING": "This change is under formal review. Use the linked records to confirm process ownership, risk impact, and any required document updates.",
+      "APPROVED": "This change has been approved. The next step is controlled implementation with any required actions or document updates visible.",
+      "IMPLEMENTING": "This change is being implemented. Keep follow-up actions and evidence visible until the result is verified.",
+      "VERIFIED": "Implementation is complete and the result has been checked. Close the request once no further follow-up is needed.",
+      "CLOSED": "This change is closed and now acts as a reviewable change-history record.",
+      "REJECTED": "This change was rejected and remains as a recorded review decision."
+    },
+    "detail": {
+      "eyebrow": "Change request",
+      "noSummary": "No proposed change summary recorded yet.",
+      "summary": {
+        "affectedArea": "Affected area",
+        "owner": "Owner",
+        "targetDate": "Target date",
+        "linkedRecords": "Linked records"
+      },
+      "stageTitle": "Stage narrative",
+      "stageSummary": {
+        "processes": "Processes",
+        "risks": "Risks",
+        "documents": "Documents",
+        "providers": "Providers"
+      },
+      "fields": {
+        "reason": "Reason for change",
+        "impactSummary": "Impact summary",
+        "controlSummary": "Control summary",
+        "reviewDate": "Review date"
+      },
+      "empty": {
+        "reason": "No reason recorded.",
+        "impactSummary": "No impact summary recorded.",
+        "controlSummary": "No control summary recorded.",
+        "reviewDate": "No review date recorded."
+      }
+    },
+    "nextSteps": {
+      "title": "Next steps",
+      "headline": {
+        "default": "Next steps appear after the change request is saved.",
+        "proposed": "Start the formal review before implementation.",
+        "reviewing": "Complete the review context before approval.",
+        "action": "Prepare an implementation follow-up action next.",
+        "verified": "Review final actions and traceability before treating the change as complete.",
+        "ready": "This change request is connected to the main controls that support implementation."
+      },
+      "copy": {
+        "default": "Save the change request first, then decide whether the immediate next step is review, traceability completion, or implementation follow-up.",
+        "proposed": "Keep the change in proposal until the reason, impact, owner, and affected area are clear enough for formal review.",
+        "reviewing": "During review, link the owning process, related risk, and affected controlled document so approval decisions are based on the full change picture.",
+        "action": "The change is ready for execution control. Prepare a follow-up action so implementation ownership and due dates stay visible in the Actions tracker.",
+        "verified": "The change result has been verified. Use linked actions and traceability to confirm nothing is still open before final closure.",
+        "ready": "The change request already shows why the change exists, where it applies, and which linked records support review and implementation."
+      },
+      "summary": {
+        "processReview": "Process review",
+        "riskReview": "Risk review",
+        "followUpAction": "Follow-up action",
+        "linked": "Linked",
+        "needed": "Needed",
+        "prepareBelow": "Prepare below"
+      }
+    },
+    "links": {
+      "eyebrow": "Linked records",
+      "title": "Traceability hub",
+      "openComposer": "+ Link",
+      "closeComposer": "Close",
+      "remove": "Remove",
+      "emptyTitle": "No linked records",
+      "includedFrom": "Included from {{tier}}",
+      "types": {
+        "PROCESS": "Process",
+        "RISK": "Risk",
+        "ACTION": "Action",
+        "DOCUMENT": "Document",
+        "OBLIGATION": "Obligation",
+        "PROVIDER": "Provider"
+      },
+      "sections": {
+        "PROCESS": { "title": "Linked processes", "copy": "Processes that own or are affected by this planned change.", "empty": "Link the process that owns the change or will feel its effect first." },
+        "RISK": { "title": "Linked risks", "copy": "Risks used to assess what could go wrong or what needs treatment before implementation.", "empty": "Link the risk that formally assesses the exposure created by this change." },
+        "ACTION": { "title": "Linked actions", "copy": "Follow-up actions already tracked in the global action register.", "empty": "Link actions already being tracked for planning, implementation, or verification." },
+        "DOCUMENT": { "title": "Linked documents", "copy": "Controlled procedures, instructions, or records that need review as part of the change.", "empty": "Link any controlled document that must be updated, reviewed, or checked because of the change." },
+        "OBLIGATION": { "title": "Linked obligations", "copy": "Customer, legal, or compliance obligations that the change could affect.", "empty": "Link obligations if the change could affect customer, legal, or regulatory requirements." },
+        "PROVIDER": { "title": "Linked providers", "copy": "External providers involved in or impacted by the planned change.", "empty": "Link providers when the change depends on or impacts an external supplier or service." }
+      }
+    },
+    "linkComposer": {
+      "chooseExisting": "Choose existing {{section}}",
+      "note": "Note",
+      "notePlaceholder": "Optional context for this link",
+      "linking": "Linking...",
+      "addLink": "Add link"
+    },
+    "messages": {
+      "noPermissionWrite": "You do not have permission to edit change requests.",
+      "completeRequired": "Complete the required change-management fields.",
+      "saved": "Change request saved successfully.",
+      "saveFailed": "Change request save failed.",
+      "archiveConfirm": "Archive change request \"{{title}}\"?",
+      "archived": "Change request archived successfully.",
+      "archiveFailed": "Change request archive failed.",
+      "linkAdded": "Linked record added.",
+      "linkFailed": "Record link failed.",
+      "linkRemoved": "Linked record removed.",
+      "linkRemoveFailed": "Link removal failed.",
+      "loadListFailed": "Change requests could not be loaded.",
+      "loadDetailsFailed": "Change request details could not be loaded.",
+      "loadOwnersFailed": "Change request owners could not be loaded.",
+      "actionDraftTitle": "Change follow-up: {{title}}"
+    }
+  },
   "hazards": {
     "page": {
       "label": "Hazard Identification",
