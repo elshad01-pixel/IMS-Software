@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { I18nService } from '../core/i18n.service';
 import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
 import { AttachmentPanelComponent } from '../shared/attachment-panel.component';
 import { PageHeaderComponent } from '../shared/page-header.component';
@@ -72,6 +73,7 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -166,6 +168,10 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
     return this.authStore.hasPermission('admin.delete');
   }
 
+  protected t(key: string, params?: Record<string, unknown>) {
+    return this.i18n.t(key, params);
+  }
+
   protected personName(user: UserSummary) {
     return `${user.firstName} ${user.lastName}`.trim();
   }
@@ -180,6 +186,26 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
 
   protected prettyStatus(value?: string | null) {
     return value ? value.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (part) => part.toUpperCase()) : '';
+  }
+
+  protected incidentStatusLabel(value?: IncidentStatus | null) {
+    return value ? this.t(`incidents.status.${value}`) : '';
+  }
+
+  protected incidentTypeLabel(value?: IncidentType | null) {
+    return value ? this.t(`incidents.types.${value}`) : '';
+  }
+
+  protected incidentCategoryLabel(value?: IncidentCategory | null) {
+    return value ? this.t(`incidents.categories.${value}`) : '';
+  }
+
+  protected incidentSeverityLabel(value?: IncidentSeverity | null) {
+    return value ? this.t(`incidents.severity.${value}`) : '';
+  }
+
+  protected incidentRcaMethodLabel(value?: IncidentRcaMethod | '' | null) {
+    return value ? this.t(`incidents.rcaMethods.${value}`) : '';
   }
 
   protected statusClass(value: IncidentStatus) {
@@ -231,44 +257,44 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
 
   protected pageTitle() {
     return {
-      list: 'Incidents and near misses',
-      create: 'Report incident',
-      detail: this.selectedIncident()?.title || 'Incident detail',
-      edit: this.selectedIncident()?.title || 'Edit incident'
+      list: this.t('incidents.page.titles.list'),
+      create: this.t('incidents.page.titles.create'),
+      detail: this.selectedIncident()?.title || this.t('incidents.page.titles.detail'),
+      edit: this.selectedIncident()?.title || this.t('incidents.page.titles.edit')
     }[this.mode()];
   }
 
   protected pageDescription() {
     return {
-      list: 'Track incidents and near misses without turning the system into a full operational workflow engine.',
-      create: 'Record what happened, immediate action, and who owns follow-up.',
-      detail: 'Review the event, response, and linked records already managing the follow-up.',
-      edit: 'Update the incident record while keeping linked processes, risks, and actions in their original modules.'
+      list: this.t('incidents.page.descriptions.list'),
+      create: this.t('incidents.page.descriptions.create'),
+      detail: this.t('incidents.page.descriptions.detail'),
+      edit: this.t('incidents.page.descriptions.edit')
     }[this.mode()];
   }
 
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: 'Incidents' }];
-    const base = [{ label: 'Incidents', link: '/incidents' }];
-    if (this.mode() === 'create') return [...base, { label: 'New incident' }];
-    if (this.mode() === 'edit') return [...base, { label: this.selectedIncident()?.title || 'Incident', link: `/incidents/${this.selectedId()}` }, { label: 'Edit' }];
-    return [...base, { label: this.selectedIncident()?.title || 'Incident' }];
+    if (this.mode() === 'list') return [{ label: this.t('incidents.page.label') }];
+    const base = [{ label: this.t('incidents.page.label'), link: '/incidents' }];
+    if (this.mode() === 'create') return [...base, { label: this.t('incidents.breadcrumbs.new') }];
+    if (this.mode() === 'edit') return [...base, { label: this.selectedIncident()?.title || this.t('incidents.breadcrumbs.record'), link: `/incidents/${this.selectedId()}` }, { label: this.t('incidents.breadcrumbs.edit') }];
+    return [...base, { label: this.selectedIncident()?.title || this.t('incidents.breadcrumbs.record') }];
   }
 
   protected incidentGuidance() {
     const raw = this.form.getRawValue();
     if (raw.eventDate && raw.ownerUserId && raw.immediateAction) {
-      return 'This record already shows what happened, who owns it, and what was done immediately.';
+      return this.t('incidents.guidance.structured');
     }
-    return 'A useful incident record should show what happened, when it happened, what was done immediately, and who owns the follow-up.';
+    return this.t('incidents.guidance.default');
   }
 
   protected reviewNarrative() {
     const incident = this.selectedIncident();
-    if (!incident) return 'Save the incident first, then link the process, risk, or action records that carry the follow-up.';
-    if (!incident.links?.length) return 'This event is recorded, but its operational follow-up is not yet visible through linked records.';
-    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('RISK')) return 'This event has some traceability, but it will be easier to review once both the affected process and related risk are linked.';
-    return 'This event already shows where it applies and how the follow-up is being managed.';
+    if (!incident) return this.t('incidents.review.noRecord');
+    if (!incident.links?.length) return this.t('incidents.review.unlinked');
+    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('RISK')) return this.t('incidents.review.partial');
+    return this.t('incidents.review.strong');
   }
 
   protected selectedRcaMethod() {
@@ -278,48 +304,48 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
   protected investigationNarrative() {
     const raw = this.form.getRawValue();
     if (raw.rcaMethod && (raw.rootCause || this.structuredRootCauseSummary())) {
-      return 'The investigation now shows both the RCA method used and the root cause captured from the review.';
+      return this.t('incidents.investigation.structured');
     }
     if (raw.investigationSummary) {
-      return 'The event has investigation notes, but the root cause method still needs to be made explicit.';
+      return this.t('incidents.investigation.summaryOnly');
     }
-    return 'Keep the first report lightweight, then use this section to capture what was found, the RCA method used, and the resulting root cause.';
+    return this.t('incidents.investigation.default');
   }
 
   protected detailInvestigationNarrative() {
     const incident = this.selectedIncident();
-    if (!incident) return 'No investigation narrative is available yet.';
+    if (!incident) return this.t('incidents.investigation.none');
     if (incident.rcaMethod && incident.rootCause) {
-      return 'The investigation records both the RCA method used and the current root cause summary.';
+      return this.t('incidents.investigation.detailStructured');
     }
     if (incident.investigationSummary) {
-      return 'Investigation notes are recorded, but the root cause method has not been made explicit yet.';
+      return this.t('incidents.investigation.detailSummaryOnly');
     }
-    return 'No structured investigation has been recorded yet.';
+    return this.t('incidents.investigation.detailNone');
   }
 
   protected nextStepHeadline() {
     const incident = this.selectedIncident();
-    if (!incident) return 'Next steps appear after the incident is saved.';
-    if (!incident.rootCause) return 'Complete the investigation conclusion first.';
-    if (!this.linkCountByType('ACTION')) return 'Create follow-up from the incident once the investigation is clear.';
-    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('RISK')) return 'Complete the traceability picture with the affected process and related risk.';
-    return 'The incident has enough structure to manage follow-up and review.';
+    if (!incident) return this.t('incidents.nextSteps.headline.default');
+    if (!incident.rootCause) return this.t('incidents.nextSteps.headline.investigation');
+    if (!this.linkCountByType('ACTION')) return this.t('incidents.nextSteps.headline.action');
+    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('RISK')) return this.t('incidents.nextSteps.headline.traceability');
+    return this.t('incidents.nextSteps.headline.ready');
   }
 
   protected nextStepNarrative() {
     const incident = this.selectedIncident();
-    if (!incident) return 'Save the event, then review investigation, evidence, and follow-up in one place.';
-    if (!incident.rootCause) return 'Use the RCA method and root cause fields to make the investigation defensible before pushing more follow-up into actions.';
-    if (!this.linkCountByType('ACTION')) return 'If the event needs corrective or preventive work, prepare an incident action from the section below so ownership and due dates are explicit.';
-    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('RISK')) return 'Link the affected process and related risk so the event is visible in the wider control system, not just the incident log.';
-    return 'Review the linked action, evidence, and traceability regularly until the event can be closed confidently.';
+    if (!incident) return this.t('incidents.nextSteps.copy.default');
+    if (!incident.rootCause) return this.t('incidents.nextSteps.copy.investigation');
+    if (!this.linkCountByType('ACTION')) return this.t('incidents.nextSteps.copy.action');
+    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('RISK')) return this.t('incidents.nextSteps.copy.traceability');
+    return this.t('incidents.nextSteps.copy.ready');
   }
 
   protected incidentDraftTitle() {
     const incident = this.selectedIncident();
     if (!incident) return null;
-    return `${incident.type === 'NEAR_MISS' ? 'Near miss' : 'Incident'} follow-up: ${incident.title}`;
+    return this.t('incidents.messages.actionDraftTitle', { type: this.incidentTypeLabel(incident.type), title: incident.title });
   }
 
   protected incidentDraftDescription() {
@@ -331,20 +357,20 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
   protected attentionHeadline() {
     const incident = this.selectedIncident();
     return incident && this.incidentAttentionReasons(incident).length
-      ? 'This event currently needs management attention.'
-      : 'This event is currently under control.';
+      ? this.t('incidents.attention.headline.needsAttention')
+      : this.t('incidents.attention.headline.underControl');
   }
 
   protected attentionNarrative() {
     const incident = this.selectedIncident();
     if (!incident) {
-      return 'Attention guidance appears after the event is saved.';
+      return this.t('incidents.attention.copy.default');
     }
     const reasons = this.incidentAttentionReasons(incident);
     if (!reasons.length) {
-      return 'Ownership, severity, and current investigation state are clear enough for routine follow-up.';
+      return this.t('incidents.attention.copy.underControl');
     }
-    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+    return this.t('incidents.attention.copy.needsAttention', { reasons: reasons.map((reason) => reason.toLowerCase()).join(', ') });
   }
 
   protected attentionSummary(item: IncidentRow) {
@@ -355,49 +381,43 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
   protected attentionLabel(item: IncidentRow) {
     const reasons = this.incidentAttentionReasons(item);
     if (!reasons.length) {
-      return 'Under control';
+      return this.t('incidents.attention.short.ok');
     }
     return reasons.length > 1 ? `${reasons[0]} +${reasons.length - 1}` : reasons[0];
   }
 
   protected attentionClass(item: IncidentRow) {
-    const reasons = this.incidentAttentionReasons(item);
-    if (!reasons.length) {
+    if (item.status === 'CLOSED' || item.status === 'ARCHIVED') {
       return 'success';
     }
-    if (reasons.includes('High priority')) {
+    if (item.severity === 'HIGH' || item.severity === 'CRITICAL') {
       return 'danger';
     }
-    return 'warn';
+    if (this.incidentAttentionReasons(item).length) {
+      return 'warn';
+    }
+    return 'success';
   }
 
   protected incidentReturnNavigation() {
     const id = this.selectedId();
-    return id ? { route: ['/incidents', id], label: 'incident' } : null;
+    return id ? { route: ['/incidents', id], label: this.t('incidents.page.label') } : null;
   }
 
   protected sectionTitle(type: LinkType) {
-    return { PROCESS: 'Linked Processes', RISK: 'Linked Risks', ACTION: 'Linked Actions' }[type];
+    return this.t(`incidents.links.sections.${type}.title`);
   }
 
   protected sectionDescription(type: LinkType) {
-    return {
-      PROCESS: 'Processes affected by this event or responsible for maintaining the control.',
-      RISK: 'Risks that reflect the exposure highlighted by this event.',
-      ACTION: 'Follow-up actions already tracked in the global action register.'
-    }[type];
+    return this.t(`incidents.links.sections.${type}.copy`);
   }
 
   protected sectionEmptyCopy(type: LinkType) {
-    return {
-      PROCESS: 'Link the affected process so the event can be reviewed in context.',
-      RISK: 'Link a risk if this event exposes an existing weakness or area needing treatment.',
-      ACTION: 'Link actions already being tracked for follow-up.'
-    }[type];
+    return this.t(`incidents.links.sections.${type}.empty`);
   }
 
   protected sectionPickerLabel(type: LinkType) {
-    return { PROCESS: 'Process', RISK: 'Risk', ACTION: 'Action' }[type];
+    return this.t(`incidents.links.types.${type}`);
   }
 
   protected linksByType(type: LinkType) {
@@ -418,7 +438,7 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
 
   protected linkState(link: IncidentLink) {
     return link.linkType === 'ACTION'
-      ? { returnNavigation: { route: ['/incidents', this.selectedId()], label: 'incident' } }
+      ? { returnNavigation: { route: ['/incidents', this.selectedId()], label: this.t('incidents.page.label') } }
       : undefined;
   }
 
@@ -442,15 +462,15 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
 
   protected packageTierLabel(packageTier: TenantPackageTier) {
     return {
-      ASSURANCE: 'Assurance',
-      CORE_IMS: 'Core IMS',
-      QHSE_PRO: 'QHSE Pro'
+      ASSURANCE: this.t('packages.assurance'),
+      CORE_IMS: this.t('packages.coreIms'),
+      QHSE_PRO: this.t('packages.qhsePro')
     }[packageTier];
   }
 
   protected save() {
-    if (!this.canWrite()) return this.error.set('You do not have permission to edit incidents.');
-    if (this.form.invalid) return this.error.set('Complete the required incident fields.');
+    if (!this.canWrite()) return this.error.set(this.t('incidents.messages.noPermissionWrite'));
+    if (this.form.invalid) return this.error.set(this.t('incidents.messages.completeRequired'));
     this.saving.set(true);
     this.error.set('');
     const raw = this.form.getRawValue();
@@ -465,20 +485,20 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
     request.subscribe({
       next: (incident) => {
         this.saving.set(false);
-        this.router.navigate(['/incidents', incident.id], { state: { notice: 'Incident saved successfully.' } });
+        this.router.navigate(['/incidents', incident.id], { state: { notice: this.t('incidents.messages.saved') } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Incident save failed.'));
+        this.error.set(this.readError(error, this.t('incidents.messages.saveFailed')));
       }
     });
   }
 
   protected archiveIncident() {
-    if (!this.selectedIncident() || !this.canDelete() || !window.confirm(`Archive incident "${this.selectedIncident()?.title}"?`)) return;
+    if (!this.selectedIncident() || !this.canDelete() || !window.confirm(this.t('incidents.messages.archiveConfirm', { title: this.selectedIncident()?.title }))) return;
     this.api.delete<{ success: boolean }>(`incidents/${this.selectedId()}`).subscribe({
-      next: () => this.router.navigate(['/incidents'], { state: { notice: 'Incident archived successfully.' } }),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Incident archive failed.'))
+      next: () => this.router.navigate(['/incidents'], { state: { notice: this.t('incidents.messages.archived') } }),
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('incidents.messages.archiveFailed')))
     });
   }
 
@@ -504,11 +524,11 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
         this.linkForm.patchValue({ linkedId: '', note: '' });
         this.activeLinkComposerType.set(null);
         this.fetchIncident(this.selectedId()!);
-        this.message.set('Linked record added.');
+        this.message.set(this.t('incidents.messages.linkAdded'));
       },
       error: (error: HttpErrorResponse) => {
         this.linkSaving.set(false);
-        this.error.set(this.readError(error, 'Record link failed.'));
+        this.error.set(this.readError(error, this.t('incidents.messages.linkFailed')));
       }
     });
   }
@@ -518,9 +538,9 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
     this.api.delete<{ success: boolean }>(`incidents/${this.selectedId()}/links/${linkId}`).subscribe({
       next: () => {
         this.fetchIncident(this.selectedId()!);
-        this.message.set('Linked record removed.');
+        this.message.set(this.t('incidents.messages.linkRemoved'));
       },
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Link removal failed.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('incidents.messages.linkRemoveFailed')))
     });
   }
 
@@ -584,7 +604,7 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Incident register could not be loaded.'));
+        this.error.set(this.readError(error, this.t('incidents.messages.loadListFailed')));
       }
     });
   }
@@ -617,7 +637,7 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Incident details could not be loaded.'));
+        this.error.set(this.readError(error, this.t('incidents.messages.loadDetailsFailed')));
       }
     });
   }
@@ -625,7 +645,7 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
   private loadOwners() {
     this.api.get<UserSummary[]>('users').subscribe({
       next: (users) => this.owners.set(users),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Incident owners could not be loaded.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('incidents.messages.loadOwnersFailed')))
     });
   }
 
@@ -638,7 +658,7 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
   }
 
   private toCandidateLabel(type: LinkType, item: any) {
-    if (type === 'PROCESS') return `${item.referenceNo || 'Uncoded'} - ${item.name}`;
+    if (type === 'PROCESS') return `${item.referenceNo || this.t('incidents.common.uncoded')} - ${item.name}`;
     if (type === 'RISK') return item.title;
     return item.title;
   }
@@ -654,9 +674,9 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
 
   private linkModuleLabel(linkType: LinkType) {
     return {
-      PROCESS: 'Process Register',
-      RISK: 'Risks',
-      ACTION: 'Actions'
+      PROCESS: this.t('shell.nav.processRegister.label'),
+      RISK: this.t('shell.nav.risks.label'),
+      ACTION: this.t('shell.nav.actions.label')
     }[linkType];
   }
 
@@ -671,16 +691,16 @@ export class IncidentsPageComponent implements OnInit, OnChanges {
     }
     const reasons: string[] = [];
     if (!item.ownerUserId) {
-      reasons.push('Owner needed');
+      reasons.push(this.t('incidents.attention.reasons.ownerNeeded'));
     }
     if (item.severity === 'HIGH' || item.severity === 'CRITICAL') {
-      reasons.push('High priority');
+      reasons.push(this.t('incidents.attention.reasons.highPriority'));
     }
     if ((item.status === 'INVESTIGATION' || item.status === 'ACTION_IN_PROGRESS') && !item.rootCause) {
-      reasons.push('Investigation incomplete');
+      reasons.push(this.t('incidents.attention.reasons.investigationIncomplete'));
     }
     if (this.isStale(item.updatedAt, 30)) {
-      reasons.push('Stale');
+      reasons.push(this.t('incidents.attention.reasons.stale'));
     }
     return reasons;
   }

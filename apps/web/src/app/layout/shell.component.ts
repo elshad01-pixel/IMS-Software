@@ -178,8 +178,8 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
       top: 1.1rem;
       height: calc(100vh - 2.2rem);
       background:
-        radial-gradient(circle at top, rgba(184, 132, 51, 0.16), transparent 28%),
-        linear-gradient(180deg, rgba(23, 55, 40, 0.985), rgba(21, 44, 33, 0.985));
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.04), transparent 22%),
+        linear-gradient(180deg, rgba(33, 79, 78, 0.99), rgba(23, 59, 61, 0.995));
       color: #f9f4ea;
       overflow: hidden;
       transition: width 180ms ease, padding 180ms ease, box-shadow 180ms ease, transform 180ms ease;
@@ -219,8 +219,8 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
       width: 3rem;
       height: 3rem;
       border-radius: 18px;
-      background: linear-gradient(180deg, rgba(244, 232, 208, 0.98), rgba(216, 188, 132, 0.96));
-      color: #173728;
+      background: linear-gradient(180deg, rgba(246, 249, 248, 0.98), rgba(229, 238, 235, 0.96));
+      color: #184746;
       font-weight: 900;
       letter-spacing: 0.08em;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
@@ -264,7 +264,7 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
     .pin-toggle:hover {
       transform: none;
       box-shadow: none;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.09);
     }
 
     .pin-toggle__icon {
@@ -274,7 +274,7 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
       min-width: 2.2rem;
       min-height: 2rem;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.09);
       font-size: 0.72rem;
       font-weight: 800;
       letter-spacing: 0.06em;
@@ -314,7 +314,7 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
     }
 
     .nav-group__header:hover {
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.05);
       color: rgba(249, 244, 234, 0.8);
       transform: none;
       box-shadow: none;
@@ -383,7 +383,7 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
 
     nav a:hover {
       transform: translateX(2px);
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.06);
     }
 
     .sidebar:not(.expanded) nav a:hover {
@@ -391,7 +391,7 @@ const SIDEBAR_GROUPS_KEY = 'ims.sidebar.groups';
     }
 
     nav a.active {
-      background: rgba(255, 255, 255, 0.11);
+      background: rgba(255, 255, 255, 0.1);
       border-color: rgba(255, 255, 255, 0.1);
       font-weight: 700;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);

@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { I18nService } from '../core/i18n.service';
 import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
@@ -62,6 +63,7 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -130,6 +132,10 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
     return this.authStore.hasPermission('admin.delete');
   }
 
+  protected t(key: string, params?: Record<string, unknown>) {
+    return this.i18n.t(key, params);
+  }
+
   protected personName(user: UserSummary) {
     return `${user.firstName} ${user.lastName}`.trim();
   }
@@ -144,6 +150,13 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
 
   protected prettyStatus(value?: string | null) {
     return value ? value.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (part) => part.toUpperCase()) : '';
+  }
+
+  protected obligationStatusLabel(value?: ObligationStatus | null) {
+    if (!value) {
+      return '';
+    }
+    return this.t(`complianceObligations.status.${value}`);
   }
 
   protected statusClass(value: ObligationStatus) {
@@ -181,111 +194,101 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
 
   protected pageTitle() {
     return {
-      list: 'Compliance obligations',
-      create: 'Create obligation',
-      detail: this.selectedObligation()?.title || 'Obligation detail',
-      edit: this.selectedObligation()?.title || 'Edit obligation'
+      list: this.t('complianceObligations.page.titles.list'),
+      create: this.t('complianceObligations.page.titles.create'),
+      detail: this.selectedObligation()?.title || this.t('complianceObligations.page.titles.detail'),
+      edit: this.selectedObligation()?.title || this.t('complianceObligations.page.titles.edit')
     }[this.mode()];
   }
 
   protected pageDescription() {
     return {
-      list: 'Track legal, regulatory, and external obligations in one controlled register.',
-      create: 'Record a compliance obligation and assign ownership for review.',
-      detail: 'Review the obligation, owner, next review date, and linked IMS records.',
-      edit: 'Update the obligation without changing the linked records themselves.'
+      list: this.t('complianceObligations.page.descriptions.list'),
+      create: this.t('complianceObligations.page.descriptions.create'),
+      detail: this.t('complianceObligations.page.descriptions.detail'),
+      edit: this.t('complianceObligations.page.descriptions.edit')
     }[this.mode()];
   }
 
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: 'Compliance Obligations' }];
-    const base = [{ label: 'Compliance Obligations', link: '/compliance-obligations' }];
-    if (this.mode() === 'create') return [...base, { label: 'New obligation' }];
-    if (this.mode() === 'edit') return [...base, { label: this.selectedObligation()?.title || 'Obligation', link: `/compliance-obligations/${this.selectedId()}` }, { label: 'Edit' }];
-    return [...base, { label: this.selectedObligation()?.title || 'Obligation' }];
+    if (this.mode() === 'list') return [{ label: this.t('complianceObligations.page.label') }];
+    const base = [{ label: this.t('complianceObligations.page.label'), link: '/compliance-obligations' }];
+    if (this.mode() === 'create') return [...base, { label: this.t('complianceObligations.breadcrumbs.new') }];
+    if (this.mode() === 'edit') return [...base, { label: this.selectedObligation()?.title || this.t('complianceObligations.breadcrumbs.record'), link: `/compliance-obligations/${this.selectedId()}` }, { label: this.t('complianceObligations.breadcrumbs.edit') }];
+    return [...base, { label: this.selectedObligation()?.title || this.t('complianceObligations.breadcrumbs.record') }];
   }
 
   protected obligationGuidance() {
     const raw = this.form.getRawValue();
     if (raw.sourceName && raw.ownerUserId && raw.nextReviewDate) {
-      return 'This obligation is structured enough to be owned and reviewed on a defined cycle.';
+      return this.t('complianceObligations.form.guidance.structured');
     }
-    return 'Record what the organization must do, who reviews it, and when it should be checked again.';
+    return this.t('complianceObligations.form.guidance.default');
   }
 
   protected reviewNarrative() {
     const obligation = this.selectedObligation();
-    if (!obligation) return 'Save the obligation first, then link the records that show how it is managed.';
-    if (!obligation.links?.length) return 'This obligation is saved and can stay unlinked for now. Add process, risk, audit, or action links later when they become relevant.';
-    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('RISK')) return 'This obligation has some traceability, but it would benefit from both process and risk visibility.';
-    return 'This obligation is already supported by linked records for review and audit follow-up.';
+    if (!obligation) return this.t('complianceObligations.review.noRecord');
+    if (!obligation.links?.length) return this.t('complianceObligations.review.unlinked');
+    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('RISK')) return this.t('complianceObligations.review.partial');
+    return this.t('complianceObligations.review.strong');
   }
   protected nextStepHeadline() {
     const obligation = this.selectedObligation();
-    if (!obligation) return 'Next steps appear after the obligation is saved.';
-    if (!this.linkCountByType('PROCESS')) return 'You can link the owning process when you are ready.';
-    if (!this.linkCountByType('AUDIT')) return 'Add audit coverage later if this obligation is formally reviewed in audit.';
-    if (!this.linkCountByType('ACTION') && obligation.status !== 'OBSOLETE') return 'Add a follow-up action later only if review work or gap closure is needed.';
-    return 'This obligation already has helpful review links in place.';
+    if (!obligation) return this.t('complianceObligations.nextSteps.headline.default');
+    if (!this.linkCountByType('PROCESS')) return this.t('complianceObligations.nextSteps.headline.process');
+    if (!this.linkCountByType('AUDIT')) return this.t('complianceObligations.nextSteps.headline.audit');
+    if (!this.linkCountByType('ACTION') && obligation.status !== 'OBSOLETE') return this.t('complianceObligations.nextSteps.headline.action');
+    return this.t('complianceObligations.nextSteps.headline.done');
   }
   protected nextStepNarrative() {
     const obligation = this.selectedObligation();
-    if (!obligation) return 'Save the obligation first, then decide later whether any process, risk, audit, or action links would be useful.';
+    if (!obligation) return this.t('complianceObligations.nextSteps.copy.default');
     if (!this.linkCountByType('PROCESS')) {
-      return 'A process link is helpful when you want to show who owns or applies the requirement, but it is not required to keep the obligation on the register.';
+      return this.t('complianceObligations.nextSteps.copy.process');
     }
     if (!this.linkCountByType('AUDIT')) {
-      return 'Link an audit only when this obligation is actually checked during formal assurance activity.';
+      return this.t('complianceObligations.nextSteps.copy.audit');
     }
     if (!this.linkCountByType('ACTION') && obligation.status !== 'OBSOLETE') {
-      return 'Create or link an action only if this obligation needs follow-up, gap closure, renewal preparation, or another owned task.';
+      return this.t('complianceObligations.nextSteps.copy.action');
     }
-    return 'The obligation already shows ownership, review timing, and useful linked support in one place.';
+    return this.t('complianceObligations.nextSteps.copy.done');
   }
   protected obligationDraftTitle() {
     const obligation = this.selectedObligation();
     if (!obligation) return null;
-    return `Obligation follow-up: ${obligation.title}`;
+    return this.t('complianceObligations.messages.actionDraftTitle', { title: obligation.title });
   }
   protected obligationDraftDescription() {
     const obligation = this.selectedObligation();
     if (!obligation) return null;
     const lines = [
       obligation.description?.trim(),
-      obligation.nextReviewDate ? `Next review date: ${obligation.nextReviewDate.slice(0, 10)}` : '',
-      !this.linkCountByType('AUDIT') ? 'Audit coverage is not linked yet.' : ''
+      obligation.nextReviewDate ? this.t('complianceObligations.messages.nextReviewDate', { date: obligation.nextReviewDate.slice(0, 10) }) : '',
+      !this.linkCountByType('AUDIT') ? this.t('complianceObligations.messages.auditCoverageMissing') : ''
     ].filter(Boolean);
     return lines.join('\n\n');
   }
   protected obligationReturnNavigation(): ReturnNavigation | null {
     const id = this.selectedId();
-    return id ? { route: ['/compliance-obligations', id], label: 'compliance obligation' } : null;
+    return id ? { route: ['/compliance-obligations', id], label: this.t('complianceObligations.page.label') } : null;
   }
 
   protected sectionTitle(type: LinkType) {
-    return { PROCESS: 'Linked Processes', RISK: 'Linked Risks', AUDIT: 'Linked Audits', ACTION: 'Linked Actions' }[type];
+    return this.t(`complianceObligations.links.sections.${type}.title`);
   }
 
   protected sectionDescription(type: LinkType) {
-    return {
-      PROCESS: 'Processes affected by or responsible for this obligation.',
-      RISK: 'Risks used to track exposure or compliance impact.',
-      AUDIT: 'Optional audit evidence for obligations that are formally reviewed during assurance activity.',
-      ACTION: 'Optional follow-up actions for gaps, reminders, renewals, or review work.'
-    }[type];
+    return this.t(`complianceObligations.links.sections.${type}.copy`);
   }
 
   protected sectionEmptyCopy(type: LinkType) {
-    return {
-      PROCESS: 'Optional for now. Link the process later if you want to show clear ownership in the IMS.',
-      RISK: 'Optional for now. Link a related risk later if the obligation creates exposure or opportunity.',
-      AUDIT: 'Optional for now. Add an audit link later if this obligation is reviewed during assurance activity.',
-      ACTION: 'Optional for now. Link or create an action later only when follow-up work is needed.'
-    }[type];
+    return this.t(`complianceObligations.links.sections.${type}.empty`);
   }
 
   protected sectionPickerLabel(type: LinkType) {
-    return { PROCESS: 'Process', RISK: 'Risk', AUDIT: 'Audit', ACTION: 'Action' }[type];
+    return this.t(`complianceObligations.links.types.${type}`);
   }
 
   protected linksByType(type: LinkType) {
@@ -306,7 +309,7 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
 
   protected linkState(link: ObligationLink) {
     return link.linkType === 'ACTION'
-      ? { returnNavigation: { route: ['/compliance-obligations', this.selectedId()], label: 'compliance obligation' } }
+      ? { returnNavigation: { route: ['/compliance-obligations', this.selectedId()], label: this.t('complianceObligations.page.label') } }
       : undefined;
   }
 
@@ -336,29 +339,29 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
 
   protected packageTierLabel(packageTier: TenantPackageTier) {
     return {
-      ASSURANCE: 'Assurance',
-      CORE_IMS: 'Core IMS',
-      QHSE_PRO: 'QHSE Pro'
+      ASSURANCE: this.t('packages.assurance'),
+      CORE_IMS: this.t('packages.coreIms'),
+      QHSE_PRO: this.t('packages.qhsePro')
     }[packageTier];
   }
 
   protected attentionHeadline() {
     const obligation = this.selectedObligation();
     return obligation && this.obligationAttentionReasons(obligation).length
-      ? 'This obligation currently needs management attention.'
-      : 'This obligation is currently under control.';
+      ? this.t('complianceObligations.attention.headline.needsAttention')
+      : this.t('complianceObligations.attention.headline.underControl');
   }
 
   protected attentionNarrative() {
     const obligation = this.selectedObligation();
     if (!obligation) {
-      return 'Attention guidance appears after the obligation is saved.';
+      return this.t('complianceObligations.attention.copy.default');
     }
     const reasons = this.obligationAttentionReasons(obligation);
     if (!reasons.length) {
-      return 'Ownership, review timing, and current status are clear enough for routine oversight.';
+      return this.t('complianceObligations.attention.copy.underControl');
     }
-    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+    return this.t('complianceObligations.attention.copy.needsAttention', { reasons: reasons.map((reason) => reason.toLowerCase()).join(', ') });
   }
 
   protected attentionSummary(item: ObligationRow) {
@@ -369,25 +372,27 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
   protected attentionLabel(item: ObligationRow) {
     const reasons = this.obligationAttentionReasons(item);
     if (!reasons.length) {
-      return 'Under control';
+      return this.t('complianceObligations.attention.short.ok');
     }
     return reasons.length > 1 ? `${reasons[0]} +${reasons.length - 1}` : reasons[0];
   }
 
   protected attentionClass(item: ObligationRow) {
-    const reasons = this.obligationAttentionReasons(item);
-    if (!reasons.length) {
+    if (item.status === 'OBSOLETE') {
       return 'success';
     }
-    if (reasons.includes('Review overdue')) {
+    if (item.nextReviewDate && this.isPastDate(item.nextReviewDate)) {
       return 'danger';
     }
-    return 'warn';
+    if (this.obligationAttentionReasons(item).length) {
+      return 'warn';
+    }
+    return 'success';
   }
 
   protected save() {
-    if (!this.canWrite()) return this.error.set('You do not have permission to edit compliance obligations.');
-    if (this.form.invalid) return this.error.set('Complete the required obligation fields.');
+    if (!this.canWrite()) return this.error.set(this.t('complianceObligations.messages.noPermissionWrite'));
+    if (this.form.invalid) return this.error.set(this.t('complianceObligations.messages.completeRequired'));
     this.saving.set(true);
     this.error.set('');
     const request = this.selectedId()
@@ -396,20 +401,20 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
     request.subscribe({
       next: (obligation) => {
         this.saving.set(false);
-        this.router.navigate(['/compliance-obligations', obligation.id], { state: { notice: 'Compliance obligation saved successfully.' } });
+        this.router.navigate(['/compliance-obligations', obligation.id], { state: { notice: this.t('complianceObligations.messages.saved') } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Obligation save failed.'));
+        this.error.set(this.readError(error, this.t('complianceObligations.messages.saveFailed')));
       }
     });
   }
 
   protected archiveObligation() {
-    if (!this.selectedObligation() || !this.canDelete() || !window.confirm(`Archive obligation "${this.selectedObligation()?.title}"?`)) return;
+    if (!this.selectedObligation() || !this.canDelete() || !window.confirm(this.t('complianceObligations.messages.archiveConfirm', { title: this.selectedObligation()?.title }))) return;
     this.api.delete<{ success: boolean }>(`compliance-obligations/${this.selectedId()}`).subscribe({
-      next: () => this.router.navigate(['/compliance-obligations'], { state: { notice: 'Compliance obligation archived successfully.' } }),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Obligation archive failed.'))
+      next: () => this.router.navigate(['/compliance-obligations'], { state: { notice: this.t('complianceObligations.messages.archived') } }),
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('complianceObligations.messages.archiveFailed')))
     });
   }
 
@@ -435,11 +440,11 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
         this.linkForm.patchValue({ linkedId: '', note: '' });
         this.activeLinkComposerType.set(null);
         this.fetchObligation(this.selectedId()!);
-        this.message.set('Linked record added.');
+        this.message.set(this.t('complianceObligations.messages.linkAdded'));
       },
       error: (error: HttpErrorResponse) => {
         this.linkSaving.set(false);
-        this.error.set(this.readError(error, 'Record link failed.'));
+        this.error.set(this.readError(error, this.t('complianceObligations.messages.linkFailed')));
       }
     });
   }
@@ -449,9 +454,9 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
     this.api.delete<{ success: boolean }>(`compliance-obligations/${this.selectedId()}/links/${linkId}`).subscribe({
       next: () => {
         this.fetchObligation(this.selectedId()!);
-        this.message.set('Linked record removed.');
+        this.message.set(this.t('complianceObligations.messages.linkRemoved'));
       },
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Link removal failed.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('complianceObligations.messages.linkRemoveFailed')))
     });
   }
 
@@ -497,7 +502,7 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Compliance obligations could not be loaded.'));
+        this.error.set(this.readError(error, this.t('complianceObligations.messages.loadListFailed')));
       }
     });
   }
@@ -523,7 +528,7 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Compliance obligation details could not be loaded.'));
+        this.error.set(this.readError(error, this.t('complianceObligations.messages.loadDetailsFailed')));
       }
     });
   }
@@ -531,7 +536,7 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
   private loadOwners() {
     this.api.get<UserSummary[]>('users').subscribe({
       next: (users) => this.owners.set(users),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Obligation owners could not be loaded.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('complianceObligations.messages.loadOwnersFailed')))
     });
   }
 
@@ -544,7 +549,7 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
   }
 
   private toCandidateLabel(type: LinkType, item: any) {
-    if (type === 'PROCESS') return `${item.referenceNo || 'Uncoded'} - ${item.name}`;
+    if (type === 'PROCESS') return `${item.referenceNo || this.t('complianceObligations.common.uncoded')} - ${item.name}`;
     if (type === 'RISK') return item.title;
     if (type === 'AUDIT') return `${item.code} - ${item.title}`;
     return item.title;
@@ -562,10 +567,10 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
 
   private linkModuleLabel(linkType: LinkType) {
     return {
-      PROCESS: 'Process Register',
-      RISK: 'Risks',
-      AUDIT: 'Audits',
-      ACTION: 'Actions'
+      PROCESS: this.t('shell.nav.processRegister.label'),
+      RISK: this.t('shell.nav.risks.label'),
+      AUDIT: this.t('shell.nav.audits.label'),
+      ACTION: this.t('shell.nav.actions.label')
     }[linkType];
   }
 
@@ -580,17 +585,17 @@ export class ComplianceObligationsPageComponent implements OnInit, OnChanges {
     }
     const reasons: string[] = [];
     if (!item.ownerUserId) {
-      reasons.push('Owner needed');
+      reasons.push(this.t('complianceObligations.attention.reasons.ownerNeeded'));
     }
     if (!item.nextReviewDate) {
-      reasons.push('Review date needed');
+      reasons.push(this.t('complianceObligations.attention.reasons.reviewDateNeeded'));
     } else if (this.isPastDate(item.nextReviewDate)) {
-      reasons.push('Review overdue');
+      reasons.push(this.t('complianceObligations.attention.reasons.reviewOverdue'));
     } else if (this.isDateWithinDays(item.nextReviewDate, 30)) {
-      reasons.push('Review due soon');
+      reasons.push(this.t('complianceObligations.attention.reasons.reviewDueSoon'));
     }
     if (this.isStale(item.updatedAt, 90)) {
-      reasons.push('Stale');
+      reasons.push(this.t('complianceObligations.attention.reasons.stale'));
     }
     return reasons;
   }

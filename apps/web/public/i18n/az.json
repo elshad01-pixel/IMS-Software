@@ -1688,6 +1688,1439 @@
     "coreIms": "Core IMS",
     "qhsePro": "QHSE Pro"
   },
+  "environmentalAspects": {
+    "page": {
+      "label": "Ekoloji aspektlər",
+      "titles": {
+        "list": "Ekoloji aspektlər",
+        "create": "Ekoloji aspekt yaradın",
+        "detail": "Ekoloji aspekt detalı",
+        "edit": "Ekoloji aspekti redaktə edin"
+      },
+      "descriptions": {
+        "list": "Əhəmiyyətli ekoloji aspektləri, təsirləri və bağlı nəzarətləri təkrarlanan risk iş axını yaratmadan görünən saxlayın.",
+        "create": "Fəaliyyəti, aspekti, təsiri, mövcud nəzarətləri və baxış məsulunu bir yüngül reyestrdə qeyd edin.",
+        "detail": "Aspekti, ekoloji təsiri, mövcud nəzarətləri və bağlı VİS qeydlərini nəzərdən keçirin.",
+        "edit": "Aspekt qeydini yeniləyin, lakin bağlı prosesləri, riskləri və tapşırıqları öz ilkin modullarında saxlayın."
+      }
+    },
+    "actions": {
+      "new": "+ Yeni aspekt",
+      "edit": "Aspekti redaktə et",
+      "archive": "Arxivləşdir",
+      "back": "Geri",
+      "save": "Aspekti yadda saxla",
+      "saving": "Yadda saxlanır..."
+    },
+    "breadcrumbs": {
+      "new": "Yeni aspekt",
+      "record": "Aspekt",
+      "edit": "Redaktə"
+    },
+    "common": {
+      "uncoded": "Kodsuz",
+      "unassigned": "Təyin edilməyib"
+    },
+    "status": {
+      "ACTIVE": "Aktiv",
+      "MONITORING": "İzləmədə",
+      "OBSOLETE": "Köhnəlmiş"
+    },
+    "lifecycleStage": {
+      "NORMAL_OPERATION": "Normal fəaliyyət",
+      "ABNORMAL_OPERATION": "Qeyri-normal fəaliyyət",
+      "EMERGENCY": "Fövqəladə hal"
+    },
+    "significance": {
+      "LOW": "Aşağı",
+      "MEDIUM": "Orta",
+      "HIGH": "Yüksək"
+    },
+    "list": {
+      "filtersTitle": "Reyestr filtrləri",
+      "copy": "Ekoloji aspektləri, təsirləri və baxış məsuliyyətini bir görünən reyestrdə izləyin.",
+      "stats": {
+        "total": "Cəmi",
+        "active": "Aktiv",
+        "monitoring": "İzləmədə",
+        "highSignificance": "Yüksək əhəmiyyət"
+      },
+      "filters": {
+        "search": "Axtar",
+        "status": "Status",
+        "owner": "Məsul",
+        "all": "Hamısı"
+      },
+      "placeholders": {
+        "search": "İstinad, fəaliyyət, aspekt, təsir"
+      },
+      "loadingTitle": "Ekoloji aspektlər yüklənir",
+      "loadingCopy": "Aspekt qeydləri, təsirlər və bağlı nəzarətlər yenilənir.",
+      "emptyTitle": "Ekoloji aspekt tapılmadı",
+      "emptyCopy": "VİS daxilində ekoloji məruzəni görünən izləmək üçün ilk aspekti yaradın.",
+      "table": {
+        "aspect": "Aspekt",
+        "activity": "Fəaliyyət",
+        "lifecycleStage": "Həyat dövrü mərhələsi",
+        "significance": "Əhəmiyyət",
+        "status": "Status",
+        "reviewDate": "Baxış tarixi",
+        "links": "Bağlantılar"
+      }
+    },
+    "form": {
+      "positionTitle": "Reyestr mövqeyi",
+      "summary": {
+        "activity": "Fəaliyyət",
+        "impact": "Təsir",
+        "owner": "Məsul",
+        "defined": "Müəyyən edilib",
+        "recorded": "Qeyd olunub",
+        "assigned": "Təyin edilib",
+        "needed": "Tələb olunur"
+      },
+      "fields": {
+        "reference": "İstinad",
+        "status": "Status",
+        "activity": "Fəaliyyət",
+        "aspect": "Ekoloji aspekt",
+        "impact": "Ekoloji təsir",
+        "lifecycleStage": "Həyat dövrü mərhələsi",
+        "significance": "Əhəmiyyət",
+        "reviewDate": "Baxış tarixi",
+        "controlSummary": "Mövcud nəzarətlər",
+        "owner": "Məsul"
+      },
+      "placeholders": {
+        "reference": "EA-001",
+        "activity": "Kimyəvi köçürmə, tullantıların idarəsi, yükləmə",
+        "aspect": "Soyuducu ilə iş | Emissiyalar | Tullantı yaranması",
+        "impact": "Aspekt nəzarətsiz qaldıqda yaranan təsiri təsvir edin.",
+        "controlSummary": "Hazırda tətbiq olunan əsas əməliyyat nəzarətlərini qısa xülasə edin."
+      },
+      "definitionTitle": "Aspektin tərifi",
+      "controlContextTitle": "Nəzarət konteksti",
+      "ownerTitle": "Baxış məsuliyyəti"
+    },
+    "guidance": {
+      "structured": "Bu aspekt qeydi artıq fəaliyyəti, ekoloji məruzəni, yaranan təsiri və baxış məsuliyyətini göstərir.",
+      "default": "Fəaliyyəti, onun yaratdığı ekoloji aspekti, yaranan təsiri və mövcud nəzarətlərə kimin baxdığını qeyd edin ki, məruzə görünən qalsın."
+    },
+    "review": {
+      "noRecord": "Əvvəlcə aspekti yadda saxlayın, sonra onun necə nəzarətdə saxlandığını göstərən proses, risk və ya tapşırıq qeydlərini bağlayın.",
+      "unlinked": "Bu ekoloji aspekt qeyd olunub, lakin onun nəzarəti və izləməsi hələ bağlı qeydlər vasitəsilə görünmür.",
+      "partial": "Bu aspektin müəyyən izlenebilirliyi var, lakin həm sahib proses, həm də əlaqəli risk bağlandıqda daha güclü görünəcək.",
+      "strong": "Bu ekoloji aspekt artıq harada nəzarətdə saxlandığını və izləmənin necə idarə olunduğunu göstərir."
+    },
+    "detail": {
+      "eyebrow": "Ekoloji aspekt",
+      "noImpact": "Təsir xülasəsi hələ qeyd olunmayıb.",
+      "summary": {
+        "activity": "Fəaliyyət",
+        "lifecycleStage": "Həyat dövrü mərhələsi",
+        "owner": "Məsul",
+        "linkedRecords": "Bağlı qeydlər"
+      },
+      "reviewTitle": "Baxış mövqeyi",
+      "reviewSummary": {
+        "processes": "Proseslər",
+        "risks": "Risklər",
+        "actions": "Tapşırıqlar"
+      },
+      "nextStepsTitle": "Növbəti addımlar",
+      "nextStepsSummary": {
+        "processLink": "Proses bağlantısı",
+        "riskLink": "Risk bağlantısı",
+        "followUpAction": "İzləmə tapşırığı",
+        "linked": "Bağlanıb",
+        "needed": "Tələb olunur",
+        "prepareBelow": "Aşağıda hazırla",
+        "optional": "Opsional"
+      },
+      "fields": {
+        "controlSummary": "Mövcud nəzarətlər",
+        "reviewDate": "Baxış tarixi"
+      },
+      "empty": {
+        "controls": "Nəzarət xülasəsi qeyd olunmayıb.",
+        "reviewDate": "Baxış tarixi qeyd olunmayıb."
+      }
+    },
+    "nextSteps": {
+      "headline": {
+        "default": "Növbəti addımlar aspekt yadda saxlandıqdan sonra görünəcək.",
+        "process": "Növbəti olaraq sahib prosesi bağlayın.",
+        "risk": "Növbəti olaraq əlaqəli risk qiymətləndirməsini bağlayın.",
+        "action": "Növbəti olaraq ekoloji izləmə tapşırığı hazırlayın.",
+        "ready": "Bu aspekt əsas nəzarət qeydlərinə bağlanıb."
+      },
+      "copy": {
+        "default": "Əvvəlcə aspekti yadda saxlayın, sonra növbəti addımın proses bağlantısı, risk görünürlüğü və ya izləmə tapşırığı məsuliyyəti olduğunu müəyyən edin.",
+        "process": "Əvvəlcə əməliyyat nəzarətinə sahib olan prosesi bağlayın ki, bu aspekt canlı sistem axınına otursun.",
+        "risk": "Bu aspekt o qədər əhəmiyyətlidir ki, ekoloji məruzə və tədbirlər baxış üçün görünən risk bağlantısı tələb edir.",
+        "action": "Əgər nəzarətin yaxşılaşdırılması, izləmə və ya baxış tədbiri hələ lazımdırsa, məsuliyyət və son tarixlərin Tapşırıqlar izləyicisində görünməsi üçün tapşırıq hazırlayın.",
+        "ready": "Bu aspekt artıq sahibliyi, əməliyyat nəzarətini və izləmə görünürlüğünü bir yerdə göstərir."
+      }
+    },
+    "links": {
+      "eyebrow": "Bağlı qeydlər",
+      "title": "İzlenebilirlik qovşağı",
+      "copy": "Canlı izləməni artıq daşıyan mövcud proses, risk və tapşırıq qeydlərini bağlayın.",
+      "openComposer": "+ Bağla",
+      "closeComposer": "Bağla",
+      "remove": "Sil",
+      "emptyTitle": "Bağlı qeyd yoxdur",
+      "includedFrom": "{{tier}} paketinə daxildir",
+      "types": {
+        "PROCESS": "Proses",
+        "RISK": "Risk",
+        "ACTION": "Tapşırıq"
+      },
+      "sections": {
+        "PROCESS": {
+          "title": "Bağlı proseslər",
+          "copy": "Bu aspekt üçün əməliyyat nəzarətinə sahib olan və ya onu tətbiq edən proseslər.",
+          "empty": "Ekoloji nəzarətə sahib olan və ya onu tətbiq edən prosesi bağlayın."
+        },
+        "RISK": {
+          "title": "Bağlı risklər",
+          "copy": "Bu aspektlə bağlı məruzəni və ya nəzarət zəifliyini izləyən risklər.",
+          "empty": "Əgər bu aspekt görünən məruzə və ya tədbir ehtiyacı yaradırsa, risk bağlayın."
+        },
+        "ACTION": {
+          "title": "Bağlı tapşırıqlar",
+          "copy": "Qlobal tapşırıq reyestrində artıq izlənən təqib tapşırıqları.",
+          "empty": "İzləmə üçün artıq izlənən tapşırıqları bağlayın."
+        }
+      }
+    },
+    "linkComposer": {
+      "chooseExisting": "Mövcud {{section}} seçin",
+      "note": "Qeyd",
+      "notePlaceholder": "Bu bağlantı üçün opsional qeyd",
+      "linking": "Bağlanır...",
+      "addLink": "Bağlantı əlavə et"
+    },
+    "messages": {
+      "noPermissionWrite": "Ekoloji aspektləri redaktə etmək üçün icazəniz yoxdur.",
+      "completeRequired": "Tələb olunan ekoloji aspekt sahələrini tamamlayın.",
+      "saved": "Ekoloji aspekt uğurla yadda saxlandı.",
+      "saveFailed": "Ekoloji aspekt yadda saxlanmadı.",
+      "archiveConfirm": "\"{{title}}\" ekoloji aspekti arxivləşdirilsin?",
+      "archived": "Ekoloji aspekt uğurla arxivləşdirildi.",
+      "archiveFailed": "Ekoloji aspekt arxivləşdirilmədi.",
+      "linkAdded": "Bağlı qeyd əlavə olundu.",
+      "linkFailed": "Qeyd bağlantısı uğursuz oldu.",
+      "linkRemoved": "Bağlı qeyd silindi.",
+      "linkRemoveFailed": "Bağlantının silinməsi uğursuz oldu.",
+      "loadListFailed": "Ekoloji aspektlər yüklənə bilmədi.",
+      "loadDetailsFailed": "Ekoloji aspekt detalları yüklənə bilmədi.",
+      "loadOwnersFailed": "Ekoloji aspekt məsulları yüklənə bilmədi.",
+      "actionDraftTitle": "Aspekt izləməsi: {{title}}",
+      "impactLine": "Ekoloji təsir: {{value}}",
+      "riskLinkNeeded": "Əlaqəli risk qiymətləndirməsi hələ bağlanmalıdır."
+    }
+  },
+  "externalProviders": {
+    "page": {
+      "label": "Təchizatçılar və podratçılar",
+      "titles": {
+        "list": "Təchizatçılar və podratçılar",
+        "create": "Təchizatçı qeydini yaradın",
+        "detail": "Təchizatçı detalı",
+        "edit": "Təchizatçını redaktə edin"
+      },
+      "descriptions": {
+        "list": "Təsdiqlənmiş təchizatçıları, podratçıları və autsors xidmətləri tətbiqi satınalma sisteminə çevirmədən görünən saxlayın.",
+        "create": "Təchizatçını, illik qiymətləndirməni, təsdiq əsasını və baxış məsuliyyətini bir yüngül reyestrdə qeyd edin.",
+        "detail": "Təchizatçı nəzarət mövqeyini, illik qiymətləndirməni, təchizatçı auditini və bağlı VİS qeydlərini nəzərdən keçirin.",
+        "edit": "Qeydi yeniləyin, lakin auditləri, riskləri, öhdəlikləri və tapşırıqları öz ilkin modullarında saxlayın."
+      }
+    },
+    "actions": {
+      "new": "+ Yeni təchizatçı",
+      "edit": "Təchizatçını redaktə et",
+      "archive": "Arxivləşdir",
+      "back": "Geri",
+      "save": "Təchizatçını yadda saxla",
+      "saving": "Yadda saxlanır..."
+    },
+    "breadcrumbs": {
+      "new": "Yeni təchizatçı",
+      "record": "Təchizatçı",
+      "edit": "Redaktə"
+    },
+    "common": {
+      "uncoded": "Kodsuz",
+      "unassigned": "Təyin edilməyib"
+    },
+    "providerType": {
+      "SUPPLIER": "Təchizatçı",
+      "OUTSOURCED_SERVICE": "Autsors xidmət",
+      "CONTRACTOR": "Podratçı",
+      "CALIBRATION": "Kalibrləmə",
+      "LOGISTICS": "Logistika",
+      "OTHER": "Digər"
+    },
+    "criticality": {
+      "LOW": "Aşağı",
+      "MEDIUM": "Orta",
+      "HIGH": "Yüksək"
+    },
+    "status": {
+      "APPROVED": "Təsdiqlənib",
+      "CONDITIONAL": "Şərtli",
+      "UNDER_REVIEW": "Baxışda",
+      "INACTIVE": "Qeyri-aktiv"
+    },
+    "list": {
+      "filtersTitle": "Reyestr filtrləri",
+      "copy": "Təsdiqlənmiş təchizatçıları, podratçıları və autsors xidmətləri bir nəzarətli reyestrdə izləyin.",
+      "stats": {
+        "total": "Cəmi",
+        "approved": "Təsdiqlənib",
+        "underReview": "Baxışda",
+        "highCriticality": "Yüksək kritiklik",
+        "evaluated": "Qiymətləndirilib"
+      },
+      "filters": {
+        "search": "Axtar",
+        "status": "Status",
+        "owner": "Məsul",
+        "all": "Hamısı"
+      },
+      "placeholders": {
+        "search": "İstinad, təchizatçı, əhatə dairəsi, təsdiq əsası"
+      },
+      "loadingTitle": "Təchizatçılar yüklənir",
+      "loadingCopy": "Təsdiqlənmiş təchizatçılar, autsors xidmətlər və baxış tarixləri yenilənir.",
+      "emptyTitle": "Təchizatçı tapılmadı",
+      "emptyCopy": "Təchizatçı və autsors xidmət nəzarətini VİS daxilində görünən etmək üçün ilk qeydi yaradın.",
+      "table": {
+        "provider": "Təchizatçı",
+        "type": "Növ",
+        "criticality": "Kritiklik",
+        "status": "Status",
+        "evaluation": "Qiymətləndirmə",
+        "nextReview": "Növbəti baxış",
+        "supplierAudit": "Təchizatçı auditi",
+        "attention": "Diqqət",
+        "links": "Bağlantılar"
+      }
+    },
+    "form": {
+      "positionTitle": "Nəzarət mövqeyi",
+      "summary": {
+        "provider": "Təchizatçı",
+        "approvalBasis": "Təsdiq əsası",
+        "owner": "Məsul",
+        "annualEvaluation": "İllik qiymətləndirmə",
+        "defined": "Müəyyən edilib",
+        "recorded": "Qeyd olunub",
+        "assigned": "Təyin edilib",
+        "needed": "Tələb olunur"
+      },
+      "fields": {
+        "reference": "İstinad",
+        "status": "Status",
+        "providerName": "Təchizatçı adı",
+        "providerType": "Təchizatçı növü",
+        "criticality": "Kritiklik",
+        "suppliedScope": "Təchizat əhatəsi",
+        "approvalBasis": "Təsdiq əsası",
+        "nextReviewDate": "Növbəti baxış tarixi",
+        "owner": "Məsul"
+      },
+      "placeholders": {
+        "reference": "SUP-001",
+        "providerName": "Təsdiqlənmiş örtük podratçısı | Kalibrləmə laboratoriyası",
+        "suppliedScope": "Bu təchizatçının hansı məhsulu, xidməti və ya autsors fəaliyyəti dəstəklədiyini göstərin.",
+        "approvalBasis": "Təchizatçının niyə təsdiqləndiyini, şərti qəbul olunduğunu və ya baxışda olduğunu xülasə edin."
+      },
+      "definitionTitle": "Təchizatçının tərifi",
+      "reviewTitle": "Təsdiq və baxış"
+    },
+    "evaluation": {
+      "title": "İllik qiymətləndirmə",
+      "copy": "Təchizatçı baxışının müqayisəli qalması üçün hər il eyni sadə sorğu dəstindən istifadə edin. Hər bəndi 1-dən 5-ə qədər qiymətləndirin.",
+      "summary": {
+        "scale": "Şkala",
+        "scaleValue": "1 zəifdən 5 güclüyə",
+        "average": "Orta",
+        "totalScore": "Ümumi bal"
+      },
+      "common": {
+        "notScored": "Qiymətləndirilməyib",
+        "notScoredYet": "Hələ qiymətləndirilməyib",
+        "notEvaluated": "Qiymətləndirilməyib"
+      },
+      "fields": {
+        "evaluationDate": "Qiymətləndirmə tarixi",
+        "evaluationSummary": "Qiymətləndirmə xülasəsi",
+        "evaluationSummaryPlaceholder": "İllik baxışın əsas güclü və zəif tərəflərini və hər hansı şərtləri xülasə edin."
+      },
+      "criteria": {
+        "1": { "title": "Zəif", "definition": "Performans nəzarətdə deyil. Təkrarlanan boşluqlar və ya ciddi narahatlıqlar görünür." },
+        "2": { "title": "Kövrək", "definition": "Bəzi nəzarətlər var, lakin performans qeyri-sabitdir və tez izləmə tələb edir." },
+        "3": { "title": "Qənaətbəxş", "definition": "Tələb ümumən yerinə yetirilir, lakin izləmə və ya daha yaxşı sabitlik hələ lazımdır." },
+        "4": { "title": "Nəzarətdə", "definition": "Performans etibarlıdır və təsirlidir, yalnız kiçik yaxşılaşdırma tələb olunur." },
+        "5": { "title": "Güclü", "definition": "Performans ardıcıl olaraq güclü, proaktiv və yaxşı nəzarət olunandır." }
+      },
+      "metrics": {
+        "qualityScore": { "label": "Keyfiyyət performansı", "hint": "Uyğunluq, qüsur tarixi və şikayət göstəricisi." },
+        "deliveryScore": { "label": "Çatdırılma performansı", "hint": "Vaxtında çatdırılma, xidmət etibarlılığı və qrafik sabitliyi." },
+        "responsivenessScore": { "label": "Reaksiya sürəti", "hint": "Problem, sorğu və eskalasiya olduqda cavabın sürəti və aydınlığı." },
+        "complianceScore": { "label": "Uyğunluq və sənədləşmə", "hint": "Sertifikatlar, təsdiqlər və tələb olunan dəstəkləyici qeydlər." },
+        "traceabilityScore": { "label": "İzlenebilirlik və nəzarət", "hint": "Qeydlərin tapılması, identifikasiya və məhsul/xidmət nəzarəti." },
+        "changeControlScore": { "label": "Dəyişiklik bildirişi", "hint": "Təchizatçının təsirdən əvvəl dəyişiklikləri nə dərəcədə etibarlı bildirdiyi." }
+      },
+      "outcome": {
+        "APPROVED": "Təsdiqlənib",
+        "APPROVED_WITH_CONDITIONS": "Şərtlərlə təsdiqlənib",
+        "ESCALATED": "Eskalasiya olunub",
+        "DISQUALIFIED": "Uyğunsuz hesab edilib"
+      },
+      "narrative": {
+        "default": "İllik qiymətləndirmə təchizatçı baxışının ildən-ilə müqayisəli qalması üçün eyni sorğu məntiqindən istifadə edir.",
+        "notRecorded": "İllik qiymətləndirmə hələ qeyd olunmayıb. Keyfiyyət, çatdırılma, çeviklik, uyğunluq, izlenebilirlik və dəyişiklik nəzarətini bu sorğu ilə qiymətləndirin.",
+        "approved": "Bu təchizatçının son illik qiymətləndirməsi güclüdür və rutin təsdiq statusunu dəstəkləyir.",
+        "approvedWithConditions": "Bu təchizatçı qəbul ediləndir, lakin illik qiymətləndirmə bir və ya bir neçə nəzarət sahəsində izləmə tələb etdiyini göstərir.",
+        "escalated": "Bu təchizatçının illik qiymətləndirməsi rəhbərlik diqqəti və aydın izləmə planı tələb edir.",
+        "disqualified": "Bu təchizatçının illik qiymətləndirməsi əlavə baxış olmadan davamlı təsdiqi sual altına alacaq qədər zəifdir."
+      }
+    },
+    "liveOutcome": {
+      "incomplete": "İllik qiymətləndirmə natamamdır",
+      "approved": "Təsdiqlənib",
+      "approvedWithConditions": "Şərtlərlə təsdiqlənib",
+      "escalated": "Eskalasiya olunmuş baxış",
+      "disqualificationRisk": "Uyğunsuzluq riski"
+    },
+    "livePerformance": {
+      "title": "Canlı performans baxışı",
+      "headline": {
+        "incomplete": "Canlı təchizatçı performansını görmək üçün bütün altı sualı tamamlayın.",
+        "strong": "Cari performans güclü və sabit görünür.",
+        "acceptable": "Cari performans qənaətbəxşdir, lakin bəzi sahələrdə izləmə lazımdır.",
+        "escalated": "Cari performans eskalasiya və fokuslu yaxşılaşdırma planı tələb edir.",
+        "weak": "Cari performans müdaxiləsiz davamlı təsdiqi sual altına alacaq qədər zəifdir."
+      },
+      "copy": {
+        "incomplete": "Canlı performans baxışı illik sorğu tam qiymətləndirildikdən sonra görünür.",
+        "weak": "Prioritet izləmə bu sahələrdə tələb olunur: {{areas}}.",
+        "watch": "Təchizatçı ümumən qənaətbəxşdir, lakin bu sahələrdə izləmə lazımdır: {{areas}}.",
+        "strong": "Qiymətləndirilən bütün sahələr nəzarətdədir və ya güclüdür, bu da rutin təchizatçı baxışını dəstəkləyir."
+      },
+      "panels": {
+        "strongAreas": "Güclü sahələr",
+        "watchAreas": "İzləmə sahələri",
+        "weakAreas": "Zəif sahələr",
+        "noneYet": "Hələ yoxdur",
+        "none": "Yoxdur"
+      }
+    },
+    "guidance": {
+      "structured": "Bu təchizatçı qeydi artıq nə təchiz edildiyini, niyə təsdiqləndiyini, kimin baxdığını və son illik qiymətləndirmənin nəticəsini göstərir.",
+      "default": "Təchizatçını, nə təchiz etdiyini, niyə təsdiqləndiyini və ya şərti qəbul edildiyini, münasibətə kimin baxdığını və illik qiymətləndirmədə necə bal aldığını qeyd edin."
+    },
+    "attention": {
+      "title": "Rəhbərlik diqqəti",
+      "underControl": "Nəzarətdədir",
+      "multi": "{{first}} +{{count}}",
+      "headline": {
+        "needsAttention": "Bu təchizatçı hazırda rəhbərlik diqqəti tələb edir.",
+        "underControl": "Bu təchizatçı hazırda nəzarətdədir."
+      },
+      "copy": {
+        "unsaved": "Diqqət istiqaməti təchizatçı yadda saxlandıqdan sonra görünəcək.",
+        "underControl": "Təsdiq statusu, baxış vaxtı, qiymətləndirmə və təchizatçı audit əhatəsi rutin nəzarət üçün kifayət qədər idarə olunur.",
+        "needsAttention": "Diqqət bu səbəblərə görə tələb olunur: {{reasons}}."
+      },
+      "reasons": {
+        "OWNER_NEEDED": "Məsul tələb olunur",
+        "REVIEW_DATE_NEEDED": "Baxış tarixi tələb olunur",
+        "REVIEW_OVERDUE": "Baxış gecikib",
+        "REVIEW_DUE_SOON": "Baxış vaxtı yaxınlaşır",
+        "SUPPLIER_AUDIT_REQUIRED": "Təchizatçı auditi tələb olunur",
+        "HIGH_PRIORITY": "Yüksək prioritet",
+        "STALE": "Köhnəlib"
+      }
+    },
+    "review": {
+      "noRecord": "Əvvəlcə təchizatçını yadda saxlayın, sonra onun necə nəzarətdə saxlandığını göstərən proses, audit, risk, tapşırıq və ya öhdəlik qeydlərini bağlayın.",
+      "unlinked": "Bu təchizatçı qeyd olunub, lakin onun əməliyyat nəzarəti və baxış sübutu hələ bağlı qeydlərlə görünmür.",
+      "auditMissing": "Bu kritik təchizatçının dəstəkləyici bağlantıları var, lakin baxışı tamamlamaq üçün hələ təchizatçı auditi bağlanmalıdır.",
+      "partial": "Bu təchizatçının müəyyən izlenebilirliyi var, lakin həm sahib proses, həm də dəstəkləyici audit və ya nəzarət qeydi bağlandıqda baxış daha aydın olacaq.",
+      "strong": "Bu təchizatçı artıq harada nəzarətdə saxlandığını və hansı VİS qeydlərinin baxış və izləməni dəstəklədiyini göstərir."
+    },
+    "detail": {
+      "eyebrow": "Təchizatçı",
+      "noScope": "Təchizat əhatəsi hələ qeyd olunmayıb.",
+      "summary": {
+        "providerType": "Təchizatçı növü",
+        "owner": "Məsul",
+        "nextReview": "Növbəti baxış",
+        "annualEvaluation": "İllik qiymətləndirmə",
+        "linkedRecords": "Bağlı qeydlər"
+      },
+      "reviewTitle": "Baxış mövqeyi",
+      "reviewSummary": {
+        "processes": "Proseslər",
+        "audits": "Auditlər",
+        "risks": "Risklər",
+        "actions": "Tapşırıqlar",
+        "supplierAudit": "Təchizatçı auditi"
+      },
+      "fields": {
+        "approvalBasis": "Təsdiq əsası",
+        "criticalityFocus": "Kritiklik diqqəti",
+        "annualEvaluationResult": "İllik qiymətləndirmə nəticəsi",
+        "questionnaireBreakdown": "Sorğu bölgüsü"
+      },
+      "criticalityFocus": {
+        "high": "Bu təchizatçı yüksək təsirli məhsul, xidmət və ya autsors fəaliyyəti dəstəkləyir və formal baxışda görünən qalmalıdır.",
+        "medium": "Bu təchizatçının təsiri orta səviyyədədir və rutin baxış və audit əhatəsində qalmalıdır.",
+        "low": "Bu təchizatçı görünürlük üçün qeyd olunub və münasibət dəyişmədiyi müddətdə daha yüngül izləmə gözlənilir."
+      },
+      "empty": {
+        "approvalBasis": "Təsdiq əsası qeyd olunmayıb."
+      },
+      "evaluationDateLine": "Son illik qiymətləndirmə {{date}} tarixində qeyd olunub."
+    },
+    "auditCoverage": {
+      "title": "Təchizatçı audit gözləntisi",
+      "copy": "Kritik təchizatçılar formal illik nəzarətin bir hissəsi kimi ən azı bir bağlı təchizatçı auditinə malik olmalıdır.",
+      "notRequired": "Tələb olunmur",
+      "linked": "Bağlanıb",
+      "required": "Tələb olunur",
+      "narrative": {
+        "notRequired": "Bu təchizatçı üçün ayrıca təchizatçı auditi onun növünə və kritiklik səviyyəsinə görə tələb olunmur.",
+        "linked": "Təchizatçı auditi artıq bağlanıb, buna görə illik baxış formal audit dəstəyi göstərir.",
+        "required": "Bu təchizatçı kritik kimi qeyd olunub, ona görə formal illik nəzarəti tamamlamaq üçün təchizatçı auditi bağlayın."
+      }
+    },
+    "nextSteps": {
+      "title": "Növbəti addımlar",
+      "headline": {
+        "default": "Növbəti addımlar təchizatçı yadda saxlandıqdan sonra görünəcək.",
+        "audit": "Növbəti olaraq tələb olunan təchizatçı auditini bağlayın.",
+        "action": "Bu baxışdan təchizatçı izləmə tapşırığı hazırlayın.",
+        "traceability": "Baxış mənzərəsini proses və audit izlenebilirliyi ilə tamamlayın.",
+        "ready": "Bu təchizatçı baxışı bağlıdır və rutin nəzarət üçün hazırdır."
+      },
+      "copy": {
+        "default": "Əvvəlcə təchizatçını yadda saxlayın, sonra növbəti nəzarət addımının təchizatçı audit əhatəsi, tapşırıq izləməsi və ya izlenebilirliyin tamamlanması olduğunu müəyyən edin.",
+        "audit": "Bu təchizatçının kritiklik səviyyəsi yüksəkdir, ona görə illik nəzarət təchizatçı auditi bağlanana qədər tamamlanmış sayılmır.",
+        "action": "İllik qiymətləndirmə artıq izləmə tələb olunduğunu göstərir. Məsuliyyətin, son tarixin və baxışın qlobal izləyicidə görünməsi üçün tapşırıq hazırlayın.",
+        "traceability": "Sahib prosesi və dəstəkləyici auditi bağlayın ki, bu təchizatçı baxışı rəhbərlik təhlili və audit izləməsində daha rahat müdafiə olunsun.",
+        "ready": "Bu təchizatçı artıq təsdiq əsasını, illik qiymətləndirməni, təchizatçı audit əhatəsini və bağlı əməliyyat nəzarətlərini bir yerdə göstərir."
+      },
+      "summary": {
+        "supplierAudit": "Təchizatçı auditi",
+        "followUpAction": "İzləmə tapşırığı",
+        "traceability": "İzlenebilirlik",
+        "linked": "Bağlanıb",
+        "prepareBelow": "Aşağıda hazırla",
+        "connected": "Bağlıdır",
+        "completeLinks": "Bağlantıları tamamla"
+      }
+    },
+    "links": {
+      "eyebrow": "Bağlı qeydlər",
+      "title": "İzlenebilirlik qovşağı",
+      "copy": "Əməliyyat izləməsini artıq daşıyan mövcud proses, audit, risk, tapşırıq və öhdəlik qeydlərini bağlayın.",
+      "openComposer": "+ Bağla",
+      "closeComposer": "Bağla",
+      "remove": "Sil",
+      "emptyTitle": "Bağlı qeyd yoxdur",
+      "includedFrom": "{{tier}} paketinə daxildir",
+      "types": {
+        "PROCESS": "Proses",
+        "RISK": "Risk",
+        "AUDIT": "Audit",
+        "ACTION": "Tapşırıq",
+        "OBLIGATION": "Öhdəlik"
+      },
+      "sections": {
+        "PROCESS": {
+          "title": "Bağlı proseslər",
+          "copy": "Bu təchizatçı münasibətindən asılı olan və ya onu nəzarətdə saxlayan proseslər.",
+          "empty": "Bu təchizatçı münasibətinə sahib olan və ya ona arxalanan prosesi bağlayın."
+        },
+        "RISK": {
+          "title": "Bağlı risklər",
+          "copy": "Bu təchizatçı üçün asılılıq, davamlılıq, keyfiyyət və ya nəzarət məruzəsini izləyən risklər.",
+          "empty": "Əgər bu təchizatçı davamlılıq, keyfiyyət və ya uyğunluq məruzəsi yaradırsa, risk bağlayın."
+        },
+        "AUDIT": {
+          "title": "Bağlı auditlər",
+          "copy": "Təchizatçını və ya onun ətrafındakı proses nəzarətlərini nəzərdən keçirmiş auditlər. Yüksək kritik təchizatçıların təchizatçı auditi bağlı olmalıdır.",
+          "empty": "Təchizatçı və ya autsors xidmət nəzarətini yoxlayan auditi bağlayın. Yüksək kritik təchizatçılar üçün təchizatçı auditi seçin."
+        },
+        "ACTION": {
+          "title": "Bağlı tapşırıqlar",
+          "copy": "Qlobal tapşırıq reyestrində artıq izlənən təqib tapşırıqları.",
+          "empty": "Təchizatçı izləməsi üçün artıq izlənən tapşırıqları bağlayın."
+        },
+        "OBLIGATION": {
+          "title": "Bağlı öhdəliklər",
+          "copy": "Bu təchizatçı münasibətinə aid olan uyğunluq və ya müştəri öhdəlikləri.",
+          "empty": "Müştəri, hüquqi və ya tənzimləyici tələblər aid olduqda öhdəlikləri bağlayın."
+        }
+      }
+    },
+    "linkComposer": {
+      "chooseExisting": "Mövcud {{section}} seçin",
+      "note": "Qeyd",
+      "notePlaceholder": "Bu bağlantı üçün opsional qeyd",
+      "linking": "Bağlanır...",
+      "addLink": "Bağlantı əlavə et"
+    },
+    "messages": {
+      "noPermissionWrite": "Təchizatçı qeydlərini redaktə etmək üçün icazəniz yoxdur.",
+      "completeRequired": "Tələb olunan təchizatçı sahələrini tamamlayın.",
+      "saved": "Təchizatçı uğurla yadda saxlandı.",
+      "saveFailed": "Təchizatçı yadda saxlanmadı.",
+      "archiveConfirm": "\"{{title}}\" təchizatçısı arxivləşdirilsin?",
+      "archived": "Təchizatçı uğurla arxivləşdirildi.",
+      "archiveFailed": "Təchizatçı arxivləşdirilmədi.",
+      "linkAdded": "Bağlı qeyd əlavə olundu.",
+      "linkFailed": "Qeyd bağlantısı uğursuz oldu.",
+      "linkRemoved": "Bağlı qeyd silindi.",
+      "linkRemoveFailed": "Bağlantının silinməsi uğursuz oldu.",
+      "loadListFailed": "Təchizatçılar yüklənə bilmədi.",
+      "loadDetailsFailed": "Təchizatçı detalları yüklənə bilmədi.",
+      "loadOwnersFailed": "Təchizatçı məsulları yüklənə bilmədi.",
+      "actionDraftTitle": "Təchizatçı izləməsi: {{title}}",
+      "auditLinkNeeded": "Bu kritik təchizatçı üçün təchizatçı auditi hələ bağlanmalıdır.",
+      "evaluationOutcomeLine": "Qiymətləndirmə nəticəsi: {{value}}.",
+      "defaultDraftDescription": "{{title}} üçün illik təchizatçı baxışını izləyin."
+    }
+  },
+  "hazards": {
+    "page": {
+      "label": "Təhlükələrin müəyyənləşdirilməsi",
+      "titles": {
+        "list": "Təhlükələrin müəyyənləşdirilməsi",
+        "create": "Təhlükə qeydi yarat",
+        "detail": "Təhlükə detalı",
+        "edit": "Təhlükəni redaktə et"
+      },
+      "descriptions": {
+        "list": "İş yeri təhlükələrini, mümkün zərəri və bağlı nəzarətləri ayrıca hadisə və ya risk axını yaratmadan görünən saxlayın.",
+        "create": "Fəaliyyəti, təhlükəni, mümkün zərəri, mövcud nəzarətləri və baxış sahibini bir yüngül reyestrdə qeyd edin.",
+        "detail": "Təhlükəni, onun mümkün zərərini, mövcud nəzarətləri və bağlı İMS qeydlərini nəzərdən keçirin.",
+        "edit": "Hadisə, risk, proses və tapşırıqları öz ilkin modullarında saxlayaraq təhlükə qeydini yeniləyin."
+      }
+    },
+    "actions": {
+      "new": "+ Yeni təhlükə",
+      "edit": "Təhlükəni redaktə et",
+      "archive": "Arxivlə",
+      "back": "Geri",
+      "save": "Təhlükəni yadda saxla",
+      "saving": "Yadda saxlanır..."
+    },
+    "breadcrumbs": {
+      "new": "Yeni təhlükə",
+      "record": "Təhlükə",
+      "edit": "Redaktə et"
+    },
+    "common": {
+      "uncoded": "Kodsuz",
+      "unassigned": "Təyin edilməyib"
+    },
+    "status": {
+      "ACTIVE": "Aktiv",
+      "MONITORING": "İzləmədə",
+      "OBSOLETE": "Köhnəlib"
+    },
+    "exposureStage": {
+      "ROUTINE": "Rutin",
+      "NON_ROUTINE": "Qeyri-rutin",
+      "EMERGENCY": "Fövqəladə"
+    },
+    "severity": {
+      "LOW": "Aşağı",
+      "MEDIUM": "Orta",
+      "HIGH": "Yüksək"
+    },
+    "list": {
+      "filtersTitle": "Reyestr filtrləri",
+      "copy": "İş yeri təhlükələrini, mümkün zərəri və baxış sahibliyini bir görünən reyestrdə izləyin.",
+      "stats": {
+        "total": "Cəmi",
+        "active": "Aktiv",
+        "monitoring": "İzləmədə",
+        "highSeverity": "Yüksək ağırlıq"
+      },
+      "filters": {
+        "search": "Axtarış",
+        "status": "Status",
+        "owner": "Sahib",
+        "all": "Hamısı"
+      },
+      "placeholders": {
+        "search": "Referans, fəaliyyət, təhlükə, zərər"
+      },
+      "loadingTitle": "Təhlükələr yüklənir",
+      "loadingCopy": "Təhlükə qeydləri, mümkün zərər və bağlı nəzarətlər yenilənir.",
+      "emptyTitle": "Təhlükə tapılmadı",
+      "emptyCopy": "İş yeri məruz qalmasını İMS-də görünən izləmək üçün ilk təhlükəni yaradın.",
+      "table": {
+        "hazard": "Təhlükə",
+        "activity": "Fəaliyyət",
+        "exposureStage": "Məruz qalma mərhələsi",
+        "severity": "Ağırlıq",
+        "status": "Status",
+        "reviewDate": "Baxış tarixi",
+        "links": "Bağlantılar"
+      }
+    },
+    "form": {
+      "positionTitle": "Reyestr mövqeyi",
+      "summary": {
+        "activity": "Fəaliyyət",
+        "potentialHarm": "Mümkün zərər",
+        "owner": "Sahib",
+        "defined": "Müəyyən edilib",
+        "recorded": "Qeyd olunub",
+        "assigned": "Təyin olunub",
+        "needed": "Lazımdır"
+      },
+      "fields": {
+        "reference": "Referans",
+        "status": "Status",
+        "activity": "Fəaliyyət",
+        "hazard": "Təhlükə",
+        "potentialHarm": "Mümkün zərər",
+        "exposureStage": "Məruz qalma mərhələsi",
+        "severity": "Ağırlıq",
+        "reviewDate": "Baxış tarixi",
+        "existingControls": "Mövcud nəzarətlər",
+        "owner": "Sahib"
+      },
+      "placeholders": {
+        "reference": "HZ-001",
+        "activity": "Yükləmə, kimyəvi köçürmə, əl ilə daşıma",
+        "hazard": "Piyada və nəqliyyat vasitəsi qarşılıqlı təsiri | Şlanq sıradan çıxması | Kimyəvi sıçrama",
+        "potentialHarm": "Təhlükə nəzarətsiz qalarsa baş verə biləcək zərəri təsvir edin.",
+        "existingControls": "Bu təhlükə üzrə artıq tətbiq olunan mövcud nəzarətləri qısa qeyd edin."
+      },
+      "definitionTitle": "Təhlükənin tərifi",
+      "controlContextTitle": "Nəzarət konteksti",
+      "ownerTitle": "Baxış sahibliyi"
+    },
+    "guidance": {
+      "structured": "Bu təhlükə qeydi artıq fəaliyyəti, mümkün zərəri və nəzarət mövqeyini kimin nəzərdən keçirdiyini göstərir.",
+      "default": "Məruz qalma görünən qalsın deyə fəaliyyəti, təhlükəni, mümkün zərəri və mövcud nəzarətləri kimin nəzərdən keçirdiyini qeyd edin."
+    },
+    "review": {
+      "noRecord": "Əvvəlcə təhlükəni yadda saxlayın, sonra onun necə idarə olunduğunu göstərən proses, hadisə, risk və ya tapşırıq qeydlərini bağlayın.",
+      "unlinked": "Bu təhlükə qeyd olunub, lakin əməliyyat nəzarətləri və hadisə tarixçəsi bağlı qeydlər vasitəsilə hələ görünmür.",
+      "partial": "Bu təhlükənin müəyyən izləniləbilənliyi var, lakin həm sahib proses, həm də ən yaxın hadisə və ya az qala baş verən bağlandıqda daha güclü olacaq.",
+      "strong": "Bu təhlükə artıq harada nəzarətdə olduğunu və dəstəkləyən hadisə, risk və tapşırıq sübutlarının harada olduğunu göstərir."
+    },
+    "detail": {
+      "eyebrow": "Təhlükənin müəyyənləşdirilməsi",
+      "noPotentialHarm": "Hələ mümkün zərər xülasəsi qeyd olunmayıb.",
+      "summary": {
+        "activity": "Fəaliyyət",
+        "exposureStage": "Məruz qalma mərhələsi",
+        "owner": "Sahib",
+        "linkedRecords": "Bağlı qeydlər"
+      },
+      "reviewTitle": "Baxış mövqeyi",
+      "reviewSummary": {
+        "processes": "Proseslər",
+        "incidents": "Hadisələr",
+        "risks": "Risklər",
+        "actions": "Tapşırıqlar"
+      },
+      "nextStepsTitle": "Növbəti addımlar",
+      "nextStepsSummary": {
+        "riskLink": "Risk bağlantısı",
+        "followUpAction": "İzləmə tapşırığı",
+        "incidentContext": "Hadisə konteksti",
+        "linked": "Bağlıdır",
+        "needed": "Lazımdır",
+        "prepareBelow": "Aşağıda hazırlayın",
+        "optional": "İstəyə bağlı"
+      },
+      "fields": {
+        "existingControls": "Mövcud nəzarətlər",
+        "reviewDate": "Baxış tarixi"
+      },
+      "empty": {
+        "controls": "Nəzarət xülasəsi qeyd olunmayıb.",
+        "reviewDate": "Baxış tarixi qeyd olunmayıb."
+      }
+    },
+    "nextSteps": {
+      "headline": {
+        "default": "Təhlükə yadda saxlandıqdan sonra növbəti addımlar görünəcək.",
+        "risk": "Növbəti olaraq formal risk qiymətləndirməsini bağlayın.",
+        "action": "Növbəti olaraq təhlükə üzrə izləmə tapşırığı hazırlayın.",
+        "traceability": "Bu təhlükə üçün nəzarət və hadisə mənzərəsini tamamlayın.",
+        "ready": "Bu təhlükə əsas nəzarət qeydlərinə bağlıdır."
+      },
+      "copy": {
+        "default": "Əvvəlcə təhlükəni yadda saxlayın, sonra növbəti addımın risk qiymətləndirilməsi, tapşırıq təqibi və ya hadisə/proses izləniləbilənliyi olub-olmadığına qərar verin.",
+        "risk": "Bu təhlükə zərərin mənbəyini göstərir, lakin formal qiymətləndirmə hələ Risk reyestrində görünməlidir.",
+        "action": "Təhlükə artıq görünür və ağırlığı yüksəkdir. Nəzarətin təkmilləşdirilməsi üzrə sahiblik və tarixlər qlobal izləyicidə görünsün deyə tapşırıq hazırlayın.",
+        "traceability": "Bu təhlükənin OH&S təqibi zamanı daha rahat nəzərdən keçirilməsi üçün sahib prosesi və əlaqəli hadisə və ya az qala baş verəni bağlayın.",
+        "ready": "Bu təhlükə artıq müəyyənləşdirməni, formal risk bağlantısını, hadisə kontekstini və tapşırıq təqibini bir yerdə göstərir."
+      }
+    },
+    "links": {
+      "eyebrow": "Bağlı qeydlər",
+      "title": "İzləniləbilənlik mərkəzi",
+      "copy": "Canlı təqibi artıq daşıyan mövcud proses, hadisə, risk və tapşırıq qeydlərini bağlayın.",
+      "openComposer": "+ Bağla",
+      "closeComposer": "Bağla",
+      "remove": "Sil",
+      "emptyTitle": "Bağlı qeyd yoxdur",
+      "includedFrom": "{{tier}} paketinə daxildir",
+      "sections": {
+        "PROCESS": {
+          "title": "Bağlı proseslər",
+          "copy": "Bu təhlükə üzrə əməliyyat nəzarətinə sahib olan və ya onu tətbiq edən proseslər.",
+          "empty": "Bu təhlükə üzrə rutin nəzarətə sahib olan prosesi bağlayın."
+        },
+        "RISK": {
+          "title": "Bağlı risklər",
+          "copy": "Bu təhlükənin yaratdığı məruz qalmanı formal qiymətləndirən və idarə edən risklər. Təhlükə identifikasiya qeydi kimi qalır, risk isə qiymətləndirilmiş müalicə yolunu saxlayır.",
+          "empty": "Bu təhlükə Risk reyestrində formal qiymətləndirilibsə və risk axını ilə idarə olunursa riski bağlayın."
+        },
+        "ACTION": {
+          "title": "Bağlı tapşırıqlar",
+          "copy": "Qlobal tapşırıq reyestrində artıq izlənən təqib tapşırıqları.",
+          "empty": "Təqib üçün artıq izlənən tapşırıqları bağlayın."
+        },
+        "INCIDENT": {
+          "title": "Bağlı hadisələr",
+          "copy": "Bu təhlükəni real hadisə kontekstində göstərən hadisələr və ya az qala baş verənlər.",
+          "empty": "Hadisə sübutunun görünən qalması üçün əlaqəli hadisə və ya az qala baş verəni bağlayın."
+        }
+      },
+      "types": {
+        "PROCESS": "Proses",
+        "RISK": "Risk",
+        "ACTION": "Tapşırıq",
+        "INCIDENT": "Hadisə"
+      }
+    },
+    "linkComposer": {
+      "chooseExisting": "Mövcud {{section}} seçin",
+      "note": "Qeyd",
+      "notePlaceholder": "Bu bağlantı üçün istəyə bağlı kontekst",
+      "linking": "Bağlanır...",
+      "addLink": "Bağlantını yadda saxla"
+    },
+    "messages": {
+      "actionDraftTitle": "Təhlükə üzrə izləmə: {{title}}",
+      "potentialHarmLine": "Mümkün zərər: {{value}}",
+      "riskLinkNeeded": "Formal risk qiymətləndirməsi hələ bağlanmalıdır.",
+      "noPermissionWrite": "Təhlükələri redaktə etmək üçün icazəniz yoxdur.",
+      "completeRequired": "Tələb olunan təhlükə sahələrini tamamlayın.",
+      "saved": "Təhlükə uğurla yadda saxlandı.",
+      "saveFailed": "Təhlükə yadda saxlanmadı.",
+      "archiveConfirm": "\"{{title}}\" təhlükəsi arxivlənsin?",
+      "archived": "Təhlükə uğurla arxivləndi.",
+      "archiveFailed": "Təhlükə arxivlənmədi.",
+      "linkAdded": "Bağlı qeyd əlavə olundu.",
+      "linkFailed": "Qeyd bağlantısı uğursuz oldu.",
+      "linkRemoved": "Bağlı qeyd silindi.",
+      "linkRemoveFailed": "Bağlantı silinmədi.",
+      "loadListFailed": "Təhlükələr yüklənmədi.",
+      "loadDetailsFailed": "Təhlükə detalları yüklənmədi.",
+      "loadOwnersFailed": "Təhlükə sahibləri yüklənmədi."
+    }
+  },
+  "incidents": {
+    "page": {
+      "label": "Hadisələr",
+      "titles": {
+        "list": "Hadisələr və az qala baş verənlər",
+        "create": "Hadisə bildir",
+        "detail": "Hadisə detalı",
+        "edit": "Hadisəni redaktə et"
+      },
+      "descriptions": {
+        "list": "Hadisələri və az qala baş verənləri sistemi ayrıca əməliyyat mühərrikinə çevirmədən izləyin.",
+        "create": "Nə baş verdiyini, ilkin reaksiyanı və izləmənin kimə aid olduğunu qeyd edin.",
+        "detail": "Hadisəni, reaksiyanı və izləməni artıq idarə edən bağlı qeydləri nəzərdən keçirin.",
+        "edit": "Bağlı proses, risk və tapşırıqları öz ilkin modullarında saxlayaraq hadisə qeydini yeniləyin."
+      }
+    },
+    "actions": {
+      "new": "+ Yeni hadisə",
+      "edit": "Hadisəni redaktə et",
+      "archive": "Arxivlə",
+      "back": "Geri",
+      "backTo": "{{label}} bölməsinə qayıt",
+      "save": "Hadisəni yadda saxla",
+      "saving": "Yadda saxlanır..."
+    },
+    "breadcrumbs": {
+      "new": "Yeni hadisə",
+      "record": "Hadisə",
+      "edit": "Redaktə et"
+    },
+    "common": {
+      "uncoded": "Kodsuz",
+      "unassigned": "Təyin edilməyib",
+      "noLocation": "Məkan qeyd olunmayıb"
+    },
+    "types": {
+      "INCIDENT": "Hadisə",
+      "NEAR_MISS": "Az qala baş verən"
+    },
+    "categories": {
+      "SAFETY": "Təhlükəsizlik",
+      "ENVIRONMENT": "Ətraf mühit",
+      "QUALITY": "Keyfiyyət",
+      "SECURITY": "Mühafizə",
+      "OTHER": "Digər"
+    },
+    "severity": {
+      "LOW": "Aşağı",
+      "MEDIUM": "Orta",
+      "HIGH": "Yüksək",
+      "CRITICAL": "Kritik"
+    },
+    "status": {
+      "REPORTED": "Bildirilib",
+      "INVESTIGATION": "Araşdırmada",
+      "ACTION_IN_PROGRESS": "Tapşırıq icrada",
+      "CLOSED": "Bağlanıb",
+      "ARCHIVED": "Arxivlənib"
+    },
+    "rcaMethods": {
+      "FIVE_WHY": "5 Niyə",
+      "FISHBONE": "Balıq sümüyü",
+      "IS_IS_NOT": "Bu / bu deyil",
+      "OTHER": "Digər"
+    },
+    "list": {
+      "filtersTitle": "Reyestr filtrləri",
+      "copy": "Hadisələri və az qala baş verənləri NCR və ya CAPA axınlarını təkrarlamadan görünən saxlayın.",
+      "stats": {
+        "total": "Cəmi",
+        "nearMisses": "Az qala baş verənlər",
+        "openFollowUp": "Açıq izləmə",
+        "highCritical": "Yüksək / kritik"
+      },
+      "filters": {
+        "search": "Axtarış",
+        "type": "Növ",
+        "status": "Status",
+        "owner": "Sahib",
+        "all": "Hamısı"
+      },
+      "placeholders": {
+        "search": "Referans, başlıq, məkan"
+      },
+      "loadingTitle": "Hadisə reyestri yüklənir",
+      "loadingCopy": "Hadisələr, az qala baş verənlər və bağlı izləmə qeydləri yenilənir.",
+      "emptyTitle": "Hadisə tapılmadı",
+      "emptyCopy": "Hadisə və ya az qala baş verən ilk qeydi yaradın ki, izləmə İMS-də görünən olsun.",
+      "table": {
+        "incident": "Hadisə",
+        "type": "Növ",
+        "eventDate": "Hadisə tarixi",
+        "severity": "Ağırlıq",
+        "status": "Status",
+        "attention": "Diqqət",
+        "links": "Bağlantılar"
+      }
+    },
+    "form": {
+      "positionTitle": "Reyestr mövqeyi",
+      "summary": {
+        "eventDate": "Hadisə tarixi",
+        "owner": "Sahib",
+        "immediateAction": "İlkin tədbir",
+        "recorded": "Qeyd olunub",
+        "assigned": "Təyin olunub",
+        "needed": "Lazımdır",
+        "addFirstResponse": "İlk reaksiyanı əlavə edin"
+      },
+      "fields": {
+        "reference": "Referans",
+        "status": "Status",
+        "title": "Başlıq",
+        "type": "Növ",
+        "category": "Kateqoriya",
+        "severity": "Ağırlıq",
+        "description": "Təsvir",
+        "eventDate": "Hadisə tarixi",
+        "location": "Məkan",
+        "owner": "Sahib",
+        "immediateAction": "İlkin tədbir",
+        "investigationSummary": "Araşdırma xülasəsi",
+        "rootCause": "Kök səbəb",
+        "rcaMethod": "KSA metodu",
+        "correctiveActionSummary": "Düzəldici tədbir xülasəsi"
+      },
+      "placeholders": {
+        "reference": "INC-001",
+        "title": "Hazırlıq sahəsində soyuducu sızması",
+        "description": "Nə baş verdiyini və niyə vacib olduğunu qısa qeyd edin.",
+        "location": "İstehsal xətti, anbar, göndəriş sahəsi",
+        "immediateAction": "Vəziyyəti təhlükəsiz etmək üçün dərhal nə edildi?",
+        "investigationSummary": "Hadisənin baxışı zamanı nə müəyyən edildi?",
+        "rootCause": "Cari kök səbəb nəticəsini qeyd edin və ya aşağıdakı KSA köməyindən istifadə edin.",
+        "correctiveActionSummary": "Hansı təqib və ya təkmilləşdirmə planlaşdırılır?",
+        "rcaNotSet": "Təyin edilməyib"
+      },
+      "eventRecordTitle": "Hadisə qeydi",
+      "eventContextTitle": "Hadisə konteksti",
+      "responseTitle": "Reaksiya və izləmə",
+      "investigationTitle": "Araşdırma mövqeyi",
+      "fiveWhy": {
+        "title": "5 Niyə köməyi",
+        "copy": "Araşdırmanı səbəb zənciri ilə qurun. Kök səbəb sahəsi boş qalarsa, bu cavablar yadda saxlanarkən ora birləşdiriləcək.",
+        "steps": {
+          "0": "Niyə 1",
+          "1": "Niyə 2",
+          "2": "Niyə 3",
+          "3": "Niyə 4",
+          "4": "Niyə 5"
+        }
+      },
+      "fishbone": {
+        "title": "Balıq sümüyü köməyi",
+        "copy": "Mümkün səbəbləri kateqoriyalar üzrə qeyd edin. Kök səbəb sahəsi boş qalarsa, bu qeydlər yadda saxlanarkən ora birləşdiriləcək.",
+        "categories": {
+          "people": "İnsanlar",
+          "process": "Proses",
+          "equipment": "Avadanlıq",
+          "materials": "Materiallar",
+          "environment": "Mühit",
+          "measurement": "Ölçmə"
+        }
+      }
+    },
+    "guidance": {
+      "structured": "Bu qeyd artıq nə baş verdiyini, kimin sahibi olduğunu və ilkin olaraq nə edildiyini göstərir.",
+      "default": "Faydalı hadisə qeydi nə baş verdiyini, nə vaxt baş verdiyini, ilkin olaraq nə edildiyini və izləmənin kimə aid olduğunu göstərməlidir."
+    },
+    "review": {
+      "noRecord": "Əvvəlcə hadisəni yadda saxlayın, sonra izləməni daşıyan proses, risk və ya tapşırıq qeydlərini bağlayın.",
+      "unlinked": "Bu hadisə qeyd olunub, lakin onun əməliyyat təqibi bağlı qeydlər vasitəsilə hələ görünmür.",
+      "partial": "Bu hadisənin müəyyən izləniləbilənliyi var, lakin həm təsirlənmiş proses, həm də əlaqəli risk bağlandıqdan sonra baxış daha asan olacaq.",
+      "strong": "Bu hadisə artıq harada tətbiq olunduğunu və izləmənin necə idarə olunduğunu göstərir."
+    },
+    "investigation": {
+      "structured": "Araşdırma indi həm istifadə olunan KSA metodunu, həm də baxışdan alınan kök səbəbi göstərir.",
+      "summaryOnly": "Hadisə üzrə araşdırma qeydləri var, lakin kök səbəb metodu hələ aydın göstərilməyib.",
+      "default": "İlk bildirişi yüngül saxlayın, sonra bu bölmədə nə tapıldığını, hansı KSA metodunun istifadə olunduğunu və nəticə kök səbəbi qeyd edin.",
+      "none": "Hələ araşdırma izahı mövcud deyil.",
+      "detailStructured": "Araşdırma həm istifadə olunan KSA metodunu, həm də cari kök səbəb xülasəsini göstərir.",
+      "detailSummaryOnly": "Araşdırma qeydləri var, lakin kök səbəb metodu hələ açıq göstərilməyib.",
+      "detailNone": "Hələ strukturlaşdırılmış araşdırma qeyd olunmayıb."
+    },
+    "detail": {
+      "eyebrow": "Hadisə / az qala baş verən",
+      "noDescription": "Hələ ətraflı təsvir qeyd olunmayıb.",
+      "summary": {
+        "type": "Növ",
+        "eventDate": "Hadisə tarixi",
+        "owner": "Sahib",
+        "linkedRecords": "Bağlı qeydlər"
+      },
+      "reviewTitle": "Baxış mövqeyi",
+      "reviewSummary": {
+        "processes": "Proseslər",
+        "risks": "Risklər",
+        "actions": "Tapşırıqlar"
+      },
+      "investigationTitle": "Araşdırma mövqeyi",
+      "investigationSummary": {
+        "rcaMethod": "KSA metodu",
+        "rootCause": "Kök səbəb",
+        "immediateAction": "İlkin tədbir",
+        "recorded": "Qeyd olunub",
+        "notRecorded": "Qeyd olunmayıb"
+      },
+      "attentionTitle": "Rəhbərlik diqqəti",
+      "nextStepsTitle": "Növbəti addımlar",
+      "nextStepsSummary": {
+        "evidence": "Sübut",
+        "followUpAction": "İzləmə tapşırığı",
+        "traceability": "İzləniləbilənlik",
+        "availableBelow": "Aşağıda mövcuddur",
+        "saveFirst": "Əvvəlcə yadda saxlayın",
+        "linked": "Bağlıdır",
+        "prepareBelow": "Aşağıda hazırlayın",
+        "connected": "Qoşulub",
+        "completeLinks": "Bağlantıları tamamlayın"
+      },
+      "fields": {
+        "immediateAction": "İlkin tədbir",
+        "investigationSummary": "Araşdırma xülasəsi",
+        "rootCause": "Kök səbəb",
+        "rcaMethod": "KSA metodu",
+        "correctiveActionSummary": "Düzəldici tədbir xülasəsi",
+        "location": "Məkan"
+      },
+      "empty": {
+        "immediateAction": "İlkin tədbir qeyd olunmayıb.",
+        "investigationSummary": "Araşdırma xülasəsi qeyd olunmayıb.",
+        "rootCause": "Kök səbəb qeyd olunmayıb.",
+        "rcaMethod": "KSA metodu qeyd olunmayıb.",
+        "correctiveActionSummary": "Düzəldici tədbir xülasəsi qeyd olunmayıb.",
+        "location": "Məkan qeyd olunmayıb."
+      }
+    },
+    "nextSteps": {
+      "headline": {
+        "default": "Hadisə yadda saxlandıqdan sonra növbəti addımlar görünəcək.",
+        "investigation": "Əvvəlcə araşdırma nəticəsini tamamlayın.",
+        "action": "Araşdırma aydın olduqdan sonra hadisədən izləmə yaradın.",
+        "traceability": "Təsirlənmiş proses və əlaqəli risklə izləniləbilənliyi tamamlayın.",
+        "ready": "Hadisə izləmə və baxış üçün kifayət qədər quruluşa malikdir."
+      },
+      "copy": {
+        "default": "Hadisəni yadda saxlayın, sonra araşdırmanı, sübutları və izləməni bir yerdə nəzərdən keçirin.",
+        "investigation": "Araşdırmanı əsaslandırılmış etmək üçün KSA metodundan və kök səbəb sahəsindən istifadə edin, sonra daha çox izləməni tapşırıqlara keçirin.",
+        "action": "Hadisə düzəldici və ya qabaqlayıcı iş tələb edirsə, sahiblik və tarixlər aydın olsun deyə aşağıdakı bölmədən hadisə tapşırığı hazırlayın.",
+        "traceability": "Hadisə təkcə hadisə jurnalında deyil, daha geniş nəzarət sistemində də görünsün deyə təsirlənmiş proses və əlaqəli riski bağlayın.",
+        "ready": "Hadisə inamla bağlanana qədər bağlı tapşırığı, sübutları və izləniləbilənliyi mütəmadi nəzərdən keçirin."
+      }
+    },
+    "evidence": {
+      "eyebrow": "Sübut",
+      "title": "Bildiriş və araşdırma sübutları",
+      "copy": "İlkin bildiriş, araşdırma qeydləri, şəkillər, şahid qeydləri və izləmə sənədləri üçün bir sübut sahəsindən istifadə edin."
+    },
+    "links": {
+      "eyebrow": "Bağlı qeydlər",
+      "title": "İzləniləbilənlik mərkəzi",
+      "copy": "İzləməni artıq daşıyan mövcud proses, risk və tapşırıq qeydlərini bağlayın.",
+      "openComposer": "+ Bağla",
+      "closeComposer": "Bağla",
+      "remove": "Sil",
+      "emptyTitle": "Bağlı qeyd yoxdur",
+      "includedFrom": "{{tier}} paketinə daxildir",
+      "sections": {
+        "PROCESS": {
+          "title": "Bağlı proseslər",
+          "copy": "Bu hadisədən təsirlənən və ya nəzarəti saxlayan proseslər.",
+          "empty": "Hadisə kontekstdə nəzərdən keçirilə bilsin deyə təsirlənmiş prosesi bağlayın."
+        },
+        "RISK": {
+          "title": "Bağlı risklər",
+          "copy": "Bu hadisənin üzə çıxardığı məruz qalmanı əks etdirən risklər.",
+          "empty": "Bu hadisə mövcud zəifliyi və ya müalicə sahəsini göstərirsə risk bağlayın."
+        },
+        "ACTION": {
+          "title": "Bağlı tapşırıqlar",
+          "copy": "Qlobal tapşırıq reyestrində artıq izlənən təqib tapşırıqları.",
+          "empty": "Təqib üçün artıq izlənən tapşırıqları bağlayın."
+        }
+      },
+      "types": {
+        "PROCESS": "Proses",
+        "RISK": "Risk",
+        "ACTION": "Tapşırıq"
+      }
+    },
+    "linkComposer": {
+      "chooseExisting": "Mövcud {{section}} seçin",
+      "note": "Qeyd",
+      "notePlaceholder": "Bu bağlantı üçün istəyə bağlı kontekst",
+      "linking": "Bağlanır...",
+      "addLink": "Bağlantını yadda saxla"
+    },
+    "attention": {
+      "headline": {
+        "needsAttention": "Bu hadisə hazırda rəhbərlik diqqəti tələb edir.",
+        "underControl": "Bu hadisə hazırda nəzarət altındadır."
+      },
+      "copy": {
+        "default": "Diqqət göstərişi hadisə yadda saxlandıqdan sonra görünür.",
+        "underControl": "Sahiblik, ağırlıq və cari araşdırma vəziyyəti rutin izləmə üçün kifayət qədər aydındır.",
+        "needsAttention": "Diqqət lazımdır, çünki {{reasons}}."
+      },
+      "short": {
+        "ok": "Nəzarət altındadır"
+      },
+      "reasons": {
+        "ownerNeeded": "Sahib lazımdır",
+        "highPriority": "Yüksək prioritet",
+        "investigationIncomplete": "Araşdırma tamamlanmayıb",
+        "stale": "Qeyd köhnəlib"
+      }
+    },
+    "messages": {
+      "actionDraftTitle": "{{type}} üzrə izləmə: {{title}}",
+      "noPermissionWrite": "Hadisələri redaktə etmək üçün icazəniz yoxdur.",
+      "completeRequired": "Tələb olunan hadisə sahələrini tamamlayın.",
+      "saved": "Hadisə uğurla yadda saxlandı.",
+      "saveFailed": "Hadisə yadda saxlanmadı.",
+      "archiveConfirm": "\"{{title}}\" hadisəsi arxivlənsin?",
+      "archived": "Hadisə uğurla arxivləndi.",
+      "archiveFailed": "Hadisə arxivlənmədi.",
+      "linkAdded": "Bağlı qeyd əlavə olundu.",
+      "linkFailed": "Qeyd bağlantısı uğursuz oldu.",
+      "linkRemoved": "Bağlı qeyd silindi.",
+      "linkRemoveFailed": "Bağlantı silinmədi.",
+      "loadListFailed": "Hadisə reyestri yüklənmədi.",
+      "loadDetailsFailed": "Hadisə detalları yüklənmədi.",
+      "loadOwnersFailed": "Hadisə sahibləri yüklənmədi."
+    }
+  },
+  "complianceObligations": {
+    "page": {
+      "label": "Uyğunluq öhdəlikləri",
+      "titles": {
+        "list": "Uyğunluq öhdəlikləri",
+        "create": "Yeni uyğunluq öhdəliyi",
+        "detail": "Uyğunluq öhdəliyinin detalı",
+        "edit": "Uyğunluq öhdəliyini redaktə et"
+      },
+      "descriptions": {
+        "list": "Hüquqi, tənzimləyici, müqavilə və digər xarici öhdəlikləri bir nəzarətli reyestrdə izləyin.",
+        "create": "Yeni öhdəliyi qeyd edin, sahibi təyin edin və növbəti baxış tarixini müəyyən edin.",
+        "detail": "Sahibliyi, baxış vaxtını, bağlı təminat qeydlərini və izləmə tapşırıqlarını bir yerdə nəzərdən keçirin.",
+        "edit": "Bağlı audit, risk, proses və tapşırıqları saxlayaraq öhdəlik qeydini yeniləyin."
+      }
+    },
+    "actions": {
+      "new": "+ Yeni öhdəlik",
+      "edit": "Öhdəliyi redaktə et",
+      "archive": "Arxivlə",
+      "back": "Geri",
+      "save": "Öhdəliyi yadda saxla",
+      "saving": "Yadda saxlanır..."
+    },
+    "breadcrumbs": {
+      "new": "Yeni öhdəlik",
+      "record": "Öhdəlik",
+      "edit": "Redaktə et"
+    },
+    "common": {
+      "uncoded": "Kodsuz",
+      "generalObligation": "Ümumi öhdəlik",
+      "unassigned": "Təyin edilməyib"
+    },
+    "status": {
+      "ACTIVE": "Aktiv",
+      "UNDER_REVIEW": "Baxışda",
+      "OBSOLETE": "Köhnəlib"
+    },
+    "list": {
+      "filtersTitle": "Reyestr filtrləri",
+      "copy": "Hüquqi, tənzimləyici və digər xarici öhdəlikləri bir nəzarətli reyestrdə izləyin.",
+      "stats": {
+        "total": "Cəmi",
+        "active": "Aktiv",
+        "review": "Baxışda"
+      },
+      "filters": {
+        "search": "Axtarış",
+        "status": "Status",
+        "owner": "Sahib",
+        "all": "Hamısı"
+      },
+      "placeholders": {
+        "search": "Referans, başlıq, mənbə, növ"
+      },
+      "loadingTitle": "Öhdəliklər reyestri yüklənir",
+      "loadingCopy": "Uyğunluq öhdəlikləri və bağlı qeydlər yenilənir.",
+      "emptyTitle": "Öhdəlik tapılmadı",
+      "emptyCopy": "Tələbləri İMS-də görünən şəkildə izləmək üçün ilk öhdəliyi yaradın.",
+      "table": {
+        "obligation": "Öhdəlik",
+        "source": "Mənbə",
+        "owner": "Sahib",
+        "nextReview": "Növbəti baxış",
+        "status": "Status",
+        "attention": "Diqqət",
+        "links": "Bağlantılar"
+      }
+    },
+    "form": {
+      "positionTitle": "Reyestr mövqeyi",
+      "summary": {
+        "source": "Mənbə",
+        "owner": "Sahib",
+        "reviewDate": "Baxış tarixi",
+        "defined": "Müəyyən edilib",
+        "assigned": "Təyin olunub",
+        "needed": "Lazımdır",
+        "planned": "Planlaşdırılıb",
+        "reviewNeeded": "Növbəti baxışı təyin edin"
+      },
+      "guidance": {
+        "structured": "Bu öhdəliyin artıq aydın mənbəsi, baxış sahibi və növbəti baxış tarixi var.",
+        "default": "Əvvəlcə mənbəni, sahibliyi və növbəti baxış nöqtəsini qeyd edin. Bağlantılar lazım olduqda sonradan əlavə edilə bilər."
+      },
+      "coreDefinition": "Əsas tərif",
+      "applicabilityTitle": "Tətbiq sahəsi",
+      "reviewOwnershipTitle": "Baxış sahibliyi",
+      "fields": {
+        "reference": "Referans",
+        "status": "Status",
+        "title": "Öhdəliyin adı",
+        "source": "Mənbə",
+        "type": "Növ",
+        "jurisdiction": "Yurisdiksiya / sahə",
+        "description": "Təsvir",
+        "owner": "Sahib",
+        "reviewFrequencyMonths": "Baxış tezliyi (ay)",
+        "nextReviewDate": "Növbəti baxış tarixi"
+      },
+      "placeholders": {
+        "reference": "CO-001",
+        "title": "Tullantıların idarə olunması icazə şərtləri hər il nəzərdən keçirilir",
+        "source": "Ekoloji icazə | Müştəri müqaviləsi | Əmək məcəlləsi",
+        "type": "Hüquqi | Tənzimləyici | Müştəri | Digər",
+        "jurisdiction": "Azərbaycan | Aİ ixracı | Müştəriyə aid",
+        "description": "Təşkilatın nə etməli və ya nəyi qüvvədə saxlamalı olduğunu qısa qeyd edin.",
+        "reviewFrequencyMonths": "12"
+      }
+    },
+    "detail": {
+      "eyebrow": "Uyğunluq öhdəliyi",
+      "noDescription": "Hələ ətraflı təsvir qeyd olunmayıb.",
+      "summary": {
+        "source": "Mənbə",
+        "owner": "Sahib",
+        "nextReview": "Növbəti baxış",
+        "linkedRecords": "Bağlı qeydlər"
+      },
+      "attentionTitle": "Rəhbərlik diqqəti",
+      "reviewTitle": "Baxış mövqeyi",
+      "reviewSummary": {
+        "processes": "Proseslər",
+        "risks": "Risklər",
+        "audits": "Auditlər",
+        "actions": "Tapşırıqlar"
+      },
+      "nextStepsTitle": "Növbəti addımlar",
+      "nextStepsSummary": {
+        "processLink": "Proses bağlantısı",
+        "auditCoverage": "Audit əhatəsi",
+        "followUpAction": "İzləmə tapşırığı",
+        "linked": "Bağlıdır",
+        "needed": "Lazımdır",
+        "review": "Baxın",
+        "prepare": "Aşağıda hazırlayın"
+      }
+    },
+    "review": {
+      "noRecord": "Baxış mövqeyini görmək üçün öhdəlik qeydini açın.",
+      "unlinked": "Bu öhdəlik qeyd olunub, lakin onun necə idarə olunduğunu göstərən İMS qeydləri ilə hələ əlaqələndirilməyib.",
+      "partial": "Müəyyən izləniləbilənlik var, lakin proses və risk bağlantısı daha aydın ola bilər.",
+      "strong": "Bu öhdəliyin artıq sistem üzrə faydalı izləniləbilənliyi var və onu daha inamla nəzərdən keçirmək olur."
+    },
+    "nextSteps": {
+      "headline": {
+        "default": "Öhdəliyi nəzərdən keçirin və növbəti haraya bağlanmalı olduğunu müəyyən edin.",
+        "process": "Növbəti olaraq bu öhdəliyi işlədən prosesi bağlayın.",
+        "audit": "Bu öhdəliyin təminat daxilində harada yoxlandığını göstərin.",
+        "action": "Öhdəlik hələ aktiv nəzarət tələb edirsə izləmə yaradın və ya bağlayın.",
+        "done": "Bu öhdəlik üçün artıq işlək baxış izi mövcuddur."
+      },
+      "copy": {
+        "default": "Mənbə, sahib və baxış tarixindən başlayın. Bağlantıları yalnız izləniləbilənlik və ya təqib üçün faydalıdırsa əlavə edin.",
+        "process": "Sahibliyin və əməliyyat kontekstinin görünən qalması üçün bu öhdəliyi daşıyan prosesi bağlayın.",
+        "audit": "Bu öhdəlik təminat fəaliyyətində açıq şəkildə nəzərdən keçirilirsə audit bağlantısı əlavə edin.",
+        "action": "Öhdəlik hələ izləmə, tətbiq işi və ya baxış hazırlığı tələb edirsə tapşırıq əlavə edin.",
+        "done": "Bu öhdəlik artıq baxış, təminat və təqib üçün kifayət qədər bağlı kontekstə malikdir."
+      }
+    },
+    "links": {
+      "eyebrow": "Bağlı qeydlər",
+      "title": "İzləniləbilənlik mərkəzi",
+      "copy": "Bu öhdəliyin İMS-də necə idarə olunduğunu göstərən qeydləri bağlayın.",
+      "optionalTitle": "İstəyə bağlı bağlantılar",
+      "optionalCopy": "Bu öhdəlik artıq yadda saxlanıb. Proses, risk, audit və ya tapşırıq bağlantılarını yalnız izləniləbilənlik və ya təqib üçün faydalıdırsa əlavə edin.",
+      "openComposer": "+ Bağla",
+      "closeComposer": "Bağla",
+      "remove": "Sil",
+      "emptyTitle": "Bağlı qeyd yoxdur",
+      "includedFrom": "{{tier}} paketinə daxildir",
+      "sections": {
+        "PROCESS": {
+          "title": "Bağlı proseslər",
+          "copy": "Bu öhdəliyi icra edən və ya nəzərdən keçirən proseslər.",
+          "empty": "Hələlik istəyə bağlıdır. Bu öhdəliyi proses sahibliyinə bağlamaq istədikdə əməliyyat prosesini əlavə edin."
+        },
+        "RISK": {
+          "title": "Bağlı risklər",
+          "copy": "Bu öhdəliklə əlaqəli risklər və ya imkanlar.",
+          "empty": "Hələlik istəyə bağlıdır. Bu öhdəlik risk və ya imkan yaradırsa onu əlavə edin."
+        },
+        "AUDIT": {
+          "title": "Bağlı auditlər",
+          "copy": "Bu öhdəliyin necə yoxlandığını təsdiqləyən auditlər.",
+          "empty": "Hələlik istəyə bağlıdır. Bu öhdəlik təminat işində formal baxışdan keçirsə audit əlavə edin."
+        },
+        "ACTION": {
+          "title": "Bağlı tapşırıqlar",
+          "copy": "Bu öhdəliyin nəzarətdə qalmasına kömək edən izləmə tapşırıqları.",
+          "empty": "Hələlik istəyə bağlıdır. Öhdəlik görünən təqib tələb edirsə tapşırıq əlavə edin."
+        }
+      },
+      "types": {
+        "PROCESS": "Proses",
+        "RISK": "Risk",
+        "AUDIT": "Audit",
+        "ACTION": "Tapşırıq"
+      }
+    },
+    "linkComposer": {
+      "chooseExisting": "Mövcud {{section}} seçin",
+      "note": "Qeyd",
+      "notePlaceholder": "Bu bağlantı üçün istəyə bağlı kontekst",
+      "linking": "Bağlanır...",
+      "addLink": "Bağlantı əlavə et"
+    },
+    "attention": {
+      "headline": {
+        "needsAttention": "Bu öhdəlik hələ müəyyən aktiv idarəetmə diqqəti tələb edir.",
+        "underControl": "Bu öhdəlik hazırda nəzarət altındadır."
+      },
+      "copy": {
+        "default": "İzləmə lazım olub-olmadığını müəyyən etmək üçün cari sahibliyi, baxış vaxtını və bağlı qeydləri nəzərdən keçirin.",
+        "underControl": "Cari sahib, baxış vaxtı və bağlı qeydlər bu öhdəlik üçün işlək nəzarət səviyyəsi yaradır.",
+        "needsAttention": "Bu öhdəlik {{reasons}} ilə bağlı hələ diqqət tələb edir."
+      },
+      "short": {
+        "ok": "Nəzarət altındadır"
+      },
+      "reasons": {
+        "ownerNeeded": "Sahib lazımdır",
+        "reviewDateNeeded": "Baxış tarixi lazımdır",
+        "reviewOverdue": "Baxış gecikib",
+        "reviewDueSoon": "Baxış vaxtı yaxınlaşır",
+        "stale": "Qeyd köhnəlib"
+      }
+    },
+    "messages": {
+      "actionDraftTitle": "Uyğunluq öhdəliyi üzrə təqib: {{title}}",
+      "nextReviewDate": "Növbəti baxış tarixi: {{date}}",
+      "auditCoverageMissing": "Audit əhatəsi hələ bağlanmayıb.",
+      "noPermissionWrite": "Uyğunluq öhdəliklərini yeniləmək üçün icazəniz yoxdur.",
+      "completeRequired": "Tələb olunan öhdəlik sahələrini tamamlayın.",
+      "saved": "Uyğunluq öhdəliyi uğurla yadda saxlandı.",
+      "saveFailed": "Uyğunluq öhdəliyi yadda saxlanmadı.",
+      "archiveConfirm": "\"{{title}}\" uyğunluq öhdəliyi arxivlənsin?",
+      "archived": "Uyğunluq öhdəliyi arxivləndi.",
+      "archiveFailed": "Uyğunluq öhdəliyi arxivlənmədi.",
+      "linkAdded": "Bağlı qeyd əlavə olundu.",
+      "linkFailed": "Bağlantı yadda saxlanmadı.",
+      "linkRemoved": "Bağlı qeyd silindi.",
+      "linkRemoveFailed": "Bağlı qeyd silinmədi.",
+      "loadListFailed": "Uyğunluq öhdəlikləri yüklənmədi.",
+      "loadDetailsFailed": "Uyğunluq öhdəliyinin detalları yüklənmədi.",
+      "loadOwnersFailed": "Öhdəlik sahibləri yüklənmədi."
+    }
+  },
   "processRegister": {
     "page": {
       "label": "Proses reyestri",

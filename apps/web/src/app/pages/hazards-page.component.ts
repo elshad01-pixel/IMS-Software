@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { I18nService } from '../core/i18n.service';
 import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
@@ -64,6 +65,7 @@ export class HazardsPageComponent implements OnInit, OnChanges {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -126,10 +128,14 @@ export class HazardsPageComponent implements OnInit, OnChanges {
 
   protected canWrite() { return this.authStore.hasPermission('hazards.write'); }
   protected canDelete() { return this.authStore.hasPermission('admin.delete'); }
+  protected t(key: string, params?: Record<string, unknown>) { return this.i18n.t(key, params); }
   protected personName(user: UserSummary) { return `${user.firstName} ${user.lastName}`.trim(); }
   protected readInputValue(event: Event) { return (event.target as HTMLInputElement).value; }
   protected readSelectValue(event: Event) { return (event.target as HTMLSelectElement).value; }
   protected prettyStatus(value?: string | null) { return value ? value.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (part) => part.toUpperCase()) : ''; }
+  protected hazardStatusLabel(value?: HazardStatus | null) { return value ? this.t(`hazards.status.${value}`) : ''; }
+  protected hazardExposureStageLabel(value?: HazardExposureStage | null) { return value ? this.t(`hazards.exposureStage.${value}`) : ''; }
+  protected hazardSeverityLabel(value?: HazardSeverity | null) { return value ? this.t(`hazards.severity.${value}`) : ''; }
   protected statusClass(value: HazardStatus) { return value === 'ACTIVE' ? 'success' : value === 'MONITORING' ? 'warn' : 'neutral'; }
   protected severityClass(value: HazardSeverity) { return value === 'HIGH' ? 'danger' : value === 'MEDIUM' ? 'warn' : 'neutral'; }
   protected activeCount() { return this.hazards().filter((item) => item.status === 'ACTIVE').length; }
@@ -155,112 +161,102 @@ export class HazardsPageComponent implements OnInit, OnChanges {
 
   protected pageTitle() {
     return {
-      list: 'Hazard identification',
-      create: 'Create hazard record',
-      detail: this.selectedHazard()?.hazard || 'Hazard detail',
-      edit: this.selectedHazard()?.hazard || 'Edit hazard'
+      list: this.t('hazards.page.titles.list'),
+      create: this.t('hazards.page.titles.create'),
+      detail: this.selectedHazard()?.hazard || this.t('hazards.page.titles.detail'),
+      edit: this.selectedHazard()?.hazard || this.t('hazards.page.titles.edit')
     }[this.mode()];
   }
 
   protected pageDescription() {
     return {
-      list: 'Keep workplace hazards, potential harm, and linked controls visible without creating a duplicate incident or risk workflow.',
-      create: 'Record the activity, hazard, potential harm, current controls, and review owner in one lightweight register.',
-      detail: 'Review the hazard, its potential harm, current controls, and linked IMS records.',
-      edit: 'Update the hazard record while keeping incidents, risks, processes, and actions in their original modules.'
+      list: this.t('hazards.page.descriptions.list'),
+      create: this.t('hazards.page.descriptions.create'),
+      detail: this.t('hazards.page.descriptions.detail'),
+      edit: this.t('hazards.page.descriptions.edit')
     }[this.mode()];
   }
 
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: 'Hazard Identification' }];
-    const base = [{ label: 'Hazard Identification', link: '/hazards' }];
-    if (this.mode() === 'create') return [...base, { label: 'New hazard' }];
-    if (this.mode() === 'edit') return [...base, { label: this.selectedHazard()?.hazard || 'Hazard', link: `/hazards/${this.selectedId()}` }, { label: 'Edit' }];
-    return [...base, { label: this.selectedHazard()?.hazard || 'Hazard' }];
+    if (this.mode() === 'list') return [{ label: this.t('hazards.page.label') }];
+    const base = [{ label: this.t('hazards.page.label'), link: '/hazards' }];
+    if (this.mode() === 'create') return [...base, { label: this.t('hazards.breadcrumbs.new') }];
+    if (this.mode() === 'edit') return [...base, { label: this.selectedHazard()?.hazard || this.t('hazards.breadcrumbs.record'), link: `/hazards/${this.selectedId()}` }, { label: this.t('hazards.breadcrumbs.edit') }];
+    return [...base, { label: this.selectedHazard()?.hazard || this.t('hazards.breadcrumbs.record') }];
   }
 
   protected hazardGuidance() {
     const raw = this.form.getRawValue();
     if (raw.activity && raw.hazard && raw.potentialHarm && raw.ownerUserId) {
-      return 'This hazard record already shows the activity, the exposed harm, and who reviews the control position.';
+      return this.t('hazards.guidance.structured');
     }
-    return 'Record the activity, the hazard, the potential harm, and who reviews the current controls so the exposure stays visible.';
+    return this.t('hazards.guidance.default');
   }
 
   protected reviewNarrative() {
     const hazard = this.selectedHazard();
-    if (!hazard) return 'Save the hazard first, then link the process, incident, risk, or action records that show how it is being managed.';
-    if (!hazard.links?.length) return 'This hazard is recorded, but the operational controls and event history are not yet visible through linked records.';
-    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('INCIDENT')) return 'This hazard has some traceability, but it will be stronger once the owning process and the closest incident or near miss are both linked.';
-    return 'This hazard already shows where it is controlled and where the supporting incident, risk, and action evidence sits.';
+    if (!hazard) return this.t('hazards.review.noRecord');
+    if (!hazard.links?.length) return this.t('hazards.review.unlinked');
+    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('INCIDENT')) return this.t('hazards.review.partial');
+    return this.t('hazards.review.strong');
   }
   protected nextStepHeadline() {
     const hazard = this.selectedHazard();
-    if (!hazard) return 'Next steps appear after the hazard is saved.';
-    if (!this.linkCountByType('RISK')) return 'Link the formal risk assessment next.';
-    if (!this.linkCountByType('ACTION') && hazard.severity === 'HIGH') return 'Prepare a hazard follow-up action next.';
-    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('INCIDENT')) return 'Complete the control and event picture for this hazard.';
-    return 'This hazard is connected to the main control records.';
+    if (!hazard) return this.t('hazards.nextSteps.headline.default');
+    if (!this.linkCountByType('RISK')) return this.t('hazards.nextSteps.headline.risk');
+    if (!this.linkCountByType('ACTION') && hazard.severity === 'HIGH') return this.t('hazards.nextSteps.headline.action');
+    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('INCIDENT')) return this.t('hazards.nextSteps.headline.traceability');
+    return this.t('hazards.nextSteps.headline.ready');
   }
   protected nextStepNarrative() {
     const hazard = this.selectedHazard();
-    if (!hazard) return 'Save the hazard first, then decide whether the next step is risk assessment, action follow-up, or event/process traceability.';
+    if (!hazard) return this.t('hazards.nextSteps.copy.default');
     if (!this.linkCountByType('RISK')) {
-      return 'This hazard identifies the source of harm, but the formal assessment still needs to be visible in the Risk register.';
+      return this.t('hazards.nextSteps.copy.risk');
     }
     if (!this.linkCountByType('ACTION') && hazard.severity === 'HIGH') {
-      return 'The hazard is already visible and high severity. Prepare an action so control improvement ownership and due dates stay visible in the global tracker.';
+      return this.t('hazards.nextSteps.copy.action');
     }
     if (!this.linkCountByType('PROCESS') || !this.linkCountByType('INCIDENT')) {
-      return 'Link the owning process and any related incident or near miss so this hazard is easier to review during OH&S follow-up.';
+      return this.t('hazards.nextSteps.copy.traceability');
     }
-    return 'The hazard already shows identification, formal risk connection, event context, and action follow-up in one place.';
+    return this.t('hazards.nextSteps.copy.ready');
   }
   protected hazardDraftTitle() {
     const hazard = this.selectedHazard();
     if (!hazard) return null;
-    return `Hazard follow-up: ${hazard.hazard}`;
+    return this.t('hazards.messages.actionDraftTitle', { title: hazard.hazard });
   }
   protected hazardDraftDescription() {
     const hazard = this.selectedHazard();
     if (!hazard) return null;
     const lines = [
       hazard.existingControls?.trim(),
-      `Potential harm: ${hazard.potentialHarm}`,
-      !this.linkCountByType('RISK') ? 'Formal risk assessment still needs to be linked.' : ''
+      this.t('hazards.messages.potentialHarmLine', { value: hazard.potentialHarm }),
+      !this.linkCountByType('RISK') ? this.t('hazards.messages.riskLinkNeeded') : ''
     ].filter(Boolean);
     return lines.join('\n\n');
   }
   protected hazardReturnNavigation(): ReturnNavigation | null {
     const id = this.selectedId();
-    return id ? { route: ['/hazards', id], label: 'hazard record' } : null;
+    return id ? { route: ['/hazards', id], label: this.t('hazards.page.label') } : null;
   }
 
-  protected sectionTitle(type: LinkType) { return { PROCESS: 'Linked Processes', RISK: 'Linked Risks', ACTION: 'Linked Actions', INCIDENT: 'Linked Incidents' }[type]; }
+  protected sectionTitle(type: LinkType) { return this.t(`hazards.links.sections.${type}.title`); }
   protected sectionDescription(type: LinkType) {
-    return {
-      PROCESS: 'Processes that own or apply the operational control for this hazard.',
-      RISK: 'Risks that formally assess and manage the exposure created by this hazard. The hazard stays as the identification record, while the risk holds the assessed treatment path.',
-      ACTION: 'Follow-up actions already tracked in the global action register.',
-      INCIDENT: 'Incidents or near misses that show the hazard in a real event context.'
-    }[type];
+    return this.t(`hazards.links.sections.${type}.copy`);
   }
   protected sectionEmptyCopy(type: LinkType) {
-    return {
-      PROCESS: 'Link the process that owns the routine control for this hazard.',
-      RISK: 'Link a risk when this hazard has been formally assessed in the Risk register and is being managed through the risk workflow.',
-      ACTION: 'Link actions already being tracked for follow-up.',
-      INCIDENT: 'Link a related incident or near miss to keep event evidence visible.'
-    }[type];
+    return this.t(`hazards.links.sections.${type}.empty`);
   }
-  protected sectionPickerLabel(type: LinkType) { return { PROCESS: 'Process', RISK: 'Risk', ACTION: 'Action', INCIDENT: 'Incident' }[type]; }
+  protected sectionPickerLabel(type: LinkType) { return this.t(`hazards.links.types.${type}`); }
   protected linksByType(type: LinkType) { return (this.selectedHazard()?.links || []).filter((link) => link.linkType === type); }
   protected linkCountByType(type: LinkType) { return this.linksByType(type).length; }
   protected linkRoute(link: HazardLink) { return link.path || '/hazards'; }
   protected linkQueryParams(link: HazardLink) { return link.linkType === 'ACTION' ? { focusActionId: link.linkedId } : undefined; }
   protected linkState(link: HazardLink) {
     return link.linkType === 'ACTION'
-      ? { returnNavigation: { route: ['/hazards', this.selectedId()], label: 'hazard record' } }
+      ? { returnNavigation: { route: ['/hazards', this.selectedId()], label: this.t('hazards.page.label') } }
       : undefined;
   }
 
@@ -284,15 +280,15 @@ export class HazardsPageComponent implements OnInit, OnChanges {
 
   protected packageTierLabel(packageTier: TenantPackageTier) {
     return {
-      ASSURANCE: 'Assurance',
-      CORE_IMS: 'Core IMS',
-      QHSE_PRO: 'QHSE Pro'
+      ASSURANCE: this.t('packages.assurance'),
+      CORE_IMS: this.t('packages.coreIms'),
+      QHSE_PRO: this.t('packages.qhsePro')
     }[packageTier];
   }
 
   protected save() {
-    if (!this.canWrite()) return this.error.set('You do not have permission to edit hazards.');
-    if (this.form.invalid) return this.error.set('Complete the required hazard fields.');
+    if (!this.canWrite()) return this.error.set(this.t('hazards.messages.noPermissionWrite'));
+    if (this.form.invalid) return this.error.set(this.t('hazards.messages.completeRequired'));
     this.saving.set(true);
     this.error.set('');
     const request = this.selectedId()
@@ -301,20 +297,20 @@ export class HazardsPageComponent implements OnInit, OnChanges {
     request.subscribe({
       next: (hazard) => {
         this.saving.set(false);
-        this.router.navigate(['/hazards', hazard.id], { state: { notice: 'Hazard saved successfully.' } });
+        this.router.navigate(['/hazards', hazard.id], { state: { notice: this.t('hazards.messages.saved') } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Hazard save failed.'));
+        this.error.set(this.readError(error, this.t('hazards.messages.saveFailed')));
       }
     });
   }
 
   protected archiveHazard() {
-    if (!this.selectedHazard() || !this.canDelete() || !window.confirm(`Archive hazard "${this.selectedHazard()?.hazard}"?`)) return;
+    if (!this.selectedHazard() || !this.canDelete() || !window.confirm(this.t('hazards.messages.archiveConfirm', { title: this.selectedHazard()?.hazard }))) return;
     this.api.delete<{ success: boolean }>(`hazards/${this.selectedId()}`).subscribe({
-      next: () => this.router.navigate(['/hazards'], { state: { notice: 'Hazard archived successfully.' } }),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Hazard archive failed.'))
+      next: () => this.router.navigate(['/hazards'], { state: { notice: this.t('hazards.messages.archived') } }),
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('hazards.messages.archiveFailed')))
     });
   }
 
@@ -340,11 +336,11 @@ export class HazardsPageComponent implements OnInit, OnChanges {
         this.linkForm.patchValue({ linkedId: '', note: '' });
         this.activeLinkComposerType.set(null);
         this.fetchHazard(this.selectedId()!);
-        this.message.set('Linked record added.');
+        this.message.set(this.t('hazards.messages.linkAdded'));
       },
       error: (error: HttpErrorResponse) => {
         this.linkSaving.set(false);
-        this.error.set(this.readError(error, 'Record link failed.'));
+        this.error.set(this.readError(error, this.t('hazards.messages.linkFailed')));
       }
     });
   }
@@ -354,9 +350,9 @@ export class HazardsPageComponent implements OnInit, OnChanges {
     this.api.delete<{ success: boolean }>(`hazards/${this.selectedId()}/links/${linkId}`).subscribe({
       next: () => {
         this.fetchHazard(this.selectedId()!);
-        this.message.set('Linked record removed.');
+        this.message.set(this.t('hazards.messages.linkRemoved'));
       },
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Link removal failed.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('hazards.messages.linkRemoveFailed')))
     });
   }
 
@@ -402,7 +398,7 @@ export class HazardsPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Hazards could not be loaded.'));
+        this.error.set(this.readError(error, this.t('hazards.messages.loadListFailed')));
       }
     });
   }
@@ -428,7 +424,7 @@ export class HazardsPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Hazard details could not be loaded.'));
+        this.error.set(this.readError(error, this.t('hazards.messages.loadDetailsFailed')));
       }
     });
   }
@@ -436,7 +432,7 @@ export class HazardsPageComponent implements OnInit, OnChanges {
   private loadOwners() {
     this.api.get<UserSummary[]>('users').subscribe({
       next: (users) => this.owners.set(users),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Hazard owners could not be loaded.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('hazards.messages.loadOwnersFailed')))
     });
   }
 
@@ -449,9 +445,9 @@ export class HazardsPageComponent implements OnInit, OnChanges {
   }
 
   private toCandidateLabel(type: LinkType, item: any) {
-    if (type === 'PROCESS') return `${item.referenceNo || 'Uncoded'} - ${item.name}`;
+    if (type === 'PROCESS') return `${item.referenceNo || this.t('hazards.common.uncoded')} - ${item.name}`;
     if (type === 'RISK') return item.title;
-    if (type === 'INCIDENT') return `${item.referenceNo || 'Uncoded'} - ${item.title}`;
+    if (type === 'INCIDENT') return `${item.referenceNo || this.t('hazards.common.uncoded')} - ${item.title}`;
     return item.title;
   }
 
@@ -467,10 +463,10 @@ export class HazardsPageComponent implements OnInit, OnChanges {
 
   private linkModuleLabel(linkType: LinkType) {
     return {
-      PROCESS: 'Process Register',
-      RISK: 'Risks',
-      ACTION: 'Actions',
-      INCIDENT: 'Incidents'
+      PROCESS: this.t('shell.nav.processRegister.label'),
+      RISK: this.t('shell.nav.risks.label'),
+      ACTION: this.t('shell.nav.actions.label'),
+      INCIDENT: this.t('shell.nav.incidents.label')
     }[linkType];
   }
 

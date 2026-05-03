@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { I18nService } from '../core/i18n.service';
 import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
@@ -64,6 +65,7 @@ export class EnvironmentalAspectsPageComponent implements OnInit, OnChanges {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -126,10 +128,14 @@ export class EnvironmentalAspectsPageComponent implements OnInit, OnChanges {
 
   protected canWrite() { return this.authStore.hasPermission('aspects.write'); }
   protected canDelete() { return this.authStore.hasPermission('admin.delete'); }
+  protected t(key: string, params?: Record<string, unknown>) { return this.i18n.t(key, params); }
   protected personName(user: UserSummary) { return `${user.firstName} ${user.lastName}`.trim(); }
   protected readInputValue(event: Event) { return (event.target as HTMLInputElement).value; }
   protected readSelectValue(event: Event) { return (event.target as HTMLSelectElement).value; }
   protected prettyStatus(value?: string | null) { return value ? value.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (part) => part.toUpperCase()) : ''; }
+  protected aspectStatusLabel(value?: AspectStatus | null) { return value ? this.t(`environmentalAspects.status.${value}`) : ''; }
+  protected aspectStageLabel(value?: AspectStage | null) { return value ? this.t(`environmentalAspects.lifecycleStage.${value}`) : ''; }
+  protected aspectSignificanceLabel(value?: AspectSignificance | null) { return value ? this.t(`environmentalAspects.significance.${value}`) : ''; }
   protected statusClass(value: AspectStatus) { return value === 'ACTIVE' ? 'success' : value === 'MONITORING' ? 'warn' : 'neutral'; }
   protected significanceClass(value: AspectSignificance) { return value === 'HIGH' ? 'danger' : value === 'MEDIUM' ? 'warn' : 'neutral'; }
   protected activeCount() { return this.aspects().filter((item) => item.status === 'ACTIVE').length; }
@@ -155,91 +161,91 @@ export class EnvironmentalAspectsPageComponent implements OnInit, OnChanges {
 
   protected pageTitle() {
     return {
-      list: 'Environmental aspects',
-      create: 'Create environmental aspect',
-      detail: this.selectedAspect()?.aspect || 'Environmental aspect detail',
-      edit: this.selectedAspect()?.aspect || 'Edit environmental aspect'
+      list: this.t('environmentalAspects.page.titles.list'),
+      create: this.t('environmentalAspects.page.titles.create'),
+      detail: this.selectedAspect()?.aspect || this.t('environmentalAspects.page.titles.detail'),
+      edit: this.selectedAspect()?.aspect || this.t('environmentalAspects.page.titles.edit')
     }[this.mode()];
   }
 
   protected pageDescription() {
     return {
-      list: 'Keep significant environmental aspects and impacts visible without building a separate operational control system.',
-      create: 'Record the activity, aspect, impact, significance, and review owner in one lightweight register.',
-      detail: 'Review the aspect, its impact, current controls, and linked IMS records.',
-      edit: 'Update the aspect record while keeping linked processes, risks, and actions in their original modules.'
+      list: this.t('environmentalAspects.page.descriptions.list'),
+      create: this.t('environmentalAspects.page.descriptions.create'),
+      detail: this.t('environmentalAspects.page.descriptions.detail'),
+      edit: this.t('environmentalAspects.page.descriptions.edit')
     }[this.mode()];
   }
 
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: 'Environmental Aspects' }];
-    const base = [{ label: 'Environmental Aspects', link: '/environmental-aspects' }];
-    if (this.mode() === 'create') return [...base, { label: 'New aspect' }];
-    if (this.mode() === 'edit') return [...base, { label: this.selectedAspect()?.aspect || 'Aspect', link: `/environmental-aspects/${this.selectedId()}` }, { label: 'Edit' }];
-    return [...base, { label: this.selectedAspect()?.aspect || 'Aspect' }];
+    if (this.mode() === 'list') return [{ label: this.t('environmentalAspects.page.label') }];
+    const base = [{ label: this.t('environmentalAspects.page.label'), link: '/environmental-aspects' }];
+    if (this.mode() === 'create') return [...base, { label: this.t('environmentalAspects.breadcrumbs.new') }];
+    if (this.mode() === 'edit') return [...base, { label: this.selectedAspect()?.aspect || this.t('environmentalAspects.breadcrumbs.record'), link: `/environmental-aspects/${this.selectedId()}` }, { label: this.t('environmentalAspects.breadcrumbs.edit') }];
+    return [...base, { label: this.selectedAspect()?.aspect || this.t('environmentalAspects.breadcrumbs.record') }];
   }
 
   protected aspectGuidance() {
     const raw = this.form.getRawValue();
     if (raw.activity && raw.aspect && raw.impact && raw.ownerUserId) {
-      return 'This aspect record is already strong enough to show the activity, environmental exposure, impact, and review ownership.';
+      return this.t('environmentalAspects.guidance.structured');
     }
-    return 'Record the activity, the environmental aspect it creates, the resulting impact, and who reviews the control position.';
+    return this.t('environmentalAspects.guidance.default');
   }
 
   protected reviewNarrative() {
     const aspect = this.selectedAspect();
-    if (!aspect) return 'Save the aspect first, then link the process, risk, or action records that show how it is controlled.';
-    if (!aspect.links?.length) return 'This environmental aspect is recorded, but its control and follow-up are not yet visible through linked records.';
-    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('RISK')) return 'This aspect has some traceability, but it will be easier to review once both the owning process and related risk are linked.';
-    return 'This environmental aspect already shows where it is controlled and how its follow-up is being managed.';
+    if (!aspect) return this.t('environmentalAspects.review.noRecord');
+    if (!aspect.links?.length) return this.t('environmentalAspects.review.unlinked');
+    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('RISK')) return this.t('environmentalAspects.review.partial');
+    return this.t('environmentalAspects.review.strong');
   }
   protected nextStepHeadline() {
     const aspect = this.selectedAspect();
-    if (!aspect) return 'Next steps appear after the aspect is saved.';
-    if (!this.linkCountByType('PROCESS')) return 'Link the owning process next.';
-    if (!this.linkCountByType('RISK') && aspect.significance === 'HIGH') return 'Link the related risk assessment next.';
-    if (!this.linkCountByType('ACTION') && aspect.status !== 'OBSOLETE') return 'Prepare an environmental follow-up action if improvement is still needed.';
-    return 'This aspect is connected to the main control records.';
+    if (!aspect) return this.t('environmentalAspects.nextSteps.headline.default');
+    if (!this.linkCountByType('PROCESS')) return this.t('environmentalAspects.nextSteps.headline.process');
+    if (!this.linkCountByType('RISK') && aspect.significance === 'HIGH') return this.t('environmentalAspects.nextSteps.headline.risk');
+    if (!this.linkCountByType('ACTION') && aspect.status !== 'OBSOLETE') return this.t('environmentalAspects.nextSteps.headline.action');
+    return this.t('environmentalAspects.nextSteps.headline.ready');
   }
   protected nextStepNarrative() {
     const aspect = this.selectedAspect();
-    if (!aspect) return 'Save the aspect first, then decide whether the next step is process linkage, risk visibility, or follow-up action ownership.';
+    if (!aspect) return this.t('environmentalAspects.nextSteps.copy.default');
     if (!this.linkCountByType('PROCESS')) {
-      return 'Link the process that owns the operational control first so this aspect is anchored in the live system flow.';
+      return this.t('environmentalAspects.nextSteps.copy.process');
     }
     if (!this.linkCountByType('RISK') && aspect.significance === 'HIGH') {
-      return 'This aspect is significant enough to justify visible risk linkage so environmental exposure and treatment stay reviewable.';
+      return this.t('environmentalAspects.nextSteps.copy.risk');
     }
     if (!this.linkCountByType('ACTION') && aspect.status !== 'OBSOLETE') {
-      return 'If control improvement, monitoring, or review follow-up is still needed, prepare an action so ownership and due dates stay visible in the Actions tracker.';
+      return this.t('environmentalAspects.nextSteps.copy.action');
     }
-    return 'The aspect already shows ownership, operational control, and follow-up visibility in one place.';
+    return this.t('environmentalAspects.nextSteps.copy.ready');
   }
   protected aspectDraftTitle() {
     const aspect = this.selectedAspect();
     if (!aspect) return null;
-    return `Aspect follow-up: ${aspect.aspect}`;
+    return this.t('environmentalAspects.messages.actionDraftTitle', { title: aspect.aspect });
   }
   protected aspectDraftDescription() {
     const aspect = this.selectedAspect();
     if (!aspect) return null;
     const lines = [
       aspect.controlSummary?.trim(),
-      `Environmental impact: ${aspect.impact}`,
-      !this.linkCountByType('RISK') && aspect.significance === 'HIGH' ? 'Related risk assessment still needs to be linked.' : ''
+      this.t('environmentalAspects.messages.impactLine', { value: aspect.impact }),
+      !this.linkCountByType('RISK') && aspect.significance === 'HIGH' ? this.t('environmentalAspects.messages.riskLinkNeeded') : ''
     ].filter(Boolean);
     return lines.join('\n\n');
   }
   protected aspectReturnNavigation(): ReturnNavigation | null {
     const id = this.selectedId();
-    return id ? { route: ['/environmental-aspects', id], label: 'environmental aspect' } : null;
+    return id ? { route: ['/environmental-aspects', id], label: this.t('environmentalAspects.page.label') } : null;
   }
 
-  protected sectionTitle(type: LinkType) { return { PROCESS: 'Linked Processes', RISK: 'Linked Risks', ACTION: 'Linked Actions' }[type]; }
-  protected sectionDescription(type: LinkType) { return { PROCESS: 'Processes that own or apply the operational control for this aspect.', RISK: 'Risks used to track the exposure or control weakness connected to this aspect.', ACTION: 'Follow-up actions already tracked in the global action register.' }[type]; }
-  protected sectionEmptyCopy(type: LinkType) { return { PROCESS: 'Link the process that owns or applies the environmental control.', RISK: 'Link a risk if this aspect creates visible exposure or requires treatment.', ACTION: 'Link actions already being tracked for follow-up.' }[type]; }
-  protected sectionPickerLabel(type: LinkType) { return { PROCESS: 'Process', RISK: 'Risk', ACTION: 'Action' }[type]; }
+  protected sectionTitle(type: LinkType) { return this.t(`environmentalAspects.links.sections.${type}.title`); }
+  protected sectionDescription(type: LinkType) { return this.t(`environmentalAspects.links.sections.${type}.copy`); }
+  protected sectionEmptyCopy(type: LinkType) { return this.t(`environmentalAspects.links.sections.${type}.empty`); }
+  protected sectionPickerLabel(type: LinkType) { return this.t(`environmentalAspects.links.types.${type}`); }
   protected linksByType(type: LinkType) { return (this.selectedAspect()?.links || []).filter((link) => link.linkType === type); }
   protected linkCountByType(type: LinkType) { return this.linksByType(type).length; }
   protected linkRoute(link: AspectLink) { return link.path || '/environmental-aspects'; }
@@ -263,15 +269,15 @@ export class EnvironmentalAspectsPageComponent implements OnInit, OnChanges {
   }
   protected packageTierLabel(packageTier: TenantPackageTier) {
     return {
-      ASSURANCE: 'Assurance',
-      CORE_IMS: 'Core IMS',
-      QHSE_PRO: 'QHSE Pro'
+      ASSURANCE: this.t('packages.assurance'),
+      CORE_IMS: this.t('packages.coreIms'),
+      QHSE_PRO: this.t('packages.qhsePro')
     }[packageTier];
   }
 
   protected save() {
-    if (!this.canWrite()) return this.error.set('You do not have permission to edit environmental aspects.');
-    if (this.form.invalid) return this.error.set('Complete the required environmental aspect fields.');
+    if (!this.canWrite()) return this.error.set(this.t('environmentalAspects.messages.noPermissionWrite'));
+    if (this.form.invalid) return this.error.set(this.t('environmentalAspects.messages.completeRequired'));
     this.saving.set(true);
     this.error.set('');
     const request = this.selectedId()
@@ -280,20 +286,20 @@ export class EnvironmentalAspectsPageComponent implements OnInit, OnChanges {
     request.subscribe({
       next: (aspect) => {
         this.saving.set(false);
-        this.router.navigate(['/environmental-aspects', aspect.id], { state: { notice: 'Environmental aspect saved successfully.' } });
+        this.router.navigate(['/environmental-aspects', aspect.id], { state: { notice: this.t('environmentalAspects.messages.saved') } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'Environmental aspect save failed.'));
+        this.error.set(this.readError(error, this.t('environmentalAspects.messages.saveFailed')));
       }
     });
   }
 
   protected archiveAspect() {
-    if (!this.selectedAspect() || !this.canDelete() || !window.confirm(`Archive environmental aspect "${this.selectedAspect()?.aspect}"?`)) return;
+    if (!this.selectedAspect() || !this.canDelete() || !window.confirm(this.t('environmentalAspects.messages.archiveConfirm', { title: this.selectedAspect()?.aspect }))) return;
     this.api.delete<{ success: boolean }>(`environmental-aspects/${this.selectedId()}`).subscribe({
-      next: () => this.router.navigate(['/environmental-aspects'], { state: { notice: 'Environmental aspect archived successfully.' } }),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Environmental aspect archive failed.'))
+      next: () => this.router.navigate(['/environmental-aspects'], { state: { notice: this.t('environmentalAspects.messages.archived') } }),
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('environmentalAspects.messages.archiveFailed')))
     });
   }
 
@@ -319,11 +325,11 @@ export class EnvironmentalAspectsPageComponent implements OnInit, OnChanges {
         this.linkForm.patchValue({ linkedId: '', note: '' });
         this.activeLinkComposerType.set(null);
         this.fetchAspect(this.selectedId()!);
-        this.message.set('Linked record added.');
+        this.message.set(this.t('environmentalAspects.messages.linkAdded'));
       },
       error: (error: HttpErrorResponse) => {
         this.linkSaving.set(false);
-        this.error.set(this.readError(error, 'Record link failed.'));
+        this.error.set(this.readError(error, this.t('environmentalAspects.messages.linkFailed')));
       }
     });
   }
@@ -333,9 +339,9 @@ export class EnvironmentalAspectsPageComponent implements OnInit, OnChanges {
     this.api.delete<{ success: boolean }>(`environmental-aspects/${this.selectedId()}/links/${linkId}`).subscribe({
       next: () => {
         this.fetchAspect(this.selectedId()!);
-        this.message.set('Linked record removed.');
+        this.message.set(this.t('environmentalAspects.messages.linkRemoved'));
       },
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Link removal failed.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('environmentalAspects.messages.linkRemoveFailed')))
     });
   }
 
@@ -381,7 +387,7 @@ export class EnvironmentalAspectsPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Environmental aspects could not be loaded.'));
+        this.error.set(this.readError(error, this.t('environmentalAspects.messages.loadListFailed')));
       }
     });
   }
@@ -407,7 +413,7 @@ export class EnvironmentalAspectsPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'Environmental aspect details could not be loaded.'));
+        this.error.set(this.readError(error, this.t('environmentalAspects.messages.loadDetailsFailed')));
       }
     });
   }
@@ -415,7 +421,7 @@ export class EnvironmentalAspectsPageComponent implements OnInit, OnChanges {
   private loadOwners() {
     this.api.get<UserSummary[]>('users').subscribe({
       next: (users) => this.owners.set(users),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Environmental aspect owners could not be loaded.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('environmentalAspects.messages.loadOwnersFailed')))
     });
   }
 
@@ -428,7 +434,7 @@ export class EnvironmentalAspectsPageComponent implements OnInit, OnChanges {
   }
 
   private toCandidateLabel(type: LinkType, item: any) {
-    if (type === 'PROCESS') return `${item.referenceNo || 'Uncoded'} - ${item.name}`;
+    if (type === 'PROCESS') return `${item.referenceNo || this.t('environmentalAspects.common.uncoded')} - ${item.name}`;
     if (type === 'RISK') return item.title;
     return item.title;
   }
@@ -444,9 +450,9 @@ export class EnvironmentalAspectsPageComponent implements OnInit, OnChanges {
 
   private linkModuleLabel(linkType: LinkType) {
     return {
-      PROCESS: 'Process Register',
-      RISK: 'Risks',
-      ACTION: 'Actions'
+      PROCESS: this.t('shell.nav.processRegister.label'),
+      RISK: this.t('shell.nav.risks.label'),
+      ACTION: this.t('shell.nav.actions.label')
     }[linkType];
   }
 

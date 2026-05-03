@@ -1708,6 +1708,1439 @@
     "coreIms": "Core IMS",
     "qhsePro": "QHSE Pro"
   },
+  "environmentalAspects": {
+    "page": {
+      "label": "Environmental Aspects",
+      "titles": {
+        "list": "Environmental aspects",
+        "create": "Create environmental aspect",
+        "detail": "Environmental aspect detail",
+        "edit": "Edit environmental aspect"
+      },
+      "descriptions": {
+        "list": "Keep significant environmental aspects, impacts, and linked controls visible without building a duplicate risk workflow.",
+        "create": "Record the activity, aspect, impact, current controls, and review owner in one lightweight register.",
+        "detail": "Review the aspect, environmental impact, current controls, and linked IMS records.",
+        "edit": "Update the aspect record while keeping linked processes, risks, and actions in their original modules."
+      }
+    },
+    "actions": {
+      "new": "+ New aspect",
+      "edit": "Edit aspect",
+      "archive": "Archive",
+      "back": "Back",
+      "save": "Save aspect",
+      "saving": "Saving..."
+    },
+    "breadcrumbs": {
+      "new": "New aspect",
+      "record": "Aspect",
+      "edit": "Edit"
+    },
+    "common": {
+      "uncoded": "Uncoded",
+      "unassigned": "Unassigned"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "MONITORING": "Monitoring",
+      "OBSOLETE": "Obsolete"
+    },
+    "lifecycleStage": {
+      "NORMAL_OPERATION": "Normal operation",
+      "ABNORMAL_OPERATION": "Abnormal operation",
+      "EMERGENCY": "Emergency"
+    },
+    "significance": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High"
+    },
+    "list": {
+      "filtersTitle": "Register filters",
+      "copy": "Track environmental aspects, impacts, and review ownership in one visible register.",
+      "stats": {
+        "total": "Total",
+        "active": "Active",
+        "monitoring": "Monitoring",
+        "highSignificance": "High significance"
+      },
+      "filters": {
+        "search": "Search",
+        "status": "Status",
+        "owner": "Owner",
+        "all": "All"
+      },
+      "placeholders": {
+        "search": "Reference, activity, aspect, impact"
+      },
+      "loadingTitle": "Loading environmental aspects",
+      "loadingCopy": "Refreshing aspect records, impacts, and linked controls.",
+      "emptyTitle": "No environmental aspects found",
+      "emptyCopy": "Create the first aspect to start tracking environmental exposure visibly in the IMS.",
+      "table": {
+        "aspect": "Aspect",
+        "activity": "Activity",
+        "lifecycleStage": "Lifecycle stage",
+        "significance": "Significance",
+        "status": "Status",
+        "reviewDate": "Review date",
+        "links": "Links"
+      }
+    },
+    "form": {
+      "positionTitle": "Register position",
+      "summary": {
+        "activity": "Activity",
+        "impact": "Impact",
+        "owner": "Owner",
+        "defined": "Defined",
+        "recorded": "Recorded",
+        "assigned": "Assigned",
+        "needed": "Needed"
+      },
+      "fields": {
+        "reference": "Reference",
+        "status": "Status",
+        "activity": "Activity",
+        "aspect": "Environmental aspect",
+        "impact": "Environmental impact",
+        "lifecycleStage": "Lifecycle stage",
+        "significance": "Significance",
+        "reviewDate": "Review date",
+        "controlSummary": "Current controls",
+        "owner": "Owner"
+      },
+      "placeholders": {
+        "reference": "EA-001",
+        "activity": "Chemical transfer, waste handling, dispatch loading",
+        "aspect": "Coolant handling | Emissions | Waste generation",
+        "impact": "Describe the resulting impact if the aspect is not controlled.",
+        "controlSummary": "Summarize the key operational controls currently applied."
+      },
+      "definitionTitle": "Aspect definition",
+      "controlContextTitle": "Control context",
+      "ownerTitle": "Review ownership"
+    },
+    "guidance": {
+      "structured": "This aspect record already shows the activity, environmental exposure, resulting impact, and review ownership.",
+      "default": "Record the activity, the environmental aspect it creates, the resulting impact, and who reviews the current controls so the exposure stays visible."
+    },
+    "review": {
+      "noRecord": "Save the aspect first, then link the process, risk, or action records that show how it is controlled.",
+      "unlinked": "This environmental aspect is recorded, but its control and follow-up are not yet visible through linked records.",
+      "partial": "This aspect has some traceability, but it will be stronger once both the owning process and related risk are linked.",
+      "strong": "This environmental aspect already shows where it is controlled and how follow-up is being managed."
+    },
+    "detail": {
+      "eyebrow": "Environmental aspect",
+      "noImpact": "No impact summary recorded yet.",
+      "summary": {
+        "activity": "Activity",
+        "lifecycleStage": "Lifecycle stage",
+        "owner": "Owner",
+        "linkedRecords": "Linked records"
+      },
+      "reviewTitle": "Review position",
+      "reviewSummary": {
+        "processes": "Processes",
+        "risks": "Risks",
+        "actions": "Actions"
+      },
+      "nextStepsTitle": "Next steps",
+      "nextStepsSummary": {
+        "processLink": "Process link",
+        "riskLink": "Risk link",
+        "followUpAction": "Follow-up action",
+        "linked": "Linked",
+        "needed": "Needed",
+        "prepareBelow": "Prepare below",
+        "optional": "Optional"
+      },
+      "fields": {
+        "controlSummary": "Current controls",
+        "reviewDate": "Review date"
+      },
+      "empty": {
+        "controls": "No control summary recorded.",
+        "reviewDate": "No review date recorded."
+      }
+    },
+    "nextSteps": {
+      "headline": {
+        "default": "Next steps appear after the aspect is saved.",
+        "process": "Link the owning process next.",
+        "risk": "Link the related risk assessment next.",
+        "action": "Prepare an environmental follow-up action next.",
+        "ready": "This aspect is connected to the main control records."
+      },
+      "copy": {
+        "default": "Save the aspect first, then decide whether the next step is process linkage, risk visibility, or follow-up action ownership.",
+        "process": "Link the process that owns the operational control first so this aspect is anchored in the live system flow.",
+        "risk": "This aspect is significant enough to justify visible risk linkage so environmental exposure and treatment stay reviewable.",
+        "action": "If control improvement, monitoring, or review follow-up is still needed, prepare an action so ownership and due dates stay visible in the Actions tracker.",
+        "ready": "The aspect already shows ownership, operational control, and follow-up visibility in one place."
+      }
+    },
+    "links": {
+      "eyebrow": "Linked records",
+      "title": "Traceability hub",
+      "copy": "Link the existing process, risk, and action records that already carry the live follow-up.",
+      "openComposer": "+ Link",
+      "closeComposer": "Close",
+      "remove": "Remove",
+      "emptyTitle": "No linked records",
+      "includedFrom": "Included from {{tier}}",
+      "types": {
+        "PROCESS": "Process",
+        "RISK": "Risk",
+        "ACTION": "Action"
+      },
+      "sections": {
+        "PROCESS": {
+          "title": "Linked processes",
+          "copy": "Processes that own or apply the operational control for this aspect.",
+          "empty": "Link the process that owns or applies the environmental control."
+        },
+        "RISK": {
+          "title": "Linked risks",
+          "copy": "Risks used to track the exposure or control weakness connected to this aspect.",
+          "empty": "Link a risk if this aspect creates visible exposure or requires treatment."
+        },
+        "ACTION": {
+          "title": "Linked actions",
+          "copy": "Follow-up actions already tracked in the global action register.",
+          "empty": "Link actions already being tracked for follow-up."
+        }
+      }
+    },
+    "linkComposer": {
+      "chooseExisting": "Choose existing {{section}}",
+      "note": "Note",
+      "notePlaceholder": "Optional context for this link",
+      "linking": "Linking...",
+      "addLink": "Add link"
+    },
+    "messages": {
+      "noPermissionWrite": "You do not have permission to edit environmental aspects.",
+      "completeRequired": "Complete the required environmental aspect fields.",
+      "saved": "Environmental aspect saved successfully.",
+      "saveFailed": "Environmental aspect save failed.",
+      "archiveConfirm": "Archive environmental aspect \"{{title}}\"?",
+      "archived": "Environmental aspect archived successfully.",
+      "archiveFailed": "Environmental aspect archive failed.",
+      "linkAdded": "Linked record added.",
+      "linkFailed": "Record link failed.",
+      "linkRemoved": "Linked record removed.",
+      "linkRemoveFailed": "Link removal failed.",
+      "loadListFailed": "Environmental aspects could not be loaded.",
+      "loadDetailsFailed": "Environmental aspect details could not be loaded.",
+      "loadOwnersFailed": "Environmental aspect owners could not be loaded.",
+      "actionDraftTitle": "Aspect follow-up: {{title}}",
+      "impactLine": "Environmental impact: {{value}}",
+      "riskLinkNeeded": "Related risk assessment still needs to be linked."
+    }
+  },
+  "externalProviders": {
+    "page": {
+      "label": "External Providers",
+      "titles": {
+        "list": "External providers",
+        "create": "Create external provider",
+        "detail": "External provider detail",
+        "edit": "Edit external provider"
+      },
+      "descriptions": {
+        "list": "Keep approved suppliers, contractors, and outsourced services visible without turning the app into a procurement system.",
+        "create": "Record the provider, annual evaluation, approval basis, and review ownership in one lightweight supplier-control register.",
+        "detail": "Review provider control position, annual evaluation, supplier-audit coverage, and linked IMS records.",
+        "edit": "Update the provider record while keeping audits, risks, obligations, and actions in their original modules."
+      }
+    },
+    "actions": {
+      "new": "+ New provider",
+      "edit": "Edit provider",
+      "archive": "Archive",
+      "back": "Back",
+      "save": "Save provider",
+      "saving": "Saving..."
+    },
+    "breadcrumbs": {
+      "new": "New provider",
+      "record": "Provider",
+      "edit": "Edit"
+    },
+    "common": {
+      "uncoded": "Uncoded",
+      "unassigned": "Unassigned"
+    },
+    "providerType": {
+      "SUPPLIER": "Supplier",
+      "OUTSOURCED_SERVICE": "Outsourced service",
+      "CONTRACTOR": "Contractor",
+      "CALIBRATION": "Calibration",
+      "LOGISTICS": "Logistics",
+      "OTHER": "Other"
+    },
+    "criticality": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High"
+    },
+    "status": {
+      "APPROVED": "Approved",
+      "CONDITIONAL": "Conditional",
+      "UNDER_REVIEW": "Under review",
+      "INACTIVE": "Inactive"
+    },
+    "list": {
+      "filtersTitle": "Register filters",
+      "copy": "Track approved suppliers, contractors, and outsourced services in one controlled register.",
+      "stats": {
+        "total": "Total",
+        "approved": "Approved",
+        "underReview": "Under review",
+        "highCriticality": "High criticality",
+        "evaluated": "Evaluated"
+      },
+      "filters": {
+        "search": "Search",
+        "status": "Status",
+        "owner": "Owner",
+        "all": "All"
+      },
+      "placeholders": {
+        "search": "Reference, provider, scope, approval basis"
+      },
+      "loadingTitle": "Loading external providers",
+      "loadingCopy": "Refreshing approved providers, outsourced services, and review timing.",
+      "emptyTitle": "No external providers found",
+      "emptyCopy": "Create the first provider to keep supplier and outsourced-service control visible in the IMS.",
+      "table": {
+        "provider": "Provider",
+        "type": "Type",
+        "criticality": "Criticality",
+        "status": "Status",
+        "evaluation": "Evaluation",
+        "nextReview": "Next review",
+        "supplierAudit": "Supplier audit",
+        "attention": "Attention",
+        "links": "Links"
+      }
+    },
+    "form": {
+      "positionTitle": "Control position",
+      "summary": {
+        "provider": "Provider",
+        "approvalBasis": "Approval basis",
+        "owner": "Owner",
+        "annualEvaluation": "Annual evaluation",
+        "defined": "Defined",
+        "recorded": "Recorded",
+        "assigned": "Assigned",
+        "needed": "Needed"
+      },
+      "fields": {
+        "reference": "Reference",
+        "status": "Status",
+        "providerName": "Provider name",
+        "providerType": "Provider type",
+        "criticality": "Criticality",
+        "suppliedScope": "Supplied scope",
+        "approvalBasis": "Approval basis",
+        "nextReviewDate": "Next review date",
+        "owner": "Owner"
+      },
+      "placeholders": {
+        "reference": "SUP-001",
+        "providerName": "Approved plating subcontractor | Calibration lab",
+        "suppliedScope": "What product, service, or outsourced activity this provider supports.",
+        "approvalBasis": "Summarize why the provider is approved, conditionally accepted, or under review."
+      },
+      "definitionTitle": "Provider definition",
+      "reviewTitle": "Approval and review"
+    },
+    "evaluation": {
+      "title": "Annual evaluation",
+      "copy": "Use one simple annual questionnaire so supplier review stays comparable across providers. Score each item from 1 to 5.",
+      "summary": {
+        "scale": "Scale",
+        "scaleValue": "1 weak to 5 strong",
+        "average": "Average",
+        "totalScore": "Total score"
+      },
+      "common": {
+        "notScored": "Not scored",
+        "notScoredYet": "Not scored yet",
+        "notEvaluated": "Not evaluated"
+      },
+      "fields": {
+        "evaluationDate": "Evaluation date",
+        "evaluationSummary": "Evaluation summary",
+        "evaluationSummaryPlaceholder": "Summarize the main strengths, weaknesses, and any conditions from the annual provider review."
+      },
+      "criteria": {
+        "1": { "title": "Weak", "definition": "Performance is not controlled. Repeated gaps or major concerns are visible." },
+        "2": { "title": "Fragile", "definition": "Some control exists, but performance is inconsistent and needs prompt follow-up." },
+        "3": { "title": "Acceptable", "definition": "The requirement is generally met, but follow-up or tighter consistency is still needed." },
+        "4": { "title": "Controlled", "definition": "Performance is reliable and effective, with only minor improvement needed." },
+        "5": { "title": "Strong", "definition": "Performance is consistently strong, proactive, and well controlled." }
+      },
+      "metrics": {
+        "qualityScore": { "label": "Quality performance", "hint": "Conformance, defect history, and complaint performance." },
+        "deliveryScore": { "label": "Delivery performance", "hint": "On-time delivery, service reliability, and schedule stability." },
+        "responsivenessScore": { "label": "Responsiveness", "hint": "Speed and clarity when issues, requests, or escalations arise." },
+        "complianceScore": { "label": "Compliance and documentation", "hint": "Certificates, approvals, and required supporting records." },
+        "traceabilityScore": { "label": "Traceability and control", "hint": "Record retrieval, identification, and control of supplied product or service." },
+        "changeControlScore": { "label": "Change notification", "hint": "How reliably the provider communicates changes before impact occurs." }
+      },
+      "outcome": {
+        "APPROVED": "Approved",
+        "APPROVED_WITH_CONDITIONS": "Approved with conditions",
+        "ESCALATED": "Escalated",
+        "DISQUALIFIED": "Disqualified"
+      },
+      "narrative": {
+        "default": "Annual evaluation uses one consistent questionnaire so provider review stays comparable year to year.",
+        "notRecorded": "No annual evaluation has been recorded yet. Use the questionnaire to score quality, delivery, responsiveness, compliance, traceability, and change control.",
+        "approved": "This provider’s latest annual evaluation is strong and supports routine approved status.",
+        "approvedWithConditions": "This provider is acceptable, but the annual evaluation shows follow-up is still needed in one or more control areas.",
+        "escalated": "This provider’s annual evaluation needs management attention and a clear follow-up plan.",
+        "disqualified": "This provider’s annual evaluation is poor enough to question continued approval without further review."
+      }
+    },
+    "liveOutcome": {
+      "incomplete": "Incomplete annual evaluation",
+      "approved": "Approved",
+      "approvedWithConditions": "Approved with conditions",
+      "escalated": "Escalated review",
+      "disqualificationRisk": "Disqualification risk"
+    },
+    "livePerformance": {
+      "title": "Live performance view",
+      "headline": {
+        "incomplete": "Complete all six questions to see the live supplier-performance view.",
+        "strong": "Current performance looks strong and stable.",
+        "acceptable": "Current performance is acceptable, with some areas needing follow-up.",
+        "escalated": "Current performance needs escalation and a focused improvement plan.",
+        "weak": "Current performance is weak enough to question ongoing approval without intervention."
+      },
+      "copy": {
+        "incomplete": "The live performance view appears once the annual questionnaire is fully scored.",
+        "weak": "Priority follow-up is needed in {{areas}}.",
+        "watch": "The provider is generally acceptable, but follow-up is still needed in {{areas}}.",
+        "strong": "All scored areas are controlled or strong, which supports routine supplier review."
+      },
+      "panels": {
+        "strongAreas": "Strong areas",
+        "watchAreas": "Watch areas",
+        "weakAreas": "Weak areas",
+        "noneYet": "None yet",
+        "none": "None"
+      }
+    },
+    "guidance": {
+      "structured": "This provider record already shows what is being supplied, why the provider is approved, who reviews it, and how the latest annual evaluation landed.",
+      "default": "Record the provider, what they supply, why they are approved or conditionally accepted, who reviews the relationship, and how the annual evaluation scored them."
+    },
+    "attention": {
+      "title": "Management attention",
+      "underControl": "Under control",
+      "multi": "{{first}} +{{count}}",
+      "headline": {
+        "needsAttention": "This provider currently needs management attention.",
+        "underControl": "This provider is currently under control."
+      },
+      "copy": {
+        "unsaved": "Attention guidance appears after the provider is saved.",
+        "underControl": "Approval status, review timing, evaluation, and supplier-audit coverage are controlled enough for routine oversight.",
+        "needsAttention": "Attention is needed because {{reasons}}."
+      },
+      "reasons": {
+        "OWNER_NEEDED": "Owner needed",
+        "REVIEW_DATE_NEEDED": "Review date needed",
+        "REVIEW_OVERDUE": "Review overdue",
+        "REVIEW_DUE_SOON": "Review due soon",
+        "SUPPLIER_AUDIT_REQUIRED": "Supplier audit required",
+        "HIGH_PRIORITY": "High priority",
+        "STALE": "Stale"
+      }
+    },
+    "review": {
+      "noRecord": "Save the provider first, then link the process, audit, risk, action, or obligation records that show how it is controlled.",
+      "unlinked": "This provider is recorded, but its operational control and review evidence are not yet visible through linked records.",
+      "auditMissing": "This critical supplier has supporting links, but it still needs a linked supplier audit to complete the review picture.",
+      "partial": "This provider has some traceability, but it will be easier to review once both the owning process and a supporting audit or control record are linked.",
+      "strong": "This provider already shows where it is controlled and which IMS records support review and follow-up."
+    },
+    "detail": {
+      "eyebrow": "External provider",
+      "noScope": "No supplied scope recorded yet.",
+      "summary": {
+        "providerType": "Provider type",
+        "owner": "Owner",
+        "nextReview": "Next review",
+        "annualEvaluation": "Annual evaluation",
+        "linkedRecords": "Linked records"
+      },
+      "reviewTitle": "Review position",
+      "reviewSummary": {
+        "processes": "Processes",
+        "audits": "Audits",
+        "risks": "Risks",
+        "actions": "Actions",
+        "supplierAudit": "Supplier audit"
+      },
+      "fields": {
+        "approvalBasis": "Approval basis",
+        "criticalityFocus": "Criticality focus",
+        "annualEvaluationResult": "Annual evaluation result",
+        "questionnaireBreakdown": "Questionnaire breakdown"
+      },
+      "criticalityFocus": {
+        "high": "This provider supports a high-impact product, service, or outsourced activity and should stay visible in formal review.",
+        "medium": "This provider has moderate impact and should stay within routine review and audit coverage.",
+        "low": "This provider is recorded for visibility, with lighter follow-up expectations unless the relationship changes."
+      },
+      "empty": {
+        "approvalBasis": "No approval basis recorded."
+      },
+      "evaluationDateLine": "Latest annual evaluation recorded on {{date}}."
+    },
+    "auditCoverage": {
+      "title": "Supplier audit expectation",
+      "copy": "Critical suppliers should show at least one linked supplier audit as part of formal annual oversight.",
+      "notRequired": "Not required",
+      "linked": "Linked",
+      "required": "Required",
+      "narrative": {
+        "notRequired": "A dedicated supplier audit is not required for this provider based on its current type and criticality.",
+        "linked": "A supplier audit is already linked, so annual provider review shows formal audit support.",
+        "required": "This provider is marked as a critical supplier, so link a supplier audit to complete formal annual oversight."
+      }
+    },
+    "nextSteps": {
+      "title": "Next steps",
+      "headline": {
+        "default": "Next steps appear after the provider is saved.",
+        "audit": "Link the required supplier audit next.",
+        "action": "Prepare a provider follow-up action from this review.",
+        "traceability": "Complete the review picture with process and audit traceability.",
+        "ready": "This provider review is connected and ready for routine oversight."
+      },
+      "copy": {
+        "default": "Save the provider first, then decide whether the next control step is supplier audit coverage, action follow-up, or traceability completion.",
+        "audit": "This provider is high criticality, so annual oversight is not complete until a supplier audit is linked.",
+        "action": "The annual evaluation already shows follow-up is needed. Prepare an action so ownership, due date, and review stay visible in the global tracker.",
+        "traceability": "Link the owning process and a supporting audit so this provider review is easier to defend during management review and audit follow-up.",
+        "ready": "The provider already shows approval basis, annual evaluation, supplier-audit coverage, and linked operational controls in one place."
+      },
+      "summary": {
+        "supplierAudit": "Supplier audit",
+        "followUpAction": "Follow-up action",
+        "traceability": "Traceability",
+        "linked": "Linked",
+        "prepareBelow": "Prepare below",
+        "connected": "Connected",
+        "completeLinks": "Complete links"
+      }
+    },
+    "links": {
+      "eyebrow": "Linked records",
+      "title": "Traceability hub",
+      "copy": "Link the existing process, audit, risk, action, and obligation records that already carry the operational follow-up.",
+      "openComposer": "+ Link",
+      "closeComposer": "Close",
+      "remove": "Remove",
+      "emptyTitle": "No linked records",
+      "includedFrom": "Included from {{tier}}",
+      "types": {
+        "PROCESS": "Process",
+        "RISK": "Risk",
+        "AUDIT": "Audit",
+        "ACTION": "Action",
+        "OBLIGATION": "Obligation"
+      },
+      "sections": {
+        "PROCESS": {
+          "title": "Linked processes",
+          "copy": "Processes that depend on or control this external provider relationship.",
+          "empty": "Link the process that owns or relies on this provider relationship."
+        },
+        "RISK": {
+          "title": "Linked risks",
+          "copy": "Risks used to track dependence, continuity, quality, or control exposure for this provider.",
+          "empty": "Link a risk if this provider creates continuity, quality, or compliance exposure."
+        },
+        "AUDIT": {
+          "title": "Linked audits",
+          "copy": "Audits that reviewed the provider or the process controls around this provider. High-criticality suppliers should have a linked supplier audit.",
+          "empty": "Link an audit that checked supplier or outsourced-provider control. For high-criticality suppliers, use a supplier audit."
+        },
+        "ACTION": {
+          "title": "Linked actions",
+          "copy": "Follow-up actions already tracked in the global action register.",
+          "empty": "Link actions already being tracked for provider follow-up."
+        },
+        "OBLIGATION": {
+          "title": "Linked obligations",
+          "copy": "Compliance or customer obligations that apply to this provider relationship.",
+          "empty": "Link obligations when customer, legal, or regulatory requirements apply to this provider."
+        }
+      }
+    },
+    "linkComposer": {
+      "chooseExisting": "Choose existing {{section}}",
+      "note": "Note",
+      "notePlaceholder": "Optional context for this link",
+      "linking": "Linking...",
+      "addLink": "Add link"
+    },
+    "messages": {
+      "noPermissionWrite": "You do not have permission to edit external providers.",
+      "completeRequired": "Complete the required external provider fields.",
+      "saved": "External provider saved successfully.",
+      "saveFailed": "External provider save failed.",
+      "archiveConfirm": "Archive external provider \"{{title}}\"?",
+      "archived": "External provider archived successfully.",
+      "archiveFailed": "External provider archive failed.",
+      "linkAdded": "Linked record added.",
+      "linkFailed": "Record link failed.",
+      "linkRemoved": "Linked record removed.",
+      "linkRemoveFailed": "Link removal failed.",
+      "loadListFailed": "External providers could not be loaded.",
+      "loadDetailsFailed": "External provider details could not be loaded.",
+      "loadOwnersFailed": "External provider owners could not be loaded.",
+      "actionDraftTitle": "Provider follow-up: {{title}}",
+      "auditLinkNeeded": "Supplier audit still needs to be linked for this critical provider.",
+      "evaluationOutcomeLine": "Evaluation outcome: {{value}}.",
+      "defaultDraftDescription": "Follow up annual provider review for {{title}}."
+    }
+  },
+  "hazards": {
+    "page": {
+      "label": "Hazard Identification",
+      "titles": {
+        "list": "Hazard identification",
+        "create": "Create hazard record",
+        "detail": "Hazard detail",
+        "edit": "Edit hazard"
+      },
+      "descriptions": {
+        "list": "Keep workplace hazards, potential harm, and linked controls visible without creating a duplicate incident or risk workflow.",
+        "create": "Record the activity, hazard, potential harm, current controls, and review owner in one lightweight register.",
+        "detail": "Review the hazard, its potential harm, current controls, and linked IMS records.",
+        "edit": "Update the hazard record while keeping incidents, risks, processes, and actions in their original modules."
+      }
+    },
+    "actions": {
+      "new": "+ New hazard",
+      "edit": "Edit hazard",
+      "archive": "Archive",
+      "back": "Back",
+      "save": "Save hazard",
+      "saving": "Saving..."
+    },
+    "breadcrumbs": {
+      "new": "New hazard",
+      "record": "Hazard",
+      "edit": "Edit"
+    },
+    "common": {
+      "uncoded": "Uncoded",
+      "unassigned": "Unassigned"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "MONITORING": "Monitoring",
+      "OBSOLETE": "Obsolete"
+    },
+    "exposureStage": {
+      "ROUTINE": "Routine",
+      "NON_ROUTINE": "Non-routine",
+      "EMERGENCY": "Emergency"
+    },
+    "severity": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High"
+    },
+    "list": {
+      "filtersTitle": "Register filters",
+      "copy": "Track workplace hazards, potential harm, and review ownership in one visible register.",
+      "stats": {
+        "total": "Total",
+        "active": "Active",
+        "monitoring": "Monitoring",
+        "highSeverity": "High severity"
+      },
+      "filters": {
+        "search": "Search",
+        "status": "Status",
+        "owner": "Owner",
+        "all": "All"
+      },
+      "placeholders": {
+        "search": "Reference, activity, hazard, harm"
+      },
+      "loadingTitle": "Loading hazards",
+      "loadingCopy": "Refreshing hazard records, potential harm, and linked controls.",
+      "emptyTitle": "No hazards found",
+      "emptyCopy": "Create the first hazard to start tracking workplace exposure visibly in the IMS.",
+      "table": {
+        "hazard": "Hazard",
+        "activity": "Activity",
+        "exposureStage": "Exposure stage",
+        "severity": "Severity",
+        "status": "Status",
+        "reviewDate": "Review date",
+        "links": "Links"
+      }
+    },
+    "form": {
+      "positionTitle": "Register position",
+      "summary": {
+        "activity": "Activity",
+        "potentialHarm": "Potential harm",
+        "owner": "Owner",
+        "defined": "Defined",
+        "recorded": "Recorded",
+        "assigned": "Assigned",
+        "needed": "Needed"
+      },
+      "fields": {
+        "reference": "Reference",
+        "status": "Status",
+        "activity": "Activity",
+        "hazard": "Hazard",
+        "potentialHarm": "Potential harm",
+        "exposureStage": "Exposure stage",
+        "severity": "Severity",
+        "reviewDate": "Review date",
+        "existingControls": "Existing controls",
+        "owner": "Owner"
+      },
+      "placeholders": {
+        "reference": "HZ-001",
+        "activity": "Dispatch loading, chemical transfer, manual handling",
+        "hazard": "Pedestrian and vehicle interaction | Hose failure | Chemical splash",
+        "potentialHarm": "Describe the likely harm if the hazard is not controlled.",
+        "existingControls": "Summarize the current controls already applied for this hazard."
+      },
+      "definitionTitle": "Hazard definition",
+      "controlContextTitle": "Control context",
+      "ownerTitle": "Review ownership"
+    },
+    "guidance": {
+      "structured": "This hazard record already shows the activity, the exposed harm, and who reviews the control position.",
+      "default": "Record the activity, the hazard, the potential harm, and who reviews the current controls so the exposure stays visible."
+    },
+    "review": {
+      "noRecord": "Save the hazard first, then link the process, incident, risk, or action records that show how it is being managed.",
+      "unlinked": "This hazard is recorded, but the operational controls and event history are not yet visible through linked records.",
+      "partial": "This hazard has some traceability, but it will be stronger once the owning process and the closest incident or near miss are both linked.",
+      "strong": "This hazard already shows where it is controlled and where the supporting incident, risk, and action evidence sits."
+    },
+    "detail": {
+      "eyebrow": "Hazard identification",
+      "noPotentialHarm": "No potential harm summary recorded yet.",
+      "summary": {
+        "activity": "Activity",
+        "exposureStage": "Exposure stage",
+        "owner": "Owner",
+        "linkedRecords": "Linked records"
+      },
+      "reviewTitle": "Review position",
+      "reviewSummary": {
+        "processes": "Processes",
+        "incidents": "Incidents",
+        "risks": "Risks",
+        "actions": "Actions"
+      },
+      "nextStepsTitle": "Next steps",
+      "nextStepsSummary": {
+        "riskLink": "Risk link",
+        "followUpAction": "Follow-up action",
+        "incidentContext": "Incident context",
+        "linked": "Linked",
+        "needed": "Needed",
+        "prepareBelow": "Prepare below",
+        "optional": "Optional"
+      },
+      "fields": {
+        "existingControls": "Existing controls",
+        "reviewDate": "Review date"
+      },
+      "empty": {
+        "controls": "No control summary recorded.",
+        "reviewDate": "No review date recorded."
+      }
+    },
+    "nextSteps": {
+      "headline": {
+        "default": "Next steps appear after the hazard is saved.",
+        "risk": "Link the formal risk assessment next.",
+        "action": "Prepare a hazard follow-up action next.",
+        "traceability": "Complete the control and event picture for this hazard.",
+        "ready": "This hazard is connected to the main control records."
+      },
+      "copy": {
+        "default": "Save the hazard first, then decide whether the next step is risk assessment, action follow-up, or event/process traceability.",
+        "risk": "This hazard identifies the source of harm, but the formal assessment still needs to be visible in the Risk register.",
+        "action": "The hazard is already visible and high severity. Prepare an action so control improvement ownership and due dates stay visible in the global tracker.",
+        "traceability": "Link the owning process and any related incident or near miss so this hazard is easier to review during OH&S follow-up.",
+        "ready": "The hazard already shows identification, formal risk connection, event context, and action follow-up in one place."
+      }
+    },
+    "links": {
+      "eyebrow": "Linked records",
+      "title": "Traceability hub",
+      "copy": "Link the existing process, incident, risk, and action records that already carry the live follow-up.",
+      "openComposer": "+ Link",
+      "closeComposer": "Close",
+      "remove": "Remove",
+      "emptyTitle": "No linked records",
+      "includedFrom": "Included from {{tier}}",
+      "sections": {
+        "PROCESS": {
+          "title": "Linked processes",
+          "copy": "Processes that own or apply the operational control for this hazard.",
+          "empty": "Link the process that owns the routine control for this hazard."
+        },
+        "RISK": {
+          "title": "Linked risks",
+          "copy": "Risks that formally assess and manage the exposure created by this hazard. The hazard stays as the identification record, while the risk holds the assessed treatment path.",
+          "empty": "Link a risk when this hazard has been formally assessed in the Risk register and is being managed through the risk workflow."
+        },
+        "ACTION": {
+          "title": "Linked actions",
+          "copy": "Follow-up actions already tracked in the global action register.",
+          "empty": "Link actions already being tracked for follow-up."
+        },
+        "INCIDENT": {
+          "title": "Linked incidents",
+          "copy": "Incidents or near misses that show the hazard in a real event context.",
+          "empty": "Link a related incident or near miss to keep event evidence visible."
+        }
+      },
+      "types": {
+        "PROCESS": "Process",
+        "RISK": "Risk",
+        "ACTION": "Action",
+        "INCIDENT": "Incident"
+      }
+    },
+    "linkComposer": {
+      "chooseExisting": "Choose existing {{section}}",
+      "note": "Note",
+      "notePlaceholder": "Optional context for this link",
+      "linking": "Linking...",
+      "addLink": "Save link"
+    },
+    "messages": {
+      "actionDraftTitle": "Hazard follow-up: {{title}}",
+      "potentialHarmLine": "Potential harm: {{value}}",
+      "riskLinkNeeded": "Formal risk assessment still needs to be linked.",
+      "noPermissionWrite": "You do not have permission to edit hazards.",
+      "completeRequired": "Complete the required hazard fields.",
+      "saved": "Hazard saved successfully.",
+      "saveFailed": "Hazard save failed.",
+      "archiveConfirm": "Archive hazard \"{{title}}\"?",
+      "archived": "Hazard archived successfully.",
+      "archiveFailed": "Hazard archive failed.",
+      "linkAdded": "Linked record added.",
+      "linkFailed": "Record link failed.",
+      "linkRemoved": "Linked record removed.",
+      "linkRemoveFailed": "Link removal failed.",
+      "loadListFailed": "Hazards could not be loaded.",
+      "loadDetailsFailed": "Hazard details could not be loaded.",
+      "loadOwnersFailed": "Hazard owners could not be loaded."
+    }
+  },
+  "incidents": {
+    "page": {
+      "label": "Incidents",
+      "titles": {
+        "list": "Incidents and near misses",
+        "create": "Report incident",
+        "detail": "Incident detail",
+        "edit": "Edit incident"
+      },
+      "descriptions": {
+        "list": "Track incidents and near misses without turning the system into a full operational workflow engine.",
+        "create": "Record what happened, immediate action, and who owns follow-up.",
+        "detail": "Review the event, response, and linked records already managing the follow-up.",
+        "edit": "Update the incident record while keeping linked processes, risks, and actions in their original modules."
+      }
+    },
+    "actions": {
+      "new": "+ New incident",
+      "edit": "Edit incident",
+      "archive": "Archive",
+      "back": "Back",
+      "backTo": "Back to {{label}}",
+      "save": "Save incident",
+      "saving": "Saving..."
+    },
+    "breadcrumbs": {
+      "new": "New incident",
+      "record": "Incident",
+      "edit": "Edit"
+    },
+    "common": {
+      "uncoded": "Uncoded",
+      "unassigned": "Unassigned",
+      "noLocation": "No location recorded"
+    },
+    "types": {
+      "INCIDENT": "Incident",
+      "NEAR_MISS": "Near miss"
+    },
+    "categories": {
+      "SAFETY": "Safety",
+      "ENVIRONMENT": "Environment",
+      "QUALITY": "Quality",
+      "SECURITY": "Security",
+      "OTHER": "Other"
+    },
+    "severity": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High",
+      "CRITICAL": "Critical"
+    },
+    "status": {
+      "REPORTED": "Reported",
+      "INVESTIGATION": "Investigation",
+      "ACTION_IN_PROGRESS": "Action in progress",
+      "CLOSED": "Closed",
+      "ARCHIVED": "Archived"
+    },
+    "rcaMethods": {
+      "FIVE_WHY": "5 Why",
+      "FISHBONE": "Fishbone",
+      "IS_IS_NOT": "Is / Is Not",
+      "OTHER": "Other"
+    },
+    "list": {
+      "filtersTitle": "Register filters",
+      "copy": "Keep incidents and near misses visible without duplicating NCR or CAPA workflows.",
+      "stats": {
+        "total": "Total",
+        "nearMisses": "Near misses",
+        "openFollowUp": "Open follow-up",
+        "highCritical": "High / critical"
+      },
+      "filters": {
+        "search": "Search",
+        "type": "Type",
+        "status": "Status",
+        "owner": "Owner",
+        "all": "All"
+      },
+      "placeholders": {
+        "search": "Reference, title, location"
+      },
+      "loadingTitle": "Loading incident register",
+      "loadingCopy": "Refreshing incidents, near misses, and linked follow-up records.",
+      "emptyTitle": "No incidents found",
+      "emptyCopy": "Create the first incident or near miss to start tracking event follow-up visibly in the IMS.",
+      "table": {
+        "incident": "Incident",
+        "type": "Type",
+        "eventDate": "Event date",
+        "severity": "Severity",
+        "status": "Status",
+        "attention": "Attention",
+        "links": "Links"
+      }
+    },
+    "form": {
+      "positionTitle": "Register position",
+      "summary": {
+        "eventDate": "Event date",
+        "owner": "Owner",
+        "immediateAction": "Immediate action",
+        "recorded": "Recorded",
+        "assigned": "Assigned",
+        "needed": "Needed",
+        "addFirstResponse": "Add first response"
+      },
+      "fields": {
+        "reference": "Reference",
+        "status": "Status",
+        "title": "Title",
+        "type": "Type",
+        "category": "Category",
+        "severity": "Severity",
+        "description": "Description",
+        "eventDate": "Event date",
+        "location": "Location",
+        "owner": "Owner",
+        "immediateAction": "Immediate action",
+        "investigationSummary": "Investigation summary",
+        "rootCause": "Root cause",
+        "rcaMethod": "RCA method",
+        "correctiveActionSummary": "Corrective action summary"
+      },
+      "placeholders": {
+        "reference": "INC-001",
+        "title": "Coolant spill at line preparation area",
+        "description": "Summarize what happened and why it matters.",
+        "location": "Production line, warehouse, dispatch",
+        "immediateAction": "What was done immediately to secure the situation?",
+        "investigationSummary": "What was found during review of the event?",
+        "rootCause": "Record the current root cause conclusion or use the structured RCA prompts below.",
+        "correctiveActionSummary": "What follow-up or improvement is planned?",
+        "rcaNotSet": "Not set"
+      },
+      "eventRecordTitle": "Event record",
+      "eventContextTitle": "Event context",
+      "responseTitle": "Response and follow-up",
+      "investigationTitle": "Investigation position",
+      "fiveWhy": {
+        "title": "5 Why prompt",
+        "copy": "Use the causal chain to build the investigation. If the root cause field is left blank, these answers will be combined into it on save.",
+        "steps": {
+          "0": "Why 1",
+          "1": "Why 2",
+          "2": "Why 3",
+          "3": "Why 4",
+          "4": "Why 5"
+        }
+      },
+      "fishbone": {
+        "title": "Fishbone prompt",
+        "copy": "Capture likely causes by category. If the root cause field is left blank, these notes will be combined into it on save.",
+        "categories": {
+          "people": "People",
+          "process": "Process",
+          "equipment": "Equipment",
+          "materials": "Materials",
+          "environment": "Environment",
+          "measurement": "Measurement"
+        }
+      }
+    },
+    "guidance": {
+      "structured": "This record already shows what happened, who owns it, and what was done immediately.",
+      "default": "A useful incident record should show what happened, when it happened, what was done immediately, and who owns the follow-up."
+    },
+    "review": {
+      "noRecord": "Save the incident first, then link the process, risk, or action records that carry the follow-up.",
+      "unlinked": "This event is recorded, but its operational follow-up is not yet visible through linked records.",
+      "partial": "This event has some traceability, but it will be easier to review once both the affected process and related risk are linked.",
+      "strong": "This event already shows where it applies and how the follow-up is being managed."
+    },
+    "investigation": {
+      "structured": "The investigation now shows both the RCA method used and the root cause captured from the review.",
+      "summaryOnly": "The event has investigation notes, but the root cause method still needs to be made explicit.",
+      "default": "Keep the first report lightweight, then use this section to capture what was found, the RCA method used, and the resulting root cause.",
+      "none": "No investigation narrative is available yet.",
+      "detailStructured": "The investigation records both the RCA method used and the current root cause summary.",
+      "detailSummaryOnly": "Investigation notes are recorded, but the root cause method has not been made explicit yet.",
+      "detailNone": "No structured investigation has been recorded yet."
+    },
+    "detail": {
+      "eyebrow": "Incident / near miss",
+      "noDescription": "No detailed description recorded yet.",
+      "summary": {
+        "type": "Type",
+        "eventDate": "Event date",
+        "owner": "Owner",
+        "linkedRecords": "Linked records"
+      },
+      "reviewTitle": "Review position",
+      "reviewSummary": {
+        "processes": "Processes",
+        "risks": "Risks",
+        "actions": "Actions"
+      },
+      "investigationTitle": "Investigation position",
+      "investigationSummary": {
+        "rcaMethod": "RCA method",
+        "rootCause": "Root cause",
+        "immediateAction": "Immediate action",
+        "recorded": "Recorded",
+        "notRecorded": "Not recorded"
+      },
+      "attentionTitle": "Management attention",
+      "nextStepsTitle": "Next steps",
+      "nextStepsSummary": {
+        "evidence": "Evidence",
+        "followUpAction": "Follow-up action",
+        "traceability": "Traceability",
+        "availableBelow": "Available below",
+        "saveFirst": "Save first",
+        "linked": "Linked",
+        "prepareBelow": "Prepare below",
+        "connected": "Connected",
+        "completeLinks": "Complete links"
+      },
+      "fields": {
+        "immediateAction": "Immediate action",
+        "investigationSummary": "Investigation summary",
+        "rootCause": "Root cause",
+        "rcaMethod": "RCA method",
+        "correctiveActionSummary": "Corrective action summary",
+        "location": "Location"
+      },
+      "empty": {
+        "immediateAction": "No immediate action recorded.",
+        "investigationSummary": "No investigation summary recorded.",
+        "rootCause": "No root cause recorded.",
+        "rcaMethod": "No RCA method recorded.",
+        "correctiveActionSummary": "No corrective action summary recorded.",
+        "location": "No location recorded."
+      }
+    },
+    "nextSteps": {
+      "headline": {
+        "default": "Next steps appear after the incident is saved.",
+        "investigation": "Complete the investigation conclusion first.",
+        "action": "Create follow-up from the incident once the investigation is clear.",
+        "traceability": "Complete the traceability picture with the affected process and related risk.",
+        "ready": "The incident has enough structure to manage follow-up and review."
+      },
+      "copy": {
+        "default": "Save the event, then review investigation, evidence, and follow-up in one place.",
+        "investigation": "Use the RCA method and root cause fields to make the investigation defensible before pushing more follow-up into actions.",
+        "action": "If the event needs corrective or preventive work, prepare an incident action from the section below so ownership and due dates are explicit.",
+        "traceability": "Link the affected process and related risk so the event is visible in the wider control system, not just the incident log.",
+        "ready": "Review the linked action, evidence, and traceability regularly until the event can be closed confidently."
+      }
+    },
+    "evidence": {
+      "eyebrow": "Evidence",
+      "title": "Reporting and investigation evidence",
+      "copy": "Use one evidence area for the original report, investigation records, photos, witness notes, and follow-up support documents."
+    },
+    "links": {
+      "eyebrow": "Linked records",
+      "title": "Traceability hub",
+      "copy": "Link the existing process, risk, and action records that already carry the follow-up.",
+      "openComposer": "+ Link",
+      "closeComposer": "Close",
+      "remove": "Remove",
+      "emptyTitle": "No linked records",
+      "includedFrom": "Included from {{tier}}",
+      "sections": {
+        "PROCESS": {
+          "title": "Linked processes",
+          "copy": "Processes affected by this event or responsible for maintaining the control.",
+          "empty": "Link the affected process so the event can be reviewed in context."
+        },
+        "RISK": {
+          "title": "Linked risks",
+          "copy": "Risks that reflect the exposure highlighted by this event.",
+          "empty": "Link a risk if this event exposes an existing weakness or area needing treatment."
+        },
+        "ACTION": {
+          "title": "Linked actions",
+          "copy": "Follow-up actions already tracked in the global action register.",
+          "empty": "Link actions already being tracked for follow-up."
+        }
+      },
+      "types": {
+        "PROCESS": "Process",
+        "RISK": "Risk",
+        "ACTION": "Action"
+      }
+    },
+    "linkComposer": {
+      "chooseExisting": "Choose existing {{section}}",
+      "note": "Note",
+      "notePlaceholder": "Optional context for this link",
+      "linking": "Linking...",
+      "addLink": "Save link"
+    },
+    "attention": {
+      "headline": {
+        "needsAttention": "This event currently needs management attention.",
+        "underControl": "This event is currently under control."
+      },
+      "copy": {
+        "default": "Attention guidance appears after the event is saved.",
+        "underControl": "Ownership, severity, and current investigation state are clear enough for routine follow-up.",
+        "needsAttention": "Attention is needed because {{reasons}}."
+      },
+      "short": {
+        "ok": "Under control"
+      },
+      "reasons": {
+        "ownerNeeded": "Owner needed",
+        "highPriority": "High priority",
+        "investigationIncomplete": "Investigation incomplete",
+        "stale": "Stale"
+      }
+    },
+    "messages": {
+      "actionDraftTitle": "{{type}} follow-up: {{title}}",
+      "noPermissionWrite": "You do not have permission to edit incidents.",
+      "completeRequired": "Complete the required incident fields.",
+      "saved": "Incident saved successfully.",
+      "saveFailed": "Incident save failed.",
+      "archiveConfirm": "Archive incident \"{{title}}\"?",
+      "archived": "Incident archived successfully.",
+      "archiveFailed": "Incident archive failed.",
+      "linkAdded": "Linked record added.",
+      "linkFailed": "Record link failed.",
+      "linkRemoved": "Linked record removed.",
+      "linkRemoveFailed": "Link removal failed.",
+      "loadListFailed": "Incident register could not be loaded.",
+      "loadDetailsFailed": "Incident details could not be loaded.",
+      "loadOwnersFailed": "Incident owners could not be loaded."
+    }
+  },
+  "complianceObligations": {
+    "page": {
+      "label": "Compliance Obligations",
+      "titles": {
+        "list": "Compliance obligations",
+        "create": "New compliance obligation",
+        "detail": "Compliance obligation detail",
+        "edit": "Edit compliance obligation"
+      },
+      "descriptions": {
+        "list": "Track legal, regulatory, contractual, and external obligations in one controlled register.",
+        "create": "Record a new obligation, assign ownership, and set the next review point.",
+        "detail": "Review ownership, review timing, linked assurance records, and follow-up actions in one place.",
+        "edit": "Update the obligation record while keeping linked audits, risks, processes, and actions intact."
+      }
+    },
+    "actions": {
+      "new": "+ New obligation",
+      "edit": "Edit obligation",
+      "archive": "Archive",
+      "back": "Back",
+      "save": "Save obligation",
+      "saving": "Saving..."
+    },
+    "breadcrumbs": {
+      "new": "New obligation",
+      "record": "Obligation",
+      "edit": "Edit"
+    },
+    "common": {
+      "uncoded": "Uncoded",
+      "generalObligation": "General obligation",
+      "unassigned": "Unassigned"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "UNDER_REVIEW": "Under review",
+      "OBSOLETE": "Obsolete"
+    },
+    "list": {
+      "filtersTitle": "Register filters",
+      "copy": "Track legal, regulatory, and external obligations in one controlled register.",
+      "stats": {
+        "total": "Total",
+        "active": "Active",
+        "review": "Under review"
+      },
+      "filters": {
+        "search": "Search",
+        "status": "Status",
+        "owner": "Owner",
+        "all": "All"
+      },
+      "placeholders": {
+        "search": "Reference, title, source, type"
+      },
+      "loadingTitle": "Loading obligations register",
+      "loadingCopy": "Refreshing compliance obligations and linked records.",
+      "emptyTitle": "No obligations found",
+      "emptyCopy": "Create the first obligation to start tracking requirements visibly in the IMS.",
+      "table": {
+        "obligation": "Obligation",
+        "source": "Source",
+        "owner": "Owner",
+        "nextReview": "Next review",
+        "status": "Status",
+        "attention": "Attention",
+        "links": "Links"
+      }
+    },
+    "form": {
+      "positionTitle": "Register position",
+      "summary": {
+        "source": "Source",
+        "owner": "Owner",
+        "reviewDate": "Review date",
+        "defined": "Defined",
+        "assigned": "Assigned",
+        "needed": "Needed",
+        "planned": "Planned",
+        "reviewNeeded": "Set next review"
+      },
+      "guidance": {
+        "structured": "This obligation now has a clear source, review owner, and next review date.",
+        "default": "Capture the source, ownership, and next review point first. Links can be added later when useful."
+      },
+      "coreDefinition": "Core definition",
+      "applicabilityTitle": "Applicability",
+      "reviewOwnershipTitle": "Review ownership",
+      "fields": {
+        "reference": "Reference",
+        "status": "Status",
+        "title": "Obligation title",
+        "source": "Source",
+        "type": "Type",
+        "jurisdiction": "Jurisdiction / area",
+        "description": "Description",
+        "owner": "Owner",
+        "reviewFrequencyMonths": "Review frequency (months)",
+        "nextReviewDate": "Next review date"
+      },
+      "placeholders": {
+        "reference": "CO-001",
+        "title": "Waste handling permit conditions are reviewed annually",
+        "source": "Environmental permit | Customer contract | Labour code",
+        "type": "Legal | Regulatory | Customer | Other",
+        "jurisdiction": "Azerbaijan | EU export | Customer specific",
+        "description": "Summarize what the organization must do or maintain.",
+        "reviewFrequencyMonths": "12"
+      }
+    },
+    "detail": {
+      "eyebrow": "Compliance obligation",
+      "noDescription": "No detailed description recorded yet.",
+      "summary": {
+        "source": "Source",
+        "owner": "Owner",
+        "nextReview": "Next review",
+        "linkedRecords": "Linked records"
+      },
+      "attentionTitle": "Management attention",
+      "reviewTitle": "Review position",
+      "reviewSummary": {
+        "processes": "Processes",
+        "risks": "Risks",
+        "audits": "Audits",
+        "actions": "Actions"
+      },
+      "nextStepsTitle": "Next steps",
+      "nextStepsSummary": {
+        "processLink": "Process link",
+        "auditCoverage": "Audit coverage",
+        "followUpAction": "Follow-up action",
+        "linked": "Linked",
+        "needed": "Needed",
+        "review": "Review",
+        "prepare": "Prepare below"
+      }
+    },
+    "review": {
+      "noRecord": "Open an obligation record to see its review position.",
+      "unlinked": "This obligation is recorded, but it is not yet connected to the IMS records that show how it is managed.",
+      "partial": "Some traceability is in place, but the obligation would benefit from clearer process and risk linkage.",
+      "strong": "This obligation already has useful traceability across the system and is easier to review with confidence."
+    },
+    "nextSteps": {
+      "headline": {
+        "default": "Review the obligation and decide where it should connect next.",
+        "process": "Link the process that operates this obligation next.",
+        "audit": "Show where this obligation is checked in assurance.",
+        "action": "Create or link follow-up where the obligation still needs active control.",
+        "done": "This obligation already has a workable review trail."
+      },
+      "copy": {
+        "default": "Start with the obligation owner, review date, and source. Add links only when they improve traceability or follow-up.",
+        "process": "Link the process that carries this obligation so ownership and operational context stay visible.",
+        "audit": "Add an audit link when this obligation is explicitly reviewed or tested in assurance activity.",
+        "action": "Add an action when this obligation still needs follow-up, implementation work, or review preparation.",
+        "done": "The obligation already has enough linked context to support review, assurance, and follow-up."
+      }
+    },
+    "links": {
+      "eyebrow": "Linked records",
+      "title": "Traceability hub",
+      "copy": "Link the records that show how this obligation is managed in the IMS.",
+      "optionalTitle": "Optional links",
+      "optionalCopy": "This obligation is already saved. Add process, risk, audit, or action links only when they are useful for traceability or follow-up.",
+      "openComposer": "+ Link",
+      "closeComposer": "Close",
+      "remove": "Remove",
+      "emptyTitle": "No linked records",
+      "includedFrom": "Included from {{tier}}",
+      "sections": {
+        "PROCESS": {
+          "title": "Linked processes",
+          "copy": "Processes that operate or review this obligation.",
+          "empty": "Optional for now. Add the operating process when you want this obligation anchored to process ownership."
+        },
+        "RISK": {
+          "title": "Linked risks",
+          "copy": "Risks or opportunities associated with this obligation.",
+          "empty": "Optional for now. Add a risk when this obligation creates exposure or opportunity."
+        },
+        "AUDIT": {
+          "title": "Linked audits",
+          "copy": "Audits that verify how this obligation is checked.",
+          "empty": "Optional for now. Add an audit when this obligation is formally reviewed in assurance work."
+        },
+        "ACTION": {
+          "title": "Linked actions",
+          "copy": "Follow-up actions that help keep this obligation under control.",
+          "empty": "Optional for now. Add an action when the obligation needs visible follow-up."
+        }
+      },
+      "types": {
+        "PROCESS": "Process",
+        "RISK": "Risk",
+        "AUDIT": "Audit",
+        "ACTION": "Action"
+      }
+    },
+    "linkComposer": {
+      "chooseExisting": "Choose existing {{section}}",
+      "note": "Note",
+      "notePlaceholder": "Optional context for this link",
+      "linking": "Linking...",
+      "addLink": "Add link"
+    },
+    "attention": {
+      "headline": {
+        "needsAttention": "This obligation still needs some active management attention.",
+        "underControl": "This obligation is currently under control."
+      },
+      "copy": {
+        "default": "Review the current ownership, review timing, and linked records to decide whether follow-up is needed.",
+        "underControl": "The current owner, review timing, and linked records give this obligation a workable level of control.",
+        "needsAttention": "This obligation still needs attention around {{reasons}}."
+      },
+      "short": {
+        "ok": "Under control"
+      },
+      "reasons": {
+        "ownerNeeded": "Owner needed",
+        "reviewDateNeeded": "Review date needed",
+        "reviewOverdue": "Review overdue",
+        "reviewDueSoon": "Review due soon",
+        "stale": "Record stale"
+      }
+    },
+    "messages": {
+      "actionDraftTitle": "Follow up compliance obligation: {{title}}",
+      "nextReviewDate": "Next review date: {{date}}",
+      "auditCoverageMissing": "Audit coverage is not linked yet.",
+      "noPermissionWrite": "You do not have permission to update compliance obligations.",
+      "completeRequired": "Complete the required obligation fields.",
+      "saved": "Compliance obligation saved successfully.",
+      "saveFailed": "Compliance obligation save failed.",
+      "archiveConfirm": "Archive compliance obligation \"{{title}}\"?",
+      "archived": "Compliance obligation archived.",
+      "archiveFailed": "Compliance obligation archive failed.",
+      "linkAdded": "Linked record added.",
+      "linkFailed": "Link could not be saved.",
+      "linkRemoved": "Linked record removed.",
+      "linkRemoveFailed": "Linked record could not be removed.",
+      "loadListFailed": "Compliance obligations could not be loaded.",
+      "loadDetailsFailed": "Compliance obligation details could not be loaded.",
+      "loadOwnersFailed": "Obligation owners could not be loaded."
+    }
+  },
   "processRegister": {
     "page": {
       "label": "Process Register",

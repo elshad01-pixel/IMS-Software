@@ -1,14 +1,14 @@
 <section class="page-grid">
   <iso-page-header
-    [label]="'Environmental Aspects'"
+    [label]="t('environmentalAspects.page.label')"
     [title]="pageTitle()"
     [description]="pageDescription()"
     [breadcrumbs]="breadcrumbs()"
   >
-    <a *ngIf="mode() === 'list' && canWrite()" routerLink="/environmental-aspects/new" class="button-link">+ New aspect</a>
-    <a *ngIf="mode() === 'detail' && selectedAspect() && canWrite()" [routerLink]="['/environmental-aspects', selectedId(), 'edit']" class="button-link">Edit aspect</a>
-    <button *ngIf="mode() === 'detail' && selectedAspect() && canDelete()" type="button" class="button-link danger" (click)="archiveAspect()">Archive</button>
-    <a *ngIf="mode() !== 'list'" routerLink="/environmental-aspects" class="button-link secondary">Back</a>
+    <a *ngIf="mode() === 'list' && canWrite()" routerLink="/environmental-aspects/new" class="button-link">{{ t('environmentalAspects.actions.new') }}</a>
+    <a *ngIf="mode() === 'detail' && selectedAspect() && canWrite()" [routerLink]="['/environmental-aspects', selectedId(), 'edit']" class="button-link">{{ t('environmentalAspects.actions.edit') }}</a>
+    <button *ngIf="mode() === 'detail' && selectedAspect() && canDelete()" type="button" class="button-link danger" (click)="archiveAspect()">{{ t('environmentalAspects.actions.archive') }}</button>
+    <a *ngIf="mode() !== 'list'" routerLink="/environmental-aspects" class="button-link secondary">{{ t('environmentalAspects.actions.back') }}</a>
   </iso-page-header>
 
   <section *ngIf="mode() === 'list'" class="page-stack">
@@ -16,35 +16,35 @@
       <div class="toolbar">
         <div class="toolbar-meta">
           <div>
-            <p class="toolbar-title">Register filters</p>
-            <p class="toolbar-copy">Track significant environmental aspects and impacts in one controlled register.</p>
+            <p class="toolbar-title">{{ t('environmentalAspects.list.filtersTitle') }}</p>
+            <p class="toolbar-copy">{{ t('environmentalAspects.list.copy') }}</p>
           </div>
           <div class="toolbar-stats">
-            <article class="toolbar-stat"><span>Total</span><strong>{{ aspects().length }}</strong></article>
-            <article class="toolbar-stat"><span>Active</span><strong>{{ activeCount() }}</strong></article>
-            <article class="toolbar-stat"><span>Monitoring</span><strong>{{ monitoringCount() }}</strong></article>
-            <article class="toolbar-stat"><span>High significance</span><strong>{{ highSignificanceCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('environmentalAspects.list.stats.total') }}</span><strong>{{ aspects().length }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('environmentalAspects.list.stats.active') }}</span><strong>{{ activeCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('environmentalAspects.list.stats.monitoring') }}</span><strong>{{ monitoringCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('environmentalAspects.list.stats.highSignificance') }}</span><strong>{{ highSignificanceCount() }}</strong></article>
           </div>
         </div>
 
         <div class="filter-row standard-filter-grid">
           <label class="field compact-field search-field">
-            <span>Search</span>
-            <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Reference, activity, aspect, impact">
+            <span>{{ t('environmentalAspects.list.filters.search') }}</span>
+            <input [value]="search()" (input)="search.set(readInputValue($event))" [placeholder]="t('environmentalAspects.list.placeholders.search')">
           </label>
           <label class="field compact-field">
-            <span>Status</span>
+            <span>{{ t('environmentalAspects.list.filters.status') }}</span>
             <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
-              <option value="">All</option>
-              <option value="ACTIVE">Active</option>
-              <option value="MONITORING">Monitoring</option>
-              <option value="OBSOLETE">Obsolete</option>
+              <option value="">{{ t('environmentalAspects.list.filters.all') }}</option>
+              <option value="ACTIVE">{{ aspectStatusLabel('ACTIVE') }}</option>
+              <option value="MONITORING">{{ aspectStatusLabel('MONITORING') }}</option>
+              <option value="OBSOLETE">{{ aspectStatusLabel('OBSOLETE') }}</option>
             </select>
           </label>
           <label class="field compact-field">
-            <span>Owner</span>
+            <span>{{ t('environmentalAspects.list.filters.owner') }}</span>
             <select [value]="ownerFilter()" (change)="ownerFilter.set(readSelectValue($event))">
-              <option value="">All</option>
+              <option value="">{{ t('environmentalAspects.list.filters.all') }}</option>
               <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
             </select>
           </label>
@@ -54,41 +54,41 @@
       <p class="feedback top-space" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
       <div class="empty-state top-space" *ngIf="loading()">
-        <strong>Loading environmental aspects</strong>
-        <span>Refreshing aspects, impacts, and linked controls.</span>
+        <strong>{{ t('environmentalAspects.list.loadingTitle') }}</strong>
+        <span>{{ t('environmentalAspects.list.loadingCopy') }}</span>
       </div>
 
       <div class="empty-state top-space" *ngIf="!loading() && !filteredAspects().length">
-        <strong>No environmental aspects found</strong>
-        <span>Create the first aspect to start tracking environmental exposure visibly in the IMS.</span>
+        <strong>{{ t('environmentalAspects.list.emptyTitle') }}</strong>
+        <span>{{ t('environmentalAspects.list.emptyCopy') }}</span>
       </div>
 
       <div class="data-table-wrap top-space" *ngIf="!loading() && filteredAspects().length">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Aspect</th>
-              <th>Activity</th>
-              <th>Stage</th>
-              <th>Significance</th>
-              <th>Status</th>
-              <th>Review date</th>
-              <th>Links</th>
+              <th>{{ t('environmentalAspects.list.table.aspect') }}</th>
+              <th>{{ t('environmentalAspects.list.table.activity') }}</th>
+              <th>{{ t('environmentalAspects.list.table.lifecycleStage') }}</th>
+              <th>{{ t('environmentalAspects.list.table.significance') }}</th>
+              <th>{{ t('environmentalAspects.list.table.status') }}</th>
+              <th>{{ t('environmentalAspects.list.table.reviewDate') }}</th>
+              <th>{{ t('environmentalAspects.list.table.links') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let item of filteredAspects()" [routerLink]="['/environmental-aspects', item.id]">
               <td>
                 <div class="table-title">
-                  <strong>{{ item.referenceNo || 'Uncoded' }} - {{ item.aspect }}</strong>
+                  <strong>{{ item.referenceNo || t('environmentalAspects.common.uncoded') }} - {{ item.aspect }}</strong>
                   <small>{{ item.impact }}</small>
                 </div>
               </td>
               <td>{{ item.activity }}</td>
-              <td>{{ prettyStatus(item.lifecycleStage) }}</td>
-              <td><span class="status-badge" [ngClass]="significanceClass(item.significance)">{{ prettyStatus(item.significance) }}</span></td>
-              <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ prettyStatus(item.status) }}</span></td>
-              <td>{{ item.reviewDate ? (item.reviewDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
+              <td>{{ aspectStageLabel(item.lifecycleStage) }}</td>
+              <td><span class="status-badge" [ngClass]="significanceClass(item.significance)">{{ aspectSignificanceLabel(item.significance) }}</span></td>
+              <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ aspectStatusLabel(item.status) }}</span></td>
+              <td>{{ item.reviewDate ? (item.reviewDate | date:'yyyy-MM-dd') : t('common.notSet') }}</td>
               <td>{{ item.linkCount || 0 }}</td>
             </tr>
           </tbody>
@@ -104,73 +104,73 @@
       <section class="content-guidance">
         <div class="section-head compact-head">
           <div>
-            <h4>Register position</h4>
+            <h4>{{ t('environmentalAspects.form.positionTitle') }}</h4>
             <p class="subtle">{{ aspectGuidance() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Activity</span><strong>{{ form.getRawValue().activity ? 'Defined' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Impact</span><strong>{{ form.getRawValue().impact ? 'Recorded' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Owner</span><strong>{{ form.getRawValue().ownerUserId ? 'Assigned' : 'Needed' }}</strong></article>
+          <article class="summary-item"><span>{{ t('environmentalAspects.form.summary.activity') }}</span><strong>{{ form.getRawValue().activity ? t('environmentalAspects.form.summary.defined') : t('environmentalAspects.form.summary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('environmentalAspects.form.summary.impact') }}</span><strong>{{ form.getRawValue().impact ? t('environmentalAspects.form.summary.recorded') : t('environmentalAspects.form.summary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('environmentalAspects.form.summary.owner') }}</span><strong>{{ form.getRawValue().ownerUserId ? t('environmentalAspects.form.summary.assigned') : t('environmentalAspects.form.summary.needed') }}</strong></article>
         </div>
       </section>
 
       <section class="detail-section">
-        <h4>Aspect definition</h4>
+        <h4>{{ t('environmentalAspects.form.definitionTitle') }}</h4>
         <div class="form-grid-2 top-space">
-          <label class="field"><span>Reference</span><input formControlName="referenceNo" placeholder="EA-001"></label>
+          <label class="field"><span>{{ t('environmentalAspects.form.fields.reference') }}</span><input formControlName="referenceNo" [placeholder]="t('environmentalAspects.form.placeholders.reference')"></label>
           <label class="field">
-            <span>Status</span>
+            <span>{{ t('environmentalAspects.form.fields.status') }}</span>
             <select formControlName="status">
-              <option value="ACTIVE">Active</option>
-              <option value="MONITORING">Monitoring</option>
-              <option value="OBSOLETE">Obsolete</option>
+              <option value="ACTIVE">{{ aspectStatusLabel('ACTIVE') }}</option>
+              <option value="MONITORING">{{ aspectStatusLabel('MONITORING') }}</option>
+              <option value="OBSOLETE">{{ aspectStatusLabel('OBSOLETE') }}</option>
             </select>
           </label>
         </div>
-        <label class="field top-space"><span>Activity</span><input formControlName="activity" placeholder="Chemical transfer, waste handling, dispatch loading"></label>
-        <label class="field top-space"><span>Environmental aspect</span><input formControlName="aspect" placeholder="Coolant handling | Emissions | Waste generation"></label>
-        <label class="field top-space"><span>Environmental impact</span><textarea formControlName="impact" rows="4" placeholder="Describe the resulting impact if the aspect is not controlled."></textarea></label>
+        <label class="field top-space"><span>{{ t('environmentalAspects.form.fields.activity') }}</span><input formControlName="activity" [placeholder]="t('environmentalAspects.form.placeholders.activity')"></label>
+        <label class="field top-space"><span>{{ t('environmentalAspects.form.fields.aspect') }}</span><input formControlName="aspect" [placeholder]="t('environmentalAspects.form.placeholders.aspect')"></label>
+        <label class="field top-space"><span>{{ t('environmentalAspects.form.fields.impact') }}</span><textarea formControlName="impact" rows="4" [placeholder]="t('environmentalAspects.form.placeholders.impact')"></textarea></label>
       </section>
 
       <section class="detail-section">
-        <h4>Control context</h4>
+        <h4>{{ t('environmentalAspects.form.controlContextTitle') }}</h4>
         <div class="form-grid-3 top-space">
           <label class="field">
-            <span>Lifecycle stage</span>
+            <span>{{ t('environmentalAspects.form.fields.lifecycleStage') }}</span>
             <select formControlName="lifecycleStage">
-              <option value="NORMAL_OPERATION">Normal operation</option>
-              <option value="ABNORMAL_OPERATION">Abnormal operation</option>
-              <option value="EMERGENCY">Emergency</option>
+              <option value="NORMAL_OPERATION">{{ aspectStageLabel('NORMAL_OPERATION') }}</option>
+              <option value="ABNORMAL_OPERATION">{{ aspectStageLabel('ABNORMAL_OPERATION') }}</option>
+              <option value="EMERGENCY">{{ aspectStageLabel('EMERGENCY') }}</option>
             </select>
           </label>
           <label class="field">
-            <span>Significance</span>
+            <span>{{ t('environmentalAspects.form.fields.significance') }}</span>
             <select formControlName="significance">
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
+              <option value="LOW">{{ aspectSignificanceLabel('LOW') }}</option>
+              <option value="MEDIUM">{{ aspectSignificanceLabel('MEDIUM') }}</option>
+              <option value="HIGH">{{ aspectSignificanceLabel('HIGH') }}</option>
             </select>
           </label>
-          <label class="field"><span>Review date</span><input formControlName="reviewDate" type="date"></label>
+          <label class="field"><span>{{ t('environmentalAspects.form.fields.reviewDate') }}</span><input formControlName="reviewDate" type="date"></label>
         </div>
-        <label class="field top-space"><span>Current controls</span><textarea formControlName="controlSummary" rows="4" placeholder="Summarize the key operational controls currently applied."></textarea></label>
+        <label class="field top-space"><span>{{ t('environmentalAspects.form.fields.controlSummary') }}</span><textarea formControlName="controlSummary" rows="4" [placeholder]="t('environmentalAspects.form.placeholders.controlSummary')"></textarea></label>
       </section>
 
       <section class="detail-section">
-        <h4>Review ownership</h4>
+        <h4>{{ t('environmentalAspects.form.ownerTitle') }}</h4>
         <label class="field top-space">
-          <span>Owner</span>
+          <span>{{ t('environmentalAspects.form.fields.owner') }}</span>
           <select formControlName="ownerUserId">
-            <option value="">Unassigned</option>
+            <option value="">{{ t('environmentalAspects.common.unassigned') }}</option>
             <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
           </select>
         </label>
       </section>
 
       <div class="button-row">
-        <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save aspect' }}</button>
-        <a [routerLink]="selectedId() ? ['/environmental-aspects', selectedId()] : ['/environmental-aspects']" class="button-link secondary">Cancel</a>
+        <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? t('environmentalAspects.actions.saving') : t('environmentalAspects.actions.save') }}</button>
+        <a [routerLink]="selectedId() ? ['/environmental-aspects', selectedId()] : ['/environmental-aspects']" class="button-link secondary">{{ t('common.cancel') }}</a>
       </div>
     </form>
   </section>
@@ -179,60 +179,60 @@
     <section class="card detail-card">
       <div class="section-head">
         <div>
-          <span class="section-eyebrow">Environmental aspect</span>
-          <h3>{{ selectedAspect()?.referenceNo || 'Uncoded' }} - {{ selectedAspect()?.aspect }}</h3>
-          <p class="subtle">{{ selectedAspect()?.impact || 'No impact summary recorded yet.' }}</p>
+          <span class="section-eyebrow">{{ t('environmentalAspects.detail.eyebrow') }}</span>
+          <h3>{{ selectedAspect()?.referenceNo || t('environmentalAspects.common.uncoded') }} - {{ selectedAspect()?.aspect }}</h3>
+          <p class="subtle">{{ selectedAspect()?.impact || t('environmentalAspects.detail.noImpact') }}</p>
         </div>
         <div class="route-context">
-          <span class="status-badge" [ngClass]="significanceClass(selectedAspect()?.significance || 'LOW')">{{ prettyStatus(selectedAspect()?.significance) }}</span>
-          <span class="status-badge" [ngClass]="statusClass(selectedAspect()?.status || 'ACTIVE')">{{ prettyStatus(selectedAspect()?.status) }}</span>
+          <span class="status-badge" [ngClass]="significanceClass(selectedAspect()?.significance || 'LOW')">{{ aspectSignificanceLabel(selectedAspect()?.significance || 'LOW') }}</span>
+          <span class="status-badge" [ngClass]="statusClass(selectedAspect()?.status || 'ACTIVE')">{{ aspectStatusLabel(selectedAspect()?.status || 'ACTIVE') }}</span>
         </div>
       </div>
 
       <div class="summary-strip top-space">
-        <article class="summary-item"><span>Activity</span><strong>{{ selectedAspect()?.activity }}</strong></article>
-        <article class="summary-item"><span>Lifecycle stage</span><strong>{{ prettyStatus(selectedAspect()?.lifecycleStage) }}</strong></article>
-        <article class="summary-item"><span>Owner</span><strong>{{ selectedAspect()?.owner ? personName(selectedAspect()!.owner!) : 'Unassigned' }}</strong></article>
-        <article class="summary-item"><span>Linked records</span><strong>{{ selectedAspect()?.links?.length || 0 }}</strong></article>
+        <article class="summary-item"><span>{{ t('environmentalAspects.detail.summary.activity') }}</span><strong>{{ selectedAspect()?.activity }}</strong></article>
+        <article class="summary-item"><span>{{ t('environmentalAspects.detail.summary.lifecycleStage') }}</span><strong>{{ aspectStageLabel(selectedAspect()?.lifecycleStage || 'NORMAL_OPERATION') }}</strong></article>
+        <article class="summary-item"><span>{{ t('environmentalAspects.detail.summary.owner') }}</span><strong>{{ selectedAspect()?.owner ? personName(selectedAspect()!.owner!) : t('environmentalAspects.common.unassigned') }}</strong></article>
+        <article class="summary-item"><span>{{ t('environmentalAspects.detail.summary.linkedRecords') }}</span><strong>{{ selectedAspect()?.links?.length || 0 }}</strong></article>
       </div>
 
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Review position</h4>
+            <h4>{{ t('environmentalAspects.detail.reviewTitle') }}</h4>
             <p class="subtle">{{ reviewNarrative() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Processes</span><strong>{{ linkCountByType('PROCESS') }}</strong></article>
-          <article class="summary-item"><span>Risks</span><strong>{{ linkCountByType('RISK') }}</strong></article>
-          <article class="summary-item"><span>Actions</span><strong>{{ linkCountByType('ACTION') }}</strong></article>
+          <article class="summary-item"><span>{{ t('environmentalAspects.detail.reviewSummary.processes') }}</span><strong>{{ linkCountByType('PROCESS') }}</strong></article>
+          <article class="summary-item"><span>{{ t('environmentalAspects.detail.reviewSummary.risks') }}</span><strong>{{ linkCountByType('RISK') }}</strong></article>
+          <article class="summary-item"><span>{{ t('environmentalAspects.detail.reviewSummary.actions') }}</span><strong>{{ linkCountByType('ACTION') }}</strong></article>
         </div>
       </section>
 
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Next steps</h4>
+            <h4>{{ t('environmentalAspects.detail.nextStepsTitle') }}</h4>
             <p class="subtle">{{ nextStepHeadline() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Process link</span><strong>{{ linkCountByType('PROCESS') ? 'Linked' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Risk link</span><strong>{{ linkCountByType('RISK') ? 'Linked' : (selectedAspect()?.significance === 'HIGH' ? 'Needed' : 'Optional') }}</strong></article>
-          <article class="summary-item"><span>Follow-up action</span><strong>{{ linkCountByType('ACTION') ? 'Linked' : 'Prepare below' }}</strong></article>
+          <article class="summary-item"><span>{{ t('environmentalAspects.detail.nextStepsSummary.processLink') }}</span><strong>{{ linkCountByType('PROCESS') ? t('environmentalAspects.detail.nextStepsSummary.linked') : t('environmentalAspects.detail.nextStepsSummary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('environmentalAspects.detail.nextStepsSummary.riskLink') }}</span><strong>{{ linkCountByType('RISK') ? t('environmentalAspects.detail.nextStepsSummary.linked') : (selectedAspect()?.significance === 'HIGH' ? t('environmentalAspects.detail.nextStepsSummary.needed') : t('environmentalAspects.detail.nextStepsSummary.optional')) }}</strong></article>
+          <article class="summary-item"><span>{{ t('environmentalAspects.detail.nextStepsSummary.followUpAction') }}</span><strong>{{ linkCountByType('ACTION') ? t('environmentalAspects.detail.nextStepsSummary.linked') : t('environmentalAspects.detail.nextStepsSummary.prepareBelow') }}</strong></article>
         </div>
         <p class="top-space">{{ nextStepNarrative() }}</p>
       </section>
 
       <div class="section-grid-2 top-space">
         <section class="detail-section">
-          <h4>Current controls</h4>
-          <p>{{ selectedAspect()?.controlSummary || 'No control summary recorded.' }}</p>
+          <h4>{{ t('environmentalAspects.detail.fields.controlSummary') }}</h4>
+          <p>{{ selectedAspect()?.controlSummary || t('environmentalAspects.detail.empty.controls') }}</p>
         </section>
         <section class="detail-section">
-          <h4>Review date</h4>
-          <p>{{ selectedAspect()?.reviewDate ? (selectedAspect()?.reviewDate | date:'yyyy-MM-dd') : 'No review date recorded.' }}</p>
+          <h4>{{ t('environmentalAspects.detail.fields.reviewDate') }}</h4>
+          <p>{{ selectedAspect()?.reviewDate ? (selectedAspect()?.reviewDate | date:'yyyy-MM-dd') : t('environmentalAspects.detail.empty.reviewDate') }}</p>
         </section>
       </div>
     </section>
@@ -248,9 +248,9 @@
     <section class="card detail-card">
       <div class="section-head">
         <div>
-          <span class="section-eyebrow">Linked records</span>
-          <h3>Traceability hub</h3>
-          <p class="subtle">Link the existing process, risk, and action records that already carry the operational follow-up.</p>
+          <span class="section-eyebrow">{{ t('environmentalAspects.links.eyebrow') }}</span>
+          <h3>{{ t('environmentalAspects.links.title') }}</h3>
+          <p class="subtle">{{ t('environmentalAspects.links.copy') }}</p>
         </div>
       </div>
 
@@ -262,12 +262,12 @@
               <p class="subtle">{{ sectionDescription(type) }}</p>
             </div>
             <button *ngIf="canWrite()" type="button" class="button-link secondary" (click)="openLinkComposer(type)">
-              {{ activeLinkComposerType() === type ? 'Close' : '+ Link' }}
+              {{ activeLinkComposerType() === type ? t('environmentalAspects.links.closeComposer') : t('environmentalAspects.links.openComposer') }}
             </button>
           </div>
 
           <div class="empty-state compact-empty top-space" *ngIf="!linksByType(type).length">
-            <strong>No linked records</strong>
+            <strong>{{ t('environmentalAspects.links.emptyTitle') }}</strong>
             <span>{{ sectionEmptyCopy(type) }}</span>
           </div>
 
@@ -281,14 +281,14 @@
                 </div>
                 <div class="route-context">
                   <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
-                  <a *ngIf="canOpenLink(link)" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">Open</a>
+                  <a *ngIf="canOpenLink(link)" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">{{ t('common.open') }}</a>
                   <div *ngIf="!canOpenLink(link) && inaccessibleLinkSummary(link) as summary" class="package-link-note">
-                    <span class="package-link-note__eyebrow">Included from {{ packageTierLabel(summary.requiredTier) }}</span>
+                    <span class="package-link-note__eyebrow">{{ t('environmentalAspects.links.includedFrom', { tier: packageTierLabel(summary.requiredTier) }) }}</span>
                     <strong>{{ summary.title }}</strong>
                     <small *ngIf="summary.subtitle">{{ summary.subtitle }}</small>
                     <small>{{ summary.moduleLabel }}<span *ngIf="summary.statusLabel"> · {{ summary.statusLabel }}</span></small>
                   </div>
-                  <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">Remove</button>
+                  <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">{{ t('environmentalAspects.links.remove') }}</button>
                 </div>
               </div>
             </div>
@@ -299,13 +299,13 @@
             <label class="field">
               <span>{{ sectionPickerLabel(type) }}</span>
               <select formControlName="linkedId">
-                <option value="">Choose existing {{ sectionPickerLabel(type).toLowerCase() }}</option>
+                <option value="">{{ t('environmentalAspects.linkComposer.chooseExisting', { section: sectionPickerLabel(type).toLowerCase() }) }}</option>
                 <option *ngFor="let candidate of linkCandidates()" [value]="candidate.id">{{ candidate.label }}</option>
               </select>
             </label>
-            <label class="field"><span>Note</span><input formControlName="note" placeholder="Optional context for this link"></label>
+            <label class="field"><span>{{ t('environmentalAspects.linkComposer.note') }}</span><input formControlName="note" [placeholder]="t('environmentalAspects.linkComposer.notePlaceholder')"></label>
             <div class="button-row">
-              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? 'Linking...' : 'Save link' }}</button>
+              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? t('environmentalAspects.linkComposer.linking') : t('environmentalAspects.linkComposer.addLink') }}</button>
             </div>
           </form>
         </section>

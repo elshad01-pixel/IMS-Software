@@ -1,14 +1,14 @@
 <section class="page-grid">
   <iso-page-header
-    [label]="'External Providers'"
+    [label]="t('externalProviders.page.label')"
     [title]="pageTitle()"
     [description]="pageDescription()"
     [breadcrumbs]="breadcrumbs()"
   >
-    <a *ngIf="mode() === 'list' && canWrite()" routerLink="/external-providers/new" class="button-link">+ New provider</a>
-    <a *ngIf="mode() === 'detail' && selectedRecord() && canWrite()" [routerLink]="['/external-providers', selectedId(), 'edit']" class="button-link">Edit provider</a>
-    <button *ngIf="mode() === 'detail' && selectedRecord() && canDelete()" type="button" class="button-link danger" (click)="archiveRecord()">Archive</button>
-    <a *ngIf="mode() !== 'list'" routerLink="/external-providers" class="button-link secondary">Back</a>
+    <a *ngIf="mode() === 'list' && canWrite()" routerLink="/external-providers/new" class="button-link">{{ t('externalProviders.actions.new') }}</a>
+    <a *ngIf="mode() === 'detail' && selectedRecord() && canWrite()" [routerLink]="['/external-providers', selectedId(), 'edit']" class="button-link">{{ t('externalProviders.actions.edit') }}</a>
+    <button *ngIf="mode() === 'detail' && selectedRecord() && canDelete()" type="button" class="button-link danger" (click)="archiveRecord()">{{ t('externalProviders.actions.archive') }}</button>
+    <a *ngIf="mode() !== 'list'" routerLink="/external-providers" class="button-link secondary">{{ t('externalProviders.actions.back') }}</a>
   </iso-page-header>
 
   <section *ngIf="mode() === 'list'" class="page-stack">
@@ -16,37 +16,37 @@
       <div class="toolbar">
         <div class="toolbar-meta">
           <div>
-            <p class="toolbar-title">Register filters</p>
-            <p class="toolbar-copy">Track approved suppliers, contractors, and outsourced services in one controlled register.</p>
+            <p class="toolbar-title">{{ t('externalProviders.list.filtersTitle') }}</p>
+            <p class="toolbar-copy">{{ t('externalProviders.list.copy') }}</p>
           </div>
           <div class="toolbar-stats">
-            <article class="toolbar-stat"><span>Total</span><strong>{{ records().length }}</strong></article>
-            <article class="toolbar-stat"><span>Approved</span><strong>{{ approvedCount() }}</strong></article>
-            <article class="toolbar-stat"><span>Under review</span><strong>{{ reviewCount() }}</strong></article>
-            <article class="toolbar-stat"><span>High criticality</span><strong>{{ highCriticalityCount() }}</strong></article>
-            <article class="toolbar-stat"><span>Evaluated</span><strong>{{ evaluatedCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('externalProviders.list.stats.total') }}</span><strong>{{ records().length }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('externalProviders.list.stats.approved') }}</span><strong>{{ approvedCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('externalProviders.list.stats.underReview') }}</span><strong>{{ reviewCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('externalProviders.list.stats.highCriticality') }}</span><strong>{{ highCriticalityCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('externalProviders.list.stats.evaluated') }}</span><strong>{{ evaluatedCount() }}</strong></article>
           </div>
         </div>
 
         <div class="filter-row standard-filter-grid">
           <label class="field compact-field search-field">
-            <span>Search</span>
-            <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Reference, provider, scope, approval basis">
+            <span>{{ t('externalProviders.list.filters.search') }}</span>
+            <input [value]="search()" (input)="search.set(readInputValue($event))" [placeholder]="t('externalProviders.list.placeholders.search')">
           </label>
           <label class="field compact-field">
-            <span>Status</span>
+            <span>{{ t('externalProviders.list.filters.status') }}</span>
             <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
-              <option value="">All</option>
-              <option value="APPROVED">Approved</option>
-              <option value="CONDITIONAL">Conditional</option>
-              <option value="UNDER_REVIEW">Under review</option>
-              <option value="INACTIVE">Inactive</option>
+              <option value="">{{ t('externalProviders.list.filters.all') }}</option>
+              <option value="APPROVED">{{ providerStatusLabel('APPROVED') }}</option>
+              <option value="CONDITIONAL">{{ providerStatusLabel('CONDITIONAL') }}</option>
+              <option value="UNDER_REVIEW">{{ providerStatusLabel('UNDER_REVIEW') }}</option>
+              <option value="INACTIVE">{{ providerStatusLabel('INACTIVE') }}</option>
             </select>
           </label>
           <label class="field compact-field">
-            <span>Owner</span>
+            <span>{{ t('externalProviders.list.filters.owner') }}</span>
             <select [value]="ownerFilter()" (change)="ownerFilter.set(readSelectValue($event))">
-              <option value="">All</option>
+              <option value="">{{ t('externalProviders.list.filters.all') }}</option>
               <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
             </select>
           </label>
@@ -56,49 +56,49 @@
       <p class="feedback top-space" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
       <div class="empty-state top-space" *ngIf="loading()">
-        <strong>Loading external providers</strong>
-        <span>Refreshing approved providers, outsourced services, and review timing.</span>
+        <strong>{{ t('externalProviders.list.loadingTitle') }}</strong>
+        <span>{{ t('externalProviders.list.loadingCopy') }}</span>
       </div>
 
       <div class="empty-state top-space" *ngIf="!loading() && !filteredRecords().length">
-        <strong>No external providers found</strong>
-        <span>Create the first provider to keep supplier and outsourced-service control visible in the IMS.</span>
+        <strong>{{ t('externalProviders.list.emptyTitle') }}</strong>
+        <span>{{ t('externalProviders.list.emptyCopy') }}</span>
       </div>
 
       <div class="data-table-wrap top-space" *ngIf="!loading() && filteredRecords().length">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Provider</th>
-              <th>Type</th>
-              <th>Criticality</th>
-              <th>Status</th>
-              <th>Evaluation</th>
-              <th>Next review</th>
-              <th>Supplier audit</th>
-              <th>Attention</th>
-              <th>Links</th>
+              <th>{{ t('externalProviders.list.table.provider') }}</th>
+              <th>{{ t('externalProviders.list.table.type') }}</th>
+              <th>{{ t('externalProviders.list.table.criticality') }}</th>
+              <th>{{ t('externalProviders.list.table.status') }}</th>
+              <th>{{ t('externalProviders.list.table.evaluation') }}</th>
+              <th>{{ t('externalProviders.list.table.nextReview') }}</th>
+              <th>{{ t('externalProviders.list.table.supplierAudit') }}</th>
+              <th>{{ t('externalProviders.list.table.attention') }}</th>
+              <th>{{ t('externalProviders.list.table.links') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let item of filteredRecords()" [routerLink]="['/external-providers', item.id]">
               <td>
                 <div class="table-title">
-                  <strong>{{ item.referenceNo || 'Uncoded' }} - {{ item.providerName }}</strong>
+                  <strong>{{ item.referenceNo || t('externalProviders.common.uncoded') }} - {{ item.providerName }}</strong>
                   <small>{{ item.suppliedScope }}</small>
                   <small class="attention-copy" *ngIf="attentionSummary(item) as attention">{{ attention }}</small>
                 </div>
               </td>
-              <td>{{ prettyStatus(item.providerType) }}</td>
-              <td><span class="status-badge" [ngClass]="criticalityClass(item.criticality)">{{ prettyStatus(item.criticality) }}</span></td>
-              <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ prettyStatus(item.status) }}</span></td>
+              <td>{{ providerTypeLabel(item.providerType) }}</td>
+              <td><span class="status-badge" [ngClass]="criticalityClass(item.criticality)">{{ providerCriticalityLabel(item.criticality) }}</span></td>
+              <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ providerStatusLabel(item.status) }}</span></td>
               <td>
                 <div class="table-title compact">
-                  <strong>{{ item.evaluationScore ?? 'Not scored' }}<span *ngIf="item.evaluationScore !== null && item.evaluationScore !== undefined">%</span></strong>
+                  <strong>{{ item.evaluationScore ?? t('externalProviders.evaluation.common.notScored') }}<span *ngIf="item.evaluationScore !== null && item.evaluationScore !== undefined">%</span></strong>
                   <small>{{ evaluationOutcomeLabel(item.evaluationOutcome) }}</small>
                 </div>
               </td>
-              <td>{{ item.nextReviewDate ? (item.nextReviewDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
+              <td>{{ item.nextReviewDate ? (item.nextReviewDate | date:'yyyy-MM-dd') : t('common.notSet') }}</td>
               <td><span class="status-badge" [ngClass]="auditCoverageClass(item)">{{ auditCoverageLabel(item) }}</span></td>
               <td><span class="status-badge" [ngClass]="attentionClass(item)">{{ attentionLabel(item) }}</span></td>
               <td>{{ item.linkCount || 0 }}</td>
@@ -116,66 +116,66 @@
       <section class="content-guidance">
         <div class="section-head compact-head">
           <div>
-            <h4>Control position</h4>
+            <h4>{{ t('externalProviders.form.positionTitle') }}</h4>
             <p class="subtle">{{ guidance() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Provider</span><strong>{{ form.getRawValue().providerName ? 'Defined' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Approval basis</span><strong>{{ form.getRawValue().approvalBasis ? 'Recorded' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Owner</span><strong>{{ form.getRawValue().ownerUserId ? 'Assigned' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Annual evaluation</span><strong>{{ questionnairePercent() !== null ? questionnairePercent() + '%' : 'Not scored' }}</strong></article>
+          <article class="summary-item"><span>{{ t('externalProviders.form.summary.provider') }}</span><strong>{{ form.getRawValue().providerName ? t('externalProviders.form.summary.defined') : t('externalProviders.form.summary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('externalProviders.form.summary.approvalBasis') }}</span><strong>{{ form.getRawValue().approvalBasis ? t('externalProviders.form.summary.recorded') : t('externalProviders.form.summary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('externalProviders.form.summary.owner') }}</span><strong>{{ form.getRawValue().ownerUserId ? t('externalProviders.form.summary.assigned') : t('externalProviders.form.summary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('externalProviders.form.summary.annualEvaluation') }}</span><strong>{{ questionnairePercent() !== null ? questionnairePercent() + '%' : t('externalProviders.evaluation.common.notScored') }}</strong></article>
         </div>
       </section>
 
       <section class="detail-section">
-        <h4>Provider definition</h4>
+        <h4>{{ t('externalProviders.form.definitionTitle') }}</h4>
         <div class="form-grid-2 top-space">
-          <label class="field"><span>Reference</span><input formControlName="referenceNo" placeholder="SUP-001"></label>
+          <label class="field"><span>{{ t('externalProviders.form.fields.reference') }}</span><input formControlName="referenceNo" [placeholder]="t('externalProviders.form.placeholders.reference')"></label>
           <label class="field">
-            <span>Status</span>
+            <span>{{ t('externalProviders.form.fields.status') }}</span>
             <select formControlName="status">
-              <option value="APPROVED">Approved</option>
-              <option value="CONDITIONAL">Conditional</option>
-              <option value="UNDER_REVIEW">Under review</option>
-              <option value="INACTIVE">Inactive</option>
+              <option value="APPROVED">{{ providerStatusLabel('APPROVED') }}</option>
+              <option value="CONDITIONAL">{{ providerStatusLabel('CONDITIONAL') }}</option>
+              <option value="UNDER_REVIEW">{{ providerStatusLabel('UNDER_REVIEW') }}</option>
+              <option value="INACTIVE">{{ providerStatusLabel('INACTIVE') }}</option>
             </select>
           </label>
         </div>
-        <label class="field top-space"><span>Provider name</span><input formControlName="providerName" placeholder="Approved plating subcontractor | Calibration lab"></label>
+        <label class="field top-space"><span>{{ t('externalProviders.form.fields.providerName') }}</span><input formControlName="providerName" [placeholder]="t('externalProviders.form.placeholders.providerName')"></label>
         <div class="form-grid-2 top-space">
           <label class="field">
-            <span>Provider type</span>
+            <span>{{ t('externalProviders.form.fields.providerType') }}</span>
             <select formControlName="providerType">
-              <option value="SUPPLIER">Supplier</option>
-              <option value="OUTSOURCED_SERVICE">Outsourced service</option>
-              <option value="CONTRACTOR">Contractor</option>
-              <option value="CALIBRATION">Calibration</option>
-              <option value="LOGISTICS">Logistics</option>
-              <option value="OTHER">Other</option>
+              <option value="SUPPLIER">{{ providerTypeLabel('SUPPLIER') }}</option>
+              <option value="OUTSOURCED_SERVICE">{{ providerTypeLabel('OUTSOURCED_SERVICE') }}</option>
+              <option value="CONTRACTOR">{{ providerTypeLabel('CONTRACTOR') }}</option>
+              <option value="CALIBRATION">{{ providerTypeLabel('CALIBRATION') }}</option>
+              <option value="LOGISTICS">{{ providerTypeLabel('LOGISTICS') }}</option>
+              <option value="OTHER">{{ providerTypeLabel('OTHER') }}</option>
             </select>
           </label>
           <label class="field">
-            <span>Criticality</span>
+            <span>{{ t('externalProviders.form.fields.criticality') }}</span>
             <select formControlName="criticality">
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
+              <option value="LOW">{{ providerCriticalityLabel('LOW') }}</option>
+              <option value="MEDIUM">{{ providerCriticalityLabel('MEDIUM') }}</option>
+              <option value="HIGH">{{ providerCriticalityLabel('HIGH') }}</option>
             </select>
           </label>
         </div>
-        <label class="field top-space"><span>Supplied scope</span><textarea formControlName="suppliedScope" rows="4" placeholder="What product, service, or outsourced activity this provider supports."></textarea></label>
+        <label class="field top-space"><span>{{ t('externalProviders.form.fields.suppliedScope') }}</span><textarea formControlName="suppliedScope" rows="4" [placeholder]="t('externalProviders.form.placeholders.suppliedScope')"></textarea></label>
       </section>
 
       <section class="detail-section">
-        <h4>Approval and review</h4>
-        <label class="field top-space"><span>Approval basis</span><textarea formControlName="approvalBasis" rows="4" placeholder="Summarize why the provider is approved, conditionally accepted, or under review."></textarea></label>
+        <h4>{{ t('externalProviders.form.reviewTitle') }}</h4>
+        <label class="field top-space"><span>{{ t('externalProviders.form.fields.approvalBasis') }}</span><textarea formControlName="approvalBasis" rows="4" [placeholder]="t('externalProviders.form.placeholders.approvalBasis')"></textarea></label>
         <div class="form-grid-2 top-space">
-          <label class="field"><span>Next review date</span><input formControlName="nextReviewDate" type="date"></label>
+          <label class="field"><span>{{ t('externalProviders.form.fields.nextReviewDate') }}</span><input formControlName="nextReviewDate" type="date"></label>
           <label class="field">
-            <span>Owner</span>
+            <span>{{ t('externalProviders.form.fields.owner') }}</span>
             <select formControlName="ownerUserId">
-              <option value="">Unassigned</option>
+              <option value="">{{ t('externalProviders.common.unassigned') }}</option>
               <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
             </select>
           </label>
@@ -183,80 +183,40 @@
       </section>
 
       <section class="detail-section">
-        <h4>Annual evaluation</h4>
-        <p class="subtle top-space">Use one simple annual questionnaire so supplier review stays comparable across providers. Score each item from 1 to 5.</p>
+        <h4>{{ t('externalProviders.evaluation.title') }}</h4>
+        <p class="subtle top-space">{{ t('externalProviders.evaluation.copy') }}</p>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Scale</span><strong>1 weak to 5 strong</strong></article>
-          <article class="summary-item"><span>Average</span><strong>{{ questionnaireAverage() ?? 'Not scored' }}</strong></article>
-          <article class="summary-item"><span>Total score</span><strong>{{ questionnairePercent() !== null ? questionnairePercent() + '%' : 'Not scored' }}</strong></article>
+          <article class="summary-item"><span>{{ t('externalProviders.evaluation.summary.scale') }}</span><strong>{{ t('externalProviders.evaluation.summary.scaleValue') }}</strong></article>
+          <article class="summary-item"><span>{{ t('externalProviders.evaluation.summary.average') }}</span><strong>{{ questionnaireAverage() ?? t('externalProviders.evaluation.common.notScored') }}</strong></article>
+          <article class="summary-item"><span>{{ t('externalProviders.evaluation.summary.totalScore') }}</span><strong>{{ questionnairePercent() !== null ? questionnairePercent() + '%' : t('externalProviders.evaluation.common.notScored') }}</strong></article>
         </div>
 
         <div class="criteria-grid top-space">
           <article class="criterion-card" *ngFor="let criterion of evaluationCriteria()">
-            <strong>{{ criterion.score }} - {{ criterion.title }}</strong>
-            <span>{{ criterion.definition }}</span>
+            <strong>{{ criterion.score }} - {{ evaluationCriterionTitle(criterion.score) }}</strong>
+            <span>{{ evaluationCriterionDefinition(criterion.score) }}</span>
           </article>
         </div>
 
         <div class="form-grid-2 top-space">
           <label class="field">
-            <span>Evaluation date</span>
+            <span>{{ t('externalProviders.evaluation.fields.evaluationDate') }}</span>
             <input formControlName="evaluationDate" type="date">
           </label>
-          <label class="field">
-            <span>Quality performance</span>
-            <select formControlName="qualityScore">
-              <option [ngValue]="null">Not scored</option>
+          <label class="field" *ngFor="let metric of evaluationMetrics()">
+            <span>{{ metric.label }}</span>
+            <select [formControlName]="metric.key">
+              <option [ngValue]="null">{{ t('externalProviders.evaluation.common.notScored') }}</option>
               <option *ngFor="let score of scoreChoices()" [ngValue]="score">{{ score }}</option>
             </select>
-            <small class="field-hint">Conformance, defect history, and complaint performance.</small>
-          </label>
-          <label class="field">
-            <span>Delivery performance</span>
-            <select formControlName="deliveryScore">
-              <option [ngValue]="null">Not scored</option>
-              <option *ngFor="let score of scoreChoices()" [ngValue]="score">{{ score }}</option>
-            </select>
-            <small class="field-hint">On-time delivery, service reliability, and schedule stability.</small>
-          </label>
-          <label class="field">
-            <span>Responsiveness</span>
-            <select formControlName="responsivenessScore">
-              <option [ngValue]="null">Not scored</option>
-              <option *ngFor="let score of scoreChoices()" [ngValue]="score">{{ score }}</option>
-            </select>
-            <small class="field-hint">Speed and clarity when issues, requests, or escalations arise.</small>
-          </label>
-          <label class="field">
-            <span>Compliance and documentation</span>
-            <select formControlName="complianceScore">
-              <option [ngValue]="null">Not scored</option>
-              <option *ngFor="let score of scoreChoices()" [ngValue]="score">{{ score }}</option>
-            </select>
-            <small class="field-hint">Certificates, approvals, and required supporting records.</small>
-          </label>
-          <label class="field">
-            <span>Traceability and control</span>
-            <select formControlName="traceabilityScore">
-              <option [ngValue]="null">Not scored</option>
-              <option *ngFor="let score of scoreChoices()" [ngValue]="score">{{ score }}</option>
-            </select>
-            <small class="field-hint">Record retrieval, identification, and control of supplied product or service.</small>
-          </label>
-          <label class="field">
-            <span>Change notification</span>
-            <select formControlName="changeControlScore">
-              <option [ngValue]="null">Not scored</option>
-              <option *ngFor="let score of scoreChoices()" [ngValue]="score">{{ score }}</option>
-            </select>
-            <small class="field-hint">How reliably the provider communicates changes before impact occurs.</small>
+            <small class="field-hint">{{ metric.hint }}</small>
           </label>
         </div>
 
         <section class="detail-section top-space live-performance">
           <div class="section-head compact-head">
             <div>
-              <h4>Live performance view</h4>
+              <h4>{{ t('externalProviders.livePerformance.title') }}</h4>
               <p class="subtle">{{ livePerformanceHeadline() }}</p>
             </div>
             <span class="status-badge" [ngClass]="liveOutcomeClass()">{{ liveOutcomeLabel() }}</span>
@@ -264,37 +224,37 @@
           <p class="top-space">{{ livePerformanceNarrative() }}</p>
           <div class="live-panels top-space" *ngIf="questionnaireScores().length">
             <article class="live-panel">
-              <span>Strong areas</span>
+              <span>{{ t('externalProviders.livePerformance.panels.strongAreas') }}</span>
               <strong *ngIf="strongestAreas().length">{{ areaLabels(strongestAreas()) }}</strong>
-              <strong *ngIf="!strongestAreas().length">None yet</strong>
+              <strong *ngIf="!strongestAreas().length">{{ t('externalProviders.livePerformance.panels.noneYet') }}</strong>
             </article>
             <article class="live-panel">
-              <span>Watch areas</span>
+              <span>{{ t('externalProviders.livePerformance.panels.watchAreas') }}</span>
               <strong *ngIf="watchAreas().length">{{ areaLabels(watchAreas()) }}</strong>
-              <strong *ngIf="!watchAreas().length">None</strong>
+              <strong *ngIf="!watchAreas().length">{{ t('externalProviders.livePerformance.panels.none') }}</strong>
             </article>
             <article class="live-panel">
-              <span>Weak areas</span>
+              <span>{{ t('externalProviders.livePerformance.panels.weakAreas') }}</span>
               <strong *ngIf="weakAreas().length">{{ areaLabels(weakAreas()) }}</strong>
-              <strong *ngIf="!weakAreas().length">None</strong>
+              <strong *ngIf="!weakAreas().length">{{ t('externalProviders.livePerformance.panels.none') }}</strong>
             </article>
           </div>
           <div class="score-grid top-space" *ngIf="questionnaireScores().length">
             <article class="score-item" *ngFor="let metric of evaluationMetrics()">
               <span>{{ metric.label }}</span>
-              <strong>{{ form.get(metric.key)?.value ?? 'Not scored' }}</strong>
+              <strong>{{ form.get(metric.key)?.value ?? t('externalProviders.evaluation.common.notScored') }}</strong>
               <small>{{ metric.hint }}</small>
               <small class="score-definition" *ngIf="scoreDefinition(form.get(metric.key)?.value)">{{ scoreDefinition(form.get(metric.key)?.value)?.definition }}</small>
             </article>
           </div>
         </section>
 
-        <label class="field top-space"><span>Evaluation summary</span><textarea formControlName="evaluationSummary" rows="4" placeholder="Summarize the main strengths, weaknesses, and any conditions from the annual provider review."></textarea></label>
+        <label class="field top-space"><span>{{ t('externalProviders.evaluation.fields.evaluationSummary') }}</span><textarea formControlName="evaluationSummary" rows="4" [placeholder]="t('externalProviders.evaluation.fields.evaluationSummaryPlaceholder')"></textarea></label>
       </section>
 
       <div class="button-row">
-        <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save provider' }}</button>
-        <a [routerLink]="selectedId() ? ['/external-providers', selectedId()] : ['/external-providers']" class="button-link secondary">Cancel</a>
+        <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? t('externalProviders.actions.saving') : t('externalProviders.actions.save') }}</button>
+        <a [routerLink]="selectedId() ? ['/external-providers', selectedId()] : ['/external-providers']" class="button-link secondary">{{ t('common.cancel') }}</a>
       </div>
     </form>
   </section>
@@ -303,28 +263,28 @@
     <section class="card detail-card">
       <div class="section-head">
         <div>
-          <span class="section-eyebrow">External provider</span>
-          <h3>{{ selectedRecord()?.referenceNo || 'Uncoded' }} - {{ selectedRecord()?.providerName }}</h3>
-          <p class="subtle">{{ selectedRecord()?.suppliedScope || 'No supplied scope recorded yet.' }}</p>
+          <span class="section-eyebrow">{{ t('externalProviders.detail.eyebrow') }}</span>
+          <h3>{{ selectedRecord()?.referenceNo || t('externalProviders.common.uncoded') }} - {{ selectedRecord()?.providerName }}</h3>
+          <p class="subtle">{{ selectedRecord()?.suppliedScope || t('externalProviders.detail.noScope') }}</p>
         </div>
         <div class="route-context">
-          <span class="status-badge" [ngClass]="criticalityClass(selectedRecord()?.criticality || 'LOW')">{{ prettyStatus(selectedRecord()?.criticality) }}</span>
-          <span class="status-badge" [ngClass]="statusClass(selectedRecord()?.status || 'APPROVED')">{{ prettyStatus(selectedRecord()?.status) }}</span>
+          <span class="status-badge" [ngClass]="criticalityClass(selectedRecord()?.criticality || 'LOW')">{{ providerCriticalityLabel(selectedRecord()?.criticality || 'LOW') }}</span>
+          <span class="status-badge" [ngClass]="statusClass(selectedRecord()?.status || 'APPROVED')">{{ providerStatusLabel(selectedRecord()?.status || 'APPROVED') }}</span>
         </div>
       </div>
 
       <div class="summary-strip top-space">
-        <article class="summary-item"><span>Provider type</span><strong>{{ prettyStatus(selectedRecord()?.providerType) }}</strong></article>
-        <article class="summary-item"><span>Owner</span><strong>{{ selectedRecord()?.owner ? personName(selectedRecord()?.owner) : 'Unassigned' }}</strong></article>
-        <article class="summary-item"><span>Next review</span><strong>{{ selectedRecord()?.nextReviewDate ? (selectedRecord()?.nextReviewDate | date:'yyyy-MM-dd') : 'Not set' }}</strong></article>
-        <article class="summary-item"><span>Annual evaluation</span><strong>{{ selectedRecord()?.evaluationScore !== null && selectedRecord()?.evaluationScore !== undefined ? selectedRecord()?.evaluationScore + '%' : 'Not scored' }}</strong></article>
-        <article class="summary-item"><span>Linked records</span><strong>{{ selectedRecord()?.links?.length || 0 }}</strong></article>
+        <article class="summary-item"><span>{{ t('externalProviders.detail.summary.providerType') }}</span><strong>{{ providerTypeLabel(selectedRecord()?.providerType || 'SUPPLIER') }}</strong></article>
+        <article class="summary-item"><span>{{ t('externalProviders.detail.summary.owner') }}</span><strong>{{ selectedRecord()?.owner ? personName(selectedRecord()?.owner) : t('externalProviders.common.unassigned') }}</strong></article>
+        <article class="summary-item"><span>{{ t('externalProviders.detail.summary.nextReview') }}</span><strong>{{ selectedRecord()?.nextReviewDate ? (selectedRecord()?.nextReviewDate | date:'yyyy-MM-dd') : t('common.notSet') }}</strong></article>
+        <article class="summary-item"><span>{{ t('externalProviders.detail.summary.annualEvaluation') }}</span><strong>{{ selectedRecord()?.evaluationScore !== null && selectedRecord()?.evaluationScore !== undefined ? selectedRecord()?.evaluationScore + '%' : t('externalProviders.evaluation.common.notScored') }}</strong></article>
+        <article class="summary-item"><span>{{ t('externalProviders.detail.summary.linkedRecords') }}</span><strong>{{ selectedRecord()?.links?.length || 0 }}</strong></article>
       </div>
 
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Management attention</h4>
+            <h4>{{ t('externalProviders.attention.title') }}</h4>
             <p class="subtle">{{ attentionHeadline() }}</p>
           </div>
         </div>
@@ -334,69 +294,69 @@
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Review position</h4>
+            <h4>{{ t('externalProviders.detail.reviewTitle') }}</h4>
             <p class="subtle">{{ reviewNarrative() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Processes</span><strong>{{ linkCountByType('PROCESS') }}</strong></article>
-          <article class="summary-item"><span>Audits</span><strong>{{ linkCountByType('AUDIT') }}</strong></article>
-          <article class="summary-item"><span>Risks</span><strong>{{ linkCountByType('RISK') }}</strong></article>
-          <article class="summary-item"><span>Actions</span><strong>{{ linkCountByType('ACTION') }}</strong></article>
-          <article class="summary-item"><span>Supplier audit</span><strong>{{ auditCoverageLabel(selectedRecord()) }}</strong></article>
+          <article class="summary-item"><span>{{ t('externalProviders.detail.reviewSummary.processes') }}</span><strong>{{ linkCountByType('PROCESS') }}</strong></article>
+          <article class="summary-item"><span>{{ t('externalProviders.detail.reviewSummary.audits') }}</span><strong>{{ linkCountByType('AUDIT') }}</strong></article>
+          <article class="summary-item"><span>{{ t('externalProviders.detail.reviewSummary.risks') }}</span><strong>{{ linkCountByType('RISK') }}</strong></article>
+          <article class="summary-item"><span>{{ t('externalProviders.detail.reviewSummary.actions') }}</span><strong>{{ linkCountByType('ACTION') }}</strong></article>
+          <article class="summary-item"><span>{{ t('externalProviders.detail.reviewSummary.supplierAudit') }}</span><strong>{{ auditCoverageLabel(selectedRecord()) }}</strong></article>
         </div>
       </section>
 
       <div class="section-grid-2 top-space">
         <section class="detail-section">
-          <h4>Approval basis</h4>
-          <p>{{ selectedRecord()?.approvalBasis || 'No approval basis recorded.' }}</p>
+          <h4>{{ t('externalProviders.detail.fields.approvalBasis') }}</h4>
+          <p>{{ selectedRecord()?.approvalBasis || t('externalProviders.detail.empty.approvalBasis') }}</p>
         </section>
         <section class="detail-section">
-          <h4>Criticality focus</h4>
-          <p>{{ selectedRecord()?.criticality === 'HIGH' ? 'This provider supports a high-impact product, service, or outsourced activity and should stay visible in formal review.' : selectedRecord()?.criticality === 'MEDIUM' ? 'This provider has moderate impact and should stay within routine review and audit coverage.' : 'This provider is recorded for visibility, with lighter follow-up expectations unless the relationship changes.' }}</p>
+          <h4>{{ t('externalProviders.detail.fields.criticalityFocus') }}</h4>
+          <p>{{ selectedRecord()?.criticality === 'HIGH' ? t('externalProviders.detail.criticalityFocus.high') : selectedRecord()?.criticality === 'MEDIUM' ? t('externalProviders.detail.criticalityFocus.medium') : t('externalProviders.detail.criticalityFocus.low') }}</p>
         </section>
       </div>
 
       <div class="section-grid-2 top-space">
         <section class="detail-section">
-          <h4>Annual evaluation result</h4>
+          <h4>{{ t('externalProviders.detail.fields.annualEvaluationResult') }}</h4>
           <div class="evaluation-head">
-            <strong>{{ selectedRecord()?.evaluationScore !== null && selectedRecord()?.evaluationScore !== undefined ? selectedRecord()?.evaluationScore + '%' : 'Not scored yet' }}</strong>
+            <strong>{{ selectedRecord()?.evaluationScore !== null && selectedRecord()?.evaluationScore !== undefined ? selectedRecord()?.evaluationScore + '%' : t('externalProviders.evaluation.common.notScoredYet') }}</strong>
             <span class="status-badge" [ngClass]="evaluationOutcomeClass(selectedRecord()?.evaluationOutcome)">{{ evaluationOutcomeLabel(selectedRecord()?.evaluationOutcome) }}</span>
           </div>
           <p class="top-space">{{ evaluationNarrative(selectedRecord()) }}</p>
           <p class="top-space" *ngIf="selectedRecord()?.evaluationSummary">{{ selectedRecord()?.evaluationSummary }}</p>
         </section>
         <section class="detail-section">
-          <h4>Questionnaire breakdown</h4>
+          <h4>{{ t('externalProviders.detail.fields.questionnaireBreakdown') }}</h4>
           <div class="score-grid">
-            <article class="score-item"><span>Quality</span><strong>{{ selectedRecord()?.qualityScore ?? '-' }}</strong></article>
-            <article class="score-item"><span>Delivery</span><strong>{{ selectedRecord()?.deliveryScore ?? '-' }}</strong></article>
-            <article class="score-item"><span>Responsiveness</span><strong>{{ selectedRecord()?.responsivenessScore ?? '-' }}</strong></article>
-            <article class="score-item"><span>Compliance</span><strong>{{ selectedRecord()?.complianceScore ?? '-' }}</strong></article>
-            <article class="score-item"><span>Traceability</span><strong>{{ selectedRecord()?.traceabilityScore ?? '-' }}</strong></article>
-            <article class="score-item"><span>Change control</span><strong>{{ selectedRecord()?.changeControlScore ?? '-' }}</strong></article>
+            <article class="score-item"><span>{{ t('externalProviders.evaluation.metrics.qualityScore.label') }}</span><strong>{{ selectedRecord()?.qualityScore ?? '-' }}</strong></article>
+            <article class="score-item"><span>{{ t('externalProviders.evaluation.metrics.deliveryScore.label') }}</span><strong>{{ selectedRecord()?.deliveryScore ?? '-' }}</strong></article>
+            <article class="score-item"><span>{{ t('externalProviders.evaluation.metrics.responsivenessScore.label') }}</span><strong>{{ selectedRecord()?.responsivenessScore ?? '-' }}</strong></article>
+            <article class="score-item"><span>{{ t('externalProviders.evaluation.metrics.complianceScore.label') }}</span><strong>{{ selectedRecord()?.complianceScore ?? '-' }}</strong></article>
+            <article class="score-item"><span>{{ t('externalProviders.evaluation.metrics.traceabilityScore.label') }}</span><strong>{{ selectedRecord()?.traceabilityScore ?? '-' }}</strong></article>
+            <article class="score-item"><span>{{ t('externalProviders.evaluation.metrics.changeControlScore.label') }}</span><strong>{{ selectedRecord()?.changeControlScore ?? '-' }}</strong></article>
           </div>
-          <p class="subtle top-space" *ngIf="selectedRecord()?.evaluationDate">Latest annual evaluation recorded on {{ selectedRecord()?.evaluationDate | date:'yyyy-MM-dd' }}.</p>
+          <p class="subtle top-space" *ngIf="selectedRecord()?.evaluationDate">{{ t('externalProviders.detail.evaluationDateLine', { date: (selectedRecord()?.evaluationDate | date:'yyyy-MM-dd') }) }}</p>
         </section>
       </div>
 
       <section class="detail-section top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Supplier audit expectation</h4>
-            <p class="subtle">Critical suppliers should show at least one linked supplier audit as part of formal annual oversight.</p>
+            <h4>{{ t('externalProviders.auditCoverage.title') }}</h4>
+            <p class="subtle">{{ t('externalProviders.auditCoverage.copy') }}</p>
           </div>
           <span class="status-badge" [ngClass]="auditCoverageClass(selectedRecord())">{{ auditCoverageLabel(selectedRecord()) }}</span>
         </div>
         <p class="top-space">
           {{
             !selectedRecord()?.supplierAuditRequired
-              ? 'A dedicated supplier audit is not required for this provider based on its current type and criticality.'
+              ? t('externalProviders.auditCoverage.narrative.notRequired')
               : selectedRecord()?.supplierAuditLinked
-                ? 'A supplier audit is already linked, so annual provider review shows formal audit support.'
-                : 'This provider is marked as a critical supplier, so link a supplier audit to complete formal annual oversight.'
+                ? t('externalProviders.auditCoverage.narrative.linked')
+                : t('externalProviders.auditCoverage.narrative.required')
           }}
         </p>
       </section>
@@ -404,14 +364,14 @@
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Next steps</h4>
+            <h4>{{ t('externalProviders.nextSteps.title') }}</h4>
             <p class="subtle">{{ nextStepHeadline() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Supplier audit</span><strong>{{ auditCoverageLabel(selectedRecord()) }}</strong></article>
-          <article class="summary-item"><span>Follow-up action</span><strong>{{ linkCountByType('ACTION') ? 'Linked' : 'Prepare below' }}</strong></article>
-          <article class="summary-item"><span>Traceability</span><strong>{{ linkCountByType('PROCESS') && linkCountByType('AUDIT') ? 'Connected' : 'Complete links' }}</strong></article>
+          <article class="summary-item"><span>{{ t('externalProviders.nextSteps.summary.supplierAudit') }}</span><strong>{{ auditCoverageLabel(selectedRecord()) }}</strong></article>
+          <article class="summary-item"><span>{{ t('externalProviders.nextSteps.summary.followUpAction') }}</span><strong>{{ linkCountByType('ACTION') ? t('externalProviders.nextSteps.summary.linked') : t('externalProviders.nextSteps.summary.prepareBelow') }}</strong></article>
+          <article class="summary-item"><span>{{ t('externalProviders.nextSteps.summary.traceability') }}</span><strong>{{ linkCountByType('PROCESS') && linkCountByType('AUDIT') ? t('externalProviders.nextSteps.summary.connected') : t('externalProviders.nextSteps.summary.completeLinks') }}</strong></article>
         </div>
         <p class="top-space">{{ nextStepNarrative() }}</p>
       </section>
@@ -428,9 +388,9 @@
     <section class="card detail-card">
       <div class="section-head">
         <div>
-          <span class="section-eyebrow">Linked records</span>
-          <h3>Traceability hub</h3>
-          <p class="subtle">Link the existing process, audit, risk, action, and obligation records that already carry the operational follow-up.</p>
+          <span class="section-eyebrow">{{ t('externalProviders.links.eyebrow') }}</span>
+          <h3>{{ t('externalProviders.links.title') }}</h3>
+          <p class="subtle">{{ t('externalProviders.links.copy') }}</p>
         </div>
       </div>
 
@@ -442,12 +402,12 @@
               <p class="subtle">{{ sectionDescription(type) }}</p>
             </div>
             <button *ngIf="canWrite()" type="button" class="button-link secondary" (click)="openLinkComposer(type)">
-              {{ activeLinkComposerType() === type ? 'Close' : '+ Link' }}
+              {{ activeLinkComposerType() === type ? t('externalProviders.links.closeComposer') : t('externalProviders.links.openComposer') }}
             </button>
           </div>
 
           <div class="empty-state compact-empty top-space" *ngIf="!linksByType(type).length">
-            <strong>No linked records</strong>
+            <strong>{{ t('externalProviders.links.emptyTitle') }}</strong>
             <span>{{ sectionEmptyCopy(type) }}</span>
           </div>
 
@@ -461,14 +421,14 @@
                 </div>
                 <div class="route-context">
                   <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
-                  <a *ngIf="canOpenLink(link)" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">Open</a>
+                  <a *ngIf="canOpenLink(link)" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">{{ t('common.open') }}</a>
                   <div *ngIf="!canOpenLink(link) && inaccessibleLinkSummary(link) as summary" class="package-link-note">
-                    <span class="package-link-note__eyebrow">Included from {{ packageTierLabel(summary.requiredTier) }}</span>
+                    <span class="package-link-note__eyebrow">{{ t('externalProviders.links.includedFrom', { tier: packageTierLabel(summary.requiredTier) }) }}</span>
                     <strong>{{ summary.title }}</strong>
                     <small *ngIf="summary.subtitle">{{ summary.subtitle }}</small>
                     <small>{{ summary.moduleLabel }}<span *ngIf="summary.statusLabel"> · {{ summary.statusLabel }}</span></small>
                   </div>
-                  <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">Remove</button>
+                  <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">{{ t('externalProviders.links.remove') }}</button>
                 </div>
               </div>
             </div>
@@ -479,13 +439,13 @@
             <label class="field">
               <span>{{ sectionPickerLabel(type) }}</span>
               <select formControlName="linkedId">
-                <option value="">Choose existing {{ sectionPickerLabel(type).toLowerCase() }}</option>
+                <option value="">{{ t('externalProviders.linkComposer.chooseExisting', { section: sectionPickerLabel(type).toLowerCase() }) }}</option>
                 <option *ngFor="let candidate of linkCandidates()" [value]="candidate.id">{{ candidate.label }}</option>
               </select>
             </label>
-            <label class="field"><span>Note</span><input formControlName="note" placeholder="Optional context for this link"></label>
+            <label class="field"><span>{{ t('externalProviders.linkComposer.note') }}</span><input formControlName="note" [placeholder]="t('externalProviders.linkComposer.notePlaceholder')"></label>
             <div class="button-row">
-              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? 'Linking...' : 'Save link' }}</button>
+              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? t('externalProviders.linkComposer.linking') : t('externalProviders.linkComposer.addLink') }}</button>
             </div>
           </form>
         </section>

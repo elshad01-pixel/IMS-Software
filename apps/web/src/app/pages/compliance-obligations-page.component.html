@@ -1,14 +1,14 @@
 <section class="page-grid">
   <iso-page-header
-    [label]="'Compliance Obligations'"
+    [label]="t('complianceObligations.page.label')"
     [title]="pageTitle()"
     [description]="pageDescription()"
     [breadcrumbs]="breadcrumbs()"
   >
-    <a *ngIf="mode() === 'list' && canWrite()" routerLink="/compliance-obligations/new" class="button-link">+ New obligation</a>
-    <a *ngIf="mode() === 'detail' && selectedObligation() && canWrite()" [routerLink]="['/compliance-obligations', selectedId(), 'edit']" class="button-link">Edit obligation</a>
-    <button *ngIf="mode() === 'detail' && selectedObligation() && canDelete()" type="button" class="button-link danger" (click)="archiveObligation()">Archive</button>
-    <a *ngIf="mode() !== 'list'" routerLink="/compliance-obligations" class="button-link secondary">Back</a>
+    <a *ngIf="mode() === 'list' && canWrite()" routerLink="/compliance-obligations/new" class="button-link">{{ t('complianceObligations.actions.new') }}</a>
+    <a *ngIf="mode() === 'detail' && selectedObligation() && canWrite()" [routerLink]="['/compliance-obligations', selectedId(), 'edit']" class="button-link">{{ t('complianceObligations.actions.edit') }}</a>
+    <button *ngIf="mode() === 'detail' && selectedObligation() && canDelete()" type="button" class="button-link danger" (click)="archiveObligation()">{{ t('complianceObligations.actions.archive') }}</button>
+    <a *ngIf="mode() !== 'list'" routerLink="/compliance-obligations" class="button-link secondary">{{ t('complianceObligations.actions.back') }}</a>
   </iso-page-header>
 
   <section *ngIf="mode() === 'list'" class="page-stack">
@@ -16,34 +16,34 @@
       <div class="toolbar">
         <div class="toolbar-meta">
           <div>
-            <p class="toolbar-title">Register filters</p>
-            <p class="toolbar-copy">Track legal, regulatory, and external obligations in one controlled register.</p>
+            <p class="toolbar-title">{{ t('complianceObligations.list.filtersTitle') }}</p>
+            <p class="toolbar-copy">{{ t('complianceObligations.list.copy') }}</p>
           </div>
           <div class="toolbar-stats">
-            <article class="toolbar-stat"><span>Total</span><strong>{{ obligations().length }}</strong></article>
-            <article class="toolbar-stat"><span>Active</span><strong>{{ activeCount() }}</strong></article>
-            <article class="toolbar-stat"><span>Under review</span><strong>{{ reviewCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('complianceObligations.list.stats.total') }}</span><strong>{{ obligations().length }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('complianceObligations.list.stats.active') }}</span><strong>{{ activeCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('complianceObligations.list.stats.review') }}</span><strong>{{ reviewCount() }}</strong></article>
           </div>
         </div>
 
         <div class="filter-row standard-filter-grid">
           <label class="field compact-field search-field">
-            <span>Search</span>
-            <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Reference, title, source, type">
+            <span>{{ t('complianceObligations.list.filters.search') }}</span>
+            <input [value]="search()" (input)="search.set(readInputValue($event))" [placeholder]="t('complianceObligations.list.placeholders.search')">
           </label>
           <label class="field compact-field">
-            <span>Status</span>
+            <span>{{ t('complianceObligations.list.filters.status') }}</span>
             <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
-              <option value="">All</option>
-              <option value="ACTIVE">Active</option>
-              <option value="UNDER_REVIEW">Under review</option>
-              <option value="OBSOLETE">Obsolete</option>
+              <option value="">{{ t('complianceObligations.list.filters.all') }}</option>
+              <option value="ACTIVE">{{ t('complianceObligations.status.ACTIVE') }}</option>
+              <option value="UNDER_REVIEW">{{ t('complianceObligations.status.UNDER_REVIEW') }}</option>
+              <option value="OBSOLETE">{{ t('complianceObligations.status.OBSOLETE') }}</option>
             </select>
           </label>
           <label class="field compact-field">
-            <span>Owner</span>
+            <span>{{ t('complianceObligations.list.filters.owner') }}</span>
             <select [value]="ownerFilter()" (change)="ownerFilter.set(readSelectValue($event))">
-              <option value="">All</option>
+              <option value="">{{ t('complianceObligations.list.filters.all') }}</option>
               <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
             </select>
           </label>
@@ -53,41 +53,41 @@
       <p class="feedback top-space" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
       <div class="empty-state top-space" *ngIf="loading()">
-        <strong>Loading obligations register</strong>
-        <span>Refreshing compliance obligations and linked records.</span>
+        <strong>{{ t('complianceObligations.list.loadingTitle') }}</strong>
+        <span>{{ t('complianceObligations.list.loadingCopy') }}</span>
       </div>
 
       <div class="empty-state top-space" *ngIf="!loading() && !filteredObligations().length">
-        <strong>No obligations found</strong>
-        <span>Create the first obligation to start tracking requirements visibly in the IMS.</span>
+        <strong>{{ t('complianceObligations.list.emptyTitle') }}</strong>
+        <span>{{ t('complianceObligations.list.emptyCopy') }}</span>
       </div>
 
       <div class="data-table-wrap top-space" *ngIf="!loading() && filteredObligations().length">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Obligation</th>
-              <th>Source</th>
-              <th>Owner</th>
-              <th>Next review</th>
-              <th>Status</th>
-              <th>Attention</th>
-              <th>Links</th>
+              <th>{{ t('complianceObligations.list.table.obligation') }}</th>
+              <th>{{ t('complianceObligations.list.table.source') }}</th>
+              <th>{{ t('complianceObligations.list.table.owner') }}</th>
+              <th>{{ t('complianceObligations.list.table.nextReview') }}</th>
+              <th>{{ t('complianceObligations.list.table.status') }}</th>
+              <th>{{ t('complianceObligations.list.table.attention') }}</th>
+              <th>{{ t('complianceObligations.list.table.links') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let item of filteredObligations()" [routerLink]="['/compliance-obligations', item.id]">
               <td>
                 <div class="table-title">
-                  <strong>{{ item.referenceNo || 'Uncoded' }} - {{ item.title }}</strong>
-                  <small>{{ item.obligationType || 'General obligation' }}</small>
+                  <strong>{{ item.referenceNo || t('complianceObligations.common.uncoded') }} - {{ item.title }}</strong>
+                  <small>{{ item.obligationType || t('complianceObligations.common.generalObligation') }}</small>
                   <small class="attention-copy" *ngIf="attentionSummary(item) as attention">{{ attention }}</small>
                 </div>
               </td>
               <td>{{ item.sourceName }}</td>
-              <td>{{ item.owner ? personName(item.owner) : 'Unassigned' }}</td>
-              <td>{{ item.nextReviewDate ? (item.nextReviewDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
-              <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ prettyStatus(item.status) }}</span></td>
+              <td>{{ item.owner ? personName(item.owner) : t('complianceObligations.common.unassigned') }}</td>
+              <td>{{ item.nextReviewDate ? (item.nextReviewDate | date:'yyyy-MM-dd') : t('common.notSet') }}</td>
+              <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ obligationStatusLabel(item.status) }}</span></td>
               <td><span class="status-badge" [ngClass]="attentionClass(item)">{{ attentionLabel(item) }}</span></td>
               <td>{{ item.linkCount || 0 }}</td>
             </tr>
@@ -104,61 +104,61 @@
       <section class="content-guidance">
         <div class="section-head compact-head">
           <div>
-            <h4>Register position</h4>
+            <h4>{{ t('complianceObligations.form.positionTitle') }}</h4>
             <p class="subtle">{{ obligationGuidance() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Source</span><strong>{{ form.getRawValue().sourceName ? 'Defined' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Owner</span><strong>{{ form.getRawValue().ownerUserId ? 'Assigned' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Review date</span><strong>{{ form.getRawValue().nextReviewDate ? 'Planned' : 'Set next review' }}</strong></article>
+          <article class="summary-item"><span>{{ t('complianceObligations.form.summary.source') }}</span><strong>{{ form.getRawValue().sourceName ? t('complianceObligations.form.summary.defined') : t('complianceObligations.form.summary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('complianceObligations.form.summary.owner') }}</span><strong>{{ form.getRawValue().ownerUserId ? t('complianceObligations.form.summary.assigned') : t('complianceObligations.form.summary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('complianceObligations.form.summary.reviewDate') }}</span><strong>{{ form.getRawValue().nextReviewDate ? t('complianceObligations.form.summary.planned') : t('complianceObligations.form.summary.reviewNeeded') }}</strong></article>
         </div>
       </section>
 
       <section class="detail-section">
-        <h4>Core definition</h4>
+        <h4>{{ t('complianceObligations.form.coreDefinition') }}</h4>
         <div class="form-grid-2 top-space">
-          <label class="field"><span>Reference</span><input formControlName="referenceNo" placeholder="CO-001"></label>
+          <label class="field"><span>{{ t('complianceObligations.form.fields.reference') }}</span><input formControlName="referenceNo" [placeholder]="t('complianceObligations.form.placeholders.reference')"></label>
           <label class="field">
-            <span>Status</span>
+            <span>{{ t('complianceObligations.form.fields.status') }}</span>
             <select formControlName="status">
-              <option value="ACTIVE">Active</option>
-              <option value="UNDER_REVIEW">Under review</option>
-              <option value="OBSOLETE">Obsolete</option>
+              <option value="ACTIVE">{{ t('complianceObligations.status.ACTIVE') }}</option>
+              <option value="UNDER_REVIEW">{{ t('complianceObligations.status.UNDER_REVIEW') }}</option>
+              <option value="OBSOLETE">{{ t('complianceObligations.status.OBSOLETE') }}</option>
             </select>
           </label>
         </div>
-        <label class="field top-space"><span>Obligation title</span><input formControlName="title" placeholder="Waste handling permit conditions are reviewed annually"></label>
-        <label class="field top-space"><span>Source</span><input formControlName="sourceName" placeholder="Environmental permit | Customer contract | Labour code"></label>
+        <label class="field top-space"><span>{{ t('complianceObligations.form.fields.title') }}</span><input formControlName="title" [placeholder]="t('complianceObligations.form.placeholders.title')"></label>
+        <label class="field top-space"><span>{{ t('complianceObligations.form.fields.source') }}</span><input formControlName="sourceName" [placeholder]="t('complianceObligations.form.placeholders.source')"></label>
       </section>
 
       <section class="detail-section">
-        <h4>Applicability</h4>
+        <h4>{{ t('complianceObligations.form.applicabilityTitle') }}</h4>
         <div class="form-grid-2 top-space">
-          <label class="field"><span>Type</span><input formControlName="obligationType" placeholder="Legal | Regulatory | Customer | Other"></label>
-          <label class="field"><span>Jurisdiction / area</span><input formControlName="jurisdiction" placeholder="Azerbaijan | EU export | Customer specific"></label>
+          <label class="field"><span>{{ t('complianceObligations.form.fields.type') }}</span><input formControlName="obligationType" [placeholder]="t('complianceObligations.form.placeholders.type')"></label>
+          <label class="field"><span>{{ t('complianceObligations.form.fields.jurisdiction') }}</span><input formControlName="jurisdiction" [placeholder]="t('complianceObligations.form.placeholders.jurisdiction')"></label>
         </div>
-        <label class="field top-space"><span>Description</span><textarea formControlName="description" rows="5" placeholder="Summarize what the organization must do or maintain."></textarea></label>
+        <label class="field top-space"><span>{{ t('complianceObligations.form.fields.description') }}</span><textarea formControlName="description" rows="5" [placeholder]="t('complianceObligations.form.placeholders.description')"></textarea></label>
       </section>
 
       <section class="detail-section">
-        <h4>Review ownership</h4>
+        <h4>{{ t('complianceObligations.form.reviewOwnershipTitle') }}</h4>
         <div class="form-grid-3 top-space">
           <label class="field">
-            <span>Owner</span>
+            <span>{{ t('complianceObligations.form.fields.owner') }}</span>
             <select formControlName="ownerUserId">
-              <option value="">Unassigned</option>
+              <option value="">{{ t('complianceObligations.common.unassigned') }}</option>
               <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
             </select>
           </label>
-          <label class="field"><span>Review frequency (months)</span><input formControlName="reviewFrequencyMonths" type="number" min="1" max="36" placeholder="12"></label>
-          <label class="field"><span>Next review date</span><input formControlName="nextReviewDate" type="date"></label>
+          <label class="field"><span>{{ t('complianceObligations.form.fields.reviewFrequencyMonths') }}</span><input formControlName="reviewFrequencyMonths" type="number" min="1" max="36" [placeholder]="t('complianceObligations.form.placeholders.reviewFrequencyMonths')"></label>
+          <label class="field"><span>{{ t('complianceObligations.form.fields.nextReviewDate') }}</span><input formControlName="nextReviewDate" type="date"></label>
         </div>
       </section>
 
       <div class="button-row">
-        <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save obligation' }}</button>
-        <a [routerLink]="selectedId() ? ['/compliance-obligations', selectedId()] : ['/compliance-obligations']" class="button-link secondary">Cancel</a>
+        <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? t('complianceObligations.actions.saving') : t('complianceObligations.actions.save') }}</button>
+        <a [routerLink]="selectedId() ? ['/compliance-obligations', selectedId()] : ['/compliance-obligations']" class="button-link secondary">{{ t('common.cancel') }}</a>
       </div>
     </form>
   </section>
@@ -167,24 +167,24 @@
     <section class="card detail-card">
       <div class="section-head">
         <div>
-          <span class="section-eyebrow">Compliance obligation</span>
-          <h3>{{ selectedObligation()?.referenceNo || 'Uncoded' }} - {{ selectedObligation()?.title }}</h3>
-          <p class="subtle">{{ selectedObligation()?.description || 'No detailed description recorded yet.' }}</p>
+          <span class="section-eyebrow">{{ t('complianceObligations.detail.eyebrow') }}</span>
+          <h3>{{ selectedObligation()?.referenceNo || t('complianceObligations.common.uncoded') }} - {{ selectedObligation()?.title }}</h3>
+          <p class="subtle">{{ selectedObligation()?.description || t('complianceObligations.detail.noDescription') }}</p>
         </div>
-        <span class="status-badge" [ngClass]="statusClass(selectedObligation()?.status || 'ACTIVE')">{{ prettyStatus(selectedObligation()?.status) }}</span>
+        <span class="status-badge" [ngClass]="statusClass(selectedObligation()?.status || 'ACTIVE')">{{ obligationStatusLabel(selectedObligation()?.status || 'ACTIVE') }}</span>
       </div>
 
       <div class="summary-strip top-space">
-        <article class="summary-item"><span>Source</span><strong>{{ selectedObligation()?.sourceName }}</strong></article>
-        <article class="summary-item"><span>Owner</span><strong>{{ selectedObligation()?.owner ? personName(selectedObligation()!.owner!) : 'Unassigned' }}</strong></article>
-        <article class="summary-item"><span>Next review</span><strong>{{ selectedObligation()?.nextReviewDate ? (selectedObligation()?.nextReviewDate | date:'yyyy-MM-dd') : 'Not set' }}</strong></article>
-        <article class="summary-item"><span>Linked records</span><strong>{{ selectedObligation()?.links?.length || 0 }}</strong></article>
+        <article class="summary-item"><span>{{ t('complianceObligations.detail.summary.source') }}</span><strong>{{ selectedObligation()?.sourceName }}</strong></article>
+        <article class="summary-item"><span>{{ t('complianceObligations.detail.summary.owner') }}</span><strong>{{ selectedObligation()?.owner ? personName(selectedObligation()!.owner!) : t('complianceObligations.common.unassigned') }}</strong></article>
+        <article class="summary-item"><span>{{ t('complianceObligations.detail.summary.nextReview') }}</span><strong>{{ selectedObligation()?.nextReviewDate ? (selectedObligation()?.nextReviewDate | date:'yyyy-MM-dd') : t('common.notSet') }}</strong></article>
+        <article class="summary-item"><span>{{ t('complianceObligations.detail.summary.linkedRecords') }}</span><strong>{{ selectedObligation()?.links?.length || 0 }}</strong></article>
       </div>
 
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Management attention</h4>
+            <h4>{{ t('complianceObligations.detail.attentionTitle') }}</h4>
             <p class="subtle">{{ attentionHeadline() }}</p>
           </div>
         </div>
@@ -194,29 +194,29 @@
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Review position</h4>
+            <h4>{{ t('complianceObligations.detail.reviewTitle') }}</h4>
             <p class="subtle">{{ reviewNarrative() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Processes</span><strong>{{ linkCountByType('PROCESS') }}</strong></article>
-          <article class="summary-item"><span>Risks</span><strong>{{ linkCountByType('RISK') }}</strong></article>
-          <article class="summary-item"><span>Audits</span><strong>{{ linkCountByType('AUDIT') }}</strong></article>
-          <article class="summary-item"><span>Actions</span><strong>{{ linkCountByType('ACTION') }}</strong></article>
+          <article class="summary-item"><span>{{ t('complianceObligations.detail.reviewSummary.processes') }}</span><strong>{{ linkCountByType('PROCESS') }}</strong></article>
+          <article class="summary-item"><span>{{ t('complianceObligations.detail.reviewSummary.risks') }}</span><strong>{{ linkCountByType('RISK') }}</strong></article>
+          <article class="summary-item"><span>{{ t('complianceObligations.detail.reviewSummary.audits') }}</span><strong>{{ linkCountByType('AUDIT') }}</strong></article>
+          <article class="summary-item"><span>{{ t('complianceObligations.detail.reviewSummary.actions') }}</span><strong>{{ linkCountByType('ACTION') }}</strong></article>
         </div>
       </section>
 
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Next steps</h4>
+            <h4>{{ t('complianceObligations.detail.nextStepsTitle') }}</h4>
             <p class="subtle">{{ nextStepHeadline() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Process link</span><strong>{{ linkCountByType('PROCESS') ? 'Linked' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Audit coverage</span><strong>{{ linkCountByType('AUDIT') ? 'Linked' : 'Review' }}</strong></article>
-          <article class="summary-item"><span>Follow-up action</span><strong>{{ linkCountByType('ACTION') ? 'Linked' : 'Prepare below' }}</strong></article>
+          <article class="summary-item"><span>{{ t('complianceObligations.detail.nextStepsSummary.processLink') }}</span><strong>{{ linkCountByType('PROCESS') ? t('complianceObligations.detail.nextStepsSummary.linked') : t('complianceObligations.detail.nextStepsSummary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('complianceObligations.detail.nextStepsSummary.auditCoverage') }}</span><strong>{{ linkCountByType('AUDIT') ? t('complianceObligations.detail.nextStepsSummary.linked') : t('complianceObligations.detail.nextStepsSummary.review') }}</strong></article>
+          <article class="summary-item"><span>{{ t('complianceObligations.detail.nextStepsSummary.followUpAction') }}</span><strong>{{ linkCountByType('ACTION') ? t('complianceObligations.detail.nextStepsSummary.linked') : t('complianceObligations.detail.nextStepsSummary.prepare') }}</strong></article>
         </div>
         <p class="top-space">{{ nextStepNarrative() }}</p>
       </section>
@@ -233,9 +233,9 @@
     <section class="card detail-card">
       <div class="section-head">
         <div>
-          <span class="section-eyebrow">Linked records</span>
-          <h3>Traceability hub</h3>
-          <p class="subtle">Link the records that show how this obligation is managed in the IMS.</p>
+          <span class="section-eyebrow">{{ t('complianceObligations.links.eyebrow') }}</span>
+          <h3>{{ t('complianceObligations.links.title') }}</h3>
+          <p class="subtle">{{ t('complianceObligations.links.copy') }}</p>
         </div>
       </div>
 
@@ -243,8 +243,8 @@
         <section class="content-guidance">
           <div class="section-head compact-head">
             <div>
-              <h4>Optional links</h4>
-              <p class="subtle">This obligation is already saved. Add process, risk, audit, or action links only when they are useful for traceability or follow-up.</p>
+              <h4>{{ t('complianceObligations.links.optionalTitle') }}</h4>
+              <p class="subtle">{{ t('complianceObligations.links.optionalCopy') }}</p>
             </div>
           </div>
         </section>
@@ -256,12 +256,12 @@
               <p class="subtle">{{ sectionDescription(type) }}</p>
             </div>
             <button *ngIf="canWrite()" type="button" class="button-link secondary" (click)="openLinkComposer(type)">
-              {{ activeLinkComposerType() === type ? 'Close' : '+ Link' }}
+              {{ activeLinkComposerType() === type ? t('complianceObligations.links.closeComposer') : t('complianceObligations.links.openComposer') }}
             </button>
           </div>
 
           <div class="empty-state compact-empty top-space" *ngIf="!linksByType(type).length">
-            <strong>No linked records</strong>
+            <strong>{{ t('complianceObligations.links.emptyTitle') }}</strong>
             <span>{{ sectionEmptyCopy(type) }}</span>
           </div>
 
@@ -275,14 +275,14 @@
                 </div>
                 <div class="route-context">
                   <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
-                  <a *ngIf="canOpenLink(link)" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">Open</a>
+                  <a *ngIf="canOpenLink(link)" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">{{ t('common.open') }}</a>
                   <div *ngIf="!canOpenLink(link) && inaccessibleLinkSummary(link) as summary" class="package-link-note">
-                    <span class="package-link-note__eyebrow">Included from {{ packageTierLabel(summary.requiredTier) }}</span>
+                    <span class="package-link-note__eyebrow">{{ t('complianceObligations.links.includedFrom', { tier: packageTierLabel(summary.requiredTier) }) }}</span>
                     <strong>{{ summary.title }}</strong>
                     <small *ngIf="summary.subtitle">{{ summary.subtitle }}</small>
                     <small>{{ summary.moduleLabel }}<span *ngIf="summary.statusLabel"> · {{ summary.statusLabel }}</span></small>
                   </div>
-                  <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">Remove</button>
+                  <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">{{ t('complianceObligations.links.remove') }}</button>
                 </div>
               </div>
             </div>
@@ -293,13 +293,13 @@
             <label class="field">
               <span>{{ sectionPickerLabel(type) }}</span>
               <select formControlName="linkedId">
-                <option value="">Choose existing {{ sectionPickerLabel(type).toLowerCase() }}</option>
+                <option value="">{{ t('complianceObligations.linkComposer.chooseExisting', { section: sectionPickerLabel(type).toLowerCase() }) }}</option>
                 <option *ngFor="let candidate of linkCandidates()" [value]="candidate.id">{{ candidate.label }}</option>
               </select>
             </label>
-            <label class="field"><span>Note</span><input formControlName="note" placeholder="Optional context for this link"></label>
+            <label class="field"><span>{{ t('complianceObligations.linkComposer.note') }}</span><input formControlName="note" [placeholder]="t('complianceObligations.linkComposer.notePlaceholder')"></label>
             <div class="button-row">
-              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? 'Linking...' : 'Add link' }}</button>
+              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? t('complianceObligations.linkComposer.linking') : t('complianceObligations.linkComposer.addLink') }}</button>
             </div>
           </form>
         </section>

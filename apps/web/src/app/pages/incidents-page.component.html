@@ -1,15 +1,15 @@
 <section class="page-grid">
   <iso-page-header
-    [label]="'Incidents'"
+    [label]="t('incidents.page.label')"
     [title]="pageTitle()"
     [description]="pageDescription()"
     [breadcrumbs]="breadcrumbs()"
   >
-    <a *ngIf="mode() === 'list' && canWrite()" routerLink="/incidents/new" class="button-link">+ New incident</a>
-    <a *ngIf="mode() === 'detail' && selectedIncident() && canWrite()" [routerLink]="['/incidents', selectedId(), 'edit']" class="button-link">Edit incident</a>
-    <button *ngIf="mode() === 'detail' && selectedIncident() && canDelete()" type="button" class="button-link danger" (click)="archiveIncident()">Archive</button>
-    <a *ngIf="returnNavigation()" [routerLink]="returnNavigation()!.route" class="button-link tertiary">Back to {{ returnNavigation()!.label }}</a>
-    <a *ngIf="mode() !== 'list'" routerLink="/incidents" class="button-link secondary">Back</a>
+    <a *ngIf="mode() === 'list' && canWrite()" routerLink="/incidents/new" class="button-link">{{ t('incidents.actions.new') }}</a>
+    <a *ngIf="mode() === 'detail' && selectedIncident() && canWrite()" [routerLink]="['/incidents', selectedId(), 'edit']" class="button-link">{{ t('incidents.actions.edit') }}</a>
+    <button *ngIf="mode() === 'detail' && selectedIncident() && canDelete()" type="button" class="button-link danger" (click)="archiveIncident()">{{ t('incidents.actions.archive') }}</button>
+    <a *ngIf="returnNavigation()" [routerLink]="returnNavigation()!.route" class="button-link tertiary">{{ t('incidents.actions.backTo', { label: returnNavigation()!.label }) }}</a>
+    <a *ngIf="mode() !== 'list'" routerLink="/incidents" class="button-link secondary">{{ t('incidents.actions.back') }}</a>
   </iso-page-header>
 
   <section *ngIf="mode() === 'list'" class="page-stack">
@@ -17,45 +17,45 @@
       <div class="toolbar">
         <div class="toolbar-meta">
           <div>
-            <p class="toolbar-title">Register filters</p>
-            <p class="toolbar-copy">Keep incidents and near misses visible without duplicating NCR or CAPA workflows.</p>
+            <p class="toolbar-title">{{ t('incidents.list.filtersTitle') }}</p>
+            <p class="toolbar-copy">{{ t('incidents.list.copy') }}</p>
           </div>
           <div class="toolbar-stats">
-            <article class="toolbar-stat"><span>Total</span><strong>{{ incidents().length }}</strong></article>
-            <article class="toolbar-stat"><span>Near misses</span><strong>{{ totalNearMissCount() }}</strong></article>
-            <article class="toolbar-stat"><span>Open follow-up</span><strong>{{ openFollowUpCount() }}</strong></article>
-            <article class="toolbar-stat"><span>High / critical</span><strong>{{ highSeverityCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('incidents.list.stats.total') }}</span><strong>{{ incidents().length }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('incidents.list.stats.nearMisses') }}</span><strong>{{ totalNearMissCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('incidents.list.stats.openFollowUp') }}</span><strong>{{ openFollowUpCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('incidents.list.stats.highCritical') }}</span><strong>{{ highSeverityCount() }}</strong></article>
           </div>
         </div>
 
         <div class="filter-row standard-filter-grid">
           <label class="field compact-field search-field">
-            <span>Search</span>
-            <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Reference, title, location">
+            <span>{{ t('incidents.list.filters.search') }}</span>
+            <input [value]="search()" (input)="search.set(readInputValue($event))" [placeholder]="t('incidents.list.placeholders.search')">
           </label>
           <label class="field compact-field">
-            <span>Type</span>
+            <span>{{ t('incidents.list.filters.type') }}</span>
             <select [value]="typeFilter()" (change)="typeFilter.set(readSelectValue($event))">
-              <option value="">All</option>
-              <option value="INCIDENT">Incident</option>
-              <option value="NEAR_MISS">Near miss</option>
+              <option value="">{{ t('incidents.list.filters.all') }}</option>
+              <option value="INCIDENT">{{ incidentTypeLabel('INCIDENT') }}</option>
+              <option value="NEAR_MISS">{{ incidentTypeLabel('NEAR_MISS') }}</option>
             </select>
           </label>
           <label class="field compact-field">
-            <span>Status</span>
+            <span>{{ t('incidents.list.filters.status') }}</span>
             <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
-              <option value="">All</option>
-              <option value="REPORTED">Reported</option>
-              <option value="INVESTIGATION">Investigation</option>
-              <option value="ACTION_IN_PROGRESS">Action in progress</option>
-              <option value="CLOSED">Closed</option>
-              <option value="ARCHIVED">Archived</option>
+              <option value="">{{ t('incidents.list.filters.all') }}</option>
+              <option value="REPORTED">{{ incidentStatusLabel('REPORTED') }}</option>
+              <option value="INVESTIGATION">{{ incidentStatusLabel('INVESTIGATION') }}</option>
+              <option value="ACTION_IN_PROGRESS">{{ incidentStatusLabel('ACTION_IN_PROGRESS') }}</option>
+              <option value="CLOSED">{{ incidentStatusLabel('CLOSED') }}</option>
+              <option value="ARCHIVED">{{ incidentStatusLabel('ARCHIVED') }}</option>
             </select>
           </label>
           <label class="field compact-field">
-            <span>Owner</span>
+            <span>{{ t('incidents.list.filters.owner') }}</span>
             <select [value]="ownerFilter()" (change)="ownerFilter.set(readSelectValue($event))">
-              <option value="">All</option>
+              <option value="">{{ t('incidents.list.filters.all') }}</option>
               <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
             </select>
           </label>
@@ -65,41 +65,41 @@
       <p class="feedback top-space" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
       <div class="empty-state top-space" *ngIf="loading()">
-        <strong>Loading incident register</strong>
-        <span>Refreshing incidents, near misses, and linked follow-up records.</span>
+        <strong>{{ t('incidents.list.loadingTitle') }}</strong>
+        <span>{{ t('incidents.list.loadingCopy') }}</span>
       </div>
 
       <div class="empty-state top-space" *ngIf="!loading() && !filteredIncidents().length">
-        <strong>No incidents found</strong>
-        <span>Create the first incident or near miss to start tracking event follow-up visibly in the IMS.</span>
+        <strong>{{ t('incidents.list.emptyTitle') }}</strong>
+        <span>{{ t('incidents.list.emptyCopy') }}</span>
       </div>
 
       <div class="data-table-wrap top-space" *ngIf="!loading() && filteredIncidents().length">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Incident</th>
-              <th>Type</th>
-              <th>Event date</th>
-              <th>Severity</th>
-              <th>Status</th>
-              <th>Attention</th>
-              <th>Links</th>
+              <th>{{ t('incidents.list.table.incident') }}</th>
+              <th>{{ t('incidents.list.table.type') }}</th>
+              <th>{{ t('incidents.list.table.eventDate') }}</th>
+              <th>{{ t('incidents.list.table.severity') }}</th>
+              <th>{{ t('incidents.list.table.status') }}</th>
+              <th>{{ t('incidents.list.table.attention') }}</th>
+              <th>{{ t('incidents.list.table.links') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let item of filteredIncidents()" [routerLink]="['/incidents', item.id]">
               <td>
                 <div class="table-title">
-                  <strong>{{ item.referenceNo || 'Uncoded' }} - {{ item.title }}</strong>
-                  <small>{{ item.location || 'No location recorded' }}</small>
+                  <strong>{{ item.referenceNo || t('incidents.common.uncoded') }} - {{ item.title }}</strong>
+                  <small>{{ item.location || t('incidents.common.noLocation') }}</small>
                   <small class="attention-copy" *ngIf="attentionSummary(item) as attention">{{ attention }}</small>
                 </div>
               </td>
-              <td>{{ item.type === 'NEAR_MISS' ? 'Near miss' : 'Incident' }} | {{ prettyStatus(item.category) }}</td>
+              <td>{{ incidentTypeLabel(item.type) }} | {{ incidentCategoryLabel(item.category) }}</td>
               <td>{{ item.eventDate | date:'yyyy-MM-dd' }}</td>
-              <td><span class="status-badge" [ngClass]="severityClass(item.severity)">{{ prettyStatus(item.severity) }}</span></td>
-              <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ prettyStatus(item.status) }}</span></td>
+              <td><span class="status-badge" [ngClass]="severityClass(item.severity)">{{ incidentSeverityLabel(item.severity) }}</span></td>
+              <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ incidentStatusLabel(item.status) }}</span></td>
               <td><span class="status-badge" [ngClass]="attentionClass(item)">{{ attentionLabel(item) }}</span></td>
               <td>{{ item.linkCount || 0 }}</td>
             </tr>
@@ -116,73 +116,73 @@
       <section class="content-guidance">
         <div class="section-head compact-head">
           <div>
-            <h4>Register position</h4>
+            <h4>{{ t('incidents.form.positionTitle') }}</h4>
             <p class="subtle">{{ incidentGuidance() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Event date</span><strong>{{ form.getRawValue().eventDate ? 'Recorded' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Owner</span><strong>{{ form.getRawValue().ownerUserId ? 'Assigned' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Immediate action</span><strong>{{ form.getRawValue().immediateAction ? 'Recorded' : 'Add first response' }}</strong></article>
+          <article class="summary-item"><span>{{ t('incidents.form.summary.eventDate') }}</span><strong>{{ form.getRawValue().eventDate ? t('incidents.form.summary.recorded') : t('incidents.form.summary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('incidents.form.summary.owner') }}</span><strong>{{ form.getRawValue().ownerUserId ? t('incidents.form.summary.assigned') : t('incidents.form.summary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('incidents.form.summary.immediateAction') }}</span><strong>{{ form.getRawValue().immediateAction ? t('incidents.form.summary.recorded') : t('incidents.form.summary.addFirstResponse') }}</strong></article>
         </div>
       </section>
 
       <section class="detail-section">
-        <h4>Event record</h4>
+        <h4>{{ t('incidents.form.eventRecordTitle') }}</h4>
         <div class="form-grid-2 top-space">
-          <label class="field"><span>Reference</span><input formControlName="referenceNo" placeholder="INC-001"></label>
+          <label class="field"><span>{{ t('incidents.form.fields.reference') }}</span><input formControlName="referenceNo" [placeholder]="t('incidents.form.placeholders.reference')"></label>
           <label class="field">
-            <span>Status</span>
+            <span>{{ t('incidents.form.fields.status') }}</span>
             <select formControlName="status">
-              <option value="REPORTED">Reported</option>
-              <option value="INVESTIGATION">Investigation</option>
-              <option value="ACTION_IN_PROGRESS">Action in progress</option>
-              <option value="CLOSED">Closed</option>
-              <option value="ARCHIVED">Archived</option>
+              <option value="REPORTED">{{ incidentStatusLabel('REPORTED') }}</option>
+              <option value="INVESTIGATION">{{ incidentStatusLabel('INVESTIGATION') }}</option>
+              <option value="ACTION_IN_PROGRESS">{{ incidentStatusLabel('ACTION_IN_PROGRESS') }}</option>
+              <option value="CLOSED">{{ incidentStatusLabel('CLOSED') }}</option>
+              <option value="ARCHIVED">{{ incidentStatusLabel('ARCHIVED') }}</option>
             </select>
           </label>
         </div>
-        <label class="field top-space"><span>Title</span><input formControlName="title" placeholder="Coolant spill at line preparation area"></label>
+        <label class="field top-space"><span>{{ t('incidents.form.fields.title') }}</span><input formControlName="title" [placeholder]="t('incidents.form.placeholders.title')"></label>
         <div class="form-grid-3 top-space">
           <label class="field">
-            <span>Type</span>
+            <span>{{ t('incidents.form.fields.type') }}</span>
             <select formControlName="type">
-              <option value="INCIDENT">Incident</option>
-              <option value="NEAR_MISS">Near miss</option>
+              <option value="INCIDENT">{{ incidentTypeLabel('INCIDENT') }}</option>
+              <option value="NEAR_MISS">{{ incidentTypeLabel('NEAR_MISS') }}</option>
             </select>
           </label>
           <label class="field">
-            <span>Category</span>
+            <span>{{ t('incidents.form.fields.category') }}</span>
             <select formControlName="category">
-              <option value="SAFETY">Safety</option>
-              <option value="ENVIRONMENT">Environment</option>
-              <option value="QUALITY">Quality</option>
-              <option value="SECURITY">Security</option>
-              <option value="OTHER">Other</option>
+              <option value="SAFETY">{{ incidentCategoryLabel('SAFETY') }}</option>
+              <option value="ENVIRONMENT">{{ incidentCategoryLabel('ENVIRONMENT') }}</option>
+              <option value="QUALITY">{{ incidentCategoryLabel('QUALITY') }}</option>
+              <option value="SECURITY">{{ incidentCategoryLabel('SECURITY') }}</option>
+              <option value="OTHER">{{ incidentCategoryLabel('OTHER') }}</option>
             </select>
           </label>
           <label class="field">
-            <span>Severity</span>
+            <span>{{ t('incidents.form.fields.severity') }}</span>
             <select formControlName="severity">
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
-              <option value="CRITICAL">Critical</option>
+              <option value="LOW">{{ incidentSeverityLabel('LOW') }}</option>
+              <option value="MEDIUM">{{ incidentSeverityLabel('MEDIUM') }}</option>
+              <option value="HIGH">{{ incidentSeverityLabel('HIGH') }}</option>
+              <option value="CRITICAL">{{ incidentSeverityLabel('CRITICAL') }}</option>
             </select>
           </label>
         </div>
-        <label class="field top-space"><span>Description</span><textarea formControlName="description" rows="5" placeholder="Summarize what happened and why it matters."></textarea></label>
+        <label class="field top-space"><span>{{ t('incidents.form.fields.description') }}</span><textarea formControlName="description" rows="5" [placeholder]="t('incidents.form.placeholders.description')"></textarea></label>
       </section>
 
       <section class="detail-section">
-        <h4>Event context</h4>
+        <h4>{{ t('incidents.form.eventContextTitle') }}</h4>
         <div class="form-grid-3 top-space">
-          <label class="field"><span>Event date</span><input formControlName="eventDate" type="date"></label>
-          <label class="field"><span>Location</span><input formControlName="location" placeholder="Production line, warehouse, dispatch"></label>
+          <label class="field"><span>{{ t('incidents.form.fields.eventDate') }}</span><input formControlName="eventDate" type="date"></label>
+          <label class="field"><span>{{ t('incidents.form.fields.location') }}</span><input formControlName="location" [placeholder]="t('incidents.form.placeholders.location')"></label>
           <label class="field">
-            <span>Owner</span>
+            <span>{{ t('incidents.form.fields.owner') }}</span>
             <select formControlName="ownerUserId">
-              <option value="">Unassigned</option>
+              <option value="">{{ t('incidents.common.unassigned') }}</option>
               <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
             </select>
           </label>
@@ -190,33 +190,33 @@
       </section>
 
       <section class="detail-section">
-        <h4>Response and follow-up</h4>
+        <h4>{{ t('incidents.form.responseTitle') }}</h4>
         <section class="compliance-note top-space">
-          <strong>Investigation position</strong>
+          <strong>{{ t('incidents.form.investigationTitle') }}</strong>
           <span>{{ investigationNarrative() }}</span>
         </section>
-        <label class="field top-space"><span>Immediate action</span><textarea formControlName="immediateAction" rows="4" placeholder="What was done immediately to secure the situation?"></textarea></label>
-        <label class="field top-space"><span>Investigation summary</span><textarea formControlName="investigationSummary" rows="4" placeholder="What was found during review of the event?"></textarea></label>
+        <label class="field top-space"><span>{{ t('incidents.form.fields.immediateAction') }}</span><textarea formControlName="immediateAction" rows="4" [placeholder]="t('incidents.form.placeholders.immediateAction')"></textarea></label>
+        <label class="field top-space"><span>{{ t('incidents.form.fields.investigationSummary') }}</span><textarea formControlName="investigationSummary" rows="4" [placeholder]="t('incidents.form.placeholders.investigationSummary')"></textarea></label>
         <div class="form-grid-2 top-space">
-          <label class="field"><span>Root cause</span><textarea formControlName="rootCause" rows="4" placeholder="Record the current root cause conclusion or use the structured RCA prompts below."></textarea></label>
+          <label class="field"><span>{{ t('incidents.form.fields.rootCause') }}</span><textarea formControlName="rootCause" rows="4" [placeholder]="t('incidents.form.placeholders.rootCause')"></textarea></label>
           <label class="field">
-            <span>RCA method</span>
+            <span>{{ t('incidents.form.fields.rcaMethod') }}</span>
             <select formControlName="rcaMethod">
-              <option value="">Not set</option>
-              <option *ngFor="let item of rcaMethodOptions" [value]="item">{{ prettyStatus(item) }}</option>
+              <option value="">{{ t('incidents.form.placeholders.rcaNotSet') }}</option>
+              <option *ngFor="let item of rcaMethodOptions" [value]="item">{{ incidentRcaMethodLabel(item) }}</option>
             </select>
           </label>
         </div>
         <div class="detail-section top-space structured-rca" *ngIf="selectedRcaMethod() === 'FIVE_WHY'">
           <div class="section-head compact-head">
             <div>
-              <h4>5 Why prompt</h4>
-              <p class="subtle">Use the causal chain to build the investigation. If the root cause field is left blank, these answers will be combined into it on save.</p>
+              <h4>{{ t('incidents.form.fiveWhy.title') }}</h4>
+              <p class="subtle">{{ t('incidents.form.fiveWhy.copy') }}</p>
             </div>
           </div>
           <div class="page-stack top-space">
             <label class="field" *ngFor="let why of fiveWhySteps; let index = index">
-              <span>{{ why }}</span>
+              <span>{{ t('incidents.form.fiveWhy.steps.' + index) }}</span>
               <textarea rows="2" [value]="fiveWhyAnswers()[index]" (input)="updateFiveWhy(index, $event)"></textarea>
             </label>
           </div>
@@ -224,23 +224,23 @@
         <div class="detail-section top-space structured-rca" *ngIf="selectedRcaMethod() === 'FISHBONE'">
           <div class="section-head compact-head">
             <div>
-              <h4>Fishbone prompt</h4>
-              <p class="subtle">Capture likely causes by category. If the root cause field is left blank, these notes will be combined into it on save.</p>
+              <h4>{{ t('incidents.form.fishbone.title') }}</h4>
+              <p class="subtle">{{ t('incidents.form.fishbone.copy') }}</p>
             </div>
           </div>
           <div class="form-grid-2 top-space">
             <label class="field" *ngFor="let group of fishboneCategories">
-              <span>{{ group.label }}</span>
+              <span>{{ t('incidents.form.fishbone.categories.' + group.key) }}</span>
               <textarea rows="2" [value]="fishboneAnswers()[group.key]" (input)="updateFishbone(group.key, $event)"></textarea>
             </label>
           </div>
         </div>
-        <label class="field top-space"><span>Corrective action summary</span><textarea formControlName="correctiveActionSummary" rows="4" placeholder="What follow-up or improvement is planned?"></textarea></label>
+        <label class="field top-space"><span>{{ t('incidents.form.fields.correctiveActionSummary') }}</span><textarea formControlName="correctiveActionSummary" rows="4" [placeholder]="t('incidents.form.placeholders.correctiveActionSummary')"></textarea></label>
       </section>
 
       <div class="button-row">
-        <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save incident' }}</button>
-        <a [routerLink]="selectedId() ? ['/incidents', selectedId()] : ['/incidents']" class="button-link secondary">Cancel</a>
+        <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? t('incidents.actions.saving') : t('incidents.actions.save') }}</button>
+        <a [routerLink]="selectedId() ? ['/incidents', selectedId()] : ['/incidents']" class="button-link secondary">{{ t('common.cancel') }}</a>
       </div>
     </form>
   </section>
@@ -249,55 +249,55 @@
     <section class="card detail-card">
       <div class="section-head">
         <div>
-          <span class="section-eyebrow">Incident / near miss</span>
-          <h3>{{ selectedIncident()?.referenceNo || 'Uncoded' }} - {{ selectedIncident()?.title }}</h3>
-          <p class="subtle">{{ selectedIncident()?.description || 'No detailed description recorded yet.' }}</p>
+          <span class="section-eyebrow">{{ t('incidents.detail.eyebrow') }}</span>
+          <h3>{{ selectedIncident()?.referenceNo || t('incidents.common.uncoded') }} - {{ selectedIncident()?.title }}</h3>
+          <p class="subtle">{{ selectedIncident()?.description || t('incidents.detail.noDescription') }}</p>
         </div>
         <div class="route-context">
-          <span class="status-badge" [ngClass]="severityClass(selectedIncident()?.severity || 'LOW')">{{ prettyStatus(selectedIncident()?.severity) }}</span>
-          <span class="status-badge" [ngClass]="statusClass(selectedIncident()?.status || 'REPORTED')">{{ prettyStatus(selectedIncident()?.status) }}</span>
+          <span class="status-badge" [ngClass]="severityClass(selectedIncident()?.severity || 'LOW')">{{ incidentSeverityLabel(selectedIncident()?.severity || 'LOW') }}</span>
+          <span class="status-badge" [ngClass]="statusClass(selectedIncident()?.status || 'REPORTED')">{{ incidentStatusLabel(selectedIncident()?.status || 'REPORTED') }}</span>
         </div>
       </div>
 
       <div class="summary-strip top-space">
-        <article class="summary-item"><span>Type</span><strong>{{ selectedIncident()?.type === 'NEAR_MISS' ? 'Near miss' : 'Incident' }}</strong></article>
-        <article class="summary-item"><span>Event date</span><strong>{{ selectedIncident()?.eventDate | date:'yyyy-MM-dd' }}</strong></article>
-        <article class="summary-item"><span>Owner</span><strong>{{ selectedIncident()?.owner ? personName(selectedIncident()!.owner!) : 'Unassigned' }}</strong></article>
-        <article class="summary-item"><span>Linked records</span><strong>{{ selectedIncident()?.links?.length || 0 }}</strong></article>
+        <article class="summary-item"><span>{{ t('incidents.detail.summary.type') }}</span><strong>{{ incidentTypeLabel(selectedIncident()?.type || 'INCIDENT') }}</strong></article>
+        <article class="summary-item"><span>{{ t('incidents.detail.summary.eventDate') }}</span><strong>{{ selectedIncident()?.eventDate | date:'yyyy-MM-dd' }}</strong></article>
+        <article class="summary-item"><span>{{ t('incidents.detail.summary.owner') }}</span><strong>{{ selectedIncident()?.owner ? personName(selectedIncident()!.owner!) : t('incidents.common.unassigned') }}</strong></article>
+        <article class="summary-item"><span>{{ t('incidents.detail.summary.linkedRecords') }}</span><strong>{{ selectedIncident()?.links?.length || 0 }}</strong></article>
       </div>
 
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Review position</h4>
+            <h4>{{ t('incidents.detail.reviewTitle') }}</h4>
             <p class="subtle">{{ reviewNarrative() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Processes</span><strong>{{ linkCountByType('PROCESS') }}</strong></article>
-          <article class="summary-item"><span>Risks</span><strong>{{ linkCountByType('RISK') }}</strong></article>
-          <article class="summary-item"><span>Actions</span><strong>{{ linkCountByType('ACTION') }}</strong></article>
+          <article class="summary-item"><span>{{ t('incidents.detail.reviewSummary.processes') }}</span><strong>{{ linkCountByType('PROCESS') }}</strong></article>
+          <article class="summary-item"><span>{{ t('incidents.detail.reviewSummary.risks') }}</span><strong>{{ linkCountByType('RISK') }}</strong></article>
+          <article class="summary-item"><span>{{ t('incidents.detail.reviewSummary.actions') }}</span><strong>{{ linkCountByType('ACTION') }}</strong></article>
         </div>
       </section>
 
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Investigation position</h4>
+            <h4>{{ t('incidents.detail.investigationTitle') }}</h4>
             <p class="subtle">{{ detailInvestigationNarrative() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>RCA method</span><strong>{{ selectedIncident()?.rcaMethod ? prettyStatus(selectedIncident()?.rcaMethod) : 'Not recorded' }}</strong></article>
-          <article class="summary-item"><span>Root cause</span><strong>{{ selectedIncident()?.rootCause ? 'Recorded' : 'Not recorded' }}</strong></article>
-          <article class="summary-item"><span>Immediate action</span><strong>{{ selectedIncident()?.immediateAction ? 'Recorded' : 'Not recorded' }}</strong></article>
+          <article class="summary-item"><span>{{ t('incidents.detail.investigationSummary.rcaMethod') }}</span><strong>{{ selectedIncident()?.rcaMethod ? incidentRcaMethodLabel(selectedIncident()?.rcaMethod) : t('incidents.detail.investigationSummary.notRecorded') }}</strong></article>
+          <article class="summary-item"><span>{{ t('incidents.detail.investigationSummary.rootCause') }}</span><strong>{{ selectedIncident()?.rootCause ? t('incidents.detail.investigationSummary.recorded') : t('incidents.detail.investigationSummary.notRecorded') }}</strong></article>
+          <article class="summary-item"><span>{{ t('incidents.detail.investigationSummary.immediateAction') }}</span><strong>{{ selectedIncident()?.immediateAction ? t('incidents.detail.investigationSummary.recorded') : t('incidents.detail.investigationSummary.notRecorded') }}</strong></article>
         </div>
       </section>
 
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Management attention</h4>
+            <h4>{{ t('incidents.detail.attentionTitle') }}</h4>
             <p class="subtle">{{ attentionHeadline() }}</p>
           </div>
         </div>
@@ -307,42 +307,42 @@
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Next steps</h4>
+            <h4>{{ t('incidents.detail.nextStepsTitle') }}</h4>
             <p class="subtle">{{ nextStepHeadline() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Evidence</span><strong>{{ selectedIncident()?.id ? 'Available below' : 'Save first' }}</strong></article>
-          <article class="summary-item"><span>Follow-up action</span><strong>{{ linkCountByType('ACTION') ? 'Linked' : 'Prepare below' }}</strong></article>
-          <article class="summary-item"><span>Traceability</span><strong>{{ linkCountByType('PROCESS') && linkCountByType('RISK') ? 'Connected' : 'Complete links' }}</strong></article>
+          <article class="summary-item"><span>{{ t('incidents.detail.nextStepsSummary.evidence') }}</span><strong>{{ selectedIncident()?.id ? t('incidents.detail.nextStepsSummary.availableBelow') : t('incidents.detail.nextStepsSummary.saveFirst') }}</strong></article>
+          <article class="summary-item"><span>{{ t('incidents.detail.nextStepsSummary.followUpAction') }}</span><strong>{{ linkCountByType('ACTION') ? t('incidents.detail.nextStepsSummary.linked') : t('incidents.detail.nextStepsSummary.prepareBelow') }}</strong></article>
+          <article class="summary-item"><span>{{ t('incidents.detail.nextStepsSummary.traceability') }}</span><strong>{{ linkCountByType('PROCESS') && linkCountByType('RISK') ? t('incidents.detail.nextStepsSummary.connected') : t('incidents.detail.nextStepsSummary.completeLinks') }}</strong></article>
         </div>
         <p class="subtle top-space">{{ nextStepNarrative() }}</p>
       </section>
 
       <div class="section-grid-2 top-space">
         <section class="detail-section">
-          <h4>Immediate action</h4>
-          <p>{{ selectedIncident()?.immediateAction || 'No immediate action recorded.' }}</p>
+          <h4>{{ t('incidents.detail.fields.immediateAction') }}</h4>
+          <p>{{ selectedIncident()?.immediateAction || t('incidents.detail.empty.immediateAction') }}</p>
         </section>
         <section class="detail-section">
-          <h4>Investigation summary</h4>
-          <p>{{ selectedIncident()?.investigationSummary || 'No investigation summary recorded.' }}</p>
+          <h4>{{ t('incidents.detail.fields.investigationSummary') }}</h4>
+          <p>{{ selectedIncident()?.investigationSummary || t('incidents.detail.empty.investigationSummary') }}</p>
         </section>
         <section class="detail-section">
-          <h4>Root cause</h4>
-          <p>{{ selectedIncident()?.rootCause || 'No root cause recorded.' }}</p>
+          <h4>{{ t('incidents.detail.fields.rootCause') }}</h4>
+          <p>{{ selectedIncident()?.rootCause || t('incidents.detail.empty.rootCause') }}</p>
         </section>
         <section class="detail-section">
-          <h4>RCA method</h4>
-          <p>{{ selectedIncident()?.rcaMethod ? prettyStatus(selectedIncident()?.rcaMethod) : 'No RCA method recorded.' }}</p>
+          <h4>{{ t('incidents.detail.fields.rcaMethod') }}</h4>
+          <p>{{ selectedIncident()?.rcaMethod ? incidentRcaMethodLabel(selectedIncident()?.rcaMethod) : t('incidents.detail.empty.rcaMethod') }}</p>
         </section>
         <section class="detail-section">
-          <h4>Corrective action summary</h4>
-          <p>{{ selectedIncident()?.correctiveActionSummary || 'No corrective action summary recorded.' }}</p>
+          <h4>{{ t('incidents.detail.fields.correctiveActionSummary') }}</h4>
+          <p>{{ selectedIncident()?.correctiveActionSummary || t('incidents.detail.empty.correctiveActionSummary') }}</p>
         </section>
         <section class="detail-section">
-          <h4>Location</h4>
-          <p>{{ selectedIncident()?.location || 'No location recorded.' }}</p>
+          <h4>{{ t('incidents.detail.fields.location') }}</h4>
+          <p>{{ selectedIncident()?.location || t('incidents.detail.empty.location') }}</p>
         </section>
       </div>
     </section>
@@ -350,9 +350,9 @@
     <section class="card detail-card">
       <div class="section-head">
         <div>
-          <span class="section-eyebrow">Evidence</span>
-          <h3>Reporting and investigation evidence</h3>
-          <p class="subtle">Use one evidence area for the original report, investigation records, photos, witness notes, and follow-up support documents.</p>
+          <span class="section-eyebrow">{{ t('incidents.evidence.eyebrow') }}</span>
+          <h3>{{ t('incidents.evidence.title') }}</h3>
+          <p class="subtle">{{ t('incidents.evidence.copy') }}</p>
         </div>
       </div>
       <div class="top-space">
@@ -371,9 +371,9 @@
     <section class="card detail-card">
       <div class="section-head">
         <div>
-          <span class="section-eyebrow">Linked records</span>
-          <h3>Traceability hub</h3>
-          <p class="subtle">Link the existing process, risk, and action records that already carry the follow-up.</p>
+          <span class="section-eyebrow">{{ t('incidents.links.eyebrow') }}</span>
+          <h3>{{ t('incidents.links.title') }}</h3>
+          <p class="subtle">{{ t('incidents.links.copy') }}</p>
         </div>
       </div>
 
@@ -385,12 +385,12 @@
               <p class="subtle">{{ sectionDescription(type) }}</p>
             </div>
             <button *ngIf="canWrite()" type="button" class="button-link secondary" (click)="openLinkComposer(type)">
-              {{ activeLinkComposerType() === type ? 'Close' : '+ Link' }}
+              {{ activeLinkComposerType() === type ? t('incidents.links.closeComposer') : t('incidents.links.openComposer') }}
             </button>
           </div>
 
           <div class="empty-state compact-empty top-space" *ngIf="!linksByType(type).length">
-            <strong>No linked records</strong>
+            <strong>{{ t('incidents.links.emptyTitle') }}</strong>
             <span>{{ sectionEmptyCopy(type) }}</span>
           </div>
 
@@ -404,14 +404,14 @@
                 </div>
                 <div class="route-context">
                   <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
-                  <a *ngIf="canOpenLink(link)" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">Open</a>
+                  <a *ngIf="canOpenLink(link)" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">{{ t('common.open') }}</a>
                   <div *ngIf="!canOpenLink(link) && inaccessibleLinkSummary(link) as summary" class="package-link-note">
-                    <span class="package-link-note__eyebrow">Included from {{ packageTierLabel(summary.requiredTier) }}</span>
+                    <span class="package-link-note__eyebrow">{{ t('incidents.links.includedFrom', { tier: packageTierLabel(summary.requiredTier) }) }}</span>
                     <strong>{{ summary.title }}</strong>
                     <small *ngIf="summary.subtitle">{{ summary.subtitle }}</small>
                     <small>{{ summary.moduleLabel }}<span *ngIf="summary.statusLabel"> · {{ summary.statusLabel }}</span></small>
                   </div>
-                  <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">Remove</button>
+                  <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">{{ t('incidents.links.remove') }}</button>
                 </div>
               </div>
             </div>
@@ -422,13 +422,13 @@
             <label class="field">
               <span>{{ sectionPickerLabel(type) }}</span>
               <select formControlName="linkedId">
-                <option value="">Choose existing {{ sectionPickerLabel(type).toLowerCase() }}</option>
+                <option value="">{{ t('incidents.linkComposer.chooseExisting', { section: sectionPickerLabel(type).toLowerCase() }) }}</option>
                 <option *ngFor="let candidate of linkCandidates()" [value]="candidate.id">{{ candidate.label }}</option>
               </select>
             </label>
-            <label class="field"><span>Note</span><input formControlName="note" placeholder="Optional context for this link"></label>
+            <label class="field"><span>{{ t('incidents.linkComposer.note') }}</span><input formControlName="note" [placeholder]="t('incidents.linkComposer.notePlaceholder')"></label>
             <div class="button-row">
-              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? 'Linking...' : 'Save link' }}</button>
+              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? t('incidents.linkComposer.linking') : t('incidents.linkComposer.addLink') }}</button>
             </div>
           </form>
         </section>

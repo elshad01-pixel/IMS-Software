@@ -1,14 +1,14 @@
 <section class="page-grid">
   <iso-page-header
-    [label]="'Hazard Identification'"
+    [label]="t('hazards.page.label')"
     [title]="pageTitle()"
     [description]="pageDescription()"
     [breadcrumbs]="breadcrumbs()"
   >
-    <a *ngIf="mode() === 'list' && canWrite()" routerLink="/hazards/new" class="button-link">+ New hazard</a>
-    <a *ngIf="mode() === 'detail' && selectedHazard() && canWrite()" [routerLink]="['/hazards', selectedId(), 'edit']" class="button-link">Edit hazard</a>
-    <button *ngIf="mode() === 'detail' && selectedHazard() && canDelete()" type="button" class="button-link danger" (click)="archiveHazard()">Archive</button>
-    <a *ngIf="mode() !== 'list'" routerLink="/hazards" class="button-link secondary">Back</a>
+    <a *ngIf="mode() === 'list' && canWrite()" routerLink="/hazards/new" class="button-link">{{ t('hazards.actions.new') }}</a>
+    <a *ngIf="mode() === 'detail' && selectedHazard() && canWrite()" [routerLink]="['/hazards', selectedId(), 'edit']" class="button-link">{{ t('hazards.actions.edit') }}</a>
+    <button *ngIf="mode() === 'detail' && selectedHazard() && canDelete()" type="button" class="button-link danger" (click)="archiveHazard()">{{ t('hazards.actions.archive') }}</button>
+    <a *ngIf="mode() !== 'list'" routerLink="/hazards" class="button-link secondary">{{ t('hazards.actions.back') }}</a>
   </iso-page-header>
 
   <section *ngIf="mode() === 'list'" class="page-stack">
@@ -16,35 +16,35 @@
       <div class="toolbar">
         <div class="toolbar-meta">
           <div>
-            <p class="toolbar-title">Register filters</p>
-            <p class="toolbar-copy">Track workplace hazards, potential harm, and review ownership in one visible register.</p>
+            <p class="toolbar-title">{{ t('hazards.list.filtersTitle') }}</p>
+            <p class="toolbar-copy">{{ t('hazards.list.copy') }}</p>
           </div>
           <div class="toolbar-stats">
-            <article class="toolbar-stat"><span>Total</span><strong>{{ hazards().length }}</strong></article>
-            <article class="toolbar-stat"><span>Active</span><strong>{{ activeCount() }}</strong></article>
-            <article class="toolbar-stat"><span>Monitoring</span><strong>{{ monitoringCount() }}</strong></article>
-            <article class="toolbar-stat"><span>High severity</span><strong>{{ highSeverityCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('hazards.list.stats.total') }}</span><strong>{{ hazards().length }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('hazards.list.stats.active') }}</span><strong>{{ activeCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('hazards.list.stats.monitoring') }}</span><strong>{{ monitoringCount() }}</strong></article>
+            <article class="toolbar-stat"><span>{{ t('hazards.list.stats.highSeverity') }}</span><strong>{{ highSeverityCount() }}</strong></article>
           </div>
         </div>
 
         <div class="filter-row standard-filter-grid">
           <label class="field compact-field search-field">
-            <span>Search</span>
-            <input [value]="search()" (input)="search.set(readInputValue($event))" placeholder="Reference, activity, hazard, harm">
+            <span>{{ t('hazards.list.filters.search') }}</span>
+            <input [value]="search()" (input)="search.set(readInputValue($event))" [placeholder]="t('hazards.list.placeholders.search')">
           </label>
           <label class="field compact-field">
-            <span>Status</span>
+            <span>{{ t('hazards.list.filters.status') }}</span>
             <select [value]="statusFilter()" (change)="statusFilter.set(readSelectValue($event))">
-              <option value="">All</option>
-              <option value="ACTIVE">Active</option>
-              <option value="MONITORING">Monitoring</option>
-              <option value="OBSOLETE">Obsolete</option>
+              <option value="">{{ t('hazards.list.filters.all') }}</option>
+              <option value="ACTIVE">{{ hazardStatusLabel('ACTIVE') }}</option>
+              <option value="MONITORING">{{ hazardStatusLabel('MONITORING') }}</option>
+              <option value="OBSOLETE">{{ hazardStatusLabel('OBSOLETE') }}</option>
             </select>
           </label>
           <label class="field compact-field">
-            <span>Owner</span>
+            <span>{{ t('hazards.list.filters.owner') }}</span>
             <select [value]="ownerFilter()" (change)="ownerFilter.set(readSelectValue($event))">
-              <option value="">All</option>
+              <option value="">{{ t('hazards.list.filters.all') }}</option>
               <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
             </select>
           </label>
@@ -54,41 +54,41 @@
       <p class="feedback top-space" [class.is-empty]="!error() && !message()" [class.error]="!!error()" [class.success]="!!message() && !error()">{{ error() || message() }}</p>
 
       <div class="empty-state top-space" *ngIf="loading()">
-        <strong>Loading hazards</strong>
-        <span>Refreshing hazard records, potential harm, and linked controls.</span>
+        <strong>{{ t('hazards.list.loadingTitle') }}</strong>
+        <span>{{ t('hazards.list.loadingCopy') }}</span>
       </div>
 
       <div class="empty-state top-space" *ngIf="!loading() && !filteredHazards().length">
-        <strong>No hazards found</strong>
-        <span>Create the first hazard to start tracking workplace exposure visibly in the IMS.</span>
+        <strong>{{ t('hazards.list.emptyTitle') }}</strong>
+        <span>{{ t('hazards.list.emptyCopy') }}</span>
       </div>
 
       <div class="data-table-wrap top-space" *ngIf="!loading() && filteredHazards().length">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Hazard</th>
-              <th>Activity</th>
-              <th>Exposure stage</th>
-              <th>Severity</th>
-              <th>Status</th>
-              <th>Review date</th>
-              <th>Links</th>
+              <th>{{ t('hazards.list.table.hazard') }}</th>
+              <th>{{ t('hazards.list.table.activity') }}</th>
+              <th>{{ t('hazards.list.table.exposureStage') }}</th>
+              <th>{{ t('hazards.list.table.severity') }}</th>
+              <th>{{ t('hazards.list.table.status') }}</th>
+              <th>{{ t('hazards.list.table.reviewDate') }}</th>
+              <th>{{ t('hazards.list.table.links') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let item of filteredHazards()" [routerLink]="['/hazards', item.id]">
               <td>
                 <div class="table-title">
-                  <strong>{{ item.referenceNo || 'Uncoded' }} - {{ item.hazard }}</strong>
+                  <strong>{{ item.referenceNo || t('hazards.common.uncoded') }} - {{ item.hazard }}</strong>
                   <small>{{ item.potentialHarm }}</small>
                 </div>
               </td>
               <td>{{ item.activity }}</td>
-              <td>{{ prettyStatus(item.exposureStage) }}</td>
-              <td><span class="status-badge" [ngClass]="severityClass(item.severity)">{{ prettyStatus(item.severity) }}</span></td>
-              <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ prettyStatus(item.status) }}</span></td>
-              <td>{{ item.reviewDate ? (item.reviewDate | date:'yyyy-MM-dd') : 'Not set' }}</td>
+              <td>{{ hazardExposureStageLabel(item.exposureStage) }}</td>
+              <td><span class="status-badge" [ngClass]="severityClass(item.severity)">{{ hazardSeverityLabel(item.severity) }}</span></td>
+              <td><span class="status-badge" [ngClass]="statusClass(item.status)">{{ hazardStatusLabel(item.status) }}</span></td>
+              <td>{{ item.reviewDate ? (item.reviewDate | date:'yyyy-MM-dd') : t('common.notSet') }}</td>
               <td>{{ item.linkCount || 0 }}</td>
             </tr>
           </tbody>
@@ -104,73 +104,73 @@
       <section class="content-guidance">
         <div class="section-head compact-head">
           <div>
-            <h4>Register position</h4>
+            <h4>{{ t('hazards.form.positionTitle') }}</h4>
             <p class="subtle">{{ hazardGuidance() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Activity</span><strong>{{ form.getRawValue().activity ? 'Defined' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Potential harm</span><strong>{{ form.getRawValue().potentialHarm ? 'Recorded' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Owner</span><strong>{{ form.getRawValue().ownerUserId ? 'Assigned' : 'Needed' }}</strong></article>
+          <article class="summary-item"><span>{{ t('hazards.form.summary.activity') }}</span><strong>{{ form.getRawValue().activity ? t('hazards.form.summary.defined') : t('hazards.form.summary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('hazards.form.summary.potentialHarm') }}</span><strong>{{ form.getRawValue().potentialHarm ? t('hazards.form.summary.recorded') : t('hazards.form.summary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('hazards.form.summary.owner') }}</span><strong>{{ form.getRawValue().ownerUserId ? t('hazards.form.summary.assigned') : t('hazards.form.summary.needed') }}</strong></article>
         </div>
       </section>
 
       <section class="detail-section">
-        <h4>Hazard definition</h4>
+        <h4>{{ t('hazards.form.definitionTitle') }}</h4>
         <div class="form-grid-2 top-space">
-          <label class="field"><span>Reference</span><input formControlName="referenceNo" placeholder="HZ-001"></label>
+          <label class="field"><span>{{ t('hazards.form.fields.reference') }}</span><input formControlName="referenceNo" [placeholder]="t('hazards.form.placeholders.reference')"></label>
           <label class="field">
-            <span>Status</span>
+            <span>{{ t('hazards.form.fields.status') }}</span>
             <select formControlName="status">
-              <option value="ACTIVE">Active</option>
-              <option value="MONITORING">Monitoring</option>
-              <option value="OBSOLETE">Obsolete</option>
+              <option value="ACTIVE">{{ hazardStatusLabel('ACTIVE') }}</option>
+              <option value="MONITORING">{{ hazardStatusLabel('MONITORING') }}</option>
+              <option value="OBSOLETE">{{ hazardStatusLabel('OBSOLETE') }}</option>
             </select>
           </label>
         </div>
-        <label class="field top-space"><span>Activity</span><input formControlName="activity" placeholder="Dispatch loading, chemical transfer, manual handling"></label>
-        <label class="field top-space"><span>Hazard</span><input formControlName="hazard" placeholder="Pedestrian and vehicle interaction | Hose failure | Chemical splash"></label>
-        <label class="field top-space"><span>Potential harm</span><textarea formControlName="potentialHarm" rows="4" placeholder="Describe the likely harm if the hazard is not controlled."></textarea></label>
+        <label class="field top-space"><span>{{ t('hazards.form.fields.activity') }}</span><input formControlName="activity" [placeholder]="t('hazards.form.placeholders.activity')"></label>
+        <label class="field top-space"><span>{{ t('hazards.form.fields.hazard') }}</span><input formControlName="hazard" [placeholder]="t('hazards.form.placeholders.hazard')"></label>
+        <label class="field top-space"><span>{{ t('hazards.form.fields.potentialHarm') }}</span><textarea formControlName="potentialHarm" rows="4" [placeholder]="t('hazards.form.placeholders.potentialHarm')"></textarea></label>
       </section>
 
       <section class="detail-section">
-        <h4>Control context</h4>
+        <h4>{{ t('hazards.form.controlContextTitle') }}</h4>
         <div class="form-grid-3 top-space">
           <label class="field">
-            <span>Exposure stage</span>
+            <span>{{ t('hazards.form.fields.exposureStage') }}</span>
             <select formControlName="exposureStage">
-              <option value="ROUTINE">Routine</option>
-              <option value="NON_ROUTINE">Non-routine</option>
-              <option value="EMERGENCY">Emergency</option>
+              <option value="ROUTINE">{{ hazardExposureStageLabel('ROUTINE') }}</option>
+              <option value="NON_ROUTINE">{{ hazardExposureStageLabel('NON_ROUTINE') }}</option>
+              <option value="EMERGENCY">{{ hazardExposureStageLabel('EMERGENCY') }}</option>
             </select>
           </label>
           <label class="field">
-            <span>Severity</span>
+            <span>{{ t('hazards.form.fields.severity') }}</span>
             <select formControlName="severity">
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
+              <option value="LOW">{{ hazardSeverityLabel('LOW') }}</option>
+              <option value="MEDIUM">{{ hazardSeverityLabel('MEDIUM') }}</option>
+              <option value="HIGH">{{ hazardSeverityLabel('HIGH') }}</option>
             </select>
           </label>
-          <label class="field"><span>Review date</span><input formControlName="reviewDate" type="date"></label>
+          <label class="field"><span>{{ t('hazards.form.fields.reviewDate') }}</span><input formControlName="reviewDate" type="date"></label>
         </div>
-        <label class="field top-space"><span>Existing controls</span><textarea formControlName="existingControls" rows="4" placeholder="Summarize the current controls already applied for this hazard."></textarea></label>
+        <label class="field top-space"><span>{{ t('hazards.form.fields.existingControls') }}</span><textarea formControlName="existingControls" rows="4" [placeholder]="t('hazards.form.placeholders.existingControls')"></textarea></label>
       </section>
 
       <section class="detail-section">
-        <h4>Review ownership</h4>
+        <h4>{{ t('hazards.form.ownerTitle') }}</h4>
         <label class="field top-space">
-          <span>Owner</span>
+          <span>{{ t('hazards.form.fields.owner') }}</span>
           <select formControlName="ownerUserId">
-            <option value="">Unassigned</option>
+            <option value="">{{ t('hazards.common.unassigned') }}</option>
             <option *ngFor="let owner of owners()" [value]="owner.id">{{ personName(owner) }}</option>
           </select>
         </label>
       </section>
 
       <div class="button-row">
-        <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? 'Saving...' : 'Save hazard' }}</button>
-        <a [routerLink]="selectedId() ? ['/hazards', selectedId()] : ['/hazards']" class="button-link secondary">Cancel</a>
+        <button type="submit" [disabled]="form.invalid || saving() || !canWrite()">{{ saving() ? t('hazards.actions.saving') : t('hazards.actions.save') }}</button>
+        <a [routerLink]="selectedId() ? ['/hazards', selectedId()] : ['/hazards']" class="button-link secondary">{{ t('common.cancel') }}</a>
       </div>
     </form>
   </section>
@@ -179,61 +179,61 @@
     <section class="card detail-card">
       <div class="section-head">
         <div>
-          <span class="section-eyebrow">Hazard identification</span>
-          <h3>{{ selectedHazard()?.referenceNo || 'Uncoded' }} - {{ selectedHazard()?.hazard }}</h3>
-          <p class="subtle">{{ selectedHazard()?.potentialHarm || 'No potential harm summary recorded yet.' }}</p>
+          <span class="section-eyebrow">{{ t('hazards.detail.eyebrow') }}</span>
+          <h3>{{ selectedHazard()?.referenceNo || t('hazards.common.uncoded') }} - {{ selectedHazard()?.hazard }}</h3>
+          <p class="subtle">{{ selectedHazard()?.potentialHarm || t('hazards.detail.noPotentialHarm') }}</p>
         </div>
         <div class="route-context">
-          <span class="status-badge" [ngClass]="severityClass(selectedHazard()?.severity || 'LOW')">{{ prettyStatus(selectedHazard()?.severity) }}</span>
-          <span class="status-badge" [ngClass]="statusClass(selectedHazard()?.status || 'ACTIVE')">{{ prettyStatus(selectedHazard()?.status) }}</span>
+          <span class="status-badge" [ngClass]="severityClass(selectedHazard()?.severity || 'LOW')">{{ hazardSeverityLabel(selectedHazard()?.severity || 'LOW') }}</span>
+          <span class="status-badge" [ngClass]="statusClass(selectedHazard()?.status || 'ACTIVE')">{{ hazardStatusLabel(selectedHazard()?.status || 'ACTIVE') }}</span>
         </div>
       </div>
 
       <div class="summary-strip top-space">
-        <article class="summary-item"><span>Activity</span><strong>{{ selectedHazard()?.activity }}</strong></article>
-        <article class="summary-item"><span>Exposure stage</span><strong>{{ prettyStatus(selectedHazard()?.exposureStage) }}</strong></article>
-        <article class="summary-item"><span>Owner</span><strong>{{ selectedHazard()?.owner ? personName(selectedHazard()!.owner!) : 'Unassigned' }}</strong></article>
-        <article class="summary-item"><span>Linked records</span><strong>{{ selectedHazard()?.links?.length || 0 }}</strong></article>
+        <article class="summary-item"><span>{{ t('hazards.detail.summary.activity') }}</span><strong>{{ selectedHazard()?.activity }}</strong></article>
+        <article class="summary-item"><span>{{ t('hazards.detail.summary.exposureStage') }}</span><strong>{{ hazardExposureStageLabel(selectedHazard()?.exposureStage || 'ROUTINE') }}</strong></article>
+        <article class="summary-item"><span>{{ t('hazards.detail.summary.owner') }}</span><strong>{{ selectedHazard()?.owner ? personName(selectedHazard()!.owner!) : t('hazards.common.unassigned') }}</strong></article>
+        <article class="summary-item"><span>{{ t('hazards.detail.summary.linkedRecords') }}</span><strong>{{ selectedHazard()?.links?.length || 0 }}</strong></article>
       </div>
 
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Review position</h4>
+            <h4>{{ t('hazards.detail.reviewTitle') }}</h4>
             <p class="subtle">{{ reviewNarrative() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Processes</span><strong>{{ linkCountByType('PROCESS') }}</strong></article>
-          <article class="summary-item"><span>Incidents</span><strong>{{ linkCountByType('INCIDENT') }}</strong></article>
-          <article class="summary-item"><span>Risks</span><strong>{{ linkCountByType('RISK') }}</strong></article>
-          <article class="summary-item"><span>Actions</span><strong>{{ linkCountByType('ACTION') }}</strong></article>
+          <article class="summary-item"><span>{{ t('hazards.detail.reviewSummary.processes') }}</span><strong>{{ linkCountByType('PROCESS') }}</strong></article>
+          <article class="summary-item"><span>{{ t('hazards.detail.reviewSummary.incidents') }}</span><strong>{{ linkCountByType('INCIDENT') }}</strong></article>
+          <article class="summary-item"><span>{{ t('hazards.detail.reviewSummary.risks') }}</span><strong>{{ linkCountByType('RISK') }}</strong></article>
+          <article class="summary-item"><span>{{ t('hazards.detail.reviewSummary.actions') }}</span><strong>{{ linkCountByType('ACTION') }}</strong></article>
         </div>
       </section>
 
       <section class="content-guidance top-space">
         <div class="section-head compact-head">
           <div>
-            <h4>Next steps</h4>
+            <h4>{{ t('hazards.detail.nextStepsTitle') }}</h4>
             <p class="subtle">{{ nextStepHeadline() }}</p>
           </div>
         </div>
         <div class="summary-strip top-space">
-          <article class="summary-item"><span>Risk link</span><strong>{{ linkCountByType('RISK') ? 'Linked' : 'Needed' }}</strong></article>
-          <article class="summary-item"><span>Follow-up action</span><strong>{{ linkCountByType('ACTION') ? 'Linked' : 'Prepare below' }}</strong></article>
-          <article class="summary-item"><span>Incident context</span><strong>{{ linkCountByType('INCIDENT') ? 'Linked' : 'Optional' }}</strong></article>
+          <article class="summary-item"><span>{{ t('hazards.detail.nextStepsSummary.riskLink') }}</span><strong>{{ linkCountByType('RISK') ? t('hazards.detail.nextStepsSummary.linked') : t('hazards.detail.nextStepsSummary.needed') }}</strong></article>
+          <article class="summary-item"><span>{{ t('hazards.detail.nextStepsSummary.followUpAction') }}</span><strong>{{ linkCountByType('ACTION') ? t('hazards.detail.nextStepsSummary.linked') : t('hazards.detail.nextStepsSummary.prepareBelow') }}</strong></article>
+          <article class="summary-item"><span>{{ t('hazards.detail.nextStepsSummary.incidentContext') }}</span><strong>{{ linkCountByType('INCIDENT') ? t('hazards.detail.nextStepsSummary.linked') : t('hazards.detail.nextStepsSummary.optional') }}</strong></article>
         </div>
         <p class="top-space">{{ nextStepNarrative() }}</p>
       </section>
 
       <div class="section-grid-2 top-space">
         <section class="detail-section">
-          <h4>Existing controls</h4>
-          <p>{{ selectedHazard()?.existingControls || 'No control summary recorded.' }}</p>
+          <h4>{{ t('hazards.detail.fields.existingControls') }}</h4>
+          <p>{{ selectedHazard()?.existingControls || t('hazards.detail.empty.controls') }}</p>
         </section>
         <section class="detail-section">
-          <h4>Review date</h4>
-          <p>{{ selectedHazard()?.reviewDate ? (selectedHazard()?.reviewDate | date:'yyyy-MM-dd') : 'No review date recorded.' }}</p>
+          <h4>{{ t('hazards.detail.fields.reviewDate') }}</h4>
+          <p>{{ selectedHazard()?.reviewDate ? (selectedHazard()?.reviewDate | date:'yyyy-MM-dd') : t('hazards.detail.empty.reviewDate') }}</p>
         </section>
       </div>
     </section>
@@ -249,9 +249,9 @@
     <section class="card detail-card">
       <div class="section-head">
         <div>
-          <span class="section-eyebrow">Linked records</span>
-          <h3>Traceability hub</h3>
-          <p class="subtle">Link the existing process, incident, risk, and action records that already carry the live follow-up.</p>
+          <span class="section-eyebrow">{{ t('hazards.links.eyebrow') }}</span>
+          <h3>{{ t('hazards.links.title') }}</h3>
+          <p class="subtle">{{ t('hazards.links.copy') }}</p>
         </div>
       </div>
 
@@ -263,12 +263,12 @@
               <p class="subtle">{{ sectionDescription(type) }}</p>
             </div>
             <button *ngIf="canWrite()" type="button" class="button-link secondary" (click)="openLinkComposer(type)">
-              {{ activeLinkComposerType() === type ? 'Close' : '+ Link' }}
+              {{ activeLinkComposerType() === type ? t('hazards.links.closeComposer') : t('hazards.links.openComposer') }}
             </button>
           </div>
 
           <div class="empty-state compact-empty top-space" *ngIf="!linksByType(type).length">
-            <strong>No linked records</strong>
+            <strong>{{ t('hazards.links.emptyTitle') }}</strong>
             <span>{{ sectionEmptyCopy(type) }}</span>
           </div>
 
@@ -282,14 +282,14 @@
                 </div>
                 <div class="route-context">
                   <span *ngIf="link.status" class="status-badge neutral">{{ prettyStatus(link.status) }}</span>
-                  <a *ngIf="canOpenLink(link)" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">Open</a>
+                  <a *ngIf="canOpenLink(link)" [routerLink]="linkRoute(link)" [queryParams]="linkQueryParams(link)" [state]="linkState(link)" class="button-link tertiary compact">{{ t('common.open') }}</a>
                   <div *ngIf="!canOpenLink(link) && inaccessibleLinkSummary(link) as summary" class="package-link-note">
-                    <span class="package-link-note__eyebrow">Included from {{ packageTierLabel(summary.requiredTier) }}</span>
+                    <span class="package-link-note__eyebrow">{{ t('hazards.links.includedFrom', { tier: packageTierLabel(summary.requiredTier) }) }}</span>
                     <strong>{{ summary.title }}</strong>
                     <small *ngIf="summary.subtitle">{{ summary.subtitle }}</small>
                     <small>{{ summary.moduleLabel }}<span *ngIf="summary.statusLabel"> · {{ summary.statusLabel }}</span></small>
                   </div>
-                  <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">Remove</button>
+                  <button *ngIf="canWrite()" type="button" class="button-link danger compact" (click)="removeLink(link.id)">{{ t('hazards.links.remove') }}</button>
                 </div>
               </div>
             </div>
@@ -300,13 +300,13 @@
             <label class="field">
               <span>{{ sectionPickerLabel(type) }}</span>
               <select formControlName="linkedId">
-                <option value="">Choose existing {{ sectionPickerLabel(type).toLowerCase() }}</option>
+                <option value="">{{ t('hazards.linkComposer.chooseExisting', { section: sectionPickerLabel(type).toLowerCase() }) }}</option>
                 <option *ngFor="let candidate of linkCandidates()" [value]="candidate.id">{{ candidate.label }}</option>
               </select>
             </label>
-            <label class="field"><span>Note</span><input formControlName="note" placeholder="Optional context for this link"></label>
+            <label class="field"><span>{{ t('hazards.linkComposer.note') }}</span><input formControlName="note" [placeholder]="t('hazards.linkComposer.notePlaceholder')"></label>
             <div class="button-row">
-              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? 'Linking...' : 'Save link' }}</button>
+              <button type="submit" [disabled]="linkForm.invalid || linkSaving()">{{ linkSaving() ? t('hazards.linkComposer.linking') : t('hazards.linkComposer.addLink') }}</button>
             </div>
           </form>
         </section>

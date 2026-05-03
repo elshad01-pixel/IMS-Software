@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
+import { I18nService } from '../core/i18n.service';
 import { PackageModuleKey, TenantPackageTier, minimumPackageTierForModule } from '../core/package-entitlements';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { RecordWorkItemsComponent } from '../shared/record-work-items.component';
@@ -27,6 +28,14 @@ type ReturnNavigation = { route: string[]; label: string };
 
 type UserSummary = { id: string; firstName: string; lastName: string; email: string };
 type LinkCandidate = { id: string; label: string };
+type ProviderAttentionReason =
+  | 'OWNER_NEEDED'
+  | 'REVIEW_DATE_NEEDED'
+  | 'REVIEW_OVERDUE'
+  | 'REVIEW_DUE_SOON'
+  | 'SUPPLIER_AUDIT_REQUIRED'
+  | 'HIGH_PRIORITY'
+  | 'STALE';
 
 type ProviderLink = {
   id: string;
@@ -73,25 +82,25 @@ type ProviderRow = {
 
 type EvaluationMetric = {
   key: EvaluationMetricKey;
-  label: string;
-  hint: string;
+  labelKey: string;
+  hintKey: string;
 };
 
 const EVALUATION_CRITERIA: EvaluationCriterion[] = [
-  { score: 1, title: 'Weak', definition: 'Performance is not controlled. Repeated gaps or major concerns are visible.' },
-  { score: 2, title: 'Fragile', definition: 'Some control exists, but performance is inconsistent and needs prompt follow-up.' },
-  { score: 3, title: 'Acceptable', definition: 'The requirement is generally met, but follow-up or tighter consistency is still needed.' },
-  { score: 4, title: 'Controlled', definition: 'Performance is reliable and effective, with only minor improvement needed.' },
-  { score: 5, title: 'Strong', definition: 'Performance is consistently strong, proactive, and well controlled.' }
+  { score: 1, title: 'weak', definition: 'weak' },
+  { score: 2, title: 'fragile', definition: 'fragile' },
+  { score: 3, title: 'acceptable', definition: 'acceptable' },
+  { score: 4, title: 'controlled', definition: 'controlled' },
+  { score: 5, title: 'strong', definition: 'strong' }
 ];
 
 const EVALUATION_METRICS: EvaluationMetric[] = [
-  { key: 'qualityScore', label: 'Quality performance', hint: 'Conformance, defect history, and complaint performance.' },
-  { key: 'deliveryScore', label: 'Delivery performance', hint: 'On-time delivery, service reliability, and schedule stability.' },
-  { key: 'responsivenessScore', label: 'Responsiveness', hint: 'Speed and clarity when issues, requests, or escalations arise.' },
-  { key: 'complianceScore', label: 'Compliance and documentation', hint: 'Certificates, approvals, and required supporting records.' },
-  { key: 'traceabilityScore', label: 'Traceability and control', hint: 'Record retrieval, identification, and control of supplied product or service.' },
-  { key: 'changeControlScore', label: 'Change notification', hint: 'How reliably the provider communicates changes before impact occurs.' }
+  { key: 'qualityScore', labelKey: 'qualityScore', hintKey: 'qualityScore' },
+  { key: 'deliveryScore', labelKey: 'deliveryScore', hintKey: 'deliveryScore' },
+  { key: 'responsivenessScore', labelKey: 'responsivenessScore', hintKey: 'responsivenessScore' },
+  { key: 'complianceScore', labelKey: 'complianceScore', hintKey: 'complianceScore' },
+  { key: 'traceabilityScore', labelKey: 'traceabilityScore', hintKey: 'traceabilityScore' },
+  { key: 'changeControlScore', labelKey: 'changeControlScore', hintKey: 'changeControlScore' }
 ];
 
 @Component({
@@ -107,6 +116,7 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -176,10 +186,14 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
 
   protected canWrite() { return this.authStore.hasPermission('providers.write'); }
   protected canDelete() { return this.authStore.hasPermission('admin.delete'); }
+  protected t(key: string, params?: Record<string, unknown>) { return this.i18n.t(key, params); }
   protected personName(user?: UserSummary | null) { return user ? `${user.firstName} ${user.lastName}`.trim() : ''; }
   protected readInputValue(event: Event) { return (event.target as HTMLInputElement).value; }
   protected readSelectValue(event: Event) { return (event.target as HTMLSelectElement).value; }
   protected prettyStatus(value?: string | null) { return value ? value.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (part) => part.toUpperCase()) : ''; }
+  protected providerTypeLabel(value?: ProviderType | null) { return value ? this.t(`externalProviders.providerType.${value}`) : ''; }
+  protected providerCriticalityLabel(value?: ProviderCriticality | null) { return value ? this.t(`externalProviders.criticality.${value}`) : ''; }
+  protected providerStatusLabel(value?: ProviderStatus | null) { return value ? this.t(`externalProviders.status.${value}`) : ''; }
   protected statusClass(value: ProviderStatus) { return value === 'APPROVED' ? 'success' : value === 'CONDITIONAL' ? 'warn' : value === 'UNDER_REVIEW' ? 'neutral' : 'danger'; }
   protected criticalityClass(value: ProviderCriticality) { return value === 'HIGH' ? 'danger' : value === 'MEDIUM' ? 'warn' : 'neutral'; }
   protected approvedCount() { return this.records().filter((item) => item.status === 'APPROVED').length; }
@@ -188,7 +202,15 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
   protected evaluatedCount() { return this.records().filter((item) => item.evaluationScore !== null && item.evaluationScore !== undefined).length; }
   protected attentionCount() { return this.records().filter((item) => this.providerAttentionReasons(item).length > 0).length; }
   protected evaluationCriteria() { return EVALUATION_CRITERIA; }
-  protected evaluationMetrics() { return EVALUATION_METRICS; }
+  protected evaluationMetrics() {
+    return EVALUATION_METRICS.map((metric) => ({
+      key: metric.key,
+      label: this.t(`externalProviders.evaluation.metrics.${metric.labelKey}.label`),
+      hint: this.t(`externalProviders.evaluation.metrics.${metric.hintKey}.hint`)
+    }));
+  }
+  protected evaluationCriterionTitle(score: number) { return this.t(`externalProviders.evaluation.criteria.${score}.title`); }
+  protected evaluationCriterionDefinition(score: number) { return this.t(`externalProviders.evaluation.criteria.${score}.definition`); }
   protected evaluationOutcomeClass(value?: ProviderEvaluationOutcome | null) {
     return value === 'APPROVED'
       ? 'success'
@@ -201,8 +223,8 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
             : 'neutral';
   }
   protected evaluationOutcomeLabel(value?: ProviderEvaluationOutcome | null) {
-    if (!value) return 'Not evaluated';
-    return value === 'APPROVED_WITH_CONDITIONS' ? 'Approved with conditions' : this.prettyStatus(value);
+    if (!value) return this.t('externalProviders.evaluation.common.notEvaluated');
+    return this.t(`externalProviders.evaluation.outcome.${value}`);
   }
   protected auditCoverageClass(record?: ProviderRow | null) {
     if (!record) return 'neutral';
@@ -210,18 +232,23 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
     return record.supplierAuditLinked ? 'success' : 'warn';
   }
   protected auditCoverageLabel(record?: ProviderRow | null) {
-    if (!record) return 'Not required';
-    if (!record.supplierAuditRequired) return 'Not required';
-    return record.supplierAuditLinked ? 'Linked' : 'Required';
+    if (!record) return this.t('externalProviders.auditCoverage.notRequired');
+    if (!record.supplierAuditRequired) return this.t('externalProviders.auditCoverage.notRequired');
+    return record.supplierAuditLinked ? this.t('externalProviders.auditCoverage.linked') : this.t('externalProviders.auditCoverage.required');
   }
   protected evaluationNarrative(record: ProviderRow | null) {
-    if (!record) return 'Annual evaluation uses one consistent questionnaire so provider review stays comparable year to year.';
+    if (!record) return this.t('externalProviders.evaluation.narrative.default');
     if (record.evaluationScore === null || record.evaluationScore === undefined) {
-      return 'No annual evaluation has been recorded yet. Use the questionnaire to score quality, delivery, responsiveness, compliance, traceability, and change control.';
+      return this.t('externalProviders.evaluation.narrative.notRecorded');
     }
-    if (record.evaluationOutcome === 'APPROVED') return 'This provider’s latest annual evaluation is strong and supports routine approved status.';
-    if (record.evaluationOutcome === 'APPROVED_WITH_CONDITIONS') return 'This provider is acceptable, but the annual evaluation shows follow-up is still needed in one or more control areas.';
-    if (record.evaluationOutcome === 'ESCALATED') return 'This provider’s annual evaluation needs management attention and a clear follow-up plan.';
+    record = record!;
+    if (record!.evaluationOutcome === 'APPROVED') return this.t('externalProviders.evaluation.narrative.approved');
+    if (record!.evaluationOutcome === 'APPROVED_WITH_CONDITIONS') return this.t('externalProviders.evaluation.narrative.approvedWithConditions');
+    if (record!.evaluationOutcome === 'ESCALATED') return this.t('externalProviders.evaluation.narrative.escalated');
+    return this.t('externalProviders.evaluation.narrative.disqualified');
+    if (record!.evaluationOutcome === 'APPROVED') return 'This provider’s latest annual evaluation is strong and supports routine approved status.';
+    if (record!.evaluationOutcome === 'APPROVED_WITH_CONDITIONS') return 'This provider is acceptable, but the annual evaluation shows follow-up is still needed in one or more control areas.';
+    if (record!.evaluationOutcome === 'ESCALATED') return 'This provider’s annual evaluation needs management attention and a clear follow-up plan.';
     return 'This provider’s annual evaluation is poor enough to question continued approval without further review.';
   }
   protected questionnaireAverage() {
@@ -236,15 +263,16 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
   }
   protected scoreChoices() { return [1, 2, 3, 4, 5]; }
   protected scoreDefinition(score?: number | null) {
-    return EVALUATION_CRITERIA.find((item) => item.score === score) ?? null;
+    const criterion = EVALUATION_CRITERIA.find((item) => item.score === score);
+    return criterion ? { score: criterion.score, definition: this.evaluationCriterionDefinition(criterion.score) } : null;
   }
   protected liveOutcomeLabel() {
     const percent = this.questionnairePercent();
-    if (percent === null) return 'Incomplete annual evaluation';
-    if (percent >= 85) return 'Approved';
-    if (percent >= 70) return 'Approved with conditions';
-    if (percent >= 55) return 'Escalated review';
-    return 'Disqualification risk';
+    if (percent === null) return this.t('externalProviders.liveOutcome.incomplete');
+    if (percent >= 85) return this.t('externalProviders.liveOutcome.approved');
+    if (percent >= 70) return this.t('externalProviders.liveOutcome.approvedWithConditions');
+    if (percent >= 55) return this.t('externalProviders.liveOutcome.escalated');
+    return this.t('externalProviders.liveOutcome.disqualificationRisk');
   }
   protected liveOutcomeClass() {
     const percent = this.questionnairePercent();
@@ -255,26 +283,26 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
   }
   protected livePerformanceHeadline() {
     const percent = this.questionnairePercent();
-    if (percent === null) return 'Complete all six questions to see the live supplier-performance view.';
-    if (percent >= 85) return 'Current performance looks strong and stable.';
-    if (percent >= 70) return 'Current performance is acceptable, with some areas needing follow-up.';
-    if (percent >= 55) return 'Current performance needs escalation and a focused improvement plan.';
-    return 'Current performance is weak enough to question ongoing approval without intervention.';
+    if (percent === null) return this.t('externalProviders.livePerformance.headline.incomplete');
+    if (percent >= 85) return this.t('externalProviders.livePerformance.headline.strong');
+    if (percent >= 70) return this.t('externalProviders.livePerformance.headline.acceptable');
+    if (percent >= 55) return this.t('externalProviders.livePerformance.headline.escalated');
+    return this.t('externalProviders.livePerformance.headline.weak');
   }
   protected livePerformanceNarrative() {
     const values = this.questionnaireMetricValues();
     if (values.length !== 6) {
-      return 'The live performance view appears once the annual questionnaire is fully scored.';
+      return this.t('externalProviders.livePerformance.copy.incomplete');
     }
     const weak = values.filter((item) => item.score <= 2).map((item) => item.label.toLowerCase());
     const watch = values.filter((item) => item.score === 3).map((item) => item.label.toLowerCase());
     if (weak.length) {
-      return `Priority follow-up is needed in ${weak.join(', ')}.`;
+      return this.t('externalProviders.livePerformance.copy.weak', { areas: weak.join(', ') });
     }
     if (watch.length) {
-      return `The provider is generally acceptable, but follow-up is still needed in ${watch.join(', ')}.`;
+      return this.t('externalProviders.livePerformance.copy.watch', { areas: watch.join(', ') });
     }
-    return 'All scored areas are controlled or strong, which supports routine supplier review.';
+    return this.t('externalProviders.livePerformance.copy.strong');
   }
   protected strongestAreas() {
     return this.questionnaireMetricValues().filter((item) => item.score >= 4);
@@ -289,10 +317,20 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
     return items.map((item) => item.label).join(', ');
   }
   protected nextStepHeadline() {
-    const record = this.selectedRecord();
-    if (!record) return 'Next steps appear after the provider is saved.';
-    if (record.supplierAuditRequired && !record.supplierAuditLinked) return 'Link the required supplier audit next.';
+    let record = this.selectedRecord();
+    if (!record) return this.t('externalProviders.nextSteps.headline.default');
+    record = record!;
+    if (record.supplierAuditRequired && !record.supplierAuditLinked) return this.t('externalProviders.nextSteps.headline.audit');
     if (!this.linkCountByType('ACTION') && record.evaluationOutcome && record.evaluationOutcome !== 'APPROVED') {
+      return this.t('externalProviders.nextSteps.headline.action');
+    }
+    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('AUDIT')) {
+      return this.t('externalProviders.nextSteps.headline.traceability');
+    }
+    return this.t('externalProviders.nextSteps.headline.ready');
+    if (!record) return 'Next steps appear after the provider is saved.';
+    if (record!.supplierAuditRequired && !record!.supplierAuditLinked) return 'Link the required supplier audit next.';
+    if (!this.linkCountByType('ACTION') && record!.evaluationOutcome && record!.evaluationOutcome !== 'APPROVED') {
       return 'Prepare a provider follow-up action from this review.';
     }
     if (!this.linkCountByType('PROCESS') || !this.linkCountByType('AUDIT')) {
@@ -301,12 +339,24 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
     return 'This provider review is connected and ready for routine oversight.';
   }
   protected nextStepNarrative() {
-    const record = this.selectedRecord();
-    if (!record) return 'Save the provider first, then decide whether the next control step is supplier audit coverage, action follow-up, or traceability completion.';
+    let record = this.selectedRecord();
+    if (!record) return this.t('externalProviders.nextSteps.copy.default');
+    record = record!;
     if (record.supplierAuditRequired && !record.supplierAuditLinked) {
-      return 'This provider is high criticality, so annual oversight is not complete until a supplier audit is linked.';
+      return this.t('externalProviders.nextSteps.copy.audit');
     }
     if (!this.linkCountByType('ACTION') && record.evaluationOutcome && record.evaluationOutcome !== 'APPROVED') {
+      return this.t('externalProviders.nextSteps.copy.action');
+    }
+    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('AUDIT')) {
+      return this.t('externalProviders.nextSteps.copy.traceability');
+    }
+    return this.t('externalProviders.nextSteps.copy.ready');
+    if (!record) return 'Save the provider first, then decide whether the next control step is supplier audit coverage, action follow-up, or traceability completion.';
+    if (record!.supplierAuditRequired && !record!.supplierAuditLinked) {
+      return 'This provider is high criticality, so annual oversight is not complete until a supplier audit is linked.';
+    }
+    if (!this.linkCountByType('ACTION') && record!.evaluationOutcome && record!.evaluationOutcome !== 'APPROVED') {
       return 'The annual evaluation already shows follow-up is needed. Prepare an action so ownership, due date, and review stay visible in the global tracker.';
     }
     if (!this.linkCountByType('PROCESS') || !this.linkCountByType('AUDIT')) {
@@ -317,55 +367,55 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
   protected providerDraftTitle() {
     const record = this.selectedRecord();
     if (!record) return null;
-    return `Provider follow-up: ${record.providerName}`;
+    return this.t('externalProviders.messages.actionDraftTitle', { title: record.providerName });
   }
   protected providerDraftDescription() {
     const record = this.selectedRecord();
     if (!record) return null;
     const lines = [
       record.evaluationSummary?.trim(),
-      record.supplierAuditRequired && !record.supplierAuditLinked ? 'Supplier audit still needs to be linked for this critical provider.' : '',
+      record.supplierAuditRequired && !record.supplierAuditLinked ? this.t('externalProviders.messages.auditLinkNeeded') : '',
       record.evaluationOutcome && record.evaluationOutcome !== 'APPROVED'
-        ? `Evaluation outcome: ${this.evaluationOutcomeLabel(record.evaluationOutcome)}.`
+        ? this.t('externalProviders.messages.evaluationOutcomeLine', { value: this.evaluationOutcomeLabel(record.evaluationOutcome) })
         : ''
     ].filter(Boolean);
-    return lines.length ? lines.join('\n\n') : `Follow up annual provider review for ${record.providerName}.`;
+    return lines.length ? lines.join('\n\n') : this.t('externalProviders.messages.defaultDraftDescription', { title: record.providerName });
   }
   protected providerReturnNavigation(): ReturnNavigation | null {
     const id = this.selectedId();
-    return id ? { route: ['/external-providers', id], label: 'external provider' } : null;
+    return id ? { route: ['/external-providers', id], label: this.t('externalProviders.page.label') } : null;
   }
 
   protected attentionHeadline() {
     const record = this.selectedRecord();
     return record && this.providerAttentionReasons(record).length
-      ? 'This provider currently needs management attention.'
-      : 'This provider is currently under control.';
+      ? this.t('externalProviders.attention.headline.needsAttention')
+      : this.t('externalProviders.attention.headline.underControl');
   }
 
   protected attentionNarrative() {
     const record = this.selectedRecord();
     if (!record) {
-      return 'Attention guidance appears after the provider is saved.';
+      return this.t('externalProviders.attention.copy.unsaved');
     }
     const reasons = this.providerAttentionReasons(record);
     if (!reasons.length) {
-      return 'Approval status, review timing, evaluation, and supplier-audit coverage are controlled enough for routine oversight.';
+      return this.t('externalProviders.attention.copy.underControl');
     }
-    return `Attention is needed because ${reasons.map((reason) => reason.toLowerCase()).join(', ')}.`;
+    return this.t('externalProviders.attention.copy.needsAttention', { reasons: reasons.map((reason) => this.attentionReasonLabel(reason)).join(', ') });
   }
 
   protected attentionSummary(item: ProviderRow) {
     const reasons = this.providerAttentionReasons(item);
-    return reasons.length ? reasons.join(' | ') : '';
+    return reasons.length ? reasons.map((reason) => this.attentionReasonLabel(reason)).join(' | ') : '';
   }
 
   protected attentionLabel(item: ProviderRow) {
     const reasons = this.providerAttentionReasons(item);
     if (!reasons.length) {
-      return 'Under control';
+      return this.t('externalProviders.attention.underControl');
     }
-    return reasons.length > 1 ? `${reasons[0]} +${reasons.length - 1}` : reasons[0];
+    return reasons.length > 1 ? this.t('externalProviders.attention.multi', { first: this.attentionReasonLabel(reasons[0]), count: reasons.length - 1 }) : this.attentionReasonLabel(reasons[0]);
   }
 
   protected attentionClass(item: ProviderRow) {
@@ -373,7 +423,7 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
     if (!reasons.length) {
       return 'success';
     }
-    if (reasons.includes('High priority') || reasons.includes('Supplier audit required') || reasons.includes('Review overdue')) {
+    if (reasons.includes('HIGH_PRIORITY') || reasons.includes('SUPPLIER_AUDIT_REQUIRED') || reasons.includes('REVIEW_OVERDUE')) {
       return 'danger';
     }
     return 'warn';
@@ -398,67 +448,51 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
 
   protected pageTitle() {
     return {
-      list: 'External providers',
-      create: 'Create external provider',
-      detail: this.selectedRecord()?.providerName || 'External provider detail',
-      edit: this.selectedRecord()?.providerName || 'Edit external provider'
+      list: this.t('externalProviders.page.titles.list'),
+      create: this.t('externalProviders.page.titles.create'),
+      detail: this.selectedRecord()?.providerName || this.t('externalProviders.page.titles.detail'),
+      edit: this.selectedRecord()?.providerName || this.t('externalProviders.page.titles.edit')
     }[this.mode()];
   }
 
   protected pageDescription() {
     return {
-      list: 'Keep approved suppliers, contractors, and outsourced services visible without turning the app into a procurement system.',
-      create: 'Record the provider, annual evaluation, approval basis, and review ownership in one lightweight supplier-control register.',
-      detail: 'Review provider control position, annual evaluation, supplier-audit coverage, and linked IMS records.',
-      edit: 'Update the provider record while keeping audits, risks, obligations, and actions in their original modules.'
+      list: this.t('externalProviders.page.descriptions.list'),
+      create: this.t('externalProviders.page.descriptions.create'),
+      detail: this.t('externalProviders.page.descriptions.detail'),
+      edit: this.t('externalProviders.page.descriptions.edit')
     }[this.mode()];
   }
 
   protected breadcrumbs() {
-    if (this.mode() === 'list') return [{ label: 'External Providers' }];
-    const base = [{ label: 'External Providers', link: '/external-providers' }];
-    if (this.mode() === 'create') return [...base, { label: 'New provider' }];
-    if (this.mode() === 'edit') return [...base, { label: this.selectedRecord()?.providerName || 'Provider', link: `/external-providers/${this.selectedId()}` }, { label: 'Edit' }];
-    return [...base, { label: this.selectedRecord()?.providerName || 'Provider' }];
+    if (this.mode() === 'list') return [{ label: this.t('externalProviders.page.label') }];
+    const base = [{ label: this.t('externalProviders.page.label'), link: '/external-providers' }];
+    if (this.mode() === 'create') return [...base, { label: this.t('externalProviders.breadcrumbs.new') }];
+    if (this.mode() === 'edit') return [...base, { label: this.selectedRecord()?.providerName || this.t('externalProviders.breadcrumbs.record'), link: `/external-providers/${this.selectedId()}` }, { label: this.t('externalProviders.breadcrumbs.edit') }];
+    return [...base, { label: this.selectedRecord()?.providerName || this.t('externalProviders.breadcrumbs.record') }];
   }
 
   protected guidance() {
     const raw = this.form.getRawValue();
     if (raw.providerName && raw.suppliedScope && raw.approvalBasis && raw.ownerUserId) {
-      return 'This provider record already shows what is being supplied, why the provider is approved, who reviews it, and how the latest annual evaluation landed.';
+      return this.t('externalProviders.guidance.structured');
     }
-    return 'Record the provider, what they supply, why they are approved or conditionally accepted, who reviews the relationship, and how the annual evaluation scored them.';
+    return this.t('externalProviders.guidance.default');
   }
 
   protected reviewNarrative() {
     const record = this.selectedRecord();
-    if (!record) return 'Save the provider first, then link the process, audit, risk, action, or obligation records that show how it is controlled.';
-    if (!record.links?.length) return 'This provider is recorded, but its operational control and review evidence are not yet visible through linked records.';
-    if (record.supplierAuditRequired && !record.supplierAuditLinked) return 'This critical supplier has supporting links, but it still needs a linked supplier audit to complete the review picture.';
-    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('AUDIT')) return 'This provider has some traceability, but it will be easier to review once both the owning process and a supporting audit or control record are linked.';
-    return 'This provider already shows where it is controlled and which IMS records support review and follow-up.';
+    if (!record) return this.t('externalProviders.review.noRecord');
+    if (!record.links?.length) return this.t('externalProviders.review.unlinked');
+    if (record.supplierAuditRequired && !record.supplierAuditLinked) return this.t('externalProviders.review.auditMissing');
+    if (!this.linkCountByType('PROCESS') || !this.linkCountByType('AUDIT')) return this.t('externalProviders.review.partial');
+    return this.t('externalProviders.review.strong');
   }
 
-  protected sectionTitle(type: LinkType) { return { PROCESS: 'Linked Processes', RISK: 'Linked Risks', AUDIT: 'Linked Audits', ACTION: 'Linked Actions', OBLIGATION: 'Linked Obligations' }[type]; }
-  protected sectionDescription(type: LinkType) {
-    return {
-      PROCESS: 'Processes that depend on or control this external provider relationship.',
-      RISK: 'Risks used to track dependence, continuity, quality, or control exposure for this provider.',
-      AUDIT: 'Audits that reviewed the provider or the process controls around this provider. High-criticality suppliers should have a linked supplier audit.',
-      ACTION: 'Follow-up actions already tracked in the global action register.',
-      OBLIGATION: 'Compliance or customer obligations that apply to this provider relationship.'
-    }[type];
-  }
-  protected sectionEmptyCopy(type: LinkType) {
-    return {
-      PROCESS: 'Link the process that owns or relies on this provider relationship.',
-      RISK: 'Link a risk if this provider creates continuity, quality, or compliance exposure.',
-      AUDIT: 'Link an audit that checked supplier or outsourced-provider control. For high-criticality suppliers, use a supplier audit.',
-      ACTION: 'Link actions already being tracked for provider follow-up.',
-      OBLIGATION: 'Link obligations when customer, legal, or regulatory requirements apply to this provider.'
-    }[type];
-  }
-  protected sectionPickerLabel(type: LinkType) { return { PROCESS: 'Process', RISK: 'Risk', AUDIT: 'Audit', ACTION: 'Action', OBLIGATION: 'Obligation' }[type]; }
+  protected sectionTitle(type: LinkType) { return this.t(`externalProviders.links.sections.${type}.title`); }
+  protected sectionDescription(type: LinkType) { return this.t(`externalProviders.links.sections.${type}.copy`); }
+  protected sectionEmptyCopy(type: LinkType) { return this.t(`externalProviders.links.sections.${type}.empty`); }
+  protected sectionPickerLabel(type: LinkType) { return this.t(`externalProviders.links.types.${type}`); }
   protected linksByType(type: LinkType) { return (this.selectedRecord()?.links || []).filter((link) => link.linkType === type); }
   protected linkCountByType(type: LinkType) { return this.linksByType(type).length; }
   protected linkRoute(link: ProviderLink) { return link.path || '/external-providers'; }
@@ -495,15 +529,15 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
 
   protected packageTierLabel(packageTier: TenantPackageTier) {
     return {
-      ASSURANCE: 'Assurance',
-      CORE_IMS: 'Core IMS',
-      QHSE_PRO: 'QHSE Pro'
+      ASSURANCE: this.t('packages.assurance'),
+      CORE_IMS: this.t('packages.coreIms'),
+      QHSE_PRO: this.t('packages.qhsePro')
     }[packageTier];
   }
 
   protected save() {
-    if (!this.canWrite()) return this.error.set('You do not have permission to edit external providers.');
-    if (this.form.invalid) return this.error.set('Complete the required external provider fields.');
+    if (!this.canWrite()) return this.error.set(this.t('externalProviders.messages.noPermissionWrite'));
+    if (this.form.invalid) return this.error.set(this.t('externalProviders.messages.completeRequired'));
     this.saving.set(true);
     this.error.set('');
     const request = this.selectedId()
@@ -512,20 +546,20 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
     request.subscribe({
       next: (record) => {
         this.saving.set(false);
-        this.router.navigate(['/external-providers', record.id], { state: { notice: 'External provider saved successfully.' } });
+        this.router.navigate(['/external-providers', record.id], { state: { notice: this.t('externalProviders.messages.saved') } });
       },
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
-        this.error.set(this.readError(error, 'External provider save failed.'));
+        this.error.set(this.readError(error, this.t('externalProviders.messages.saveFailed')));
       }
     });
   }
 
   protected archiveRecord() {
-    if (!this.selectedRecord() || !this.canDelete() || !window.confirm(`Archive external provider "${this.selectedRecord()?.providerName}"?`)) return;
+    if (!this.selectedRecord() || !this.canDelete() || !window.confirm(this.t('externalProviders.messages.archiveConfirm', { title: this.selectedRecord()?.providerName }))) return;
     this.api.delete<{ success: boolean }>(`external-providers/${this.selectedId()}`).subscribe({
-      next: () => this.router.navigate(['/external-providers'], { state: { notice: 'External provider archived successfully.' } }),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'External provider archive failed.'))
+      next: () => this.router.navigate(['/external-providers'], { state: { notice: this.t('externalProviders.messages.archived') } }),
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('externalProviders.messages.archiveFailed')))
     });
   }
 
@@ -551,11 +585,11 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
         this.linkForm.patchValue({ linkedId: '', note: '' });
         this.activeLinkComposerType.set(null);
         this.fetchRecord(this.selectedId()!);
-        this.message.set('Linked record added.');
+        this.message.set(this.t('externalProviders.messages.linkAdded'));
       },
       error: (error: HttpErrorResponse) => {
         this.linkSaving.set(false);
-        this.error.set(this.readError(error, 'Record link failed.'));
+        this.error.set(this.readError(error, this.t('externalProviders.messages.linkFailed')));
       }
     });
   }
@@ -565,9 +599,9 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
     this.api.delete<{ success: boolean }>(`external-providers/${this.selectedId()}/links/${linkId}`).subscribe({
       next: () => {
         this.fetchRecord(this.selectedId()!);
-        this.message.set('Linked record removed.');
+        this.message.set(this.t('externalProviders.messages.linkRemoved'));
       },
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'Link removal failed.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('externalProviders.messages.linkRemoveFailed')))
     });
   }
 
@@ -620,7 +654,7 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'External providers could not be loaded.'));
+        this.error.set(this.readError(error, this.t('externalProviders.messages.loadListFailed')));
       }
     });
   }
@@ -653,7 +687,7 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set(this.readError(error, 'External provider details could not be loaded.'));
+        this.error.set(this.readError(error, this.t('externalProviders.messages.loadDetailsFailed')));
       }
     });
   }
@@ -661,7 +695,7 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
   private loadOwners() {
     this.api.get<UserSummary[]>('users').subscribe({
       next: (users) => this.owners.set(users),
-      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, 'External provider owners could not be loaded.'))
+      error: (error: HttpErrorResponse) => this.error.set(this.readError(error, this.t('externalProviders.messages.loadOwnersFailed')))
     });
   }
 
@@ -674,10 +708,10 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
   }
 
   private toCandidateLabel(type: LinkType, item: any) {
-    if (type === 'PROCESS') return `${item.referenceNo || 'Uncoded'} - ${item.name}`;
+    if (type === 'PROCESS') return `${item.referenceNo || this.t('externalProviders.common.uncoded')} - ${item.name}`;
     if (type === 'RISK') return item.title;
     if (type === 'AUDIT') return `${item.code} - ${item.title}`;
-    if (type === 'OBLIGATION') return `${item.referenceNo || 'Uncoded'} - ${item.title}`;
+    if (type === 'OBLIGATION') return `${item.referenceNo || this.t('externalProviders.common.uncoded')} - ${item.title}`;
     return item.title;
   }
 
@@ -694,11 +728,11 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
 
   private linkModuleLabel(linkType: LinkType) {
     return {
-      PROCESS: 'Process Register',
-      RISK: 'Risks',
-      AUDIT: 'Audits',
-      ACTION: 'Actions',
-      OBLIGATION: 'Compliance Obligations'
+      PROCESS: this.t('shell.nav.processRegister.label'),
+      RISK: this.t('shell.nav.risks.label'),
+      AUDIT: this.t('shell.nav.audits.label'),
+      ACTION: this.t('shell.nav.actions.label'),
+      OBLIGATION: this.t('shell.nav.complianceObligations.label')
     }[linkType];
   }
 
@@ -721,35 +755,39 @@ export class ExternalProvidersPageComponent implements OnInit, OnChanges {
   protected questionnaireMetricValues() {
     const raw = this.form.getRawValue();
     return EVALUATION_METRICS
-      .map((metric) => ({ label: metric.label, score: raw[metric.key] }))
+      .map((metric) => ({ label: this.t(`externalProviders.evaluation.metrics.${metric.labelKey}.label`), score: raw[metric.key] }))
       .filter((item): item is { label: string; score: number } => typeof item.score === 'number');
   }
 
-  private providerAttentionReasons(item: ProviderRow) {
+  private providerAttentionReasons(item: ProviderRow): ProviderAttentionReason[] {
     if (item.status === 'INACTIVE') {
       return [];
     }
-    const reasons: string[] = [];
+    const reasons: ProviderAttentionReason[] = [];
     if (!item.ownerUserId) {
-      reasons.push('Owner needed');
+      reasons.push('OWNER_NEEDED');
     }
     if (!item.nextReviewDate) {
-      reasons.push('Review date needed');
+      reasons.push('REVIEW_DATE_NEEDED');
     } else if (this.isPastDate(item.nextReviewDate)) {
-      reasons.push('Review overdue');
+      reasons.push('REVIEW_OVERDUE');
     } else if (this.isDateWithinDays(item.nextReviewDate, 30)) {
-      reasons.push('Review due soon');
+      reasons.push('REVIEW_DUE_SOON');
     }
     if (item.supplierAuditRequired && !item.supplierAuditLinked) {
-      reasons.push('Supplier audit required');
+      reasons.push('SUPPLIER_AUDIT_REQUIRED');
     }
     if (item.evaluationOutcome === 'ESCALATED' || item.evaluationOutcome === 'DISQUALIFIED') {
-      reasons.push('High priority');
+      reasons.push('HIGH_PRIORITY');
     }
     if (this.isStale(item.updatedAt, 90)) {
-      reasons.push('Stale');
+      reasons.push('STALE');
     }
     return reasons;
+  }
+
+  private attentionReasonLabel(reason: ProviderAttentionReason) {
+    return this.t(`externalProviders.attention.reasons.${reason}`);
   }
 
   private isPastDate(value?: string | null) {
@@ -784,3 +822,4 @@ export class ExternalProvidersDetailPageComponent {}
 
 @Component({ standalone: true, imports: [ExternalProvidersPageComponent], template: `<iso-external-providers-page [forcedMode]="'edit'" />` })
 export class ExternalProvidersEditPageComponent {}
+
